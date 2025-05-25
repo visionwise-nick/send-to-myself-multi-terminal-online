@@ -85,7 +85,8 @@ dependencies:
   desktop_drop: ^0.4.4
   
   # 视频缩略图
-  video_thumbnail: ^0.5.3
+  fc_native_video_thumbnail: ^0.17.2
+  video_thumbnail: ^0.5.6  # 移动端备用方案
 
 dev_dependencies:
   flutter_test:

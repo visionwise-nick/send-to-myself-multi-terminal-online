@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   dynamic_color
+  fc_native_video_thumbnail
   url_launcher_windows
 )
 

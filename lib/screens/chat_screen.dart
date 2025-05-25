@@ -16,6 +16,8 @@ import 'package:path/path.dart' as path;
 import 'package:open_filex/open_filex.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:math' as math;
+import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 // 文件下载处理器类
 class FileDownloadHandler {
@@ -1225,27 +1227,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (!isMe) ...[
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF10B981), Color(0xFF059669)],
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.person_rounded,
-                size: 14,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          
           Flexible(
             child: Container(
               constraints: BoxConstraints(
@@ -1253,7 +1234,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               ),
               padding: EdgeInsets.all(hasFile ? 6 : 10),
               decoration: BoxDecoration(
-                color: isMe ? const Color(0xFF6366F1) : Colors.white,
+                color: isMe 
+                  ? (hasFile ? Colors.white : const Color(0xFF6366F1)) // 文件消息用白色，文字消息用主色调
+                  : Colors.white,
                 borderRadius: BorderRadius.circular(16).copyWith(
                   bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
                   bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
@@ -1261,12 +1244,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 boxShadow: [
                   BoxShadow(
                     color: isMe 
-                      ? const Color(0xFF6366F1).withOpacity(0.2)
+                      ? (hasFile ? Colors.black.withOpacity(0.06) : const Color(0xFF6366F1).withOpacity(0.2))
                       : Colors.black.withOpacity(0.06),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
+                // 为发送方的文件消息添加边框
+                border: (isMe && hasFile) 
+                  ? Border.all(color: const Color(0xFFE5E7EB), width: 1)
+                  : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1280,7 +1267,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     Text(
                       message['text'],
                       style: TextStyle(
-                        color: isMe ? Colors.white : const Color(0xFF1F2937),
+                        color: isMe 
+                          ? (hasFile ? const Color(0xFF1F2937) : Colors.white) // 文件消息用深色，文字消息用白色
+                          : const Color(0xFF1F2937),
                         fontSize: 14,
                         height: 1.3,
                         fontWeight: FontWeight.w400,
@@ -1297,7 +1286,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                         TimeUtils.formatTime(message['timestamp']),
                         style: TextStyle(
                           color: isMe 
-                            ? Colors.white.withOpacity(0.7)
+                            ? (hasFile ? const Color(0xFF9CA3AF) : Colors.white.withOpacity(0.7)) // 文件消息用灰色，文字消息用白色
                             : const Color(0xFF9CA3AF),
                           fontSize: 10,
                           fontWeight: FontWeight.w400,
@@ -1313,27 +1302,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               ),
             ),
           ),
-          
-          if (isMe) ...[
-            const SizedBox(width: 8),
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.person_rounded,
-                size: 14,
-                color: Colors.white,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -1471,10 +1439,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: isMe ? Colors.white.withOpacity(0.15) : const Color(0xFFF9FAFB),
+                  color: isMe ? const Color(0xFFF9FAFB) : const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: isMe ? Colors.white.withOpacity(0.3) : const Color(0xFFE5E7EB),
+                    color: const Color(0xFFE5E7EB),
                     width: 1,
                   ),
                 ),
@@ -1484,16 +1452,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     Icon(
                       _getFileTypeIcon(fileType),
                       size: 16,
-                      color: isMe ? Colors.white.withOpacity(0.9) : const Color(0xFF6B7280),
+                      color: const Color(0xFF6B7280),
                     ),
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
                         _getFileName(actualFilePath, fullUrl) ?? '文件',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
-                          color: isMe ? Colors.white.withOpacity(0.9) : const Color(0xFF374151),
+                          color: Color(0xFF374151),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1557,21 +1525,21 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   // 构建简单视频预览
   Widget _buildSimpleVideoPreview(String? filePath, String? fileUrl) {
-          return Container(
-            height: 100,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1F2937),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.play_circle_outline,
-                size: 32,
-                color: Colors.white,
-              ),
-            ),
-          );
+    return Container(
+      height: 100,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        color: const Color(0xFF1F2937),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: _VideoGifPreview(
+          videoPath: filePath,
+          videoUrl: fileUrl,
+        ),
+      ),
+    );
   }
 
   // 打开本地文件（简化版）
@@ -2173,5 +2141,200 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('$_filePathCachePrefix$url', filePath);
     _downloadedFiles[url] = filePath;
+  }
+}
+
+// 视频静态缩略图预览组件
+class _VideoGifPreview extends StatefulWidget {
+  final String? videoPath;
+  final String? videoUrl;
+
+  const _VideoGifPreview({
+    this.videoPath,
+    this.videoUrl,
+  });
+
+  @override
+  State<_VideoGifPreview> createState() => _VideoGifPreviewState();
+}
+
+class _VideoGifPreviewState extends State<_VideoGifPreview> {
+  Uint8List? _thumbnailData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _generateVideoThumbnail();
+  }
+
+  Future<void> _generateVideoThumbnail() async {
+    if (widget.videoPath == null && widget.videoUrl == null) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+    
+    try {
+      String videoSource = widget.videoPath ?? widget.videoUrl!;
+      Uint8List? thumbnailData;
+      
+      // 方案1: 优先尝试使用fc_native_video_thumbnail（支持桌面端）
+      try {
+        final plugin = FcNativeVideoThumbnail();
+        
+        // 创建临时文件路径用于保存缩略图
+        final directory = await getApplicationDocumentsDirectory();
+        final thumbnailDir = Directory(path.join(directory.path, 'thumbnails'));
+        if (!thumbnailDir.existsSync()) {
+          thumbnailDir.createSync(recursive: true);
+        }
+        
+        final thumbnailPath = path.join(
+          thumbnailDir.path, 
+          'thumb_${DateTime.now().millisecondsSinceEpoch}.jpg'
+        );
+        
+        // 生成缩略图文件
+        final success = await plugin.getVideoThumbnail(
+          srcFile: videoSource,
+          destFile: thumbnailPath,
+          width: 400, // 高分辨率
+          height: 300, // 高分辨率  
+          format: 'jpeg',
+          quality: 90, // 高质量
+        );
+        
+        if (success) {
+          // 读取生成的缩略图文件
+          final thumbnailFile = File(thumbnailPath);
+          if (thumbnailFile.existsSync()) {
+            thumbnailData = await thumbnailFile.readAsBytes();
+            
+            // 清理临时文件
+            try {
+              await thumbnailFile.delete();
+            } catch (e) {
+              print('清理缩略图临时文件失败: $e');
+            }
+          }
+        }
+      } catch (e) {
+        print('fc_native_video_thumbnail 失败，尝试备用方案: $e');
+      }
+      
+      // 方案2: 如果fc_native_video_thumbnail失败，使用video_thumbnail（移动端）
+      if (thumbnailData == null) {
+        try {
+          thumbnailData = await VideoThumbnail.thumbnailData(
+            video: videoSource,
+            imageFormat: ImageFormat.JPEG,
+            timeMs: 1000, // 从第1秒开始截取
+            maxWidth: 400, // 高分辨率
+            maxHeight: 300, // 高分辨率
+            quality: 90, // 高质量
+          );
+          print('使用video_thumbnail生成缩略图成功');
+        } catch (e) {
+          print('video_thumbnail 也失败了: $e');
+        }
+      } else {
+        print('使用fc_native_video_thumbnail生成缩略图成功');
+      }
+      
+      if (mounted && thumbnailData != null) {
+        setState(() {
+          _thumbnailData = thumbnailData;
+          _isLoading = false;
+        });
+      } else if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('生成视频缩略图失败: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Container(
+        color: const Color(0xFF1F2937),
+        child: const Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white54),
+            ),
+          ),
+        ),
+      );
+    }
+    
+    if (_thumbnailData != null) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          // 高清缩略图
+          Image.memory(
+            _thumbnailData!,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: 100,
+          ),
+          
+          // 播放按钮覆盖层
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.2),
+                  Colors.black.withOpacity(0.05),
+                ],
+              ),
+            ),
+            child: Center(
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  color: Colors.black54,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.play_arrow,
+                  size: 28,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    
+    // 如果缩略图生成失败，显示默认图标
+    return Container(
+      color: const Color(0xFF1F2937),
+      child: const Center(
+        child: Icon(
+          Icons.play_circle_fill,
+          size: 48,
+          color: Colors.white70,
+        ),
+      ),
+    );
   }
 } 
