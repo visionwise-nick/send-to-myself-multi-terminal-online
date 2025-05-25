@@ -342,45 +342,27 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 80,
-            height: 80,
-                    decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-              ),
-              borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                  color: const Color(0xFF6366F1).withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-            child: const Icon(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
               Icons.groups_rounded,
-              size: 36,
-                                    color: Colors.white,
+              size: 28,
+              color: AppTheme.primaryColor,
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             '请选择群组',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF1F2937),
-            ),
+            style: AppTheme.displayStyle,
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             '点击顶部群组选择器来选择或创建群组',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF6B7280),
-            ),
+            style: AppTheme.captionStyle,
           ),
       ],
       ),

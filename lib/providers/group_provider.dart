@@ -13,6 +13,7 @@ class GroupProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   StreamSubscription? _groupChangeSubscription;
+  StreamSubscription? _deviceStatusSubscription;
   
   // Getters
   List<Map<String, dynamic>>? get groups => _groups;
@@ -32,6 +33,11 @@ class GroupProvider extends ChangeNotifier {
   void _subscribeToGroupChanges() {
     _groupChangeSubscription = _websocketService.onGroupChange.listen((data) {
       _handleGroupChangeNotification(data);
+    });
+    
+    // 同时监听设备状态变化
+    _deviceStatusSubscription = _websocketService.onDeviceStatusChange.listen((data) {
+      _handleDeviceStatusUpdate(data);
     });
   }
   
@@ -523,9 +529,117 @@ class GroupProvider extends ChangeNotifier {
     }
   }
   
+  // 处理设备状态更新
+  void _handleDeviceStatusUpdate(Map<String, dynamic> data) {
+    final type = data['type'];
+    print('收到设备状态更新: $type');
+    
+    switch (type) {
+      case 'group_devices_status':
+        _handleGroupDevicesStatusUpdate(data);
+        break;
+      case 'online_devices':
+        _handleOnlineDevicesUpdate(data);
+        break;
+      default:
+        print('未知的设备状态更新类型: $type');
+        break;
+    }
+  }
+  
+  // 处理群组设备状态更新
+  void _handleGroupDevicesStatusUpdate(Map<String, dynamic> data) {
+    final groupId = data['groupId'];
+    final devices = data['devices'] as List<dynamic>?;
+    
+    if (groupId == null || devices == null) return;
+    
+    print('更新群组设备状态: 群组ID=$groupId, ${devices.length}台设备');
+    
+    // 更新当前群组的设备状态
+    if (_currentGroup != null && _currentGroup!['id'] == groupId) {
+      _currentGroup!['devices'] = devices;
+      notifyListeners();
+      print('当前群组设备状态已更新');
+    }
+    
+    // 同时更新群组列表中的设备状态
+    if (_groups != null) {
+      for (final group in _groups!) {
+        if (group['id'] == groupId) {
+          group['devices'] = devices;
+          break;
+        }
+      }
+    }
+  }
+  
+  // 处理在线设备列表更新
+  void _handleOnlineDevicesUpdate(Map<String, dynamic> data) {
+    final devices = data['devices'] as List<dynamic>?;
+    if (devices == null) return;
+    
+    print('更新在线设备列表: ${devices.length}台设备');
+    
+    // 更新所有群组中对应设备的在线状态
+    if (_groups != null) {
+      for (final group in _groups!) {
+        final groupDevices = group['devices'] as List<dynamic>?;
+        if (groupDevices != null) {
+          for (final groupDevice in groupDevices) {
+            if (groupDevice is Map<String, dynamic>) {
+              // 查找对应的在线设备信息
+              final onlineDevice = devices.firstWhere(
+                (device) => device['id'] == groupDevice['id'],
+                orElse: () => null,
+              );
+              
+              if (onlineDevice != null) {
+                groupDevice['isOnline'] = onlineDevice['isOnline'];
+                groupDevice['is_online'] = onlineDevice['is_online'];
+              } else {
+                // 设备不在在线列表中，标记为离线
+                groupDevice['isOnline'] = false;
+                groupDevice['is_online'] = false;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // 更新当前群组设备状态
+    if (_currentGroup != null) {
+      final currentGroupDevices = _currentGroup!['devices'] as List<dynamic>?;
+      if (currentGroupDevices != null) {
+        for (final groupDevice in currentGroupDevices) {
+          if (groupDevice is Map<String, dynamic>) {
+            // 查找对应的在线设备信息
+            final onlineDevice = devices.firstWhere(
+              (device) => device['id'] == groupDevice['id'],
+              orElse: () => null,
+            );
+            
+            if (onlineDevice != null) {
+              groupDevice['isOnline'] = onlineDevice['isOnline'];
+              groupDevice['is_online'] = onlineDevice['is_online'];
+            } else {
+              // 设备不在在线列表中，标记为离线
+              groupDevice['isOnline'] = false;
+              groupDevice['is_online'] = false;
+            }
+          }
+        }
+      }
+    }
+    
+    notifyListeners();
+  }
+  
   @override
   void dispose() {
     _groupChangeSubscription?.cancel();
+    _deviceStatusSubscription?.cancel();
     super.dispose();
   }
 } 

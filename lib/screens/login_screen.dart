@@ -152,10 +152,14 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       child: ElevatedButton(
                         onPressed: _isRegistering ? null : _registerDevice,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryColor,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: AppTheme.primaryColor.withOpacity(0.6),
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppTheme.primaryColor,
+                          disabledBackgroundColor: Colors.white.withOpacity(0.6),
                           elevation: 0,
+                          side: BorderSide(
+                            color: AppTheme.primaryColor,
+                            width: 1.5,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -164,19 +168,19 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                             ? Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const SizedBox(
+                                  SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
                                     '注册中...',
                                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      color: Colors.white,
+                                      color: AppTheme.primaryColor,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -185,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                             : Text(
                                 '开始使用',
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
+                                  color: AppTheme.primaryColor,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),

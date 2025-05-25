@@ -28,58 +28,63 @@ class GroupSelector extends StatelessWidget {
               child: GestureDetector(
                 onTap: () => _showGroupSelector(context, groupProvider),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppTheme.primaryColor.withOpacity(0.2),
-                      width: 1,
-                    ),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 群组图标
-                      Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: const Icon(
-                          Icons.group,
-                          color: Colors.white,
-                          size: 12,
-                        ),
-                      ),
-                      
-                      const SizedBox(width: 8),
-                      
-                      // 群组名称
-                      Flexible(
-                        child: Text(
-                          currentGroup['name'] ?? '未命名群组',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => _showGroupSelector(context, groupProvider),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      child: Row(
+                        children: [
+                          // 群组图标 - 简化
+                          Icon(
+                            Icons.group,
+                            size: 16, // 减小图标
                             color: AppTheme.primaryColor,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          
+                          const SizedBox(width: 6), // 减小间距
+                          
+                          // 群组名称和二维码按钮
+                          Expanded(
+                            child: Row(
+                              children: [
+                                // 群组名称
+                                Flexible(
+                                  child: Text(
+                                    currentGroup['name'] ?? '未命名群组',
+                                    style: AppTheme.titleStyle.copyWith(
+                                      color: AppTheme.primaryColor,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                
+                                const SizedBox(width: 6), // 二维码和群组名的间距
+                                
+                                // 二维码入口 - 紧挨着群组名
+                                GestureDetector(
+                                  onTap: () => _showQrGenerate(context, currentGroup),
+                                  child: Container(
+                                    width: 20, // 进一步减小
+                                    height: 20,
+                                    child: Icon(
+                                      Icons.qr_code,
+                                      color: AppTheme.textSecondaryColor,
+                                      size: 14, // 减小图标
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      
-                      const SizedBox(width: 4),
-                      
-                      // 下拉箭头
-                      Icon(
-                        Icons.keyboard_arrow_down,
-                        color: AppTheme.primaryColor,
-                        size: 16,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -87,26 +92,11 @@ class GroupSelector extends StatelessWidget {
             
             const SizedBox(width: 8),
             
-            // 二维码入口
-            GestureDetector(
-              onTap: () => _showQrGenerate(context, currentGroup),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: AppTheme.primaryColor.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(
-                  Icons.qr_code_2_rounded,
-                  color: AppTheme.primaryColor,
-                  size: 18,
-                ),
-              ),
+            // 下拉箭头 - 替换重复的二维码按钮
+            Icon(
+              Icons.expand_more,
+              size: 14,
+              color: AppTheme.textSecondaryColor,
             ),
           ],
         );
@@ -142,8 +132,8 @@ class GroupSelector extends StatelessWidget {
                   const Text(
                     '点击加入群组',
                     style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                      fontSize: AppTheme.fontSizeTitle,
+                      fontWeight: AppTheme.fontWeightMedium,
                       color: Colors.orange,
                     ),
                   ),

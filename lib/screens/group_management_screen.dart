@@ -398,8 +398,8 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
               const PopupMenuItem(
                 value: 'generate_qr',
                 child: ListTile(
-                  leading: Icon(Icons.qr_code_2_rounded, color: Color(0xFF6366F1)),
-                  title: Text('生成二维码', style: TextStyle(color: Color(0xFF6366F1))),
+                  leading: Icon(Icons.qr_code_2_rounded, color: AppTheme.primaryColor),
+                  title: Text('生成二维码', style: TextStyle(color: AppTheme.primaryColor)),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),

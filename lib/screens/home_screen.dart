@@ -166,49 +166,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
-          // 现代化底部导航栏
-          bottomNavigationBar: _buildModernBottomNav(),
+          // 移动端底部导航
+          bottomNavigationBar: _buildMobileBottomNav(),
     );
   }
 
-  Widget _buildModernBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundColor,
-        border: Border(
-          top: BorderSide(
-            color: AppTheme.dividerColor,
-            width: 0.5,
-          ),
+  Widget _buildMobileBottomNav() {
+    return BottomNavigationBar(
+      currentIndex: _selectedIndex,
+      onTap: _onItemTapped,
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: Colors.white,
+      selectedItemColor: AppTheme.primaryColor,
+      unselectedItemColor: AppTheme.textSecondaryColor,
+      elevation: 8,
+      selectedFontSize: 10, // 减小选中字体
+      unselectedFontSize: 9, // 减小未选中字体
+      iconSize: 20, // 减小图标尺寸
+      items: [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.chat), // 简化图标
+          label: '聊天',
         ),
-      ),
-      child: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: _onItemTapped,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        indicatorColor: AppTheme.primaryColor.withOpacity(0.1),
-        destinations: [
-          NavigationDestination(
-            icon: Icon(
-              _selectedIndex == 0 ? Icons.chat_bubble : Icons.chat_bubble_outline,
-              color: _selectedIndex == 0 
-                ? AppTheme.primaryColor 
-                : AppTheme.textSecondaryColor,
-            ),
-            label: '聊天',
-          ),
-          NavigationDestination(
-            icon: Icon(
-              _selectedIndex == 1 ? Icons.psychology : Icons.psychology_outlined,
-              color: _selectedIndex == 1 
-                ? AppTheme.primaryColor 
-                : AppTheme.textSecondaryColor,
-            ),
-            label: '记忆',
-          ),
-        ],
-      ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.notes), // 简化图标
+          label: '记忆',
+        ),
+      ],
     );
   }
 
@@ -233,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                colors: [AppTheme.primaryColor, AppTheme.primaryDarkColor],
               ),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -248,20 +232,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Send To Myself',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937),
-                  ),
+                  style: AppTheme.titleStyle,
                 ),
                 Text(
                   deviceName,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF6B7280),
-                  ),
+                  style: AppTheme.captionStyle,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -316,17 +293,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Icon(
                   icon,
-                  size: 20,
+                  size: 18,
                   color: isSelected 
                     ? AppTheme.primaryColor
                     : AppTheme.textSecondaryColor,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  style: AppTheme.bodyStyle.copyWith(
+                    fontWeight: isSelected ? AppTheme.fontWeightMedium : AppTheme.fontWeightNormal,
                     color: isSelected 
                       ? AppTheme.primaryColor
                       : AppTheme.textSecondaryColor,
@@ -465,9 +441,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               const SizedBox(width: 4),
               Text(
                 '$onlineCount/$totalCount在线',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                style: AppTheme.smallStyle.copyWith(
                   color: onlineCount > 0 ? AppTheme.onlineColor : AppTheme.offlineColor,
-                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],

@@ -831,7 +831,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     
     // 立即保存并滚动，确保用户能看到消息
     await _saveMessages();
-    _scrollToBottom();
+    _smoothScrollToBottom(); // 发送新消息时使用平滑滚动
     
     print('消息已立即添加到界面: $text, ID: $messageId');
 
@@ -926,7 +926,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       _messages.add(fileMessage);
     });
     await _saveMessages();
-    _scrollToBottom();
+    _smoothScrollToBottom(); // 发送文件时使用平滑滚动
     
     print('文件消息已立即添加到界面: $fileName, ID: ${fileMessage['id']}');
 
@@ -1060,12 +1060,30 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 滚动到底部
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+      if (_scrollController.hasClients && mounted) {
+        try {
+          // 立即跳转到底部，避免动画效果
+          _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        } catch (e) {
+          print('滚动到底部失败: $e');
+        }
+      }
+    });
+  }
+  
+  // 平滑滚动到底部（用于发送新消息时）
+  void _smoothScrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients && mounted) {
+        try {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200), // 减少动画时间
+            curve: Curves.easeOut,
+          );
+        } catch (e) {
+          print('平滑滚动失败: $e');
+        }
       }
     });
   }
@@ -1141,7 +1159,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               ? const Center(
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Color(0xFF6366F1),
+                    color: AppTheme.primaryColor,
                   ),
                 )
               : _messages.isEmpty
@@ -1150,10 +1168,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 8), // 减少顶部和底部间距
                       itemCount: _messages.length,
                       itemBuilder: (context, index) {
-                        return _buildMessageBubble(_messages[index]);
+                        final message = _messages[index];
+                        
+                        // 简化：不再显示日期分组，直接在每条消息显示完整时间
+                        return _buildMessageBubble(message);
                       },
                     ),
                   ),
@@ -1172,44 +1193,28 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 80,
-            height: 80,
+            width: 48, // 减小图标容器
+            height: 48,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-              ),
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF6366F1).withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12), // 减小圆角
             ),
-            child: const Icon(
-              Icons.chat_bubble_outline_rounded,
-              size: 36,
-              color: Colors.white,
+            child: Icon(
+              Icons.chat_bubble_outline,
+              size: 20, // 减小图标
+              color: AppTheme.primaryColor,
             ),
           ),
-          const SizedBox(height: 24),
-          const Text(
+          const SizedBox(height: 12), // 减少间距
+          Text(
             '开始对话',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF1F2937),
-            ),
+            style: AppTheme.bodyStyle, // 使用更小的字体
           ),
-          const SizedBox(height: 8),
-          const Text(
+          const SizedBox(height: 4), // 减少间距
+          Text(
             '发送消息或文件来开始聊天',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF6B7280),
+            style: AppTheme.captionStyle.copyWith(
+              fontSize: 10, // 进一步减小说明文字
             ),
           ),
         ],
@@ -1222,85 +1227,80 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final hasFile = message['fileType'] != null;
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      margin: const EdgeInsets.only(bottom: 8), // 减少消息间距
+      child: Column(
+        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
-              padding: EdgeInsets.all(hasFile ? 6 : 10),
-              decoration: BoxDecoration(
-                color: isMe 
-                  ? (hasFile ? Colors.white : const Color(0xFF6366F1)) // 文件消息用白色，文字消息用主色调
-                  : Colors.white,
-                borderRadius: BorderRadius.circular(16).copyWith(
-                  bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
-                  bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isMe 
-                      ? (hasFile ? Colors.black.withOpacity(0.06) : const Color(0xFF6366F1).withOpacity(0.2))
-                      : Colors.black.withOpacity(0.06),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+          // 消息气泡
+          Row(
+            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.75,
                   ),
-                ],
-                // 为发送方的文件消息添加边框
-                border: (isMe && hasFile) 
-                  ? Border.all(color: const Color(0xFFE5E7EB), width: 1)
-                  : null,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 文件内容
-                  if (hasFile) _buildFileContent(message, isMe),
-                  
-                  // 文本内容
-                  if (message['text'] != null && message['text'].isNotEmpty) ...[
-                    if (hasFile) const SizedBox(height: 6),
-                    Text(
-                      message['text'],
-                      style: TextStyle(
-                        color: isMe 
-                          ? (hasFile ? const Color(0xFF1F2937) : Colors.white) // 文件消息用深色，文字消息用白色
-                          : const Color(0xFF1F2937),
-                        fontSize: 14,
-                        height: 1.3,
-                        fontWeight: FontWeight.w400,
-                      ),
+                  padding: EdgeInsets.all(hasFile ? 6 : 10), // 减少内边距
+                  decoration: BoxDecoration(
+                    color: isMe 
+                      ? (hasFile ? Colors.white : AppTheme.primaryColor) 
+                      : Colors.white,
+                    borderRadius: BorderRadius.circular(16).copyWith( // 稍微减小圆角
+                      bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
+                      bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
                     ),
-                  ],
-                  
-                  // 时间和状态
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                    border: Border.all(
+                      color: const Color(0xFFE5E7EB), 
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        TimeUtils.formatTime(message['timestamp']),
-                        style: TextStyle(
-                          color: isMe 
-                            ? (hasFile ? const Color(0xFF9CA3AF) : Colors.white.withOpacity(0.7)) // 文件消息用灰色，文字消息用白色
-                            : const Color(0xFF9CA3AF),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w400,
+                      // 文件内容
+                      if (hasFile) _buildFileContent(message, isMe),
+                      
+                      // 文本内容 - 统一字体
+                      if (message['text'] != null && message['text'].isNotEmpty) ...[
+                        if (hasFile) const SizedBox(height: 6), // 减少间距
+                        Text(
+                          message['text'],
+                          style: AppTheme.bodyStyle.copyWith(
+                            color: isMe 
+                              ? (hasFile ? AppTheme.textPrimaryColor : Colors.white)
+                              : AppTheme.textPrimaryColor,
+                          ),
                         ),
-                      ),
-                      if (isMe) ...[
-                        const SizedBox(width: 4),
-                        _buildMessageStatusIcon(message),
                       ],
                     ],
                   ),
+                ),
+              ),
+            ],
+          ),
+          
+          // 时间戳和状态 - 使用完整日期时间
+          const SizedBox(height: 2), // 减少间距
+          Row(
+            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    TimeUtils.formatChatDateTime(message['timestamp']), // 使用完整日期时间
+                    style: AppTheme.smallStyle.copyWith(
+                      fontSize: 9, // 进一步减小时间戳字体
+                    ),
+                  ),
+                  if (isMe) ...[
+                    const SizedBox(width: 3), // 减少间距
+                    _buildMessageStatusIcon(message),
+                  ],
                 ],
               ),
-            ),
+            ],
           ),
         ],
       ),
@@ -1344,7 +1344,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                       Text(
                         '上传中 ${(uploadProgress * 100).toInt()}%',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: isMe ? Colors.white.withOpacity(0.8) : const Color(0xFF6B7280),
                         ),
                       ),
@@ -1355,7 +1355,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     value: uploadProgress,
                     backgroundColor: isMe ? Colors.white.withOpacity(0.3) : const Color(0xFFE5E7EB),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      isMe ? Colors.white : const Color(0xFF6366F1),
+                      isMe ? Colors.white : AppTheme.primaryColor,
                     ),
                     borderRadius: BorderRadius.circular(2),
                     minHeight: 3,
@@ -1380,7 +1380,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                       Text(
                         '下载中 ${(message['downloadProgress'] * 100).toInt()}%',
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: Color(0xFF3B82F6),
                         ),
                       ),
@@ -1437,13 +1437,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             else
               // 其他文件类型显示简洁信息
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8), // 减少内边距
                 decoration: BoxDecoration(
-                  color: isMe ? const Color(0xFFF9FAFB) : const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(6),
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(6), // 减小圆角
                   border: Border.all(
-                    color: const Color(0xFFE5E7EB),
-                    width: 1,
+                    color: AppTheme.borderColor,
+                    width: 0.5,
                   ),
                 ),
                 child: Row(
@@ -1451,17 +1451,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   children: [
                     Icon(
                       _getFileTypeIcon(fileType),
-                      size: 16,
-                      color: const Color(0xFF6B7280),
+                      size: 14, // 减小图标
+                      color: AppTheme.textSecondaryColor,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 6), // 减少间距
                     Flexible(
                       child: Text(
                         _getFileName(actualFilePath, fullUrl) ?? '文件',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFF374151),
+                        style: AppTheme.captionStyle.copyWith(
+                          color: AppTheme.textPrimaryColor,
+                          fontSize: 10, // 减小文字
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1483,20 +1482,20 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     if (filePath != null && File(filePath).existsSync()) {
       imageWidget = Image.file(
         File(filePath),
-        height: 100,
+        height: 80, // 减少高度
         width: double.infinity,
         fit: BoxFit.cover,
       );
     } else if (fileUrl != null) {
       imageWidget = Image.network(
         fileUrl,
-        height: 100,
+        height: 80, // 减少高度
         width: double.infinity,
         fit: BoxFit.cover,
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(
-            height: 100,
+            height: 80, // 减少高度
             width: double.infinity,
             color: const Color(0xFFF3F4F6),
             child: const Center(
@@ -1506,10 +1505,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         },
         errorBuilder: (context, error, stackTrace) {
           return Container(
-            height: 100,
+            height: 80, // 减少高度
             width: double.infinity,
             color: const Color(0xFFF3F4F6),
-            child: const Icon(Icons.image_not_supported, size: 24),
+            child: const Icon(Icons.image_not_supported, size: 20), // 减小图标
           );
         },
       );
@@ -1518,7 +1517,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
     
     return ClipRRect(
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(4), // 减小圆角
       child: imageWidget,
     );
   }
@@ -1526,14 +1525,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 构建简单视频预览
   Widget _buildSimpleVideoPreview(String? filePath, String? fileUrl) {
     return Container(
-      height: 100,
+      height: 80, // 减少高度
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(4), // 减小圆角
         color: const Color(0xFF1F2937),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(4), // 减小圆角
         child: _VideoGifPreview(
           videoPath: filePath,
           videoUrl: fileUrl,
@@ -1609,66 +1608,55 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   Widget _buildInputArea() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8), // 减少内边距
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
-          top: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+          top: BorderSide(color: Color(0xFFE5E7EB), width: 0.5),
         ),
       ),
       child: SafeArea(
         child: Row(
           children: [
-            // 附件按钮 - 简化设计
+            // 附件按钮 - 极简设计
             GestureDetector(
               onTap: _showFileOptions,
               child: Container(
-                width: 32,
+                width: 32, // 与发送按钮保持一致
                 height: 32,
                 decoration: BoxDecoration(
                   color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFD1D5DB), width: 1),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(
-                  Icons.add_rounded,
-                  size: 18,
+                  Icons.add,
+                  size: 14, // 减小图标
                   color: Color(0xFF6B7280),
                 ),
               ),
             ),
             
-            const SizedBox(width: 8),
+            const SizedBox(width: 6), // 减少间距
             
-            // 输入框 - 简化设计
+            // 输入框 - 极简设计
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: _isTyping 
-                      ? const Color(0xFF6366F1)
-                      : const Color(0xFFD1D5DB),
-                    width: 1,
-                  ),
+                  color: const Color(0xFFF9FAFB), // 更浅的背景色
+                  borderRadius: BorderRadius.circular(16), // 减小圆角
                 ),
                 child: TextField(
                   controller: _messageController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: '输入消息...',
-                    hintStyle: TextStyle(
-                      color: Color(0xFF9CA3AF),
-                      fontSize: 14,
+                    hintStyle: AppTheme.bodyStyle.copyWith(
+                      color: AppTheme.textTertiaryColor,
                     ),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    border: InputBorder.none, // 去掉所有边框
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // 减小内边距
                   ),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF1F2937),
-                  ),
-                  maxLines: 3,
+                  style: AppTheme.bodyStyle,
+                  maxLines: 4,
                   minLines: 1,
                   onChanged: (text) {
                     setState(() {
@@ -1677,16 +1665,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   },
                   onSubmitted: (text) {
                     if (text.trim().isNotEmpty) {
-                      _sendTextMessage(text);
+                      _sendTextMessage(text.trim());
                     }
                   },
                 ),
               ),
             ),
             
-            const SizedBox(width: 8),
+            const SizedBox(width: 6), // 减少间距
             
-            // 发送按钮 - 简化设计
+            // 发送按钮 - 极简设计
             GestureDetector(
               onTap: () {
                 final text = _messageController.text.trim();
@@ -1695,16 +1683,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 }
               },
               child: Container(
-                width: 32,
+                width: 32, // 再减小按钮
                 height: 32,
                 decoration: BoxDecoration(
-                  color: _isTyping ? const Color(0xFF6366F1) : const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(10),
+                  color: _isTyping ? AppTheme.primaryColor : const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
-                  Icons.send_rounded,
-                  size: 16,
-                  color: _isTyping ? Colors.white : const Color(0xFF6B7280),
+                  Icons.send,
+                  size: 14, // 减小图标
+                  color: _isTyping ? Colors.white : AppTheme.textSecondaryColor,
                 ),
               ),
             ),
@@ -1720,56 +1708,38 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     
     if (isTemporary && status == 'sending') {
       return SizedBox(
-        width: 14,
-        height: 14,
+        width: 10, // 减小尺寸
+        height: 10,
         child: CircularProgressIndicator(
-          strokeWidth: 2,
+          strokeWidth: 1.5, // 减小线宽
           valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.8)),
         ),
       );
     } else if (status == 'uploading') {
       return SizedBox(
-        width: 14,
-        height: 14,
+        width: 10, // 减小尺寸
+        height: 10,
         child: CircularProgressIndicator(
-          strokeWidth: 2,
+          strokeWidth: 1.5, // 减小线宽
           valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.8)),
         ),
       );
     } else if (status == 'failed') {
-      return Container(
-        width: 16,
-        height: 16,
-        decoration: BoxDecoration(
-          color: Colors.red,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Icon(
-          Icons.error_outline_rounded,
-          size: 10,
-          color: Colors.white,
-        ),
+      return Icon(
+        Icons.error_outline,
+        size: 10, // 减小图标
+        color: Colors.red,
       );
     } else if (status == 'read') {
-      return Container(
-        width: 16,
-        height: 16,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF10B981), Color(0xFF059669)],
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Icon(
-          Icons.done_all_rounded,
-          size: 10,
-          color: Colors.white,
-        ),
+      return Icon(
+        Icons.done_all,
+        size: 10, // 减小图标
+        color: Colors.green,
       );
     } else if (status == 'sent') {
       return Icon(
-        Icons.done_rounded,
-        size: 14,
+        Icons.done,
+        size: 10, // 减小图标
         color: Colors.white.withOpacity(0.8),
       );
     }
@@ -2025,41 +1995,39 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       builder: (context) => Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(12)), // 减小圆角
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              margin: const EdgeInsets.only(top: 8),
-              width: 32,
-              height: 4,
+              margin: const EdgeInsets.only(top: 6), // 减少间距
+              width: 24, // 减小指示器
+              height: 3,
               decoration: BoxDecoration(
                 color: const Color(0xFFE5E7EB),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 12), // 减少间距
             
-            const Text(
+            Text(
               '选择文件类型',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1F2937),
+              style: AppTheme.bodyStyle.copyWith( // 使用更小的字体
+                fontWeight: AppTheme.fontWeightMedium,
               ),
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 12), // 减少间距
             
             // 简洁的文件选项列表
-            _buildFileOption(Icons.image_rounded, '图片', () => _selectFile(FileType.image)),
-            _buildFileOption(Icons.videocam_rounded, '视频', () => _selectFile(FileType.video)),
-            _buildFileOption(Icons.description_rounded, '文档', () => _selectFile(FileType.any)),
-            _buildFileOption(Icons.audiotrack_rounded, '音频', () => _selectFile(FileType.audio)),
+            _buildFileOption(Icons.image, '图片', () => _selectFile(FileType.image)),
+            _buildFileOption(Icons.videocam, '视频', () => _selectFile(FileType.video)),
+            _buildFileOption(Icons.description, '文档', () => _selectFile(FileType.any)),
+            _buildFileOption(Icons.audiotrack, '音频', () => _selectFile(FileType.audio)),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 12), // 减少间距
           ],
         ),
       ),
@@ -2068,16 +2036,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   Widget _buildFileOption(IconData icon, String title, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon, color: const Color(0xFF6B7280)),
+      leading: Icon(icon, color: const Color(0xFF6B7280), size: 18), // 减小图标
       title: Text(
         title,
-        style: const TextStyle(
-          fontSize: 16,
-          color: Color(0xFF1F2937),
-        ),
+        style: AppTheme.bodyStyle.copyWith(fontSize: 12), // 减小字体
       ),
       onTap: onTap,
       dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2), // 减少内边距
     );
   }
 

@@ -13,7 +13,6 @@ class TimeUtils {
       
       return dateTime.toLocal();
     } catch (e) {
-      print('解析时间失败: $e, 原始时间: $dateTimeStr');
       return null;
     }
   }
@@ -102,5 +101,67 @@ class TimeUtils {
     if (localTime == null) return '';
     
     return '${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}';
+  }
+  
+  /// 判断两个日期是否在同一天
+  static bool isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+           date1.month == date2.month &&
+           date1.day == date2.day;
+  }
+  
+  /// 格式化聊天消息的日期分组标题
+  static String formatDateGroupTitle(dynamic dateTime) {
+    if (dateTime == null) return '';
+    
+    final localTime = parseToLocal(dateTime.toString());
+    if (localTime == null) return '';
+    
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final messageDate = DateTime(localTime.year, localTime.month, localTime.day);
+    
+    if (isSameDay(messageDate, today)) {
+      return '今天';
+    } else if (isSameDay(messageDate, yesterday)) {
+      return '昨天';
+    } else if (now.difference(messageDate).inDays < 7) {
+      // 一周内显示星期几
+      const weekdays = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
+      return weekdays[localTime.weekday - 1];
+    } else if (localTime.year == now.year) {
+      // 同年显示月日
+      return '${localTime.month}月${localTime.day}日';
+    } else {
+      // 不同年显示完整日期
+      return '${localTime.year}年${localTime.month}月${localTime.day}日';
+    }
+  }
+  
+  /// 格式化聊天消息的完整时间戳（日期+时间，用于消息气泡外）
+  static String formatChatDateTime(dynamic dateTime) {
+    if (dateTime == null) return '';
+    
+    final localTime = parseToLocal(dateTime.toString());
+    if (localTime == null) return '';
+    
+    // 格式：05-25 16:30:24
+    return '${localTime.month.toString().padLeft(2, '0')}-${localTime.day.toString().padLeft(2, '0')} '
+           '${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}:${localTime.second.toString().padLeft(2, '0')}';
+  }
+  
+  /// 检查是否需要显示日期分组（两条消息间隔超过一定时间）
+  static bool shouldShowDateGroup(DateTime? prevTime, DateTime currentTime) {
+    if (prevTime == null) return true;
+    
+    // 如果不在同一天，需要显示日期分组
+    if (!isSameDay(prevTime, currentTime)) {
+      return true;
+    }
+    
+    // 如果间隔超过2小时，也显示时间分组
+    final difference = currentTime.difference(prevTime);
+    return difference.inHours >= 2;
   }
 } 

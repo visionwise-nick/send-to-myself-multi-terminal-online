@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
 class AppTheme {
-  // 主色调 - 现代化蓝色
-  static const Color primaryColor = Color(0xFF2563EB); // 蓝色
-  static const Color primaryLightColor = Color(0xFF3B82F6);
-  static const Color primaryDarkColor = Color(0xFF1E40AF);
+  // 主色调 - 玫红色系
+  static const Color primaryColor = Color(0xFFEC445A); // 玫红色 (236, 68, 90)
+  static const Color primaryLightColor = Color(0xFFFF6B84); // 浅玫红色
+  static const Color primaryDarkColor = Color(0xFFD63651); // 深玫红色
   
   // 背景色
   static const Color backgroundColor = Colors.white;
@@ -31,6 +31,55 @@ class AppTheme {
   // 阴影色
   static const Color shadowColor = Color(0x0A000000);
   
+  // 统一字体规范
+  static const double fontSizeDisplay = 18.0;    // 大标题
+  static const double fontSizeTitle = 15.0;      // 标题
+  static const double fontSizeBody = 13.0;       // 正文
+  static const double fontSizeCaption = 11.0;    // 说明文字
+  static const double fontSizeSmall = 10.0;      // 小字
+
+  static const FontWeight fontWeightMedium = FontWeight.w500;
+  static const FontWeight fontWeightNormal = FontWeight.w400;
+  static const FontWeight fontWeightLight = FontWeight.w300;
+
+  // 统一文本样式
+  static const TextStyle displayStyle = TextStyle(
+    fontSize: fontSizeDisplay,
+    fontWeight: fontWeightMedium,
+    color: textPrimaryColor,
+    letterSpacing: -0.3,
+  );
+
+  static const TextStyle titleStyle = TextStyle(
+    fontSize: fontSizeTitle,
+    fontWeight: fontWeightMedium,
+    color: textPrimaryColor,
+    letterSpacing: -0.2,
+  );
+
+  static const TextStyle bodyStyle = TextStyle(
+    fontSize: fontSizeBody,
+    fontWeight: fontWeightNormal,
+    color: textPrimaryColor,
+    letterSpacing: 0,
+    height: 1.4,
+  );
+
+  static const TextStyle captionStyle = TextStyle(
+    fontSize: fontSizeCaption,
+    fontWeight: fontWeightNormal,
+    color: textSecondaryColor,
+    letterSpacing: 0,
+    height: 1.3,
+  );
+
+  static const TextStyle smallStyle = TextStyle(
+    fontSize: fontSizeSmall,
+    fontWeight: fontWeightNormal,
+    color: textTertiaryColor,
+    letterSpacing: 0,
+  );
+  
   // 创建主题数据
   static ThemeData get lightTheme {
     return ThemeData(
@@ -43,7 +92,7 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: backgroundColor,
       
-      // AppBar主题
+      // AppBar主题 - 紧凑设计
       appBarTheme: const AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 1,
@@ -51,9 +100,11 @@ class AppTheme {
         foregroundColor: textPrimaryColor,
         titleTextStyle: TextStyle(
           color: textPrimaryColor,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          letterSpacing: -0.1,
         ),
+        toolbarHeight: 48, // 减小工具栏高度
       ),
       
       // 卡片主题
@@ -66,7 +117,7 @@ class AppTheme {
         ),
       ),
       
-      // 按钮主题
+      // 按钮主题 - 紧凑设计
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
@@ -75,7 +126,12 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          textStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            letterSpacing: 0,
+          ),
         ),
       ),
       
@@ -125,57 +181,82 @@ class AppTheme {
         }),
       ),
       
-      // 文本主题
+      // 文本主题 - 精细化设计
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           color: textPrimaryColor,
-          fontSize: 32,
-          fontWeight: FontWeight.w700,
+          fontSize: 24,
+          fontWeight: FontWeight.w500,
+          letterSpacing: -0.5,
         ),
         headlineLarge: TextStyle(
           color: textPrimaryColor,
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
+          fontSize: 18,
+          fontWeight: FontWeight.w500,
+          letterSpacing: -0.3,
         ),
         headlineMedium: TextStyle(
           color: textPrimaryColor,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          letterSpacing: -0.2,
         ),
         titleLarge: TextStyle(
           color: textPrimaryColor,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          letterSpacing: -0.1,
         ),
         titleMedium: TextStyle(
           color: textPrimaryColor,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0,
         ),
         titleSmall: TextStyle(
           color: textSecondaryColor,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0,
         ),
         bodyLarge: TextStyle(
           color: textPrimaryColor,
-          fontSize: 16,
+          fontSize: 14,
           fontWeight: FontWeight.w400,
+          letterSpacing: 0,
+          height: 1.4,
         ),
         bodyMedium: TextStyle(
           color: textSecondaryColor,
-          fontSize: 14,
+          fontSize: 12,
           fontWeight: FontWeight.w400,
+          letterSpacing: 0,
+          height: 1.3,
         ),
         bodySmall: TextStyle(
           color: textTertiaryColor,
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w400,
+          letterSpacing: 0,
+          height: 1.2,
         ),
         labelLarge: TextStyle(
           color: textPrimaryColor,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0.1,
+        ),
+        labelMedium: TextStyle(
+          color: textPrimaryColor,
+          fontSize: 11,
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0.1,
+        ),
+        labelSmall: TextStyle(
+          color: textPrimaryColor,
+          fontSize: 10,
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0.2,
         ),
       ),
     );
