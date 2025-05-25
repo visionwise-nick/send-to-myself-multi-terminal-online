@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:convert';
 import '../providers/auth_provider.dart';
+import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
 
@@ -48,8 +49,8 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
 
   Future<void> _generateQRCode() async {
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final result = await authProvider.generateQRCode();
+      final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      final result = await groupProvider.generateInviteCode();
 
       if (mounted) {
         setState(() {
@@ -57,11 +58,11 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
           _result = result;
         });
 
-        if (result['success'] == true) {
+        if (result != null && result['success'] == true) {
           _animationController.forward();
         } else {
           setState(() {
-            _errorMessage = result['message'] ?? '生成失败';
+            _errorMessage = result?['message'] ?? '生成失败';
           });
         }
       }
@@ -194,13 +195,13 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
     final groupId = _result?['groupId']?.toString() ?? '';
     
     final qrData = {
-      'joinCode': joinCode,
+      'type': 'sendtomyself_group_join',
+      'version': '1.0',
       'groupId': groupId,
       'groupName': groupName,
+      'joinCode': joinCode,
       'expiresAt': expiresAt,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-      'type': 'device_join',
-      'version': '1.0'
+      'createdAt': DateTime.now().toIso8601String(),
     };
     
     final qrDataString = jsonEncode(qrData);

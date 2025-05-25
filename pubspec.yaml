@@ -49,6 +49,9 @@ dependencies:
   device_info_plus: ^9.0.2
   uuid: ^3.0.7
   
+  # 加密和哈希
+  crypto: ^3.0.3
+  
   # 二维码相关
   qr_flutter: ^4.1.0
   mobile_scanner: ^3.2.0
@@ -76,6 +79,10 @@ dependencies:
   
   # 文件打开
   open_filex: ^4.3.4
+  url_launcher: ^6.1.12
+  
+  # 桌面端拖拽上传
+  desktop_drop: ^0.4.4
   
   # 视频缩略图
   video_thumbnail: ^0.5.3

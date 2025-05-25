@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
+import '../providers/group_provider.dart';
 
 class MemoryTab extends StatefulWidget {
   const MemoryTab({super.key});
@@ -36,24 +38,56 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
     
     _loadData();
     _animationController.forward();
+    
+    // 监听群组变化
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      groupProvider.addListener(_onGroupChanged);
+    });
   }
 
   @override
   void dispose() {
+    final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+    groupProvider.removeListener(_onGroupChanged);
     _animationController.dispose();
     _tabController.dispose();
     super.dispose();
   }
   
+  // 群组变化处理
+  void _onGroupChanged() {
+    if (mounted) {
+      _loadData();
+    }
+  }
+  
   // 加载本地数据
   Future<void> _loadData() async {
-    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return; // 检查widget是否还在树中
     
+    final prefs = await SharedPreferences.getInstance();
+    final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+    final currentGroup = groupProvider.currentGroup;
+    
+    // 如果没有选中群组，清空数据
+    if (currentGroup == null) {
+      setState(() {
+        _notes = [];
+        _passwords = [];
+        _contacts = [];
+        _quickTexts = [];
+      });
+      return;
+    }
+    
+    // 根据群组ID加载数据
+    final groupId = currentGroup['id'];
     setState(() {
-      _notes = _parseDataList(prefs.getString('memory_notes') ?? '[]');
-      _passwords = _parseDataList(prefs.getString('memory_passwords') ?? '[]');
-      _contacts = _parseDataList(prefs.getString('memory_contacts') ?? '[]');
-      _quickTexts = _parseDataList(prefs.getString('memory_quick_texts') ?? '[]');
+      _notes = _parseDataList(prefs.getString('memory_notes_$groupId') ?? '[]');
+      _passwords = _parseDataList(prefs.getString('memory_passwords_$groupId') ?? '[]');
+      _contacts = _parseDataList(prefs.getString('memory_contacts_$groupId') ?? '[]');
+      _quickTexts = _parseDataList(prefs.getString('memory_quick_texts_$groupId') ?? '[]');
     });
   }
   
@@ -68,11 +102,20 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
   
   // 保存数据到本地
   Future<void> _saveData() async {
+    if (!mounted) return; // 检查widget是否还在树中
+    
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('memory_notes', json.encode(_notes));
-    await prefs.setString('memory_passwords', json.encode(_passwords));
-    await prefs.setString('memory_contacts', json.encode(_contacts));
-    await prefs.setString('memory_quick_texts', json.encode(_quickTexts));
+    final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+    final currentGroup = groupProvider.currentGroup;
+    
+    if (currentGroup == null) return;
+    
+    // 根据群组ID保存数据
+    final groupId = currentGroup['id'];
+    await prefs.setString('memory_notes_$groupId', json.encode(_notes));
+    await prefs.setString('memory_passwords_$groupId', json.encode(_passwords));
+    await prefs.setString('memory_contacts_$groupId', json.encode(_contacts));
+    await prefs.setString('memory_quick_texts_$groupId', json.encode(_quickTexts));
   }
 
   @override
@@ -129,6 +172,8 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
   
   Widget _buildStatsCard() {
     final totalItems = _notes.length + _passwords.length + _contacts.length + _quickTexts.length;
+    final groupProvider = Provider.of<GroupProvider>(context);
+    final currentGroup = groupProvider.currentGroup;
     
     return Container(
       margin: const EdgeInsets.all(16),
@@ -171,7 +216,7 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '我的记忆',
+                  currentGroup != null ? '${currentGroup['name']} 的记忆' : '我的记忆',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -179,7 +224,9 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '已保存 $totalItems 项重要信息',
+                  currentGroup != null 
+                    ? '已保存 $totalItems 项重要信息'
+                    : '请选择群组查看记忆',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.white.withOpacity(0.8),
                   ),
@@ -194,7 +241,7 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              '本地存储',
+              currentGroup != null ? '群组存储' : '本地存储',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w500,

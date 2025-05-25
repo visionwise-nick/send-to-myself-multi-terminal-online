@@ -28,6 +28,10 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>需要访问相机以扫描设备加入二维码</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>需要访问相册以选择和保存图片</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>需要访问文档目录以保存和打开文件</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

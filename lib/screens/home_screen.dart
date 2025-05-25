@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/logout_dialog.dart';
+import '../widgets/group_selector.dart';
 import 'messages_tab.dart';
 import 'memory_tab.dart';
-import 'qr_scan_screen.dart';
-import 'qr_generate_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,206 +19,60 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _selectedIndex = 0;
   late PageController _pageController;
-  late AnimationController _fabAnimationController;
-  late Animation<double> _fabAnimation;
-  bool _isFabExpanded = false;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    _fabAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-    _fabAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fabAnimationController, curve: Curves.easeOut),
-    );
-    _fabAnimationController.forward();
+    
+    // 监听群组变化，确保页面切换时整个应用状态刷新
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      groupProvider.addListener(_onGroupChanged);
+    });
   }
 
   @override
   void dispose() {
+    final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+    groupProvider.removeListener(_onGroupChanged);
     _pageController.dispose();
-    _fabAnimationController.dispose();
     super.dispose();
+  }
+  
+  // 群组变化处理 - 通知页面数据可能已变化
+  void _onGroupChanged() {
+    if (mounted) {
+      print('检测到群组变化');
+      // 不需要强制重建，页面会通过 Consumer 自动响应变化
+    }
   }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+    if (!_isDesktop()) {
     _pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+    }
   }
 
   void _showLogoutDialog() {
     LogoutDialog.showLogoutConfirmDialog(context);
   }
 
-  void _showQrOptions() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppTheme.backgroundColor,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 拖拽指示器
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.borderColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            Text(
-              '设备连接',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // 扫描二维码
-            _buildQrOptionTile(
-              icon: Icons.qr_code_scanner_rounded,
-              title: '扫描二维码',
-              subtitle: '扫描其他设备的二维码加入群组',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        const QrScanScreen(),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      return SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(1.0, 0.0),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      );
-                    },
-                    transitionDuration: const Duration(milliseconds: 300),
-                  ),
-                );
-              },
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // 生成二维码
-            _buildQrOptionTile(
-              icon: Icons.qr_code_2_rounded,
-              title: '生成二维码',
-              subtitle: '生成二维码让其他设备扫描加入',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        const QrGenerateScreen(),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      return SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(1.0, 0.0),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      );
-                    },
-                    transitionDuration: const Duration(milliseconds: 300),
-                  ),
-                );
-              },
-            ),
-            
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQrOptionTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppTheme.borderColor),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: AppTheme.primaryColor,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: AppTheme.textTertiaryColor,
-                size: 16,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  // 判断是否为桌面端
+  bool _isDesktop() {
+    if (kIsWeb) {
+      return MediaQuery.of(context).size.width >= 800;
+    }
+    return defaultTargetPlatform == TargetPlatform.macOS ||
+           defaultTargetPlatform == TargetPlatform.windows ||
+           defaultTargetPlatform == TargetPlatform.linux;
   }
 
   @override
@@ -229,6 +84,63 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         
         return Scaffold(
           backgroundColor: AppTheme.backgroundColor,
+          body: _isDesktop() 
+            ? _buildDesktopLayout(deviceName)
+            : _buildMobileLayout(deviceName),
+        );
+      },
+    );
+  }
+
+  // 桌面端布局
+  Widget _buildDesktopLayout(String deviceName) {
+    return Row(
+      children: [
+        // 左侧边栏
+        Container(
+          width: 280,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              right: BorderSide(
+                color: AppTheme.dividerColor,
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: Column(
+            children: [
+              // 侧边栏顶部
+              _buildDesktopSidebarHeader(deviceName),
+              
+              // 导航项
+              _buildDesktopNavigation(),
+              
+              // 群组选择器
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: GroupSelector(),
+              ),
+              
+              const Spacer(),
+              
+              // 底部操作区
+              _buildDesktopSidebarFooter(),
+            ],
+          ),
+        ),
+        
+        // 主内容区
+        Expanded(
+          child: _buildDesktopMainContent(),
+        ),
+      ],
+    );
+  }
+
+  // 移动端布局（原来的布局）
+  Widget _buildMobileLayout(String deviceName) {
+    return Scaffold(
           body: SafeArea(
             child: Column(
               children: [
@@ -239,6 +151,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Expanded(
                   child: PageView(
                     controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(), // 禁用滑动
                     onPageChanged: (index) {
                       setState(() {
                         _selectedIndex = index;
@@ -253,150 +166,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ],
             ),
           ),
-          
-          // 浮动操作按钮
-          floatingActionButton: _selectedIndex == 0 
-            ? _buildAnimatedFAB()
-            : null,
-          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-          
           // 现代化底部导航栏
           bottomNavigationBar: _buildModernBottomNav(),
-        );
-      },
-    );
-  }
-
-  Widget _buildModernAppBar(String deviceName) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 16, 12),
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundColor,
-        border: Border(
-          bottom: BorderSide(
-            color: AppTheme.dividerColor,
-            width: 0.5,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          // 设备图标
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.devices_rounded,
-              color: AppTheme.primaryColor,
-              size: 20,
-            ),
-          ),
-          
-          const SizedBox(width: 12),
-          
-          // 设备名称
-          Expanded(
-            child: Text(
-              deviceName,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          
-          // 右侧按钮组
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 在线状态指示器
-              _buildOnlineIndicator(),
-              
-              const SizedBox(width: 8),
-              
-              // 退出登录按钮
-              _buildIconButton(
-                icon: Icons.logout_rounded,
-                onTap: _showLogoutDialog,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOnlineIndicator() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppTheme.onlineColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: AppTheme.onlineColor,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '在线',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.onlineColor,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIconButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: AppTheme.textSecondaryColor,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAnimatedFAB() {
-    return ScaleTransition(
-      scale: _fabAnimation,
-      child: FloatingActionButton(
-        onPressed: _showQrOptions,
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        child: const Icon(Icons.add_rounded),
-      ),
     );
   }
 
@@ -437,6 +208,296 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             label: '记忆',
           ),
         ],
+      ),
+    );
+  }
+
+  // 桌面端侧边栏头部
+  Widget _buildDesktopSidebarHeader(String deviceName) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: AppTheme.dividerColor,
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.send_rounded,
+              size: 18,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Send To Myself',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+                Text(
+                  deviceName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF6B7280),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 桌面端导航
+  Widget _buildDesktopNavigation() {
+    return Column(
+      children: [
+        _buildDesktopNavItem(
+          icon: Icons.chat_bubble_rounded,
+          label: '聊天',
+          index: 0,
+        ),
+        _buildDesktopNavItem(
+          icon: Icons.psychology_rounded,
+          label: '记忆',
+          index: 1,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopNavItem({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _selectedIndex == index;
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _onItemTapped(index),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected 
+                ? AppTheme.primaryColor.withOpacity(0.1)
+                : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 20,
+                  color: isSelected 
+                    ? AppTheme.primaryColor
+                    : AppTheme.textSecondaryColor,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected 
+                      ? AppTheme.primaryColor
+                      : AppTheme.textSecondaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 桌面端侧边栏底部
+  Widget _buildDesktopSidebarFooter() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: AppTheme.dividerColor,
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // 在线状态指示器
+          Expanded(child: _buildOnlineIndicator()),
+          
+          const SizedBox(width: 8),
+          
+          // 退出登录按钮
+          _buildIconButton(
+            icon: Icons.logout_rounded,
+            onTap: _showLogoutDialog,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 桌面端主内容区
+  Widget _buildDesktopMainContent() {
+    switch (_selectedIndex) {
+      case 0:
+        return const MessagesTab();
+      case 1:
+        return const MemoryTab();
+      default:
+        return const MessagesTab();
+    }
+  }
+
+  Widget _buildModernAppBar(String deviceName) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 8, 12, 8),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundColor,
+        border: Border(
+          bottom: BorderSide(
+            color: AppTheme.dividerColor,
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // 群组选择器
+          Expanded(
+            child: GroupSelector(),
+          ),
+          
+          // 右侧按钮组
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 在线状态指示器
+              _buildOnlineIndicator(),
+              
+              const SizedBox(width: 8),
+              
+              // 退出登录按钮
+              _buildIconButton(
+                icon: Icons.logout_rounded,
+                onTap: _showLogoutDialog,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOnlineIndicator() {
+    return Consumer<GroupProvider>(
+      builder: (context, groupProvider, child) {
+        final currentGroup = groupProvider.currentGroup;
+        
+        if (currentGroup == null) {
+          return const SizedBox.shrink(); // 没有群组时不显示
+        }
+        
+        final devices = List<Map<String, dynamic>>.from(currentGroup['devices'] ?? []);
+        final totalCount = devices.length;
+        
+        // 计算在线设备数
+        int onlineCount = 0;
+        for (var device in devices) {
+          // 检查设备在线状态，根据日志分析使用正确的字段
+          final isOnline = device['is_online'] == true || device['isOnline'] == true;
+          final isLoggedOut = device['is_logged_out'] == true || device['isLoggedOut'] == true;
+          
+          if (!isLoggedOut && isOnline) {
+            onlineCount++;
+          }
+        }
+        
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppTheme.onlineColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: onlineCount > 0 ? AppTheme.onlineColor : AppTheme.offlineColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$onlineCount/$totalCount在线',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: onlineCount > 0 ? AppTheme.onlineColor : AppTheme.offlineColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: AppTheme.textSecondaryColor,
+          ),
+        ),
       ),
     );
   }

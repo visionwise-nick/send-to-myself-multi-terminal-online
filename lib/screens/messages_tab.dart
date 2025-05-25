@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import '../providers/auth_provider.dart';
+import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
 import '../services/websocket_service.dart';
 import '../services/chat_service.dart';
@@ -46,34 +47,16 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
     _subscribeToGroupChanges();
     
     _animationController.forward();
-    
-    // 监听AuthProvider变化
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.addListener(_onAuthProviderChanged);
-    });
   }
 
   @override
   void dispose() {
-    // 移除AuthProvider监听
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.removeListener(_onAuthProviderChanged);
-    
     _messageSubscription?.cancel();
     _chatMessageSubscription?.cancel();
     _groupChangeSubscription?.cancel();
     _refreshController.dispose();
     _animationController.dispose();
     super.dispose();
-  }
-  
-  // AuthProvider变化处理
-  void _onAuthProviderChanged() {
-    if (mounted) {
-      print('检测到AuthProvider变化，刷新对话列表');
-      _loadConversations();
-    }
   }
   
   // 订阅消息更新
@@ -94,21 +77,7 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
       // 处理新的聊天消息
       if (mounted) {
         print('收到聊天消息更新: ${data['type']}');
-        switch (data['type']) {
-          case 'new_private_message':
-            _handleNewPrivateMessage(data);
-            break;
-          case 'new_group_message':
-            _handleNewGroupMessage(data);
-            break;
-          case 'message_sent_confirmation':
-          case 'group_message_sent_confirmation':
-            _handleMessageSentConfirmation(data);
-            break;
-          case 'message_status_updated':
-            _handleMessageStatusUpdate(data);
-            break;
-        }
+        _loadConversations(); // 简化处理，直接重新加载
       }
     });
   }
@@ -125,77 +94,6 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
     });
   }
   
-  // 处理新的私聊消息
-  void _handleNewPrivateMessage(Map<String, dynamic> data) {
-    final message = data['message'];
-    if (message == null) return;
-    
-    final sourceDeviceId = message['sourceDeviceId'];
-    if (sourceDeviceId == null) return;
-    
-    // 在对话列表中找到对应的私聊对话并更新最后消息
-    final conversationIndex = _conversations.indexWhere(
-      (conv) => conv['type'] == 'private' && conv['deviceData']?['id'] == sourceDeviceId
-    );
-    
-    if (conversationIndex != -1) {
-      setState(() {
-        _conversations[conversationIndex]['lastMessage'] = message['content'] ?? '收到新消息';
-        _conversations[conversationIndex]['lastTime'] = message['createdAt'] ?? DateTime.now().toIso8601String();
-        _conversations[conversationIndex]['unreadCount'] = (_conversations[conversationIndex]['unreadCount'] ?? 0) + 1;
-        
-        // 重新排序对话列表
-        _sortConversations();
-      });
-    }
-  }
-  
-  // 处理新的群组消息
-  void _handleNewGroupMessage(Map<String, dynamic> data) {
-    final message = data['message'];
-    if (message == null) return;
-    
-    final groupId = message['groupId'];
-    if (groupId == null) return;
-    
-    // 在对话列表中找到对应的群组对话并更新最后消息
-    final conversationIndex = _conversations.indexWhere(
-      (conv) => conv['type'] == 'group' && conv['groupData']?['id'] == groupId
-    );
-    
-    if (conversationIndex != -1) {
-      setState(() {
-        _conversations[conversationIndex]['lastMessage'] = message['content'] ?? '收到新消息';
-        _conversations[conversationIndex]['lastTime'] = message['createdAt'] ?? DateTime.now().toIso8601String();
-        _conversations[conversationIndex]['unreadCount'] = (_conversations[conversationIndex]['unreadCount'] ?? 0) + 1;
-        
-        // 重新排序对话列表
-        _sortConversations();
-      });
-    }
-  }
-  
-  // 处理消息发送确认
-  void _handleMessageSentConfirmation(Map<String, dynamic> data) {
-    print('消息发送确认: ${data['messageId']}');
-    // 可以在这里更新UI显示消息发送状态
-  }
-  
-  // 处理消息状态更新
-  void _handleMessageStatusUpdate(Map<String, dynamic> data) {
-    print('消息状态更新: ${data['messageId']} -> ${data['status']}');
-    // 可以在这里更新UI显示消息已读状态
-  }
-  
-  // 对话列表排序
-  void _sortConversations() {
-    _conversations.sort((a, b) {
-      final timeA = DateTime.parse(a['lastTime']);
-      final timeB = DateTime.parse(b['lastTime']);
-      return timeB.compareTo(timeA);
-    });
-  }
-  
   // 加载对话列表
   Future<void> _loadConversations() async {
     if (_isRefreshing) return;
@@ -206,26 +104,27 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
     
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final groups = authProvider.groups ?? [];
-      final currentDevice = authProvider.deviceInfo;
+      final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      final currentGroup = groupProvider.currentGroup;
+      final currentDevice = authProvider.deviceInfo ?? authProvider.profile;
       
       print('开始加载对话列表');
-      print('群组数量: ${groups.length}');
-      print('当前设备: ${currentDevice?['id']}');
+      print('当前群组: ${currentGroup?['name']}');
+      print('当前设备: ${currentDevice?['id']} (${currentDevice?['name']})');
       
       // 构建对话列表：群聊 + 私聊
       List<Map<String, dynamic>> conversations = [];
       Set<String> processedDeviceIds = {}; // 用于避免重复添加设备
       
-      // 添加群聊对话和私聊对话
-      for (var group in groups) {
-        final devices = List<Map<String, dynamic>>.from(group['devices'] ?? []);
-        final groupId = group['id'];
+      // 只处理当前选中的群组
+      if (currentGroup != null && currentDevice != null) {
+        final devices = List<Map<String, dynamic>>.from(currentGroup['devices'] ?? []);
+        final groupId = currentGroup['id'];
         
-        print('处理群组: ${group['name']}, 设备数量: ${devices.length}');
+        print('处理群组: ${currentGroup['name']}, 设备数量: ${devices.length}');
         
-        // 1. 添加群聊对话（如果群组有多于1个设备）
-        if (devices.length > 1) {
+        // 1. 添加群聊对话（包括只有自己一台设备的情况）
+        if (devices.isNotEmpty) {
           // 尝试获取群组的最新消息
           Map<String, dynamic>? lastGroupMessage;
           try {
@@ -240,27 +139,28 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
           conversations.add({
             'id': 'group_$groupId',
             'type': 'group',
-            'title': group['name'] ?? '群组',
-            'subtitle': '${devices.length}台设备',
+            'title': currentGroup['name'] ?? '群组',
+            'subtitle': devices.length == 1 ? '仅有自己' : '${devices.length}台设备',
             'avatar': _getGroupAvatar(devices),
-            'lastMessage': lastGroupMessage?['content'] ?? '点击开始群聊',
+            'lastMessage': lastGroupMessage?['content'] ?? (devices.length == 1 ? '发给自己的消息' : '点击开始群聊'),
             'lastTime': lastGroupMessage?['createdAt'] ?? DateTime.now().toIso8601String(),
             'unreadCount': 0,
             'isOnline': devices.any((d) => d['isOnline'] == true),
-            'groupData': group,
+            'groupData': currentGroup,
           });
           
-          print('添加群聊对话: ${group['name']}');
+          print('添加群聊对话: ${currentGroup['name']} (${devices.length}台设备)');
         }
         
-        // 2. 添加设备间的私聊对话（包括当前群组中的所有其他设备）
-        if (currentDevice != null) {
+        // 2. 添加设备间的私聊对话（包括当前群组中的所有设备，包含自己）
           for (var device in devices) {
             final deviceId = device['id'];
             
-            // 跳过当前设备，但确保添加所有其他设备
-            if (deviceId != currentDevice['id'] && !processedDeviceIds.contains(deviceId)) {
+          // 添加所有设备的私聊对话，包括自己
+          if (deviceId != null && !processedDeviceIds.contains(deviceId)) {
               processedDeviceIds.add(deviceId);
+            
+            final isCurrentDevice = deviceId == currentDevice['id'];
               
               // 尝试获取与该设备的最新消息
               Map<String, dynamic>? lastPrivateMessage;
@@ -276,27 +176,31 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
               conversations.add({
                 'id': 'private_$deviceId',
                 'type': 'private',
-                'title': device['name'] ?? '未知设备',
-                'subtitle': device['type'] ?? '未知类型',
+              'title': isCurrentDevice ? '${device['name']} (我)' : (device['name'] ?? '未知设备'),
+              'subtitle': isCurrentDevice ? '给自己发消息' : (device['type'] ?? '未知类型'),
                 'avatar': _getDeviceAvatar(device['type']),
-                'lastMessage': lastPrivateMessage?['content'] ?? '点击开始聊天',
+              'lastMessage': lastPrivateMessage?['content'] ?? (isCurrentDevice ? '给自己发消息' : '点击开始聊天'),
                 'lastTime': lastPrivateMessage?['createdAt'] ?? device['last_active_time'] ?? DateTime.now().toIso8601String(),
                 'unreadCount': 0,
                 'isOnline': device['isOnline'] == true,
                 'deviceData': device,
               });
               
-              print('添加私聊对话: ${device['name']} (${device['id']})');
-            }
+            print('添加私聊对话: ${device['name']} (${device['id']})${isCurrentDevice ? ' - 自己' : ''}');
           }
         }
       }
       
       // 按最后消息时间排序
       conversations.sort((a, b) {
-        final timeA = DateTime.parse(a['lastTime']);
-        final timeB = DateTime.parse(b['lastTime']);
+        try {
+          final timeA = DateTime.parse(a['lastTime'] ?? DateTime.now().toIso8601String());
+          final timeB = DateTime.parse(b['lastTime'] ?? DateTime.now().toIso8601String());
         return timeB.compareTo(timeA);
+        } catch (e) {
+          print('时间排序失败: $e');
+          return 0;
+        }
       });
       
       print('总对话数量: ${conversations.length}');
@@ -306,10 +210,11 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
           _conversations = conversations;
           _isRefreshing = false;
         });
-      }
       
+        // 完成下拉刷新
       if (_refreshController.isRefresh) {
         _refreshController.refreshCompleted();
+        }
       }
     } catch (e) {
       print('加载对话失败: $e');
@@ -317,9 +222,11 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
         setState(() {
           _isRefreshing = false;
         });
-      }
+        
+        // 刷新失败
       if (_refreshController.isRefresh) {
         _refreshController.refreshFailed();
+        }
       }
     }
   }
@@ -358,27 +265,45 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
     }
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SmartRefresher(
-        controller: _refreshController,
-        onRefresh: _loadConversations,
-        header: const WaterDropHeader(
-          waterDropColor: AppTheme.primaryColor,
-        ),
-        child: _conversations.isEmpty 
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _conversations.length,
-              itemBuilder: (context, index) {
-                final conversation = _conversations[index];
-                return _buildConversationCard(conversation, index);
-              },
+    return Consumer<GroupProvider>(
+      builder: (context, groupProvider, child) {
+        final currentGroup = groupProvider.currentGroup;
+        
+        // 如果有选择的群组，显示群聊界面
+        if (currentGroup != null) {
+          // 构建群组对话数据
+          final devices = List<Map<String, dynamic>>.from(currentGroup['devices'] ?? []);
+          final groupConversation = {
+            'id': 'group_${currentGroup['id']}',
+            'type': 'group',
+            'title': currentGroup['name'] ?? '群组',
+            'subtitle': devices.length == 1 ? '仅有自己' : '${devices.length}台设备',
+            'avatar': _getGroupAvatar(devices),
+            'lastMessage': devices.length == 1 ? '发给自己的消息' : '点击开始群聊',
+            'lastTime': DateTime.now().toIso8601String(),
+            'unreadCount': 0,
+            'isOnline': devices.any((d) => d['isOnline'] == true),
+            'groupData': currentGroup,
+          };
+          
+          // 使用群组ID作为key，确保群组变化时ChatScreen重建
+          return FadeTransition(
+            opacity: _fadeAnimation,
+            child: ChatScreen(
+              key: ValueKey('chat_${currentGroup['id']}'),
+              conversation: groupConversation,
             ),
-      ),
+          );
+        }
+        
+        // 没有选择群组时显示空状态
+        return FadeTransition(
+          opacity: _fadeAnimation,
+          child: _buildNoGroupSelectedState(),
+        );
+      },
     );
   }
   
@@ -411,224 +336,53 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
     );
   }
   
-  Widget _buildConversationCard(Map<String, dynamic> conversation, int index) {
-    final bool isGroup = conversation['type'] == 'group';
-    final bool isOnline = conversation['isOnline'] == true;
-    final int unreadCount = conversation['unreadCount'] ?? 0;
-    
-    return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 200 + index * 50),
-      tween: Tween(begin: 0.0, end: 1.0),
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _openChatScreen(conversation),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
+  Widget _buildNoGroupSelectedState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
                     decoration: BoxDecoration(
-                      color: AppTheme.cardColor,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppTheme.borderColor,
-                        width: 0.5,
-                      ),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+              ),
+              borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.shadowColor,
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                  color: const Color(0xFF6366F1).withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                         ),
                       ],
                     ),
-                    child: Row(
-                      children: [
-                        // 头像
-                        _buildAvatar(conversation),
-                        
-                        const SizedBox(width: 12),
-                        
-                        // 对话信息
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      conversation['title'],
-                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  Text(
-                                    TimeUtils.formatRelativeTime(conversation['lastTime']),
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppTheme.textTertiaryColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              
-                              const SizedBox(height: 4),
-                              
-                              Row(
-                                children: [
-                                  // 在线状态指示器
-                                  if (!isGroup)
-                                    Container(
-                                      width: 6,
-                                      height: 6,
-                                      margin: const EdgeInsets.only(right: 6),
-                                      decoration: BoxDecoration(
-                                        color: isOnline ? AppTheme.onlineColor : AppTheme.offlineColor,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  
-                                  Expanded(
-                                    child: Text(
-                                      conversation['subtitle'],
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: AppTheme.textSecondaryColor,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              
-                              const SizedBox(height: 4),
-                              
-                              Text(
-                                conversation['lastMessage'],
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppTheme.textTertiaryColor,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                        
-                        const SizedBox(width: 8),
-                        
-                        // 右侧信息
-                        Column(
-                          children: [
-                            // 未读消息数
-                            if (unreadCount > 0)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  unreadCount > 99 ? '99+' : unreadCount.toString(),
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            child: const Icon(
+              Icons.groups_rounded,
+              size: 36,
                                     color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ),
-                            
-                            const SizedBox(height: 8),
-                            
-                            // 类型图标
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: isGroup 
-                                  ? AppTheme.primaryColor.withOpacity(0.1)
-                                  : AppTheme.onlineColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                isGroup ? Icons.group_rounded : Icons.person_rounded,
-                                size: 12,
-                                color: isGroup ? AppTheme.primaryColor : AppTheme.onlineColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
             ),
           ),
-        );
-      },
-    );
-  }
-  
-  Widget _buildAvatar(Map<String, dynamic> conversation) {
-    final String avatar = conversation['avatar'];
-    final bool isOnline = conversation['isOnline'] == true;
-    final bool isGroup = conversation['type'] == 'group';
-    
-    return Stack(
-      children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: isGroup 
-              ? AppTheme.primaryColor.withOpacity(0.1)
-              : isOnline 
-                ? AppTheme.onlineColor.withOpacity(0.1)
-                : AppTheme.offlineColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Text(
-              avatar,
-              style: const TextStyle(fontSize: 24),
+          const SizedBox(height: 24),
+          const Text(
+            '请选择群组',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
             ),
           ),
-        ),
-        
-        // 在线状态指示器（仅私聊显示）
-        if (!isGroup)
-          Positioned(
-            right: 2,
-            bottom: 2,
-            child: Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: isOnline ? AppTheme.onlineColor : AppTheme.offlineColor,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.cardColor, width: 2),
-              ),
+          const SizedBox(height: 8),
+          const Text(
+            '点击顶部群组选择器来选择或创建群组',
+            style: TextStyle(
+              fontSize: 14,
+              color: Color(0xFF6B7280),
             ),
           ),
       ],
-    );
-  }
-  
-  // 打开聊天界面
-  void _openChatScreen(Map<String, dynamic> conversation) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatScreen(conversation: conversation),
       ),
     );
   }

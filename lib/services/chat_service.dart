@@ -38,6 +38,39 @@ class ChatService {
     return headers;
   }
   
+  // 获取服务器配置信息
+  Future<Map<String, dynamic>> getServerConfig() async {
+    try {
+      final headers = await _getAuthHeaders();
+      headers.remove('Content-Type'); // 不需要Content-Type
+      
+      final response = await http.get(
+        Uri.parse('$_baseUrl/config'),
+        headers: headers,
+      );
+      
+      print('获取服务器配置响应状态码: ${response.statusCode}');
+      print('获取服务器配置响应内容: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        // 如果没有config接口，返回默认配置
+        return {
+          'maxFileSize': 50 * 1024 * 1024, // 默认50MB
+          'allowedFileTypes': ['image', 'video', 'audio', 'document'],
+        };
+      }
+    } catch (e) {
+      print('获取服务器配置失败: $e');
+      // 发生错误时返回默认配置
+      return {
+        'maxFileSize': 50 * 1024 * 1024, // 默认50MB
+        'allowedFileTypes': ['image', 'video', 'audio', 'document'],
+      };
+    }
+  }
+  
   // 发送1v1文本消息
   Future<Map<String, dynamic>> sendPrivateMessage({
     required String targetDeviceId,

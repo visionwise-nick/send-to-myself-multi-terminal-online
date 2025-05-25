@@ -1,28 +1,93 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'dart:io' show Platform;
 
 class DeviceAuthService {
   final String _baseUrl = "https://sendtomyself-api-adecumh2za-uc.a.run.app/api";
   
-  // 获取或生成设备ID - 确保ID固定不变
+  // 获取或生成设备ID - 基于硬件信息生成稳定ID
   Future<String> getOrCreateDeviceId() async {
     final prefs = await SharedPreferences.getInstance();
-    String? deviceId = prefs.getString('device_id');
+    String? cachedDeviceId = prefs.getString('device_id');
     
-    if (deviceId == null) {
-      deviceId = const Uuid().v4();
-      await prefs.setString('device_id', deviceId);
-      print('生成新设备ID: $deviceId');
+    // 生成基于硬件信息的稳定设备ID
+    String stableDeviceId = await _generateStableDeviceId();
+    
+    // 如果缓存的ID和硬件ID不匹配，使用硬件ID并更新缓存
+    if (cachedDeviceId == null || cachedDeviceId != stableDeviceId) {
+      await prefs.setString('device_id', stableDeviceId);
+      print('更新设备ID: $stableDeviceId (基于硬件信息)');
     } else {
-      print('使用现有设备ID: $deviceId');
+      print('使用稳定设备ID: $stableDeviceId');
     }
     
-    return deviceId;
+    return stableDeviceId;
+  }
+
+  // 基于设备硬件信息生成稳定的设备ID
+  Future<String> _generateStableDeviceId() async {
+    final deviceInfoPlugin = DeviceInfoPlugin();
+    String uniqueIdentifier = '';
+    
+    try {
+      if (kIsWeb) {
+        // Web环境：使用浏览器指纹
+        uniqueIdentifier = 'web_${DateTime.now().millisecondsSinceEpoch}';
+      } else if (Platform.isAndroid) {
+        final androidInfo = await deviceInfoPlugin.androidInfo;
+        // Android：使用设备的唯一标识符组合
+        final androidId = androidInfo.id; // Android ID
+        final brand = androidInfo.brand;
+        final model = androidInfo.model;
+        final device = androidInfo.device;
+        uniqueIdentifier = 'android_${androidId}_${brand}_${model}_${device}';
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfoPlugin.iosInfo;
+        // iOS：使用IDFV (identifierForVendor)
+        final idfv = iosInfo.identifierForVendor; // 这个ID在App卸载重装后保持不变
+        if (idfv != null) {
+          uniqueIdentifier = 'ios_$idfv';
+        } else {
+          // 如果无法获取IDFV，使用设备信息组合
+          uniqueIdentifier = 'ios_${iosInfo.model}_${iosInfo.systemName}_${iosInfo.name}';
+        }
+      } else if (Platform.isMacOS) {
+        final macOsInfo = await deviceInfoPlugin.macOsInfo;
+        uniqueIdentifier = 'macos_${macOsInfo.systemGUID ?? macOsInfo.computerName}';
+      } else if (Platform.isWindows) {
+        final windowsInfo = await deviceInfoPlugin.windowsInfo;
+        uniqueIdentifier = 'windows_${windowsInfo.computerName}_${windowsInfo.deviceId}';
+      } else if (Platform.isLinux) {
+        uniqueIdentifier = 'linux_${Platform.localHostname}';
+      }
+      
+      // 如果无法获取硬件信息，生成一个UUID
+      if (uniqueIdentifier.isEmpty) {
+        uniqueIdentifier = 'fallback_${const Uuid().v4()}';
+      }
+      
+    } catch (e) {
+      print('获取硬件信息失败: $e，使用备选方案');
+      // 在测试环境或无法获取硬件信息时，使用固定标识符
+      if (kDebugMode) {
+        uniqueIdentifier = 'test_stable_device_identifier';
+      } else {
+        uniqueIdentifier = 'fallback_${const Uuid().v4()}';
+      }
+    }
+    
+    // 将唯一标识符转换为UUID格式
+    final bytes = utf8.encode(uniqueIdentifier);
+    final digest = bytes.fold(0, (prev, element) => prev + element);
+    
+    // 基于硬件信息生成确定性的UUID
+    final uuid = Uuid();
+    return uuid.v5(Uuid.NAMESPACE_OID, uniqueIdentifier);
   }
   
   // 获取设备信息

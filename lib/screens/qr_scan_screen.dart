@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
 import 'dart:convert';
 
@@ -48,7 +49,10 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
         
         try {
           final Map<String, dynamic> data = jsonDecode(code);
-          if (data.containsKey('joinCode') && data['joinCode'] != null) {
+          // 检查是否是群组邀请二维码
+          if (data['type'] == 'sendtomyself_group_join' && 
+              data.containsKey('joinCode') && 
+              data['joinCode'] != null) {
             final joinCode = data['joinCode'].toString();
             if (joinCode.length == 8) {
               _joinGroup(joinCode);
@@ -56,6 +60,7 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
             }
           }
         } catch (e) {
+          // 如果不是JSON格式，检查是否是8位加入码
           if (code.length == 8) {
             _joinGroup(code);
             break;
@@ -73,27 +78,25 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
     });
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final result = await authProvider.joinGroup(code);
+      final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      final result = await groupProvider.joinGroup(code);
 
       if (mounted) {
         Navigator.of(context).pop();
-        if (result['success'] == true) {
+        if (result == true) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('成功加入群组: ${result['group']['name']}'),
+            const SnackBar(
+              content: Text('成功加入群组'),
               backgroundColor: AppTheme.successColor,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('加入失败: ${result['message'] ?? '请检查加入码'}'),
+            const SnackBar(
+              content: Text('加入失败，请检查加入码'),
               backgroundColor: AppTheme.errorColor,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           );
         }

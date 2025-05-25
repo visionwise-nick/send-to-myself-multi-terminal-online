@@ -184,28 +184,114 @@ class WebSocketService {
         if (data is Map) {
           _messageController.add(Map<String, dynamic>.from(data));
           
-          // 根据消息类型处理
-          if (data.containsKey('type')) {
-            final messageType = data['type'];
-            switch (messageType) {
-              case 'system':
-                // 处理系统消息
-                if (data['content'] == 'device_logged_out') {
-                  print('收到登出通知: ${data['message']}');
-                  _logoutController.add({
-                    'type': 'logout_notification',
-                    'message': data['message'] ?? '设备已登出，连接即将断开',
+                      // 根据消息类型处理
+            if (data.containsKey('type')) {
+              final messageType = data['type'];
+              switch (messageType) {
+                case 'system':
+                  // 处理系统消息
+                  if (data['content'] == 'device_logged_out') {
+                    print('收到登出通知: ${data['message']}');
+                    _logoutController.add({
+                      'type': 'logout_notification',
+                      'message': data['message'] ?? '设备已登出，连接即将断开',
+                      'timestamp': DateTime.now().toIso8601String()
+                    });
+                  } else if (data['content'] == 'device_status_update' && data.containsKey('device_statuses')) {
+                    print('收到设备状态更新');
+                    _deviceStatusController.add({
+                      'type': 'device_status_update',
+                      'device_statuses': data['device_statuses'],
+                      'timestamp': DateTime.now().toIso8601String()
+                    });
+                  }
+                  break;
+                
+                // 群组管理相关通知
+                case 'device_joined_group':
+                  print('设备加入群组通知');
+                  _groupChangeController.add({
+                    'type': 'device_joined_group',
+                    'device': data['device'],
+                    'group': data['group'],
+                    'joinedAt': data['joinedAt'],
                     'timestamp': DateTime.now().toIso8601String()
                   });
-                } else if (data['content'] == 'device_status_update' && data.containsKey('device_statuses')) {
-                  print('收到设备状态更新');
-                  _deviceStatusController.add({
-                    'type': 'device_status_update',
-                    'device_statuses': data['device_statuses'],
+                  break;
+                
+                case 'device_left_group':
+                  print('设备离开群组通知');
+                  _groupChangeController.add({
+                    'type': 'device_left_group',
+                    'device': data['device'],
+                    'group': data['group'],
+                    'leftAt': data['leftAt'],
+                    'ownershipChanged': data['ownershipChanged'],
+                    'leaveReason': data['leaveReason'],
                     'timestamp': DateTime.now().toIso8601String()
                   });
-                }
-                break;
+                  break;
+                
+                case 'removed_from_group':
+                  print('被移除出群组通知');
+                  _groupChangeController.add({
+                    'type': 'removed_from_group',
+                    'group': data['group'],
+                    'removedAt': data['removedAt'],
+                    'action': data['action'],
+                    'timestamp': DateTime.now().toIso8601String()
+                  });
+                  break;
+                
+                case 'group_ownership_changed':
+                  print('群组所有权变更通知');
+                  _groupChangeController.add({
+                    'type': 'group_ownership_changed',
+                    'group': data['group'],
+                    'previousOwner': data['previousOwner'],
+                    'newOwner': data['newOwner'],
+                    'reason': data['reason'],
+                    'changedAt': data['changedAt'],
+                    'timestamp': DateTime.now().toIso8601String()
+                  });
+                  break;
+                
+                case 'group_renamed':
+                  print('群组重命名通知');
+                  _groupChangeController.add({
+                    'type': 'group_renamed',
+                    'groupId': data['groupId'],
+                    'oldName': data['oldName'],
+                    'newName': data['newName'],
+                    'renamedBy': data['renamedBy'],
+                    'renamedAt': data['renamedAt'],
+                    'timestamp': DateTime.now().toIso8601String()
+                  });
+                  break;
+                
+                case 'device_renamed':
+                  print('设备重命名通知');
+                  _groupChangeController.add({
+                    'type': 'device_renamed',
+                    'deviceId': data['deviceId'],
+                    'newName': data['newName'],
+                    'renamedAt': data['renamedAt'],
+                    'groupId': data['groupId'],
+                    'timestamp': DateTime.now().toIso8601String()
+                  });
+                  break;
+                
+                case 'group_deleted':
+                  print('群组删除通知');
+                  _groupChangeController.add({
+                    'type': 'group_deleted',
+                    'groupId': data['groupId'],
+                    'groupName': data['groupName'],
+                    'reason': data['reason'],
+                    'deletedAt': data['deletedAt'],
+                    'timestamp': DateTime.now().toIso8601String()
+                  });
+                  break;
               case 'device_joined_group':
                 print('设备加入群组通知');
                 // 发送设备状态更新通知

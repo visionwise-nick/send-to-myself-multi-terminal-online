@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'router/app_router.dart';
 import 'providers/auth_provider.dart';
+import 'providers/group_provider.dart';
 import 'theme/app_theme.dart';
 import 'services/websocket_service.dart';
 import 'services/device_auth_service.dart';
@@ -45,9 +46,14 @@ void main() async {
   }
   
   runApp(
-    // 提供认证状态
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+    // 提供认证状态和群组状态
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(
+          create: (_) => GroupProvider()..initialize(),
+        ),
+      ],
       child: const MyApp(),
     ),
   );
