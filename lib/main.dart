@@ -4,9 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'router/app_router.dart';
 import 'providers/auth_provider.dart';
 import 'providers/group_provider.dart';
+import 'providers/memory_provider.dart';
+import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
 import 'services/websocket_service.dart';
 import 'services/device_auth_service.dart';
+import 'services/local_storage_service.dart';
 
 void main() async {
   // 确保Flutter绑定初始化
@@ -15,6 +19,9 @@ void main() async {
   // 初始化设备认证服务和WebSocket服务
   final authService = DeviceAuthService();
   final wsService = WebSocketService();
+  
+  // 初始化本地存储服务并执行数据维护
+  final localStorage = LocalStorageService();
   
   try {
     // 获取设备信息
@@ -41,6 +48,13 @@ void main() async {
     } catch (e) {
       print('WebSocket连接失败: $e');
     }
+
+    // 执行数据维护
+    print('开始执行应用启动维护...');
+    await localStorage.cleanupOldData();
+    final storageInfo = await localStorage.getStorageInfo();
+    print('存储使用情况: ${storageInfo['totalSize']} bytes');
+    print('应用启动维护完成');
   } catch (e) {
     print('初始化失败: $e');
   }
@@ -53,6 +67,7 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => GroupProvider()..initialize(),
         ),
+        ChangeNotifierProvider(create: (context) => MemoryProvider()),
       ],
       child: const MyApp(),
     ),

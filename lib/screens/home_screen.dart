@@ -7,7 +7,7 @@ import '../theme/app_theme.dart';
 import '../widgets/logout_dialog.dart';
 import '../widgets/group_selector.dart';
 import 'messages_tab.dart';
-import 'memory_tab.dart';
+import 'memories_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -151,15 +151,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Expanded(
                   child: PageView(
                     controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(), // 禁用滑动
+                    physics: const NeverScrollableScrollPhysics(), // 禁用滑动
                     onPageChanged: (index) {
                       setState(() {
                         _selectedIndex = index;
                       });
                     },
-                    children: const [
+                    children: [
                       MessagesTab(),
-                      MemoryTab(),
+                      MemoriesTab(),
                     ],
                   ),
                 ),
@@ -351,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       case 0:
         return const MessagesTab();
       case 1:
-        return const MemoryTab();
+        return const MemoriesTab();
       default:
         return const MessagesTab();
     }

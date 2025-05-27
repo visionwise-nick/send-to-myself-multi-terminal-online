@@ -9,6 +9,7 @@ import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
 import '../services/chat_service.dart';
 import '../services/websocket_service.dart';
+import '../services/local_storage_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
@@ -18,6 +19,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:math' as math;
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+import '../services/device_auth_service.dart';
 
 // 文件下载处理器类
 class FileDownloadHandler {
@@ -126,15 +128,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   StreamSubscription? _chatMessageSubscription;
   final ChatService _chatService = ChatService();
   final WebSocketService _websocketService = WebSocketService();
+  final LocalStorageService _localStorage = LocalStorageService();
   
   // 消息处理相关
   final Set<String> _processedMessageIds = <String>{}; // 防止重复处理
   bool _isInitialLoad = true;
   
-  // 文件下载相关
+  // 文件下载相关 - 优化缓存策略
   final Dio _dio = Dio();
-  final Map<String, String> _downloadedFiles = {}; // URL -> 本地路径
+  // 使用LRU缓存，限制内存中的文件路径映射数量
+  final Map<String, String> _downloadedFiles = <String, String>{}; // URL -> 本地路径
   final Set<String> _downloadingFiles = {}; // 正在下载的文件URL
+  static const int _maxCacheSize = 100; // 最多缓存100个文件路径
+  final List<String> _cacheAccessOrder = []; // LRU访问顺序
   
   // 文件去重相关
   final Map<String, String> _fileHashCache = {}; // 文件路径 -> 哈希值
@@ -161,6 +167,23 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _loadFileCache();
     _loadMessages();
     _subscribeToChatMessages();
+    
+    // 启动时进行文件迁移
+    _migrateOldFilesOnStartup();
+  }
+  
+  // 启动时迁移旧文件到永久存储
+  Future<void> _migrateOldFilesOnStartup() async {
+    try {
+      // 输出永久存储目录路径
+      final permanentPath = await _localStorage.getPermanentStoragePath();
+      print('=== 永久存储目录: $permanentPath ===');
+      
+      await _localStorage.migrateOldFiles();
+      print('启动时文件迁移完成');
+    } catch (e) {
+      print('启动时文件迁移失败: $e');
+    }
   }
 
   // 初始化Dio配置，添加认证头
@@ -257,56 +280,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     
     print('收到消息: ID=$messageId, 文件消息=$isFileMessage, 内容=${content ?? fileName}');
     
-    // 简化的重复检测：只检查消息ID是否已存在
-    final isDuplicate = _messages.any((existingMsg) => existingMsg['id'] == messageId);
-    
-    if (isDuplicate) {
-      print('发现相同ID的消息，跳过添加: $messageId');
-      _processedMessageIds.add(messageId); // 标记为已处理
-      return;
-    }
-
-    // 如果是文件消息，进行额外的文件去重检查
+    // 如果是文件消息，记录日志即可
     if (isFileMessage && fileName != null) {
-      // 基于文件元数据的去重检查
-      final metadataKey = FileDownloadHandler.generateFileMetadataKey(
-        fileName, 
-        fileSize ?? 0, 
-        DateTime.tryParse(message['createdAt'] ?? '') ?? DateTime.now()
-      );
-      
-      // 检查是否已有相同元数据的文件消息
-      final duplicateFileMessage = _messages.any((existingMsg) {
-        if (existingMsg['fileType'] == null) return false; // 不是文件消息
-        
-        final existingMetadataKey = FileDownloadHandler.generateFileMetadataKey(
-          existingMsg['fileName'] ?? '', 
-          existingMsg['fileSize'] ?? 0, 
-          DateTime.tryParse(existingMsg['timestamp'] ?? '') ?? DateTime.now()
-        );
-        
-        return existingMetadataKey == metadataKey;
-      });
-      
-      if (duplicateFileMessage) {
-        print('发现重复文件消息（相同元数据），跳过添加: $fileName');
-        _processedMessageIds.add(messageId); // 仍然标记为已处理
-        return;
-      }
-      
-      // 检查是否已有相同文件名和大小的消息（更宽松的检查）
-      final similarFileMessage = _messages.any((existingMsg) {
-        if (existingMsg['fileType'] == null) return false; // 不是文件消息
-        
-        return existingMsg['fileName'] == fileName && 
-               existingMsg['fileSize'] == fileSize;
-      });
-      
-      if (similarFileMessage) {
-        print('发现相似文件消息（相同文件名和大小），跳过添加: $fileName (${fileSize ?? 0} bytes)');
-        _processedMessageIds.add(messageId); // 仍然标记为已处理
-        return;
-      }
+      print('接收文件消息: $fileName, 大小: ${fileSize ?? 0} bytes, ID: $messageId');
     } else if (!isFileMessage && content != null && content.trim().isNotEmpty) {
       // 如果是文本消息，进行基于内容的去重检查
       final sourceDeviceId = message['sourceDeviceId'];
@@ -318,21 +294,21 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         if (existingMsg['text'] != content) return false; // 内容不同
         if (existingMsg['sourceDeviceId'] != sourceDeviceId) return false; // 发送者不同
         
-        // 检查时间窗口（10秒内认为是重复）
+        // 检查时间窗口（5秒内认为是重复）
         try {
           final existingTime = DateTime.parse(existingMsg['timestamp']);
           final timeDiff = (messageTime.millisecondsSinceEpoch - existingTime.millisecondsSinceEpoch).abs();
-          return timeDiff < 10000; // 10秒内
+          return timeDiff < 5000; // 5秒内
         } catch (e) {
           print('文本消息时间比较失败: $e');
-          return true; // 时间解析失败但内容和发送者相同，保守地认为是重复
+          return false; // 时间解析失败时不认为重复
         }
-      });
-      
+    });
+    
       if (duplicateTextMessage) {
-        print('发现重复文本消息（相同内容+发送者+时间窗口），跳过添加: $content');
-        _processedMessageIds.add(messageId); // 仍然标记为已处理
-        return;
+        print('发现重复文本消息（相同内容+发送者+5秒窗口），跳过添加: $content');
+      _processedMessageIds.add(messageId); // 仍然标记为已处理
+      return;
       }
     }
 
@@ -651,7 +627,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           _processedMessageIds.add(serverId); // 标记为已处理
           continue;
         }
-        
+            
         // 如果是文件消息，进行额外的文件去重检查
         if (serverMsg['fileType'] != null && serverMsg['fileName'] != null) {
           // 基于文件元数据的去重检查
@@ -721,7 +697,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           if (duplicateTextMessage) {
             print('发现重复文本消息（同步时，相同内容+发送者+时间窗口），跳过添加: $content');
             _processedMessageIds.add(serverId); // 仍然标记为已处理
-            continue;
+          continue;
           }
         }
         
@@ -769,26 +745,54 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   // 加载本地缓存消息
   Future<void> _loadLocalMessages() async {
-    final prefs = await SharedPreferences.getInstance();
     final chatId = widget.conversation['id'];
-    final messagesJson = prefs.getString('chat_messages_$chatId') ?? '[]';
     
     try {
-      final List<dynamic> messagesList = json.decode(messagesJson);
+      final messages = await _localStorage.loadChatMessages(chatId);
+      if (mounted) {
       setState(() {
-        _messages = messagesList.map((msg) => Map<String, dynamic>.from(msg)).toList();
+          _messages = messages;
       });
       _scrollToBottom();
+      }
     } catch (e) {
       print('加载本地消息失败: $e');
+      // 如果新存储失败，尝试旧版本兼容
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final messagesJson = prefs.getString('chat_messages_$chatId') ?? '[]';
+        final List<dynamic> messagesList = json.decode(messagesJson);
+        if (mounted) {
+          setState(() {
+            _messages = messagesList.map((msg) => Map<String, dynamic>.from(msg)).toList();
+          });
+          _scrollToBottom();
+          
+          // 迁移到新存储
+          await _localStorage.saveChatMessages(chatId, _messages);
+        }
+      } catch (legacyError) {
+        print('兼容旧版本存储也失败: $legacyError');
+      }
     }
   }
 
   // 保存聊天消息到本地
   Future<void> _saveMessages() async {
-    final prefs = await SharedPreferences.getInstance();
     final chatId = widget.conversation['id'];
+    try {
+      await _localStorage.saveChatMessages(chatId, _messages);
+    } catch (e) {
+      print('保存消息到持久化存储失败: $e');
+      // 如果新存储失败，尝试保存到SharedPreferences作为后备
+      try {
+        final prefs = await SharedPreferences.getInstance();
     await prefs.setString('chat_messages_$chatId', json.encode(_messages));
+        print('已保存到SharedPreferences备份');
+      } catch (backupError) {
+        print('备份保存也失败: $backupError');
+      }
+    }
   }
 
   // 发送文本消息
@@ -907,13 +911,27 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   // 发送文件消息
   Future<void> _sendFileMessage(File file, String fileName, String fileType) async {
+    // 立即复制文件到永久存储
+    String? permanentFilePath;
+    try {
+      permanentFilePath = await _localStorage.copyFileToPermanentStorage(
+        file.path, 
+        fileName
+      );
+      print('文件已复制到永久存储: $fileName -> $permanentFilePath');
+    } catch (e) {
+      print('复制文件到永久存储失败: $e');
+      // 如果复制失败，仍然继续发送，但使用原始路径
+      permanentFilePath = file.path;
+    }
+    
     // 创建文件消息对象，包含进度信息
     final fileMessage = {
       'id': 'temp_file_${DateTime.now().millisecondsSinceEpoch}',
       'text': '', // 文件消息可能包含文字说明
       'fileType': _getFileType(fileName),
       'fileName': fileName,
-      'filePath': file.path,
+      'filePath': permanentFilePath, // 使用永久存储路径
       'fileSize': await file.length(),
       'timestamp': DateTime.now().toUtc().toIso8601String(), // 使用UTC时间
       'isMe': true,
@@ -949,6 +967,24 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           
           // 更新临时消息为已发送状态，并更新完整的API返回信息
           if (apiResult != null && mounted) {
+            // 先处理文件URL映射更新（异步操作）
+            String? fileUrl;
+            if (apiResult['fileUrl'] != null) {
+              fileUrl = apiResult['fileUrl'] as String;
+              if (permanentFilePath != null) {
+                try {
+                  await _localStorage.copyFileToPermanentStorage(
+                    permanentFilePath, 
+                    fileName, 
+                    fileUrl: fileUrl
+                  );
+                } catch (e) {
+                  print('更新文件URL映射失败: $e');
+                }
+              }
+            }
+            
+            // 然后更新UI状态（同步操作）
             setState(() {
               final index = _messages.indexWhere((msg) => msg['id'] == fileMessage['id']);
               if (index != -1) {
@@ -959,8 +995,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   _messages[index]['id'] = apiResult['messageId'];
                   _processedMessageIds.add(apiResult['messageId'].toString());
                 }
-                if (apiResult['fileUrl'] != null) {
-                  _messages[index]['fileUrl'] = apiResult['fileUrl'];
+                if (fileUrl != null) {
+                  _messages[index]['fileUrl'] = fileUrl;
                 }
                 if (apiResult['fileName'] != null) {
                   _messages[index]['fileName'] = apiResult['fileName'];
@@ -990,6 +1026,24 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           
           // 更新临时消息为已发送状态，并更新完整的API返回信息
           if (apiResult != null && mounted) {
+            // 先处理文件URL映射更新（异步操作）
+            String? fileUrl;
+            if (apiResult['fileUrl'] != null) {
+              fileUrl = apiResult['fileUrl'] as String;
+              if (permanentFilePath != null) {
+                try {
+                  await _localStorage.copyFileToPermanentStorage(
+                    permanentFilePath, 
+                    fileName, 
+                    fileUrl: fileUrl
+                  );
+                } catch (e) {
+                  print('更新文件URL映射失败: $e');
+                }
+              }
+            }
+            
+            // 然后更新UI状态（同步操作）
             setState(() {
               final index = _messages.indexWhere((msg) => msg['id'] == fileMessage['id']);
               if (index != -1) {
@@ -1000,8 +1054,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   _messages[index]['id'] = apiResult['messageId'];
                   _processedMessageIds.add(apiResult['messageId'].toString());
                 }
-                if (apiResult['fileUrl'] != null) {
-                  _messages[index]['fileUrl'] = apiResult['fileUrl'];
+                if (fileUrl != null) {
+                  _messages[index]['fileUrl'] = fileUrl;
                 }
                 if (apiResult['fileName'] != null) {
                   _messages[index]['fileName'] = apiResult['fileName'];
@@ -1076,11 +1130,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients && mounted) {
         try {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
             duration: const Duration(milliseconds: 200), // 减少动画时间
-            curve: Curves.easeOut,
-          );
+          curve: Curves.easeOut,
+        );
         } catch (e) {
           print('平滑滚动失败: $e');
         }
@@ -1151,6 +1205,22 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: GestureDetector(
+          onLongPress: _showStorageInfo,
+          child: Text(title ?? '聊天'),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: const Color(0xFFE5E7EB),
+            height: 1,
+          ),
+        ),
+      ),
       body: Column(
         children: [
           // 消息列表
@@ -1186,6 +1256,71 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       ),
     );
   }
+  
+  // 显示存储信息（调试功能）
+  Future<void> _showStorageInfo() async {
+    try {
+      final permanentPath = await _localStorage.getPermanentStoragePath();
+      final storageInfo = await _localStorage.getStorageInfo();
+      final fileCacheInfo = await _localStorage.getFileCacheInfo();
+      
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('存储信息'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('永久存储目录:'),
+                const SizedBox(height: 4),
+                Text(permanentPath, style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
+                const SizedBox(height: 16),
+                Text('存储使用情况:'),
+                const SizedBox(height: 8),
+                Text('聊天数据: ${_formatBytes(storageInfo['chatSize'] ?? 0)}'),
+                Text('记忆数据: ${_formatBytes(storageInfo['memorySize'] ?? 0)}'),
+                Text('用户数据: ${_formatBytes(storageInfo['userDataSize'] ?? 0)}'),
+                Text('文件缓存: ${_formatBytes(storageInfo['fileCacheSize'] ?? 0)}'),
+                Text('总计: ${_formatBytes(storageInfo['totalSize'] ?? 0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                Text('文件缓存统计:'),
+                const SizedBox(height: 8),
+                Text('总文件数: ${fileCacheInfo['totalFiles']}'),
+                Text('有效文件: ${fileCacheInfo['validFiles']}'),
+                Text('无效文件: ${fileCacheInfo['invalidFiles']}'),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('关闭'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      print('显示存储信息失败: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('获取存储信息失败: $e')),
+      );
+    }
+  }
+  
+  // 格式化字节数
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) {
+      return '$bytes B';
+    } else if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    } else if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    } else {
+      return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+    }
+  }
 
   Widget _buildEmptyState() {
     return Center(
@@ -1209,7 +1344,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           Text(
             '开始对话',
             style: AppTheme.bodyStyle, // 使用更小的字体
-          ),
+            ),
           const SizedBox(height: 4), // 减少间距
           Text(
             '发送消息或文件来开始聊天',
@@ -1233,46 +1368,46 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         children: [
           // 消息气泡
           Row(
-            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Flexible(
-                child: Container(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.75,
-                  ),
+        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
+              ),
                   padding: EdgeInsets.all(hasFile ? 6 : 10), // 减少内边距
-                  decoration: BoxDecoration(
+              decoration: BoxDecoration(
                     color: isMe 
                       ? (hasFile ? Colors.white : AppTheme.primaryColor) 
                       : Colors.white,
                     borderRadius: BorderRadius.circular(16).copyWith( // 稍微减小圆角
-                      bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
-                      bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
-                    ),
+                  bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
+                  bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
+                ),
                     border: Border.all(
                       color: const Color(0xFFE5E7EB), 
                       width: 0.5,
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 文件内容
-                      if (hasFile) _buildFileContent(message, isMe),
-                      
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 文件内容
+                  if (hasFile) _buildFileContent(message, isMe),
+                  
                       // 文本内容 - 统一字体
-                      if (message['text'] != null && message['text'].isNotEmpty) ...[
+                  if (message['text'] != null && message['text'].isNotEmpty) ...[
                         if (hasFile) const SizedBox(height: 6), // 减少间距
-                        Text(
-                          message['text'],
+                    Text(
+                      message['text'],
                           style: AppTheme.bodyStyle.copyWith(
                             color: isMe 
                               ? (hasFile ? AppTheme.textPrimaryColor : Colors.white)
                               : AppTheme.textPrimaryColor,
-                          ),
-                        ),
-                      ],
+                      ),
+                    ),
+                  ],
                     ],
                   ),
                 ),
@@ -1285,22 +1420,22 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           Row(
             mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
                     TimeUtils.formatChatDateTime(message['timestamp']), // 使用完整日期时间
                     style: AppTheme.smallStyle.copyWith(
                       fontSize: 9, // 进一步减小时间戳字体
-                    ),
-                  ),
-                  if (isMe) ...[
+                        ),
+                      ),
+                      if (isMe) ...[
                     const SizedBox(width: 3), // 减少间距
-                    _buildMessageStatusIcon(message),
-                  ],
+                        _buildMessageStatusIcon(message),
+                      ],
+                    ],
+                  ),
                 ],
-              ),
-            ],
           ),
         ],
       ),
@@ -1402,7 +1537,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  // 构建文件预览 - 简洁实用设计
+  // 构建文件预览 - 优化版本，减少重复加载
   Widget _buildFilePreview(String? fileType, String? filePath, String? fileUrl, bool isMe) {
     // 转换相对URL为绝对URL
     String? fullUrl = fileUrl;
@@ -1410,20 +1545,96 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
     }
 
-    // 优先使用本地文件路径
-    String? actualFilePath = filePath;
-    if (actualFilePath == null || !File(actualFilePath).existsSync()) {
-      // 检查缓存中是否有文件
-      if (fullUrl != null && _downloadedFiles.containsKey(fullUrl)) {
-        final cachedPath = _downloadedFiles[fullUrl]!;
-        if (File(cachedPath).existsSync()) {
-          actualFilePath = cachedPath;
-        }
-      }
+    // 1. 优先使用传入的本地文件路径
+    if (filePath != null && File(filePath).existsSync()) {
+      return _buildActualFilePreview(fileType, filePath, fullUrl, isMe);
     }
+    
+    // 2. 检查内存缓存
+    if (fullUrl != null) {
+      final cachedPath = _getFromCache(fullUrl);
+      if (cachedPath != null && File(cachedPath).existsSync()) {
+        return _buildActualFilePreview(fileType, cachedPath, fullUrl, isMe);
+      }
+      
+      // 3. 如果内存缓存没有，异步检查持久化存储
+      return FutureBuilder<String?>(
+        future: _localStorage.getFileFromCache(fullUrl),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return _buildLoadingPreview();
+          }
+          
+          final persistentCachedPath = snapshot.data;
+          if (persistentCachedPath != null && File(persistentCachedPath).existsSync()) {
+            // 添加到内存缓存以提高后续访问速度
+            _addToCache(fullUrl!, persistentCachedPath);
+            return _buildActualFilePreview(fileType, persistentCachedPath, fullUrl, isMe);
+          }
+          
+          // 4. 文件不存在，显示占位符
+          return _buildFileNotFoundPreview(fileType, fullUrl);
+        },
+      );
+    }
+    
+    return _buildFileNotFoundPreview(fileType, fullUrl);
+  }
 
+  // 加载中预览
+  Widget _buildLoadingPreview() {
+    return Container(
+      height: 80,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+    );
+  }
+
+  // 文件未找到预览
+  Widget _buildFileNotFoundPreview(String? fileType, String? fileUrl) {
+    return Container(
+      height: 80,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            _getFileTypeIcon(fileType),
+            size: 24,
+            color: const Color(0xFF9CA3AF),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '文件不存在',
+            style: TextStyle(
+              fontSize: 10,
+              color: const Color(0xFF9CA3AF),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 实际构建文件预览的方法
+  Widget _buildActualFilePreview(String? fileType, String? filePath, String? fileUrl, bool isMe) {
     return GestureDetector(
-      onTap: () => _openFile(actualFilePath, fullUrl, fileType),
+      onTap: () => _openFile(filePath, fileUrl, fileType),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 200),
         child: Column(
@@ -1431,9 +1642,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           children: [
             // 图片和视频只显示预览，不显示额外信息
             if (fileType == 'image') 
-              _buildSimpleImagePreview(actualFilePath, fullUrl)
+              _buildSimpleImagePreview(filePath, fileUrl)
             else if (fileType == 'video')
-              _buildSimpleVideoPreview(actualFilePath, fullUrl)
+              _buildSimpleVideoPreview(filePath, fileUrl)
             else
               // 其他文件类型显示简洁信息
               Container(
@@ -1457,7 +1668,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     const SizedBox(width: 6), // 减少间距
                     Flexible(
                       child: Text(
-                        _getFileName(actualFilePath, fullUrl) ?? '文件',
+                        _getFileName(filePath, fileUrl) ?? '文件',
                         style: AppTheme.captionStyle.copyWith(
                           color: AppTheme.textPrimaryColor,
                           fontSize: 10, // 减小文字
@@ -1492,6 +1703,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         height: 80, // 减少高度
         width: double.infinity,
         fit: BoxFit.cover,
+        headers: _dio.options.headers.map((key, value) => MapEntry(key, value.toString())), // 添加认证头
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(
@@ -1504,6 +1716,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           );
         },
         errorBuilder: (context, error, stackTrace) {
+          print('图片加载失败: $error');
           return Container(
             height: 80, // 减少高度
             width: double.infinity,
@@ -1524,21 +1737,21 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   // 构建简单视频预览
   Widget _buildSimpleVideoPreview(String? filePath, String? fileUrl) {
-    return Container(
+          return Container(
       height: 80, // 减少高度
-      width: double.infinity,
-      decoration: BoxDecoration(
+            width: double.infinity,
+            decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(4), // 减小圆角
-        color: const Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(4), // 减小圆角
         child: _VideoGifPreview(
           videoPath: filePath,
           videoUrl: fileUrl,
-        ),
-      ),
-    );
+              ),
+            ),
+          );
   }
 
   // 打开本地文件（简化版）
@@ -1728,7 +1941,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       return Icon(
         Icons.error_outline,
         size: 10, // 减小图标
-        color: Colors.red,
+          color: Colors.red,
       );
     } else if (status == 'read') {
       return Icon(
@@ -1746,7 +1959,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     return const SizedBox();
   }
 
-  // 自动下载文件（实现去重逻辑）
+  // 自动下载文件（使用优化的缓存系统）
   Future<void> _autoDownloadFile(Map<String, dynamic> message) async {
     final fileUrl = message['fileUrl'];
     final fileName = message['fileName'];
@@ -1767,144 +1980,76 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
     
     try {
+      // 1. 检查内存缓存
+      final memCachedPath = _getFromCache(fullUrl);
+      if (memCachedPath != null && await File(memCachedPath).exists()) {
+        print('从内存缓存找到文件: $fileName -> $memCachedPath');
+        _updateMessageFilePath(message, memCachedPath);
+        return;
+      }
+      
+      // 2. 检查持久化缓存
+      final persistentCachedPath = await _localStorage.getFileFromCache(fullUrl);
+      if (persistentCachedPath != null && await File(persistentCachedPath).exists()) {
+        print('从永久缓存找到文件: $fileName -> $persistentCachedPath');
+        _addToCache(fullUrl, persistentCachedPath);
+        _updateMessageFilePath(message, persistentCachedPath);
+        return;
+      }
+      
+      print('开始下载文件: $fileName (${fileSize ?? 'unknown'} bytes)');
       _downloadingFiles.add(fullUrl);
-      print('开始下载文件: $fileName');
       
-      // 第一步：基于元数据的快速去重检查
-      final metadataKey = FileDownloadHandler.generateFileMetadataKey(
-        fileName, 
-        fileSize ?? 0, 
-        DateTime.now()
+      // 3. 下载文件
+      final dio = Dio();
+      final authService = DeviceAuthService();
+      final token = await authService.getAuthToken();
+      
+      final response = await dio.get(
+        fullUrl,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        ),
       );
       
-      if (_fileMetadataCache.containsKey(metadataKey)) {
-        final existingPath = _fileMetadataCache[metadataKey]!;
-        if (File(existingPath).existsSync()) {
-          print('发现相同元数据的文件，跳过下载: $fileName -> $existingPath');
-          await _saveFileCache(fullUrl, existingPath);
-          return;
-        } else {
-          // 文件不存在了，清理缓存
-          _fileMetadataCache.remove(metadataKey);
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.remove('$_fileMetadataCachePrefix$metadataKey');
-        }
-      }
-      
-      // 检查是否已经下载过（URL缓存）
-      if (_downloadedFiles.containsKey(fullUrl)) {
-        final cachedPath = _downloadedFiles[fullUrl]!;
-        if (File(cachedPath).existsSync()) {
-          print('文件已存在于URL缓存，跳过下载: $fileName -> $cachedPath');
-          return;
-        } else {
-          // 文件不存在了，从缓存中移除
-          _downloadedFiles.remove(fullUrl);
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.remove('$_filePathCachePrefix$fullUrl');
-        }
-      }
-      
-      // 获取下载目录
-      final directory = await getApplicationDocumentsDirectory();
-      final downloadDir = Directory(path.join(directory.path, 'downloads'));
-      if (!downloadDir.existsSync()) {
-        downloadDir.createSync(recursive: true);
-      }
-      
-      // 开始下载文件，并获取响应头以解析正确的文件名
-      Response<List<int>> response;
-      try {
-        response = await _dio.get<List<int>>(
-          fullUrl,
-          options: Options(
-            responseType: ResponseType.bytes,
-            followRedirects: true,
-          ),
-        );
-      } catch (e) {
-        print('下载文件失败: $fileName, 错误: $e');
-        return;
-      }
-      
-      if (response.statusCode != 200 || response.data == null) {
-        print('下载文件失败: $fileName, 状态码: ${response.statusCode}');
-        return;
-      }
-      
-      // 解析正确的文件名（从响应头）
-      String actualFileName = fileName; // 默认使用消息中的文件名
-      try {
-        actualFileName = FileDownloadHandler.parseFileName(response.headers.map);
-        print('解析到的实际文件名: $actualFileName (原始: $fileName)');
-      } catch (e) {
-        print('解析文件名失败，使用默认文件名: $fileName, 错误: $e');
-      }
-      
-      // 生成唯一的本地文件路径
-      String proposedPath = path.join(downloadDir.path, actualFileName);
-      String uniquePath = await FileDownloadHandler.getUniqueFilePath(proposedPath);
-      
-      // 写入文件
-      final file = File(uniquePath);
-      await file.writeAsBytes(response.data!);
-      
-      // 第二步：基于文件内容的哈希去重检查
-      final fileHash = await FileDownloadHandler.calculateFileHash(file);
-      if (fileHash.isNotEmpty) {
-        if (_seenFileHashes.contains(fileHash)) {
-          print('发现重复文件内容，删除新下载的文件: $uniquePath');
-          await file.delete();
+      if (response.statusCode == 200 && response.data != null) {
+        // 直接保存到永久存储
+        final savedPath = await _localStorage.saveFileToCache(fullUrl, response.data as List<int>, fileName);
+        
+        if (savedPath != null) {
+          print('文件下载并保存到永久存储完成: $fileName -> $savedPath');
           
-          // 查找现有的相同哈希文件
-          String? existingPath;
-          for (String cachedPath in _fileHashCache.keys) {
-            if (_fileHashCache[cachedPath] == fileHash && File(cachedPath).existsSync()) {
-              existingPath = cachedPath;
-              break;
-            }
-          }
+          // 添加到内存缓存
+          _addToCache(fullUrl, savedPath);
           
-          if (existingPath != null) {
-            await _saveFileCache(fullUrl, existingPath);
-            print('重定向到现有相同内容文件: $existingPath');
-          }
-          return;
-        } else {
-          // 新文件，记录哈希
-          _seenFileHashes.add(fileHash);
-          _fileHashCache[uniquePath] = fileHash;
+          // 更新消息文件路径
+          _updateMessageFilePath(message, savedPath);
           
-          // 持久化哈希缓存
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('$_fileHashCachePrefix$uniquePath', fileHash);
-          await prefs.setStringList('seen_file_hashes', _seenFileHashes.toList());
+          // 保存消息更新
+          await _saveMessages();
         }
+      } else {
+        throw Exception('下载失败: HTTP ${response.statusCode}');
       }
-      
-      // 保存各种缓存
-      await _saveFileCache(fullUrl, uniquePath);
-      
-      // 保存元数据缓存
-      final finalMetadataKey = FileDownloadHandler.generateFileMetadataKey(
-        actualFileName, 
-        response.data!.length, 
-        await file.lastModified()
-      );
-      _fileMetadataCache[finalMetadataKey] = uniquePath;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('$_fileMetadataCachePrefix$finalMetadataKey', uniquePath);
-      
-      print('文件下载完成并缓存: $actualFileName -> $uniquePath');
-      print('文件大小: ${response.data!.length} bytes, 哈希: ${fileHash.substring(0, 8)}...');
-      
     } catch (e) {
-      print('文件下载失败: $fileName, 错误: $e');
+      print('文件下载失败: $fileName - $e');
     } finally {
       _downloadingFiles.remove(fullUrl);
     }
   }
   
+  // 更新消息中的文件路径
+  void _updateMessageFilePath(Map<String, dynamic> message, String filePath) {
+    setState(() {
+      final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+      if (messageIndex != -1) {
+        _messages[messageIndex]['localFilePath'] = filePath;
+      }
+    });
+  }
+
+  // 时间戳标准化方法
   String _normalizeTimestamp(String timestamp) {
     try {
       // 解析时间戳，如果没有时区信息则当作UTC处理
@@ -1924,6 +2069,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       // 出错时返回当前UTC时间
       return DateTime.now().toUtc().toIso8601String();
     }
+  }
+
+  // 保存文件缓存映射
+  Future<void> _saveFileCache(String url, String filePath) async {
+    // 这个方法现在主要用于向后兼容
+    _addToCache(url, filePath);
   }
 
   // 格式化文件大小
@@ -2047,66 +2198,104 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  // 加载所有类型的文件缓存映射
+  // 优化文件缓存加载，减少重复操作
   Future<void> _loadFileCache() async {
+    print('开始加载文件缓存映射...');
+    
+    // 首先从持久化LocalStorageService加载文件映射（限量加载）
+    try {
+      final mapping = await _localStorage.getFileMapping();
+      int loadedCount = 0;
+      
+      for (final entry in mapping.entries) {
+        final url = entry.key;
+        final filePath = entry.value;
+        
+        // 限制初始加载数量，避免内存过载
+        if (loadedCount >= _maxCacheSize) {
+          break;
+        }
+        
+        if (await File(filePath).exists()) {
+          _addToCache(url, filePath);
+          loadedCount++;
+        }
+      }
+      
+      print('从持久化存储加载了${loadedCount}个文件映射');
+    } catch (e) {
+      print('从持久化存储加载文件映射失败: $e');
+    }
+    
+    // 兼容性：从SharedPreferences迁移旧数据（但不全部加载到内存）
+    try {
     final prefs = await SharedPreferences.getInstance();
+      final pathKeys = prefs.getKeys().where((key) => key.startsWith(_filePathCachePrefix)).take(20); // 限制迁移数量
     
-    // 1. 加载文件路径缓存
-    final pathKeys = prefs.getKeys().where((key) => key.startsWith(_filePathCachePrefix));
-    for (final key in pathKeys) {
+      int migratedCount = 0;
+      for (final key in pathKeys) {
       final url = key.substring(_filePathCachePrefix.length);
+        
+        // 如果已经在新系统中，跳过
+        if (_downloadedFiles.containsKey(url)) continue;
+        
       final filePath = prefs.getString(key);
       if (filePath != null && File(filePath).existsSync()) {
-        _downloadedFiles[url] = filePath;
+          // 迁移到新系统（异步，不阻塞）
+          _migrateFileToNewSystem(url, filePath, prefs.getString('${key}_name') ?? 'unknown');
+          migratedCount++;
       } else {
-        // 清理无效的缓存
+          // 清理无效缓存
         await prefs.remove(key);
       }
     }
-    print('已加载 ${_downloadedFiles.length} 个文件路径缓存');
-    
-    // 2. 加载文件哈希缓存
-    final hashKeys = prefs.getKeys().where((key) => key.startsWith(_fileHashCachePrefix));
-    for (final key in hashKeys) {
-      final filePath = key.substring(_fileHashCachePrefix.length);
-      final fileHash = prefs.getString(key);
-      if (fileHash != null && File(filePath).existsSync()) {
-        _fileHashCache[filePath] = fileHash;
-        _seenFileHashes.add(fileHash);
-      } else {
-        // 清理无效的缓存
-        await prefs.remove(key);
+      
+      if (migratedCount > 0) {
+        print('迁移了${migratedCount}个文件到新系统');
       }
+    } catch (e) {
+      print('迁移旧文件缓存失败: $e');
     }
-    print('已加载 ${_fileHashCache.length} 个文件哈希缓存');
     
-    // 3. 加载已见过的文件哈希列表
-    final seenHashesList = prefs.getStringList('seen_file_hashes') ?? [];
-    _seenFileHashes.addAll(seenHashesList);
-    print('已加载 ${_seenFileHashes.length} 个已见过的文件哈希');
-    
-    // 4. 加载元数据缓存
-    final metadataKeys = prefs.getKeys().where((key) => key.startsWith(_fileMetadataCachePrefix));
-    for (final key in metadataKeys) {
-      final metadataKey = key.substring(_fileMetadataCachePrefix.length);
-      final filePath = prefs.getString(key);
-      if (filePath != null && File(filePath).existsSync()) {
-        _fileMetadataCache[metadataKey] = filePath;
-      } else {
-        // 清理无效的缓存
-        await prefs.remove(key);
-      }
+    print('文件缓存加载完成，内存缓存: ${_downloadedFiles.length}个文件');
+  }
+  
+  // 异步迁移文件到新系统
+  Future<void> _migrateFileToNewSystem(String url, String filePath, String fileName) async {
+    try {
+      final fileBytes = await File(filePath).readAsBytes();
+      await _localStorage.saveFileToCache(url, fileBytes, fileName);
+      print('文件迁移成功: $fileName');
+    } catch (e) {
+      print('文件迁移失败: $fileName - $e');
     }
-    print('已加载 ${_fileMetadataCache.length} 个文件元数据缓存');
-    
-    print('文件缓存加载完成 - 路径缓存: ${_downloadedFiles.length}, 哈希缓存: ${_fileHashCache.length}, 元数据缓存: ${_fileMetadataCache.length}');
   }
 
-  // 保存文件缓存映射
-  Future<void> _saveFileCache(String url, String filePath) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('$_filePathCachePrefix$url', filePath);
+  // LRU缓存管理
+  void _updateCacheAccess(String url) {
+    _cacheAccessOrder.remove(url);
+    _cacheAccessOrder.add(url);
+    
+    // 如果超过缓存大小限制，移除最老的缓存项
+    while (_downloadedFiles.length > _maxCacheSize) {
+      final oldestUrl = _cacheAccessOrder.removeAt(0);
+      _downloadedFiles.remove(oldestUrl);
+      print('移除过期缓存: $oldestUrl');
+    }
+  }
+  
+  void _addToCache(String url, String filePath) {
     _downloadedFiles[url] = filePath;
+    _updateCacheAccess(url);
+  }
+  
+  String? _getFromCache(String url) {
+    final filePath = _downloadedFiles[url];
+    if (filePath != null) {
+      _updateCacheAccess(url);
+      return filePath;
+    }
+    return null;
   }
 }
 
@@ -2302,5 +2491,5 @@ class _VideoGifPreviewState extends State<_VideoGifPreview> {
         ),
       ),
     );
-  }
-} 
+  } 
+}
