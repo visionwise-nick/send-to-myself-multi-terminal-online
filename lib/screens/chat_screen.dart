@@ -512,13 +512,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       // 优先从本地快速加载
       await _loadLocalMessages();
       
-      // 为本地加载的消息添加到已处理集合中，避免重复
-      for (final message in _messages) {
-        final messageId = message['id'];
-        if (messageId != null) {
-          _processedMessageIds.add(messageId.toString());
-        }
-      }
+      // 注意：不要将本地消息ID添加到_processedMessageIds中
+      // _processedMessageIds只用于防止实时WebSocket消息的重复处理
+      // 本地消息同步应该通过直接对比消息ID来判断
+      print('本地消息加载完成，不添加到_processedMessageIds以避免阻止同步');
       
       setState(() {
         _isLoading = false;
@@ -608,23 +605,22 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         }
       });
 
-      // 简化的去重逻辑：只检查消息ID
+      // 修复的去重逻辑：主要基于本地消息ID检查，而不是_processedMessageIds
       final List<Map<String, dynamic>> newMessages = [];
       
       for (final serverMsg in convertedMessages) {
         final serverId = serverMsg['id'].toString();
         
-        // 检查是否已经存在相同ID的消息
-        if (_processedMessageIds.contains(serverId)) {
-          print('消息ID已处理过，跳过: $serverId');
+        // 首先检查是否已经存在相同ID的本地消息
+        final existsById = _messages.any((localMsg) => localMsg['id'].toString() == serverId);
+        if (existsById) {
+          print('消息ID已存在于本地，跳过同步: $serverId');
           continue;
         }
         
-        // 检查是否已经存在相同ID的本地消息
-        final existsById = _messages.any((localMsg) => localMsg['id'].toString() == serverId);
-        if (existsById) {
-          print('消息ID已存在于本地，跳过: $serverId');
-          _processedMessageIds.add(serverId); // 标记为已处理
+        // 检查WebSocket实时消息去重（防止实时消息重复）
+        if (_processedMessageIds.contains(serverId)) {
+          print('消息ID在实时处理中已存在，跳过: $serverId');
           continue;
         }
             
@@ -652,7 +648,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           
           if (duplicateFileMessage) {
             print('发现重复文件消息（同步时，相同元数据），跳过添加: ${serverMsg['fileName']}');
-            _processedMessageIds.add(serverId); // 仍然标记为已处理
             continue;
           }
           
@@ -666,7 +661,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           
           if (similarFileMessage) {
             print('发现相似文件消息（同步时，相同文件名和大小），跳过添加: ${serverMsg['fileName']} (${serverMsg['fileSize'] ?? 0} bytes)');
-            _processedMessageIds.add(serverId); // 仍然标记为已处理
             continue;
           }
         }
@@ -696,14 +690,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           
           if (duplicateTextMessage) {
             print('发现重复文本消息（同步时，相同内容+发送者+时间窗口），跳过添加: $content');
-            _processedMessageIds.add(serverId); // 仍然标记为已处理
-          continue;
+            continue;
           }
         }
         
         // 通过检查，添加到新消息列表
         newMessages.add(serverMsg);
-        _processedMessageIds.add(serverId); // 标记为已处理
+        // 标记为已处理，防止后续WebSocket实时消息重复
+        _processedMessageIds.add(serverId);
       }
 
       if (newMessages.isNotEmpty && mounted) {
@@ -750,10 +744,104 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     try {
       final messages = await _localStorage.loadChatMessages(chatId);
       if (mounted) {
-      setState(() {
+        // 获取当前的永久存储路径
+        final currentPermanentPath = await _localStorage.getPermanentStoragePath();
+        final currentCacheDir = path.join(currentPermanentPath, 'files_cache');
+        
+        // 添加详细的调试日志
+        print('=== 本地消息加载详情 ===');
+        print('总消息数: ${messages.length}');
+        print('当前缓存目录: $currentCacheDir');
+        
+        int textCount = 0;
+        int fileCount = 0;
+        int fixedCount = 0;
+        int imageCount = 0;
+        int videoCount = 0;
+        int otherFileCount = 0;
+        
+        for (int i = 0; i < messages.length; i++) {
+          final msg = messages[i];
+          final hasFile = msg['fileType'] != null || msg['fileUrl'] != null || msg['fileName'] != null;
+          
+          if (hasFile) {
+            fileCount++;
+            final fileType = msg['fileType'];
+            
+            // 关键修复：检查是否有localFilePath，如果有就设置到filePath
+            if (msg['localFilePath'] != null) {
+              msg['filePath'] = msg['localFilePath'];
+              print('设置本地文件路径: ${msg['fileName']} -> ${msg['localFilePath']}');
+            }
+            
+            // 新增：检查并修复过期的文件路径
+            if (msg['filePath'] != null) {
+              final filePath = msg['filePath'] as String;
+              final fileName = msg['fileName'] as String?;
+              
+              // 检查文件是否存在
+              if (!await File(filePath).exists() && fileName != null) {
+                // 尝试在当前缓存目录中查找文件
+                final currentFilePath = path.join(currentCacheDir, fileName);
+                if (await File(currentFilePath).exists()) {
+                  print('🔧 修复文件路径: $fileName');
+                  print('   旧路径: $filePath');
+                  print('   新路径: $currentFilePath');
+                  msg['filePath'] = currentFilePath;
+                  fixedCount++;
+                } else {
+                  // 尝试查找带时间戳后缀的文件
+                  final cacheDir = Directory(currentCacheDir);
+                  if (await cacheDir.exists()) {
+                    final files = await cacheDir.list().where((file) => file is File).toList();
+                    for (final file in files) {
+                      final existingFileName = path.basename(file.path);
+                      if (existingFileName.contains(fileName.split('.').first)) {
+                        print('🔧 修复文件路径(模糊匹配): $fileName -> $existingFileName');
+                        msg['filePath'] = file.path;
+                        fixedCount++;
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            
+            switch (fileType) {
+              case 'image':
+                imageCount++;
+                break;
+              case 'video':
+                videoCount++;
+                break;
+              default:
+                otherFileCount++;
+                break;
+            }
+            print('文件消息 ${i+1}: ID=${msg['id']}, fileName=${msg['fileName']}, fileType=${msg['fileType']}, fileUrl=${msg['fileUrl']}, filePath=${msg['filePath']}');
+          } else {
+            textCount++;
+            print('文本消息 ${i+1}: ID=${msg['id']}, text=${msg['text']?.substring(0, math.min(20, msg['text']?.length ?? 0))}...');
+          }
+        }
+        
+        print('文本消息: $textCount 条');
+        print('文件消息: $fileCount 条 (图片: $imageCount, 视频: $videoCount, 其他: $otherFileCount)');
+        print('修复的文件路径: $fixedCount 条');
+        print('=== 本地消息加载详情结束 ===');
+        
+        setState(() {
           _messages = messages;
-      });
-      _scrollToBottom();
+        });
+        
+        // 如果有文件路径被修复，保存更新
+        if (fixedCount > 0) {
+          print('保存修复后的消息到本地存储...');
+          await _saveMessages();
+        }
+        
+        _scrollToBottom();
       }
     } catch (e) {
       print('加载本地消息失败: $e');
@@ -1361,6 +1449,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final isMe = message['isMe'] == true;
     final hasFile = message['fileType'] != null;
     
+    // 添加调试日志
+    if (message['fileUrl'] != null || message['fileName'] != null) {
+      print('构建消息气泡: ID=${message['id']}, fileName=${message['fileName']}, fileType=${message['fileType']}, hasFile=$hasFile, fileUrl=${message['fileUrl']}');
+    }
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 8), // 减少消息间距
       child: Column(
@@ -1537,27 +1630,36 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  // 构建文件预览 - 优化版本，减少重复加载
+  // 构建文件预览 - 简化版本
   Widget _buildFilePreview(String? fileType, String? filePath, String? fileUrl, bool isMe) {
-    // 转换相对URL为绝对URL
-    String? fullUrl = fileUrl;
-    if (fileUrl != null && fileUrl.startsWith('/api/')) {
-      fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
-    }
-
+    print('=== 构建文件预览调试 ===');
+    print('fileType: $fileType, filePath: $filePath, fileUrl: $fileUrl');
+    
     // 1. 优先使用传入的本地文件路径
-    if (filePath != null && File(filePath).existsSync()) {
-      return _buildActualFilePreview(fileType, filePath, fullUrl, isMe);
+    if (filePath != null) {
+      if (File(filePath).existsSync()) {
+        print('✅ 使用本地文件路径: $filePath');
+        return _buildActualFilePreview(fileType, filePath, fileUrl, isMe);
+      } else {
+        print('❌ 本地文件不存在: $filePath');
+      }
     }
     
-    // 2. 检查内存缓存
-    if (fullUrl != null) {
-      final cachedPath = _getFromCache(fullUrl);
-      if (cachedPath != null && File(cachedPath).existsSync()) {
-        return _buildActualFilePreview(fileType, cachedPath, fullUrl, isMe);
+    // 2. 检查URL缓存
+    if (fileUrl != null) {
+      String fullUrl = fileUrl;
+      if (fileUrl.startsWith('/api/')) {
+        fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
       }
       
-      // 3. 如果内存缓存没有，异步检查持久化存储
+      // 检查内存缓存
+      final cachedPath = _getFromCache(fullUrl);
+      if (cachedPath != null && File(cachedPath).existsSync()) {
+        print('✅ 使用内存缓存: $cachedPath');
+        return _buildActualFilePreview(fileType, cachedPath, fileUrl, isMe);
+      }
+      
+      // 异步检查持久化存储
       return FutureBuilder<String?>(
         future: _localStorage.getFileFromCache(fullUrl),
         builder: (context, snapshot) {
@@ -1565,20 +1667,20 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             return _buildLoadingPreview();
           }
           
-          final persistentCachedPath = snapshot.data;
-          if (persistentCachedPath != null && File(persistentCachedPath).existsSync()) {
-            // 添加到内存缓存以提高后续访问速度
-            _addToCache(fullUrl!, persistentCachedPath);
-            return _buildActualFilePreview(fileType, persistentCachedPath, fullUrl, isMe);
+          final persistentPath = snapshot.data;
+          if (persistentPath != null && File(persistentPath).existsSync()) {
+            _addToCache(fullUrl, persistentPath);
+            print('✅ 使用持久化缓存: $persistentPath');
+            return _buildActualFilePreview(fileType, persistentPath, fileUrl, isMe);
           }
           
-          // 4. 文件不存在，显示占位符
+          print('❌ 文件未找到，显示占位符');
           return _buildFileNotFoundPreview(fileType, fullUrl);
         },
       );
     }
     
-    return _buildFileNotFoundPreview(fileType, fullUrl);
+    return _buildFileNotFoundPreview(fileType, fileUrl);
   }
 
   // 加载中预览
@@ -2198,23 +2300,20 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  // 优化文件缓存加载，减少重复操作
+  // 简化文件缓存加载
   Future<void> _loadFileCache() async {
     print('开始加载文件缓存映射...');
     
-    // 首先从持久化LocalStorageService加载文件映射（限量加载）
     try {
       final mapping = await _localStorage.getFileMapping();
-      int loadedCount = 0;
+      print('持久化映射总数: ${mapping.length}');
       
+      int loadedCount = 0;
       for (final entry in mapping.entries) {
         final url = entry.key;
         final filePath = entry.value;
         
-        // 限制初始加载数量，避免内存过载
-        if (loadedCount >= _maxCacheSize) {
-          break;
-        }
+        if (loadedCount >= _maxCacheSize) break;
         
         if (await File(filePath).exists()) {
           _addToCache(url, filePath);
@@ -2222,52 +2321,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         }
       }
       
-      print('从持久化存储加载了${loadedCount}个文件映射');
-    } catch (e) {
-      print('从持久化存储加载文件映射失败: $e');
-    }
-    
-    // 兼容性：从SharedPreferences迁移旧数据（但不全部加载到内存）
-    try {
-    final prefs = await SharedPreferences.getInstance();
-      final pathKeys = prefs.getKeys().where((key) => key.startsWith(_filePathCachePrefix)).take(20); // 限制迁移数量
-    
-      int migratedCount = 0;
-      for (final key in pathKeys) {
-      final url = key.substring(_filePathCachePrefix.length);
-        
-        // 如果已经在新系统中，跳过
-        if (_downloadedFiles.containsKey(url)) continue;
-        
-      final filePath = prefs.getString(key);
-      if (filePath != null && File(filePath).existsSync()) {
-          // 迁移到新系统（异步，不阻塞）
-          _migrateFileToNewSystem(url, filePath, prefs.getString('${key}_name') ?? 'unknown');
-          migratedCount++;
-      } else {
-          // 清理无效缓存
-        await prefs.remove(key);
-      }
-    }
+      print('文件缓存加载完成，内存缓存: ${_downloadedFiles.length}个文件');
       
-      if (migratedCount > 0) {
-        print('迁移了${migratedCount}个文件到新系统');
-      }
     } catch (e) {
-      print('迁移旧文件缓存失败: $e');
-    }
-    
-    print('文件缓存加载完成，内存缓存: ${_downloadedFiles.length}个文件');
-  }
-  
-  // 异步迁移文件到新系统
-  Future<void> _migrateFileToNewSystem(String url, String filePath, String fileName) async {
-    try {
-      final fileBytes = await File(filePath).readAsBytes();
-      await _localStorage.saveFileToCache(url, fileBytes, fileName);
-      print('文件迁移成功: $fileName');
-    } catch (e) {
-      print('文件迁移失败: $fileName - $e');
+      print('加载文件缓存失败: $e');
     }
   }
 
