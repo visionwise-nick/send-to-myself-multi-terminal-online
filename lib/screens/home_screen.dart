@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
+import '../services/websocket_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/logout_dialog.dart';
 import '../widgets/group_selector.dart';
@@ -16,28 +18,71 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, WidgetsBindingObserver {
   int _selectedIndex = 0;
   late PageController _pageController;
+  Timer? _statusSyncTimer;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    WidgetsBinding.instance.addObserver(this);
     
     // 监听群组变化，确保页面切换时整个应用状态刷新
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final groupProvider = Provider.of<GroupProvider>(context, listen: false);
       groupProvider.addListener(_onGroupChanged);
+      
+      // 启动设备状态同步定时器
+      _startStatusSyncTimer();
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     final groupProvider = Provider.of<GroupProvider>(context, listen: false);
     groupProvider.removeListener(_onGroupChanged);
+    _statusSyncTimer?.cancel();
     _pageController.dispose();
     super.dispose();
+  }
+  
+  // 开始定期状态同步定时器
+  void _startStatusSyncTimer() {
+    _statusSyncTimer?.cancel();
+    
+    // 每20秒检查一次设备状态同步
+    _statusSyncTimer = Timer.periodic(Duration(seconds: 20), (timer) {
+      final websocketService = WebSocketService();
+      if (websocketService.isConnected) {
+        print('🔄 定期设备状态同步检查');
+        websocketService.refreshDeviceStatus();
+      }
+    });
+  }
+  
+  // 用户交互时触发状态同步
+  void _onUserInteraction() {
+    final websocketService = WebSocketService();
+    if (websocketService.isConnected) {
+      websocketService.notifyDeviceActivityChange();
+    }
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    if (state == AppLifecycleState.resumed) {
+      // 应用回到前台时重启定时器
+      _startStatusSyncTimer();
+      _onUserInteraction();
+    } else if (state == AppLifecycleState.paused) {
+      // 应用暂停时停止定时器
+      _statusSyncTimer?.cancel();
+    }
   }
   
   // 群组变化处理 - 通知页面数据可能已变化
@@ -59,6 +104,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       curve: Curves.easeInOut,
     );
     }
+    
+    // 用户交互时触发状态同步
+    _onUserInteraction();
   }
 
   void _showLogoutDialog() {

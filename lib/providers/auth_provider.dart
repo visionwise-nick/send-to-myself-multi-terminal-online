@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/device_auth_service.dart';
 import '../services/websocket_service.dart';
 
-class AuthProvider with ChangeNotifier {
+class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
   final DeviceAuthService _authService = DeviceAuthService();
   final WebSocketService _websocketService = WebSocketService();
   
@@ -24,6 +24,46 @@ class AuthProvider with ChangeNotifier {
     _initWebSocket();
     _websocketService.onDeviceStatusChange.listen(_handleDeviceStatusChange);
     _websocketService.onLogout.listen(_handleLogoutEvent);
+    
+    // 添加应用生命周期监听
+    WidgetsBinding.instance.addObserver(this);
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    print('📱 应用生命周期变化: $state');
+    
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // 应用回到前台，立即同步设备状态
+        print('应用回到前台，触发设备状态同步');
+        _websocketService.notifyDeviceActivityChange();
+        _websocketService.forceSyncDeviceStatus();
+        break;
+        
+      case AppLifecycleState.paused:
+        // 应用暂停，通知状态变化但不强制同步
+        print('应用暂停，通知设备状态变化');
+        _websocketService.notifyDeviceActivityChange();
+        break;
+        
+      case AppLifecycleState.inactive:
+        // 应用非活跃状态
+        print('应用变为非活跃状态');
+        break;
+        
+      case AppLifecycleState.detached:
+        // 应用分离状态
+        print('应用分离');
+        break;
+        
+      case AppLifecycleState.hidden:
+        // 应用隐藏状态
+        print('应用隐藏');
+        break;
+    }
   }
   
   Future<void> _initialize() async {
@@ -307,10 +347,13 @@ class AuthProvider with ChangeNotifier {
         }
       }
       
-      // 获取最新的在线设备状态
-      WebSocketService().refreshDeviceStatus();
+      // 强制同步最新的设备状态，确保所有设备显示一致
+      _websocketService.forceSyncDeviceStatus();
       
-      print('设备资料刷新成功');
+      // 通知设备活跃状态变化
+      _websocketService.notifyDeviceActivityChange();
+      
+      print('设备资料刷新成功，已触发设备状态强制同步');
       notifyListeners();
     } catch (e) {
       print('刷新设备资料失败: $e');
@@ -534,6 +577,9 @@ class AuthProvider with ChangeNotifier {
   
   @override
   void dispose() {
+    // 移除应用生命周期监听器
+    WidgetsBinding.instance.removeObserver(this);
+    
     _websocketService.dispose();
     super.dispose();
   }

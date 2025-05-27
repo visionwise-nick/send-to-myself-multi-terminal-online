@@ -572,6 +572,9 @@ class GroupProvider extends ChangeNotifier {
         }
       }
     }
+    
+    // 设备状态更新后，通知WebSocket服务
+    _websocketService.notifyDeviceActivityChange();
   }
   
   // 处理在线设备列表更新

@@ -471,61 +471,20 @@ class WebSocketService {
     if (data.containsKey('devices') && data.containsKey('groupId')) {
       print('收到群组设备状态: 群组ID=${data['groupId']}, ${data['devices'].length}台设备');
       
-      // 正确处理设备状态，根据服务器数据和活跃时间判断
+      // 简化并优化设备状态判断，确保所有设备状态一致
       final List<Map<String, dynamic>> processedDevices = [];
       for (final device in data['devices']) {
         if (device is Map) {
           final Map<String, dynamic> processedDevice = Map<String, dynamic>.from(device);
           
-          // 根据服务器返回的is_online状态和最后活跃时间来判断设备在线状态
-          bool isOnline = false;
-          
-          // 首先检查服务器返回的is_online状态
-          if (device['is_online'] == true) {
-            // 如果服务器说在线，再检查最后活跃时间
-            if (device['last_active_time'] != null) {
-              try {
-                final lastActiveTime = DateTime.parse(device['last_active_time']);
-                final now = DateTime.now();
-                final timeDifference = now.difference(lastActiveTime);
-                
-                // 缩短在线判断时间到3分钟，提高准确性
-                if (timeDifference.inMinutes <= 3) {
-                  isOnline = true;
-                  print('设备${device['name']}(${device['id']})在线 - 最后活跃: ${timeDifference.inMinutes}分钟前');
-                } else if (timeDifference.inMinutes <= 10) {
-                  // 3-10分钟内显示为"刚刚离线"但保持在线状态用于通信
-                  isOnline = true;
-                  print('设备${device['name']}(${device['id']})刚刚离线 - 最后活跃: ${timeDifference.inMinutes}分钟前');
-                } else {
-                  // 超过10分钟认为真正离线
-                  isOnline = false;
-                  print('设备${device['name']}(${device['id']})离线 - 最后活跃: ${timeDifference.inMinutes}分钟前');
-                }
-              } catch (e) {
-                print('解析设备活跃时间失败: $e');
-                // 解析失败时使用服务器的is_online状态
-                isOnline = device['is_online'] == true;
-              }
-            } else {
-              // 没有活跃时间但服务器说在线，保持在线状态
-              isOnline = true;
-            }
-          } else {
-            // 服务器明确说离线
-            isOnline = false;
-            print('设备${device['name']}(${device['id']})离线 - 服务器状态');
-          }
-          
-          // 检查是否已登出
-          if (device['is_logged_out'] == true) {
-            isOnline = false;
-            print('设备${device['name']}(${device['id']})已登出');
-          }
+          // 优化在线状态判断逻辑
+          bool isOnline = _determineDeviceOnlineStatus(device);
           
           processedDevice['isOnline'] = isOnline;
           processedDevice['is_online'] = isOnline;
           processedDevices.add(processedDevice);
+          
+          print('群组设备状态: ${device['name']}(${device['id']}) - ${isOnline ? "在线" : "离线"}');
         }
       }
       
@@ -544,57 +503,20 @@ class WebSocketService {
     if (data.containsKey('devices') && data['devices'] is List) {
       print('收到在线设备列表: ${data['devices'].length}台设备');
       
-      // 正确处理设备状态，根据服务器数据和活跃时间判断
+      // 使用相同的设备状态判断逻辑确保一致性
       final List<Map<String, dynamic>> processedDevices = [];
       for (final device in data['devices']) {
         if (device is Map) {
           final Map<String, dynamic> processedDevice = Map<String, dynamic>.from(device);
           
-          // 根据服务器返回的is_online状态和最后活跃时间来判断设备在线状态
-          bool isOnline = false;
-          
-          // 首先检查服务器返回的is_online状态
-          if (device['is_online'] == true) {
-            // 如果服务器说在线，再检查最后活跃时间
-            if (device['last_active_time'] != null) {
-              try {
-                final lastActiveTime = DateTime.parse(device['last_active_time']);
-                final now = DateTime.now();
-                final timeDifference = now.difference(lastActiveTime);
-                
-                // 缩短在线判断时间到3分钟，保持与群组设备状态一致
-                if (timeDifference.inMinutes <= 3) {
-                  isOnline = true;
-                  print('在线设备${device['name']}(${device['id']}) - 最后活跃: ${timeDifference.inMinutes}分钟前');
-                } else if (timeDifference.inMinutes <= 10) {
-                  // 3-10分钟内显示为"刚刚离线"但保持在线状态用于通信
-                  isOnline = true;
-                  print('在线设备${device['name']}(${device['id']})刚刚离线 - 最后活跃: ${timeDifference.inMinutes}分钟前');
-                } else {
-                  // 超过10分钟认为真正离线
-                  isOnline = false;
-                  print('在线设备${device['name']}(${device['id']})离线 - 最后活跃: ${timeDifference.inMinutes}分钟前');
-                }
-              } catch (e) {
-                print('解析设备活跃时间失败: $e');
-                // 解析失败时使用服务器的is_online状态
-                isOnline = device['is_online'] == true;
-              }
-            } else {
-              // 没有活跃时间但服务器说在线，保持在线状态
-              isOnline = true;
-            }
-          }
-          
-          // 检查是否已登出
-          if (device['is_logged_out'] == true) {
-            isOnline = false;
-            print('设备${device['name']}(${device['id']})已登出');
-          }
+          // 使用统一的在线状态判断逻辑
+          bool isOnline = _determineDeviceOnlineStatus(device);
           
           processedDevice['isOnline'] = isOnline;
           processedDevice['is_online'] = isOnline;
           processedDevices.add(processedDevice);
+          
+          print('在线设备状态: ${device['name']}(${device['id']}) - ${isOnline ? "在线" : "离线"}');
         }
       }
       
@@ -606,12 +528,49 @@ class WebSocketService {
     }
   }
   
+  // 统一的设备在线状态判断逻辑
+  bool _determineDeviceOnlineStatus(Map device) {
+    // 1. 首先检查是否已登出
+    if (device['is_logged_out'] == true) {
+      return false;
+    }
+    
+    // 2. 检查服务器的is_online状态
+    if (device['is_online'] != true) {
+      return false; // 服务器明确说离线
+    }
+    
+    // 3. 如果服务器说在线，检查最后活跃时间
+    if (device['last_active_time'] != null) {
+      try {
+        final lastActiveTime = DateTime.parse(device['last_active_time']);
+        final now = DateTime.now();
+        final timeDifference = now.difference(lastActiveTime);
+        
+        // 简化判断：2分钟内活跃即认为在线（提高实时性）
+        if (timeDifference.inMinutes <= 2) {
+          return true;
+        } else {
+          print('设备${device['name']}活跃时间超时: ${timeDifference.inMinutes}分钟前');
+          return false;
+        }
+      } catch (e) {
+        print('解析设备活跃时间失败: $e');
+        // 解析失败时相信服务器状态
+        return device['is_online'] == true;
+      }
+    }
+    
+    // 4. 没有活跃时间但服务器说在线，暂时相信服务器
+    return true;
+  }
+  
   // 开始定期发送ping
   void _startPingTimer() {
     _pingTimer?.cancel();
     
-    // 优化ping间隔：根据连接健康状况动态调整
-    int pingInterval = _isConnectionHealthy ? 30 : 15; // 连接健康时30秒，不健康时15秒
+    // 大幅缩短ping间隔以提高设备状态同步的实时性
+    int pingInterval = _isConnectionHealthy ? 10 : 5; // 连接健康时10秒，不健康时5秒
     
     _pingTimer = Timer.periodic(Duration(seconds: pingInterval), (timer) {
       if (_socket != null && _socket!.connected) {
@@ -622,15 +581,17 @@ class WebSocketService {
           'status': 'active',
           'timestamp': DateTime.now().toIso8601String(),
           'clientTime': DateTime.now().millisecondsSinceEpoch,
+          'request_status_update': true, // 请求服务器返回最新状态
         });
         
         // 检查连接健康状况
         _checkConnectionHealth();
         
-        // 定期请求设备状态更新（降低频率）
+        // 每次ping都请求最新的设备状态（提高同步频率）
         if (_reconnectAttempts == 0) { // 只在连接稳定时请求
           _requestDeviceStatus();
           _requestGroupDevicesStatus();
+          _requestOnlineDevices(); // 增加在线设备列表请求
         }
       } else {
         print('❌ 连接已断开，停止ping');
@@ -745,8 +706,48 @@ class WebSocketService {
     if (isConnected && _isConnectionHealthy) {
       _requestDeviceStatus();
       _requestGroupDevicesStatus();
+      _requestOnlineDevices();
+      print('🔄 手动刷新设备状态完成');
     } else {
       print('⚠️ 连接不健康，跳过设备状态刷新');
+    }
+  }
+  
+  // 立即同步设备状态（用于重要状态变化）
+  void forceSyncDeviceStatus() {
+    if (_socket != null && _socket!.connected) {
+      print('🚀 强制同步设备状态...');
+      
+      // 立即发送状态更新请求
+      _socket!.emit('force_status_sync', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'sync_reason': 'manual_refresh'
+      });
+      
+      // 同时请求各种状态更新
+      _requestDeviceStatus();
+      _requestGroupDevicesStatus();
+      _requestOnlineDevices();
+    }
+  }
+  
+  // 当设备活跃状态发生变化时调用
+  void notifyDeviceActivityChange() {
+    if (_socket != null && _socket!.connected) {
+      print('📱 通知设备活跃状态变化...');
+      
+      _socket!.emit('device_activity_update', {
+        'status': 'active',
+        'timestamp': DateTime.now().toIso8601String(),
+        'last_active': DateTime.now().toIso8601String(),
+      });
+      
+      // 延迟一秒后请求更新状态，确保服务器处理完成
+      Future.delayed(Duration(seconds: 1), () {
+        if (_socket != null && _socket!.connected) {
+          forceSyncDeviceStatus();
+        }
+      });
     }
   }
   
