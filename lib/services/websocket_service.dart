@@ -64,18 +64,24 @@ class WebSocketService {
       case 'new_private_message':
       case 'new_group_message':
         // 🔥 关键修复：确保群组消息正确转发
-        print('🔥 转发聊天消息到聊天流: $type, 数据: ${data['data']}');
+        print('🔥 转发聊天消息到聊天流: $type, 原始数据: $data');
         
-        // 🔥 重要修复：确保消息数据结构正确
+        // 🔥 重要修复：正确解析消息数据结构
         final messageData = data['data'];
         if (messageData != null) {
-          _chatMessageController.add({
-            'type': type,
-            'message': messageData['message'],
-            'data': messageData,
-            'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
-          });
-          print('✅ 群组消息已转发到聊天流');
+          // 🔥 关键修复：确保消息结构正确
+          final message = messageData['message'];
+          if (message != null) {
+            _chatMessageController.add({
+              'type': type,
+              'message': message, // 直接传递消息对象
+              'data': messageData,
+              'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
+            });
+            print('✅ 聊天消息已正确转发: ${message['id']}');
+          } else {
+            print('❌ 消息对象为空，无法转发');
+          }
         } else {
           print('❌ 消息数据为空，无法转发');
         }
@@ -85,13 +91,14 @@ class WebSocketService {
         // 🔥 新增：处理文件消息
         print('📎 转发文件消息到聊天流');
         final messageData = data['data'];
-        if (messageData != null) {
+        if (messageData != null && messageData['message'] != null) {
           _chatMessageController.add({
             'type': 'new_private_message',
             'message': messageData['message'],
             'data': messageData,
             'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
           });
+          print('✅ 文件消息已转发: ${messageData['message']['id']}');
         }
         break;
         
@@ -99,13 +106,14 @@ class WebSocketService {
         // 🔥 新增：处理群组文件消息
         print('📎 转发群组文件消息到聊天流');
         final messageData = data['data'];
-        if (messageData != null) {
+        if (messageData != null && messageData['message'] != null) {
           _chatMessageController.add({
             'type': 'new_group_message',
             'message': messageData['message'],
             'data': messageData,
             'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
           });
+          print('✅ 群组文件消息已转发: ${messageData['message']['id']}');
         }
         break;
         
