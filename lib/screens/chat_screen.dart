@@ -187,6 +187,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     
     // 启动时进行文件迁移
     _migrateOldFilesOnStartup();
+    
+    // 🔥 紧急诊断：实时WebSocket状态监控
+    _startEmergencyDiagnostics();
   }
   
   // 启动时迁移旧文件到永久存储
@@ -2560,6 +2563,70 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _subscribeToChatMessages();
     
     print('已重新启动WebSocket监听');
+  }
+
+  // 🔥 紧急诊断：实时WebSocket状态监控
+  void _startEmergencyDiagnostics() {
+    // 每30秒检查一次WebSocket状态和消息接收情况
+    Timer.periodic(Duration(seconds: 30), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      
+      print('🩺 === 紧急WebSocket诊断 ===');
+      print('WebSocket连接状态: ${_websocketService.isConnected}');
+      print('最后收到消息时间: $_lastMessageReceivedTime');
+      print('已处理消息数量: ${_processedMessageIds.length}');
+      print('界面消息数量: ${_messages.length}');
+      
+      if (_lastMessageReceivedTime != null) {
+        final timeSinceLastMessage = DateTime.now().difference(_lastMessageReceivedTime!);
+        print('距离最后消息: ${timeSinceLastMessage.inMinutes}分钟');
+        
+        // 如果超过2分钟没收到任何消息，进行恢复尝试
+        if (timeSinceLastMessage.inMinutes >= 2) {
+          print('⚠️ 消息接收异常，尝试恢复连接');
+          _emergencyWebSocketRecovery();
+        }
+      } else {
+        print('⚠️ 从未收到过消息，可能存在连接问题');
+        _emergencyWebSocketRecovery();
+      }
+    });
+  }
+
+  // 🔥 紧急WebSocket恢复
+  void _emergencyWebSocketRecovery() {
+    print('🚨 执行紧急WebSocket恢复...');
+    
+    // 1. 重新订阅消息流
+    _chatMessageSubscription?.cancel();
+    _subscribeToChatMessages();
+    
+    // 2. 强制刷新WebSocket状态
+    _websocketService.refreshDeviceStatus();
+    
+    // 3. 手动请求最近消息
+    _websocketService.emit('get_recent_messages', {
+      'timestamp': DateTime.now().toIso8601String(),
+      'reason': 'emergency_recovery',
+      'limit': 20,
+    });
+    
+    // 4. 清理部分旧的消息ID（防止过度累积）
+    if (_processedMessageIds.length > 500) {
+      print('🧹 清理过多的消息ID记录');
+      final oldIds = _processedMessageIds.take(200).toList();
+      _processedMessageIds.removeAll(oldIds);
+      
+      // 同时清理对应的时间戳
+      oldIds.forEach((id) {
+        _messageIdTimestamps.remove(id);
+      });
+    }
+    
+    print('✅ 紧急恢复完成');
   }
 }
 
