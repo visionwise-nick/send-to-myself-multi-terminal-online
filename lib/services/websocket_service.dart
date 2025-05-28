@@ -2,15 +2,23 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'dart:async';
 import 'dart:io';
 import 'device_auth_service.dart';
+import 'websocket_manager.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as http;
 
 class WebSocketService {
   static final WebSocketService _instance = WebSocketService._internal();
   factory WebSocketService() => _instance;
-  WebSocketService._internal();
+  WebSocketService._internal() {
+    // 🔥 关键修复：监听新的WebSocket管理器消息并转发
+    _setupWebSocketManagerBridge();
+  }
   
   IO.Socket? _socket;
   final DeviceAuthService _authService = DeviceAuthService();
+  final WebSocketManager _wsManager = WebSocketManager();
+  StreamSubscription? _wsManagerSubscription;
   final StreamController<Map<String, dynamic>> _messageController = 
       StreamController<Map<String, dynamic>>.broadcast();
   
@@ -39,6 +47,8 @@ class WebSocketService {
   bool get isConnected => _socket?.connected ?? false;
   Timer? _pingTimer;
   Timer? _reconnectTimer;
+  Timer? _statusSyncTimer; // 添加专门的状态同步定时器
+  Timer? _networkCheckTimer; // 添加网络状态检查定时器
   DateTime? _lastPongTime; // 添加最后pong时间记录
   
   // 重连控制
@@ -54,6 +64,42 @@ class WebSocketService {
   // 连接健康检查
   bool _isConnectionHealthy = true;
   int _consecutiveFailures = 0;
+  
+  // 🔥 关键修复：设置WebSocket管理器桥接
+  void _setupWebSocketManagerBridge() {
+    _wsManagerSubscription = _wsManager.onMessageReceived.listen((data) {
+      _handleWebSocketManagerMessage(data);
+    });
+  }
+  
+  // 处理来自WebSocket管理器的消息并转发到相应的流
+  void _handleWebSocketManagerMessage(Map<String, dynamic> data) {
+    final type = data['type'];
+    print('🌉 WebSocketService桥接消息: $type');
+    
+    switch (type) {
+      case 'new_private_message':
+      case 'new_group_message':
+        // 转发聊天消息到聊天消息流
+        _chatMessageController.add(data);
+        break;
+      case 'group_devices_status':
+      case 'online_devices':
+      case 'device_status_update':
+        // 转发设备状态消息到设备状态流
+        _deviceStatusController.add(data);
+        break;
+      case 'recent_messages': // 🔥 新增：处理最近消息
+        // 转发最近消息到聊天消息流
+        print('📬 桥接最近消息到聊天流');
+        _chatMessageController.add(data);
+        break;
+      default:
+        // 转发其他消息到通用消息流
+        _messageController.add(data);
+        break;
+    }
+  }
   
   // 发送1v1聊天消息
   void sendPrivateMessage({
@@ -188,18 +234,41 @@ class WebSocketService {
       // 取消现有的ping计时器
       _pingTimer?.cancel();
       
-      // 完全按照Node.js脚本创建连接
+      // 优化的Socket.IO连接配置，针对移动网络环境
       _socket = IO.io(
         'https://sendtomyself-api-adecumh2za-uc.a.run.app',
         {
           'path': '/ws',
-          'transports': ['websocket'],
+          'transports': ['websocket'], // 优先使用WebSocket
           'query': {
             'token': updatedToken,
             'deviceId': deviceId
           },
           'reconnection': false, // 禁用自动重连，我们自己控制
-          'timeout': 20000, // 20秒连接超时
+          'timeout': 30000, // 增加到30秒连接超时，适应慢网络
+          'forceNew': true, // 强制创建新连接
+          'upgrade': true, // 允许协议升级
+          'rememberUpgrade': false, // 不记住升级状态，每次重新协商
+          
+          // 移动网络优化参数
+          'autoConnect': true,
+          'closeOnBeforeunload': true,
+          
+          // 传输层优化
+          'transports': ['polling', 'websocket'], // 支持polling作为fallback
+          'upgrade': true,
+          'timestampRequests': true, // 添加时间戳避免缓存
+          
+          // 心跳和超时设置
+          'pingTimeout': 60000, // 60秒ping超时
+          'pingInterval': 25000, // 25秒ping间隔
+          
+          // 缓冲区设置
+          'maxBufferSize': 1000000, // 1MB缓冲区
+          
+          // 连接重试设置
+          'randomizationFactor': 0.5,
+          'tryAllTransports': true, // 尝试所有传输方式
         }
       );
       
@@ -256,49 +325,97 @@ class WebSocketService {
     }
   }
   
-  // 检查网络连接
+  // 优化的网络连接检查
   Future<bool> _checkNetworkConnectivity() async {
-    try {
-      print('检查网络连接...');
-      final result = await InternetAddress.lookup('google.com')
-          .timeout(Duration(seconds: 10));
+    print('检查网络连接...');
+    
+    if (kIsWeb) {
+      // Web环境：使用HTTP请求检查网络连接
+      final testUrls = [
+        'https://www.google.com/',
+        'https://www.cloudflare.com/',
+        'https://sendtomyself-api-adecumh2za-uc.a.run.app/health',
+      ];
       
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        print('✅ 网络连接正常');
-        _isNetworkAvailable = true;
-        return true;
+      for (final url in testUrls) {
+        try {
+          print('尝试连接: $url');
+          final response = await http.get(Uri.parse(url))
+              .timeout(Duration(seconds: 8));
+          
+          if (response.statusCode < 500) {
+            print('✅ 网络连接正常 (通过: $url)');
+            _isNetworkAvailable = true;
+            return true;
+          }
+        } catch (e) {
+          print('❌ 连接$url失败: $e');
+          continue;
+        }
       }
-    } catch (e) {
-      print('❌ 网络连接检查失败: $e');
-      _isNetworkAvailable = false;
+    } else {
+      // 原生环境：使用DNS解析检查
+      final testDomains = [
+        'google.com',
+        '8.8.8.8',
+        'cloudflare.com',
+      ];
+      
+      for (final domain in testDomains) {
+        try {
+          print('尝试连接: $domain');
+          final result = await InternetAddress.lookup(domain)
+              .timeout(Duration(seconds: 8));
+          
+          if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+            print('✅ 网络连接正常 (通过: $domain)');
+            _isNetworkAvailable = true;
+            return true;
+          }
+        } catch (e) {
+          print('❌ 连接$domain失败: $e');
+          continue;
+        }
+      }
     }
+    
+    print('❌ 所有网络检查都失败');
+    _isNetworkAvailable = false;
     return false;
   }
   
-  // 检查DNS解析
+  // 简化的DNS解析检查
   Future<bool> _checkDnsResolution() async {
     try {
-      print('检查服务器DNS解析...');
-      final result = await InternetAddress.lookup('sendtomyself-api-adecumh2za-uc.a.run.app')
-          .timeout(Duration(seconds: 15));
+      print('检查服务器连通性...');
       
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        print('✅ 服务器DNS解析成功: ${result[0].address}');
-        return true;
+      if (kIsWeb) {
+        // Web环境：使用HTTP请求检查服务器
+        final response = await http.get(
+          Uri.parse('https://sendtomyself-api-adecumh2za-uc.a.run.app/health')
+        ).timeout(Duration(seconds: 10));
+        
+        if (response.statusCode < 500) {
+          print('✅ 服务器连通性正常: ${response.statusCode}');
+          return true;
+        }
+      } else {
+        // 原生环境：使用DNS解析检查
+        final result = await InternetAddress.lookup('sendtomyself-api-adecumh2za-uc.a.run.app')
+            .timeout(Duration(seconds: 10));
+        
+        if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+          print('✅ 服务器连通性正常: ${result[0].address}');
+          return true;
+        }
       }
     } catch (e) {
-      print('❌ 服务器DNS解析失败: $e');
+      print('⚠️ 服务器连通性检查失败: $e');
       
-      // 如果DNS解析失败，尝试备用检查
-      try {
-        print('尝试备用DNS检查...');
-        final result = await InternetAddress.lookup('google.com')
-            .timeout(Duration(seconds: 10));
-        if (result.isNotEmpty) {
-          print('⚠️ 网络正常但服务器DNS解析失败，可能是服务器问题');
-        }
-      } catch (e2) {
-        print('❌ 备用DNS检查也失败，网络可能有问题: $e2');
+      // 如果检查失败但网络可能正常，也允许尝试连接
+      if (_isNetworkAvailable) {
+        print('🔄 网络正常，允许尝试连接服务器');
+        return true;
       }
     }
     return false;
@@ -316,7 +433,55 @@ class WebSocketService {
     _reconnectTimer?.cancel();
     
     _startPingTimer(); // 开始发送定期ping
+    _startStatusSyncTimer(); // 启动专门的状态同步定时器
+    _startNetworkMonitoring(); // 启动网络监控
     print('🎉 WebSocket连接恢复正常');
+  }
+  
+  // 启动网络状态监控
+  void _startNetworkMonitoring() {
+    _networkCheckTimer?.cancel();
+    
+    // 每2分钟检查一次网络状态
+    _networkCheckTimer = Timer.periodic(Duration(minutes: 2), (timer) {
+      if (!isConnected) {
+        print('🔍 检查网络状态恢复...');
+        _checkNetworkConnectivity().then((isAvailable) {
+          if (isAvailable && _shouldReconnect && !_isReconnecting) {
+            print('📶 网络已恢复，尝试重连...');
+            _reconnectAttempts = 0; // 重置重连计数
+            connect().catchError((e) {
+              print('网络恢复后重连失败: $e');
+            });
+          }
+        });
+      }
+    });
+  }
+  
+  // 优化的状态同步定时器
+  void _startStatusSyncTimer() {
+    _statusSyncTimer?.cancel();
+    
+    // 减少状态同步频率，从12秒增加到60秒
+    _statusSyncTimer = Timer.periodic(Duration(seconds: 60), (timer) {
+      if (_socket != null && _socket!.connected && _isConnectionHealthy) {
+        print('⚡ 定期状态同步检查...');
+        
+        // 只在连接稳定时执行状态同步
+        if (_reconnectAttempts == 0) {
+          forceSyncDeviceStatus();
+          
+          // 每5分钟通知一次设备活跃状态
+          if (DateTime.now().minute % 5 == 0) {
+            notifyDeviceActivityChange();
+          }
+        }
+      } else {
+        print('⚠️ 连接不健康，跳过状态同步');
+        timer.cancel();
+      }
+    });
   }
   
   // 收到消息时的处理（连接健康检查）
@@ -330,6 +495,8 @@ class WebSocketService {
   void _onConnectionLost(String? reason) {
     _isConnectionHealthy = false;
     _pingTimer?.cancel(); // 停止ping
+    _statusSyncTimer?.cancel(); // 停止状态同步定时器
+    // 保持网络监控运行，以便检测网络恢复
     
     print('连接断开原因: $reason');
     
@@ -337,6 +504,7 @@ class WebSocketService {
     if (reason == 'io server disconnect') {
       print('服务端主动断开连接，可能是登出操作');
       _shouldReconnect = false;
+      _networkCheckTimer?.cancel(); // 登出时停止网络监控
       _logoutController.add({
         'type': 'forced_disconnect',
         'message': '您已从其他设备登出，连接已断开',
@@ -409,31 +577,63 @@ class WebSocketService {
     }
   }
   
-  // 安排重连
+  // 优化的重连安排策略
   void _scheduleReconnect({bool isNetworkError = false}) {
     if (_reconnectAttempts >= _maxReconnectAttempts) {
-      print('❌ 达到最大重连次数，停止重连');
+      print('❌ 达到最大重连次数($_maxReconnectAttempts)，停止重连');
       _shouldReconnect = false;
       return;
     }
     
     _reconnectAttempts++;
     
-    // 指数退避算法，网络错误时使用更长延迟
-    int baseDelay = isNetworkError ? 10 : 5; // 网络错误基础延迟10秒，其他5秒
-    int delay = (baseDelay * (1 << (_reconnectAttempts - 1))).clamp(baseDelay, isNetworkError ? 120 : 60); // 最大延迟2分钟/1分钟
+    // 根据错误类型和重连次数动态调整延迟
+    int delay;
+    if (isNetworkError) {
+      // 网络错误：更保守的重连策略
+      delay = _calculateNetworkErrorDelay(_reconnectAttempts);
+    } else {
+      // 一般错误：较快的重连策略  
+      delay = _calculateNormalErrorDelay(_reconnectAttempts);
+    }
     
-    print('⏰ 安排${delay}秒后进行第${_reconnectAttempts}次重连${isNetworkError ? '(网络错误)' : ''}');
+    print('⏰ 安排${delay}秒后进行第${_reconnectAttempts}次重连${isNetworkError ? '(网络错误)' : '(一般错误)'}');
     
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(Duration(seconds: delay), () {
       if (_shouldReconnect && !isConnected) {
-        print('🔄 开始第${_reconnectAttempts}次重连...');
+        print('🔄 开始第${_reconnectAttempts}次重连... (尝试${_reconnectAttempts}/${_maxReconnectAttempts})');
         connect().catchError((e) {
           print('重连失败: $e');
         });
       }
     });
+  }
+  
+  // 计算网络错误的重连延迟
+  int _calculateNetworkErrorDelay(int attempt) {
+    // 网络错误使用更长的延迟，给网络更多恢复时间
+    switch (attempt) {
+      case 1: return 15;  // 15秒
+      case 2: return 30;  // 30秒  
+      case 3: return 60;  // 1分钟
+      case 4: return 120; // 2分钟
+      case 5: return 300; // 5分钟
+      default: return 600; // 10分钟
+    }
+  }
+  
+  // 计算一般错误的重连延迟
+  int _calculateNormalErrorDelay(int attempt) {
+    // 一般错误使用较短的延迟
+    switch (attempt) {
+      case 1: return 3;   // 3秒
+      case 2: return 6;   // 6秒
+      case 3: return 12;  // 12秒
+      case 4: return 25;  // 25秒
+      case 5: return 50;  // 50秒
+      default: return 120; // 2分钟
+    }
   }
   
   // 请求设备状态
@@ -565,33 +765,41 @@ class WebSocketService {
     return true;
   }
   
-  // 开始定期发送ping
+  // 优化的ping机制
   void _startPingTimer() {
     _pingTimer?.cancel();
     
-    // 大幅缩短ping间隔以提高设备状态同步的实时性
-    int pingInterval = _isConnectionHealthy ? 10 : 5; // 连接健康时10秒，不健康时5秒
+    // 根据连接健康状况和网络状态动态调整ping间隔
+    int pingInterval;
+    if (_isConnectionHealthy && _isNetworkAvailable) {
+      pingInterval = 30; // 连接健康且网络稳定时30秒ping一次
+    } else if (_isConnectionHealthy) {
+      pingInterval = 20; // 连接健康但网络可能不稳定时20秒
+    } else {
+      pingInterval = 15; // 连接不健康时15秒
+    }
     
     _pingTimer = Timer.periodic(Duration(seconds: pingInterval), (timer) {
       if (_socket != null && _socket!.connected) {
         print('🏓 发送ping保持连接... (间隔: ${pingInterval}秒)');
         
-        // 发送带有设备状态的ping
+        // 发送轻量级的ping消息
         _socket!.emit('ping', {
           'status': 'active',
           'timestamp': DateTime.now().toIso8601String(),
           'clientTime': DateTime.now().millisecondsSinceEpoch,
-          'request_status_update': true, // 请求服务器返回最新状态
         });
         
         // 检查连接健康状况
         _checkConnectionHealth();
         
-        // 每次ping都请求最新的设备状态（提高同步频率）
-        if (_reconnectAttempts == 0) { // 只在连接稳定时请求
+        // 减少状态请求频率，避免网络压力
+        // 只在连接稳定且每隔一段时间才请求状态
+        if (_reconnectAttempts == 0 && DateTime.now().second % 60 == 0) {
+          print('📡 定期状态同步检查...');
           _requestDeviceStatus();
           _requestGroupDevicesStatus();
-          _requestOnlineDevices(); // 增加在线设备列表请求
+          _requestOnlineDevices();
         }
       } else {
         print('❌ 连接已断开，停止ping');
@@ -638,6 +846,8 @@ class WebSocketService {
     // 重置状态
     _isConnectionHealthy = false;
     _pingTimer?.cancel();
+    _statusSyncTimer?.cancel(); // 停止状态同步定时器
+    // 保持网络监控运行
     
     // 安排重连
     if (_shouldReconnect) {
@@ -672,6 +882,8 @@ class WebSocketService {
     
     _shouldReconnect = false; // 主动断开时不自动重连
     _pingTimer?.cancel();
+    _statusSyncTimer?.cancel(); // 停止状态同步定时器
+    _networkCheckTimer?.cancel(); // 停止网络监控定时器
     _reconnectTimer?.cancel();
     
     if (_socket != null) {
@@ -774,7 +986,10 @@ class WebSocketService {
     _shouldReconnect = false; // 确保不会再重连
     
     _pingTimer?.cancel();
+    _statusSyncTimer?.cancel(); // 清理状态同步定时器
+    _networkCheckTimer?.cancel(); // 清理网络监控定时器
     _reconnectTimer?.cancel();
+    _wsManagerSubscription?.cancel(); // 🔥 清理WebSocket管理器订阅
     
     if (_socket != null) {
       _socket!.disconnect();

@@ -5,6 +5,8 @@ import 'dart:async';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
 import '../services/websocket_service.dart';
+import '../services/websocket_manager.dart';
+import '../widgets/connection_status_widget.dart';
 import '../theme/app_theme.dart';
 import '../widgets/logout_dialog.dart';
 import '../widgets/group_selector.dart';
@@ -75,14 +77,76 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     
+    print('🔄 应用生命周期变化: $state');
+    
     if (state == AppLifecycleState.resumed) {
-      // 应用回到前台时重启定时器
-      _startStatusSyncTimer();
-      _onUserInteraction();
+      // 🔥 关键修复：应用回到前台时完整恢复连接和状态
+      print('📱 应用回到前台，开始恢复连接...');
+      _handleAppResumed();
     } else if (state == AppLifecycleState.paused) {
-      // 应用暂停时停止定时器
+      // 应用暂停时停止定时器但保持连接
+      print('⏸️ 应用暂停，停止定时器');
+      _statusSyncTimer?.cancel();
+    } else if (state == AppLifecycleState.detached) {
+      // 应用完全关闭时清理资源
+      print('🚪 应用关闭，清理资源');
       _statusSyncTimer?.cancel();
     }
+  }
+  
+  // 处理应用恢复到前台
+  void _handleAppResumed() async {
+    // 重启状态同步定时器
+    _startStatusSyncTimer();
+    
+    // 检查并恢复WebSocket连接
+    final websocketService = WebSocketService();
+    if (!websocketService.isConnected) {
+      print('🔄 WebSocket未连接，尝试重连...');
+      try {
+        await websocketService.reconnect();
+        print('✅ WebSocket重连成功');
+      } catch (e) {
+        print('❌ WebSocket重连失败: $e');
+      }
+    }
+    
+    // 同时检查新的WebSocket管理器
+    final wsManager = WebSocketManager();
+    if (!wsManager.isConnected) {
+      print('🔄 WebSocket管理器未连接，尝试重连...');
+      try {
+        await wsManager.reconnect();
+        print('✅ WebSocket管理器重连成功');
+      } catch (e) {
+        print('❌ WebSocket管理器重连失败: $e');
+      }
+    }
+    
+    // 延迟2秒后强制刷新状态，确保连接稳定
+    Timer(Duration(seconds: 2), () {
+      _forceRefreshAllStates();
+    });
+    
+    // 通知用户活跃状态
+    _onUserInteraction();
+  }
+  
+  // 强制刷新所有状态
+  void _forceRefreshAllStates() {
+    print('🔄 强制刷新所有状态...');
+    
+    // 刷新群组状态
+    final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+    groupProvider.refreshCurrentGroup();
+    
+    // 刷新WebSocket状态
+    final websocketService = WebSocketService();
+    if (websocketService.isConnected) {
+      websocketService.refreshDeviceStatus();
+    }
+    
+    print('✅ 状态刷新完成');
   }
   
   // 群组变化处理 - 通知页面数据可能已变化
@@ -376,17 +440,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           ),
         ),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // 在线状态指示器
-          Expanded(child: _buildOnlineIndicator()),
+          // WebSocket连接状态
+          Row(
+            children: [
+              const ConnectionStatusWidget(),
+              const Spacer(),
+              // 退出登录按钮
+              _buildIconButton(
+                icon: Icons.logout_rounded,
+                onTap: _showLogoutDialog,
+              ),
+            ],
+          ),
           
-          const SizedBox(width: 8),
+          const SizedBox(height: 8),
           
-          // 退出登录按钮
-          _buildIconButton(
-            icon: Icons.logout_rounded,
-            onTap: _showLogoutDialog,
+          // 在线设备状态
+          Row(
+            children: [
+              Expanded(child: _buildOnlineIndicator()),
+            ],
           ),
         ],
       ),
@@ -428,8 +504,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 在线状态指示器
-              _buildOnlineIndicator(),
+              // WebSocket连接状态指示器 + 在线设备数量
+              const ConnectionStatusWidget(showDeviceCount: true),
               
               const SizedBox(width: 8),
               
@@ -457,17 +533,38 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         final devices = List<Map<String, dynamic>>.from(currentGroup['devices'] ?? []);
         final totalCount = devices.length;
         
-        // 计算在线设备数
+        // 使用统一的在线状态判断逻辑
         int onlineCount = 0;
         for (var device in devices) {
-          // 检查设备在线状态，根据日志分析使用正确的字段
-          final isOnline = device['is_online'] == true || device['isOnline'] == true;
-          final isLoggedOut = device['is_logged_out'] == true || device['isLoggedOut'] == true;
+          // 统一的在线状态判断逻辑，优先使用isOnline字段
+          bool isOnline = false;
           
-          if (!isLoggedOut && isOnline) {
+          // 1. 如果设备已登出，直接离线
+          if (device['is_logged_out'] == true || device['isLoggedOut'] == true) {
+            isOnline = false;
+          }
+          // 2. 检查isOnline状态（优先）
+          else if (device['isOnline'] == true) {
+            isOnline = true;
+          }
+          // 3. 检查is_online状态（备用）
+          else if (device['is_online'] == true) {
+            isOnline = true;
+          }
+          // 4. 默认离线
+          else {
+            isOnline = false;
+          }
+          
+          if (isOnline) {
             onlineCount++;
           }
+          
+          // 调试输出，帮助定位问题
+          print('设备状态检查: ${device['name']}(${device['id']}) - isOnline: ${device['isOnline']}, is_online: ${device['is_online']}, 判定结果: ${isOnline ? "在线" : "离线"}');
         }
+        
+        print('在线统计: $onlineCount/$totalCount 台设备在线');
         
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

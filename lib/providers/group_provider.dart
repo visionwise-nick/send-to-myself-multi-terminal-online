@@ -3,10 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import '../services/group_service.dart';
 import '../services/websocket_service.dart';
+import '../services/websocket_manager.dart';
 
 class GroupProvider extends ChangeNotifier {
   final GroupService _groupService = GroupService();
   final WebSocketService _websocketService = WebSocketService();
+  final WebSocketManager _wsManager = WebSocketManager();
   
   List<Map<String, dynamic>>? _groups;
   Map<String, dynamic>? _currentGroup;
@@ -14,6 +16,7 @@ class GroupProvider extends ChangeNotifier {
   String? _error;
   StreamSubscription? _groupChangeSubscription;
   StreamSubscription? _deviceStatusSubscription;
+  StreamSubscription? _wsManagerMessageSubscription;
   
   // Getters
   List<Map<String, dynamic>>? get groups => _groups;
@@ -39,6 +42,100 @@ class GroupProvider extends ChangeNotifier {
     _deviceStatusSubscription = _websocketService.onDeviceStatusChange.listen((data) {
       _handleDeviceStatusUpdate(data);
     });
+    
+    // 监听新的WebSocket管理器消息
+    _wsManagerMessageSubscription = _wsManager.onMessageReceived.listen((data) {
+      _handleWebSocketManagerMessage(data);
+    });
+  }
+  
+  // 处理WebSocket管理器的消息
+  void _handleWebSocketManagerMessage(Map<String, dynamic> data) {
+    final type = data['type'];
+    print('📩 GroupProvider收到WebSocket管理器消息: $type');
+    
+    switch (type) {
+      case 'group_devices_status':
+        _handleGroupDevicesStatusFromManager(data);
+        break;
+      case 'online_devices':
+        _handleOnlineDevicesFromManager(data);
+        break;
+      case 'device_status_update':
+        _handleDeviceStatusUpdateFromManager(data);
+        break;
+    }
+  }
+  
+  // 处理来自WebSocket管理器的群组设备状态
+  void _handleGroupDevicesStatusFromManager(Map<String, dynamic> data) {
+    if (data.containsKey('devices') && data.containsKey('groupId')) {
+      final groupId = data['groupId'];
+      final devices = List<Map<String, dynamic>>.from(data['devices']);
+      
+      print('📊 收到群组设备状态更新: 群组=$groupId, 设备数=${devices.length}');
+      
+      // 更新当前群组的设备状态
+      if (_currentGroup != null && _currentGroup!['id'] == groupId) {
+        _currentGroup!['devices'] = devices;
+        notifyListeners();
+        print('✅ 当前群组设备状态已更新');
+      }
+      
+      // 更新群组列表中对应群组的设备状态
+      if (_groups != null) {
+        for (var group in _groups!) {
+          if (group['id'] == groupId) {
+            group['devices'] = devices;
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  // 处理来自WebSocket管理器的在线设备列表
+  void _handleOnlineDevicesFromManager(Map<String, dynamic> data) {
+    if (data.containsKey('devices')) {
+      final devices = List<Map<String, dynamic>>.from(data['devices']);
+      print('📱 收到在线设备列表更新: ${devices.length}台设备');
+      
+      // 创建在线设备ID到状态的映射
+      final Map<String, bool> onlineStatusMap = {};
+      for (var device in devices) {
+        onlineStatusMap[device['id']] = device['isOnline'] == true || device['is_online'] == true;
+      }
+      
+      // 更新当前群组中设备的在线状态
+      if (_currentGroup != null && _currentGroup!['devices'] != null) {
+        bool hasChanges = false;
+        for (var device in _currentGroup!['devices']) {
+          final deviceId = device['id'];
+          if (onlineStatusMap.containsKey(deviceId)) {
+            final newStatus = onlineStatusMap[deviceId]!;
+            final currentStatus = device['isOnline'] == true || device['is_online'] == true;
+            
+            if (currentStatus != newStatus) {
+              device['isOnline'] = newStatus;
+              device['is_online'] = newStatus;
+              hasChanges = true;
+              print('🔄 设备${device['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}');
+            }
+          }
+        }
+        
+        if (hasChanges) {
+          notifyListeners();
+          print('✅ 设备在线状态已更新');
+        }
+      }
+    }
+  }
+  
+  // 处理来自WebSocket管理器的设备状态更新
+  void _handleDeviceStatusUpdateFromManager(Map<String, dynamic> data) {
+    print('🔄 收到设备状态更新: $data');
+    // 可以根据需要处理特定的设备状态更新
   }
   
   // 处理群组变化通知
@@ -556,25 +653,73 @@ class GroupProvider extends ChangeNotifier {
     
     print('更新群组设备状态: 群组ID=$groupId, ${devices.length}台设备');
     
+    bool needsUpdate = false;
+    
     // 更新当前群组的设备状态
     if (_currentGroup != null && _currentGroup!['id'] == groupId) {
-      _currentGroup!['devices'] = devices;
-      notifyListeners();
-      print('当前群组设备状态已更新');
+      // 深度比较设备状态是否真的发生了变化
+      final currentDevices = _currentGroup!['devices'] as List<dynamic>?;
+      if (currentDevices == null || _hasDeviceStatusChanged(currentDevices, devices)) {
+        _currentGroup!['devices'] = List<Map<String, dynamic>>.from(
+          devices.map((device) => Map<String, dynamic>.from(device))
+        );
+        needsUpdate = true;
+        print('当前群组设备状态已更新');
+      }
     }
     
     // 同时更新群组列表中的设备状态
     if (_groups != null) {
       for (final group in _groups!) {
         if (group['id'] == groupId) {
-          group['devices'] = devices;
+          final currentDevices = group['devices'] as List<dynamic>?;
+          if (currentDevices == null || _hasDeviceStatusChanged(currentDevices, devices)) {
+            group['devices'] = List<Map<String, dynamic>>.from(
+              devices.map((device) => Map<String, dynamic>.from(device))
+            );
+            needsUpdate = true;
+          }
           break;
         }
       }
     }
     
-    // 设备状态更新后，通知WebSocket服务
-    _websocketService.notifyDeviceActivityChange();
+    // 只有状态确实发生变化时才通知UI更新
+    if (needsUpdate) {
+      print('群组设备状态发生变化，通知UI更新');
+      notifyListeners();
+      
+      // 设备状态更新后，通知WebSocket服务
+      _websocketService.notifyDeviceActivityChange();
+    }
+  }
+  
+  // 检查设备状态是否发生变化
+  bool _hasDeviceStatusChanged(List<dynamic> currentDevices, List<dynamic> newDevices) {
+    if (currentDevices.length != newDevices.length) return true;
+    
+    // 创建设备ID到状态的映射
+    final currentStatusMap = <String, bool>{};
+    for (final device in currentDevices) {
+      if (device is Map && device['id'] != null) {
+        currentStatusMap[device['id']] = device['isOnline'] == true;
+      }
+    }
+    
+    // 检查新设备状态是否有变化
+    for (final device in newDevices) {
+      if (device is Map && device['id'] != null) {
+        final deviceId = device['id'];
+        final newStatus = device['isOnline'] == true;
+        
+        if (!currentStatusMap.containsKey(deviceId) || currentStatusMap[deviceId] != newStatus) {
+          print('设备状态变化检测: $deviceId 从 ${currentStatusMap[deviceId]} 变为 $newStatus');
+          return true;
+        }
+      }
+    }
+    
+    return false;
   }
   
   // 处理在线设备列表更新
@@ -584,26 +729,33 @@ class GroupProvider extends ChangeNotifier {
     
     print('更新在线设备列表: ${devices.length}台设备');
     
+    bool needsUpdate = false;
+    
+    // 创建在线设备状态映射
+    final onlineStatusMap = <String, bool>{};
+    for (final device in devices) {
+      if (device is Map && device['id'] != null) {
+        onlineStatusMap[device['id']] = device['isOnline'] == true;
+      }
+    }
+    
     // 更新所有群组中对应设备的在线状态
     if (_groups != null) {
       for (final group in _groups!) {
         final groupDevices = group['devices'] as List<dynamic>?;
         if (groupDevices != null) {
           for (final groupDevice in groupDevices) {
-            if (groupDevice is Map<String, dynamic>) {
-              // 查找对应的在线设备信息
-              final onlineDevice = devices.firstWhere(
-                (device) => device['id'] == groupDevice['id'],
-                orElse: () => null,
-              );
+            if (groupDevice is Map<String, dynamic> && groupDevice['id'] != null) {
+              final deviceId = groupDevice['id'];
+              final currentStatus = groupDevice['isOnline'] == true;
+              final newStatus = onlineStatusMap[deviceId] ?? false;
               
-              if (onlineDevice != null) {
-                groupDevice['isOnline'] = onlineDevice['isOnline'];
-                groupDevice['is_online'] = onlineDevice['is_online'];
-              } else {
-                // 设备不在在线列表中，标记为离线
-                groupDevice['isOnline'] = false;
-                groupDevice['is_online'] = false;
+              // 只有状态真的发生变化时才更新
+              if (currentStatus != newStatus) {
+                groupDevice['isOnline'] = newStatus;
+                groupDevice['is_online'] = newStatus;
+                needsUpdate = true;
+                print('设备${groupDevice['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}');
               }
             }
           }
@@ -616,33 +768,67 @@ class GroupProvider extends ChangeNotifier {
       final currentGroupDevices = _currentGroup!['devices'] as List<dynamic>?;
       if (currentGroupDevices != null) {
         for (final groupDevice in currentGroupDevices) {
-          if (groupDevice is Map<String, dynamic>) {
-            // 查找对应的在线设备信息
-            final onlineDevice = devices.firstWhere(
-              (device) => device['id'] == groupDevice['id'],
-              orElse: () => null,
-            );
+          if (groupDevice is Map<String, dynamic> && groupDevice['id'] != null) {
+            final deviceId = groupDevice['id'];
+            final currentStatus = groupDevice['isOnline'] == true;
+            final newStatus = onlineStatusMap[deviceId] ?? false;
             
-            if (onlineDevice != null) {
-              groupDevice['isOnline'] = onlineDevice['isOnline'];
-              groupDevice['is_online'] = onlineDevice['is_online'];
-            } else {
-              // 设备不在在线列表中，标记为离线
-              groupDevice['isOnline'] = false;
-              groupDevice['is_online'] = false;
+            // 只有状态真的发生变化时才更新
+            if (currentStatus != newStatus) {
+              groupDevice['isOnline'] = newStatus;
+              groupDevice['is_online'] = newStatus;
+              needsUpdate = true;
+              print('当前群组设备${groupDevice['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}');
             }
           }
         }
       }
     }
     
-    notifyListeners();
+    // 只有状态确实发生变化时才通知UI更新
+    if (needsUpdate) {
+      print('在线设备状态发生变化，通知UI更新');
+      notifyListeners();
+    }
   }
   
+  // 🔥 新增：获取在线设备数量
+  int get onlineDevicesCount {
+    if (_currentGroup == null) return 0;
+    
+    final devices = List<Map<String, dynamic>>.from(_currentGroup!['devices'] ?? []);
+    int count = 0;
+    
+    for (var device in devices) {
+      bool isOnline = false;
+      
+      if (device['is_logged_out'] == true || device['isLoggedOut'] == true) {
+        isOnline = false;
+      } else if (device['isOnline'] == true || device['is_online'] == true) {
+        isOnline = true;
+      }
+      
+      if (isOnline) {
+        count++;
+      }
+    }
+    
+    return count;
+  }
+  
+  // 🔥 新增：获取总设备数量
+  int get totalDevicesCount {
+    if (_currentGroup == null) return 0;
+    
+    final devices = List<Map<String, dynamic>>.from(_currentGroup!['devices'] ?? []);
+    return devices.length;
+  }
+
   @override
   void dispose() {
     _groupChangeSubscription?.cancel();
     _deviceStatusSubscription?.cancel();
+    _wsManagerMessageSubscription?.cancel();
     super.dispose();
   }
 } 
