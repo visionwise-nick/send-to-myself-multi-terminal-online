@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:async';
@@ -15,7 +17,6 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:open_filex/open_filex.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:math' as math;
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -162,6 +163,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   static const String _filePathCachePrefix = 'file_path_cache_';
   static const String _fileHashCachePrefix = 'file_hash_cache_';
   static const String _fileMetadataCachePrefix = 'file_metadata_cache_';
+
+  // 判断是否为桌面端
+  bool _isDesktop() {
+    if (kIsWeb) {
+      return MediaQuery.of(context).size.width >= 800;
+    }
+    return defaultTargetPlatform == TargetPlatform.macOS ||
+           defaultTargetPlatform == TargetPlatform.windows ||
+           defaultTargetPlatform == TargetPlatform.linux;
+  }
 
   @override
   void initState() {
@@ -2116,29 +2127,71 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   color: const Color(0xFFF9FAFB), // 更浅的背景色
                   borderRadius: BorderRadius.circular(16), // 减小圆角
                 ),
-                child: TextField(
-                  controller: _messageController,
-                  decoration: InputDecoration(
-                    hintText: '输入消息...',
-                    hintStyle: AppTheme.bodyStyle.copyWith(
-                      color: AppTheme.textTertiaryColor,
-                    ),
-                    border: InputBorder.none, // 去掉所有边框
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // 减小内边距
-                  ),
-                  style: AppTheme.bodyStyle,
-                  maxLines: 4,
-                  minLines: 1,
-                  onChanged: (text) {
-                    setState(() {
-                      _isTyping = text.trim().isNotEmpty;
-                    });
-                  },
-                  onSubmitted: (text) {
-                    if (text.trim().isNotEmpty) {
-                      _sendTextMessage(text.trim());
+                child: RawKeyboardListener(
+                  focusNode: FocusNode(),
+                  onKey: (RawKeyEvent event) {
+                    // 只在桌面端处理键盘事件
+                    if (!_isDesktop()) return;
+                    
+                    if (event is RawKeyDownEvent) {
+                      final isEnterPressed = event.logicalKey == LogicalKeyboardKey.enter;
+                      final isShiftPressed = event.isShiftPressed;
+                      
+                      if (isEnterPressed && !isShiftPressed) {
+                        // Enter键发送消息（桌面端）
+                        final text = _messageController.text.trim();
+                        if (text.isNotEmpty) {
+                          _sendTextMessage(text);
+                        }
+                        // 阻止事件继续传播，防止TextField处理Enter键
+                        return;
+                      }
+                      // Shift+Enter换行由TextField自动处理
                     }
                   },
+                  child: Focus(
+                    onKey: (FocusNode node, RawKeyEvent event) {
+                      // 在桌面端拦截Enter键事件，防止TextField处理
+                      if (_isDesktop() && event is RawKeyDownEvent) {
+                        final isEnterPressed = event.logicalKey == LogicalKeyboardKey.enter;
+                        final isShiftPressed = event.isShiftPressed;
+                        
+                        if (isEnterPressed && !isShiftPressed) {
+                          // 返回KeyEventResult.handled表示事件已处理，阻止进一步传播
+                          return KeyEventResult.handled;
+                        }
+                      }
+                      // 其他情况让TextField正常处理
+                      return KeyEventResult.ignored;
+                    },
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        hintText: _isDesktop() ? '输入消息... (Enter发送, Shift+Enter换行)' : '输入消息...',
+                        hintStyle: AppTheme.bodyStyle.copyWith(
+                          color: AppTheme.textTertiaryColor,
+                          fontSize: _isDesktop() ? 13 : 14,
+                        ),
+                        border: InputBorder.none, // 去掉所有边框
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // 减小内边距
+                      ),
+                      style: AppTheme.bodyStyle,
+                      maxLines: 4,
+                      minLines: 1,
+                      textInputAction: _isDesktop() ? TextInputAction.newline : TextInputAction.send,
+                      onChanged: (text) {
+                        setState(() {
+                          _isTyping = text.trim().isNotEmpty;
+                        });
+                      },
+                      onSubmitted: (text) {
+                        // 移动端：Enter键发送消息
+                        if (!_isDesktop() && text.trim().isNotEmpty) {
+                          _sendTextMessage(text.trim());
+                        }
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),
