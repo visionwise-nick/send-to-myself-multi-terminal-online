@@ -134,6 +134,17 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final Set<String> _processedMessageIds = <String>{}; // 防止重复处理
   bool _isInitialLoad = true;
   
+  // 🔥 关键修复：添加消息ID清理机制，防止内存泄漏和阻止同步
+  Timer? _messageIdCleanupTimer;
+  final Map<String, DateTime> _messageIdTimestamps = <String, DateTime>{}; // 记录消息ID的处理时间
+  static const int _maxProcessedMessageIds = 1000; // 最大保留的消息ID数量
+  static const Duration _messageIdRetentionTime = Duration(hours: 2); // 消息ID保留时间2小时
+  
+  // 🔥 新增：WebSocket连接健康监控
+  Timer? _connectionHealthTimer;
+  DateTime? _lastMessageReceivedTime;
+  bool _hasWebSocketIssue = false;
+  
   // 文件下载相关 - 优化缓存策略
   final Dio _dio = Dio();
   // 使用LRU缓存，限制内存中的文件路径映射数量
@@ -167,6 +178,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _loadFileCache();
     _loadMessages();
     _subscribeToChatMessages();
+    
+    // 🔥 关键修复：启动消息ID清理定时器
+    _startMessageIdCleanup();
+    
+    // 🔥 新增：启动连接健康检查
+    _startConnectionHealthCheck();
     
     // 启动时进行文件迁移
     _migrateOldFilesOnStartup();
@@ -219,7 +236,98 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _animationController.dispose();
     _messageAnimationController.dispose();
     _chatMessageSubscription?.cancel();
+    
+    // 🔥 关键修复：清理新增的定时器
+    _messageIdCleanupTimer?.cancel();
+    _connectionHealthTimer?.cancel();
+    
     super.dispose();
+  }
+  
+  // 🔥 关键修复：启动消息ID清理定时器
+  void _startMessageIdCleanup() {
+    _messageIdCleanupTimer = Timer.periodic(Duration(minutes: 30), (_) {
+      _cleanupOldProcessedMessageIds();
+    });
+  }
+  
+  // 🔥 关键修复：清理过期的消息ID
+  void _cleanupOldProcessedMessageIds() {
+    final now = DateTime.now();
+    final expiredIds = <String>[];
+    
+    // 找出过期的消息ID
+    _messageIdTimestamps.forEach((messageId, timestamp) {
+      if (now.difference(timestamp) > _messageIdRetentionTime) {
+        expiredIds.add(messageId);
+      }
+    });
+    
+    // 移除过期的消息ID
+    for (final id in expiredIds) {
+      _processedMessageIds.remove(id);
+      _messageIdTimestamps.remove(id);
+    }
+    
+    // 如果仍然超过最大数量，移除最老的
+    if (_processedMessageIds.length > _maxProcessedMessageIds) {
+      final sortedEntries = _messageIdTimestamps.entries.toList()
+        ..sort((a, b) => a.value.compareTo(b.value));
+      
+      final toRemove = _processedMessageIds.length - _maxProcessedMessageIds;
+      for (int i = 0; i < toRemove && i < sortedEntries.length; i++) {
+        final id = sortedEntries[i].key;
+        _processedMessageIds.remove(id);
+        _messageIdTimestamps.remove(id);
+      }
+    }
+    
+    print('消息ID清理完成: 剩余${_processedMessageIds.length}个，清理${expiredIds.length}个过期ID');
+  }
+  
+  // 🔥 新增：启动连接健康检查
+  void _startConnectionHealthCheck() {
+    _connectionHealthTimer = Timer.periodic(Duration(minutes: 2), (_) {
+      _checkWebSocketHealth();
+    });
+  }
+  
+  // 🔥 新增：检查WebSocket连接健康状态
+  void _checkWebSocketHealth() {
+    final now = DateTime.now();
+    
+    // 检查最后接收消息的时间
+    if (_lastMessageReceivedTime != null) {
+      final timeSinceLastMessage = now.difference(_lastMessageReceivedTime!);
+      
+      // 如果超过5分钟没收到任何消息，可能有问题
+      if (timeSinceLastMessage.inMinutes >= 5) {
+        print('⚠️ WebSocket可能有问题：${timeSinceLastMessage.inMinutes}分钟未收到消息');
+        _hasWebSocketIssue = true;
+        
+        // 尝试重新建立连接
+        _attemptWebSocketRecovery();
+      } else {
+        _hasWebSocketIssue = false;
+      }
+    }
+  }
+  
+  // 🔥 新增：尝试WebSocket恢复
+  void _attemptWebSocketRecovery() {
+    print('🔄 尝试恢复WebSocket连接...');
+    
+    // 重新订阅消息
+    _chatMessageSubscription?.cancel();
+    _subscribeToChatMessages();
+    
+    // 通知WebSocket服务进行健康检查
+    if (!_websocketService.isConnected) {
+      print('🔄 WebSocket未连接，尝试重连...');
+      _websocketService.connect().catchError((e) {
+        print('WebSocket重连失败: $e');
+      });
+    }
   }
 
   // 订阅聊天消息
@@ -258,11 +366,24 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final message = data['message'];
     if (message == null) return;
 
+    // 🔥 关键修复：更新最后收到消息的时间
+    _lastMessageReceivedTime = DateTime.now();
+
     final messageId = message['id'];
-    if (messageId == null || _processedMessageIds.contains(messageId)) {
+    if (messageId == null) {
+      print('消息ID为空，跳过处理');
+      return;
+    }
+
+    // 🔥 关键修复：检查消息是否已处理，并记录时间戳
+    if (_processedMessageIds.contains(messageId)) {
       print('消息已处理过，跳过: $messageId');
       return; // 防止重复处理
     }
+    
+    // 🔥 关键修复：立即标记消息已处理并记录时间戳
+    _processedMessageIds.add(messageId);
+    _messageIdTimestamps[messageId] = DateTime.now();
 
     // 检查是否是当前对话的消息
     if (!_isMessageForCurrentConversation(message, isGroupMessage)) {
@@ -307,13 +428,15 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     
       if (duplicateTextMessage) {
         print('发现重复文本消息（相同内容+发送者+5秒窗口），跳过添加: $content');
-      _processedMessageIds.add(messageId); // 仍然标记为已处理
-      return;
+        // 🔥 关键修复：即使是重复消息也要标记时间戳，但移除ID标记避免阻止同步
+        _messageIdTimestamps[messageId] = DateTime.now();
+        return;
       }
     }
 
-    // 标记消息已处理
+    // 🔥 关键修复：标记消息已处理并记录时间戳
     _processedMessageIds.add(messageId);
+    _messageIdTimestamps[messageId] = DateTime.now();
     
     // 添加消息到界面
     _addMessageToChat(message, false);
@@ -696,8 +819,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         
         // 通过检查，添加到新消息列表
         newMessages.add(serverMsg);
-        // 标记为已处理，防止后续WebSocket实时消息重复
+        // 🔥 关键修复：标记为已处理并记录时间戳，防止后续WebSocket实时消息重复
         _processedMessageIds.add(serverId);
+        _messageIdTimestamps[serverId] = DateTime.now();
       }
 
       if (newMessages.isNotEmpty && mounted) {
@@ -960,7 +1084,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             if (apiResult!['messageId'] != null) {
               final realMessageId = apiResult['messageId'];
               _messages[index]['id'] = realMessageId;
+              // 🔥 关键修复：记录真实消息ID的时间戳
               _processedMessageIds.add(realMessageId.toString());
+              _messageIdTimestamps[realMessageId.toString()] = DateTime.now();
               print('消息ID更新并标记为已处理: $messageId -> $realMessageId');
             }
           }
@@ -1082,6 +1208,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 if (apiResult!['messageId'] != null) {
                   _messages[index]['id'] = apiResult['messageId'];
                   _processedMessageIds.add(apiResult['messageId'].toString());
+                  _messageIdTimestamps[apiResult['messageId'].toString()] = DateTime.now();
                 }
                 if (fileUrl != null) {
                   _messages[index]['fileUrl'] = fileUrl;
@@ -1141,6 +1268,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 if (apiResult!['messageId'] != null) {
                   _messages[index]['id'] = apiResult['messageId'];
                   _processedMessageIds.add(apiResult['messageId'].toString());
+                  _messageIdTimestamps[apiResult['messageId'].toString()] = DateTime.now();
                 }
                 if (fileUrl != null) {
                   _messages[index]['fileUrl'] = fileUrl;

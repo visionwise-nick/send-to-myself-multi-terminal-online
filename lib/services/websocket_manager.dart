@@ -607,30 +607,72 @@ class WebSocketManager {
     });
   }
 
-  /// 🔥 新增：检查消息接收健康状态
+  /// 检查消息接收健康状态
   void _checkMessageReceiveHealth() {
     if (_lastMessageReceived != null) {
       final timeSinceLastMessage = DateTime.now().difference(_lastMessageReceived!);
       
-      // 如果超过3分钟没收到任何消息（包括心跳响应），认为连接可能有问题
+      // 🔥 关键修复：分级响应机制
       if (timeSinceLastMessage.inMinutes >= 3) {
         _log('⚠️ 警告：${timeSinceLastMessage.inMinutes}分钟未收到消息，可能连接异常');
         
-        // 发送测试消息检查连接
+        // 第一级：发送测试消息检查连接
         _sendConnectionTest();
         
-        // 如果超过5分钟，强制重新设置监听器
+        // 🔥 新增：主动请求群组消息同步，确保不会丢失消息
+        _requestGroupMessageSync();
+        
+        // 第二级：如果超过5分钟，尝试WebSocket恢复
         if (timeSinceLastMessage.inMinutes >= 5) {
-          _log('🔄 消息接收异常，重新设置监听器');
-          _refreshEventHandlers();
+          _log('🔄 消息接收异常，尝试WebSocket恢复');
+          _attemptWebSocketRecovery();
         }
         
-        // 如果超过8分钟，强制重连
+        // 第三级：如果超过8分钟，强制重新设置监听器
         if (timeSinceLastMessage.inMinutes >= 8) {
-          _log('❌ 连接可能断开，执行强制重连');
-          _forceReconnect();
+          _log('❌ 连接可能严重异常，重新设置监听器');
+          _refreshEventHandlers();
         }
       }
+    }
+  }
+  
+  /// 🔥 新增：尝试WebSocket恢复
+  void _attemptWebSocketRecovery() {
+    _log('🔄 尝试WebSocket恢复...');
+    
+    if (_socket?.connected == true) {
+      // 重新订阅消息流
+      _log('📡 重新订阅消息流...');
+      _performFullStateSync();
+      
+      // 检查连接状态
+      _socket?.emit('connection_health_check', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'recovery_attempt',
+        'last_message_time': _lastMessageReceived?.toIso8601String(),
+      });
+    } else {
+      _log('❌ WebSocket未连接，尝试重连...');
+      _forceReconnect();
+    }
+  }
+  
+  /// 🔥 新增：主动请求群组消息同步
+  void _requestGroupMessageSync() {
+    _log('🔄 主动请求群组消息同步...');
+    if (_socket?.connected == true) {
+      _socket?.emit('sync_group_messages', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'health_check_sync',
+        'client_health_check': true,
+      });
+      
+      // 同时请求最新的在线设备状态
+      _socket?.emit('get_online_devices', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'health_check_sync',
+      });
     }
   }
   
@@ -650,16 +692,89 @@ class WebSocketManager {
     _log('🔄 刷新WebSocket事件监听器...');
     
     if (_socket?.connected == true) {
-      // 清除旧的监听器
-      _socket?.clearListeners();
+      // 🔥 关键修复：不要清除所有监听器，而是选择性重新绑定核心监听器
+      // 这样可以避免在刷新期间丢失消息
+      _log('📡 重新绑定核心消息监听器...');
       
-      // 重新设置监听器
-      _setupEventHandlers();
+      // 重新绑定群组消息监听器
+      _socket?.off('new_group_message');
+      _socket?.on('new_group_message', (data) {
+        _log('📨 刷新后收到群组消息');
+        _lastMessageReceived = DateTime.now();
+        _messageController.add({
+          'type': 'new_group_message',
+          'data': data,
+          'timestamp': DateTime.now().toIso8601String()
+        });
+      });
+      
+      // 重新绑定私聊消息监听器  
+      _socket?.off('new_message');
+      _socket?.on('new_message', (data) {
+        _log('📨 刷新后收到私聊消息');
+        _lastMessageReceived = DateTime.now();
+        _messageController.add({
+          'type': 'new_private_message',
+          'data': data,
+          'timestamp': DateTime.now().toIso8601String()
+        });
+      });
+      
+      // 重新绑定文件消息监听器
+      _socket?.off('file_message_received');
+      _socket?.on('file_message_received', (data) {
+        _log('📎 刷新后收到文件消息');
+        _lastMessageReceived = DateTime.now();
+        _messageController.add({
+          'type': 'new_private_message',
+          'data': data,
+          'timestamp': DateTime.now().toIso8601String()
+        });
+      });
+
+      _socket?.off('group_file_message');
+      _socket?.on('group_file_message', (data) {
+        _log('📎 刷新后收到群组文件消息');
+        _lastMessageReceived = DateTime.now();
+        _messageController.add({
+          'type': 'new_group_message',
+          'data': data,
+          'timestamp': DateTime.now().toIso8601String()
+        });
+      });
+      
+      // 重新绑定心跳响应
+      _socket?.off('pong');
+      _socket?.on('pong', (_) {
+        _log('💓 刷新后收到心跳响应');
+        _lastMessageReceived = DateTime.now();
+      });
+      
+      // 重新绑定服务器心跳
+      _socket?.off('server_ping');
+      _socket?.on('server_ping', (_) {
+        _log('📡 刷新后收到服务器心跳');
+        _lastMessageReceived = DateTime.now();
+        // 立即响应服务器心跳
+        _socket?.emit('pong', {
+          'timestamp': DateTime.now().toIso8601String(),
+        });
+      });
+      
+      // 重新绑定连接测试响应
+      _socket?.off('connection_test_response');
+      _socket?.on('connection_test_response', (data) {
+        _log('🧪 收到连接测试响应');
+        _lastMessageReceived = DateTime.now();
+        if (data['test_id'] != null) {
+          _pendingTests.remove(data['test_id']);
+        }
+      });
       
       // 重新请求状态同步
       _performFullStateSync();
       
-      _log('✅ 事件监听器已刷新');
+      _log('✅ 事件监听器已安全刷新');
     }
   }
 
