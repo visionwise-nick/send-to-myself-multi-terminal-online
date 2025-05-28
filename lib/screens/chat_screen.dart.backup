@@ -187,6 +187,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     
     // 启动时进行文件迁移
     _migrateOldFilesOnStartup();
+    
+    // 🔥 紧急诊断：实时WebSocket状态监控
+    _startEmergencyDiagnostics();
   }
   
   // 启动时迁移旧文件到永久存储
@@ -375,18 +378,21 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       return;
     }
 
-    // 🔥 关键修复：检查消息是否已处理，并记录时间戳
+    // 🔥 关键修复：检查消息是否已处理，如果已处理则直接返回
     if (_processedMessageIds.contains(messageId)) {
       print('消息已处理过，跳过: $messageId');
       return; // 防止重复处理
     }
     
-    // 🔥 关键修复：立即标记消息已处理并记录时间戳
+    // 🔥 关键修复：立即标记消息已处理并记录时间戳（只标记一次）
     _processedMessageIds.add(messageId);
     _messageIdTimestamps[messageId] = DateTime.now();
+    
+    print('开始处理新消息: ID=$messageId, 群组消息=$isGroupMessage');
 
     // 检查是否是当前对话的消息
     if (!_isMessageForCurrentConversation(message, isGroupMessage)) {
+      print('消息不属于当前对话，跳过: $messageId');
       return;
     }
 
@@ -424,19 +430,17 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           print('文本消息时间比较失败: $e');
           return false; // 时间解析失败时不认为重复
         }
-    });
+      });
     
       if (duplicateTextMessage) {
         print('发现重复文本消息（相同内容+发送者+5秒窗口），跳过添加: $content');
-        // 🔥 关键修复：即使是重复消息也要标记时间戳，但移除ID标记避免阻止同步
-        _messageIdTimestamps[messageId] = DateTime.now();
+        // 🔥 关键修复：重复文本消息不需要移除ID标记，因为已经在开头标记了
         return;
       }
     }
 
-    // 🔥 关键修复：标记消息已处理并记录时间戳
-    _processedMessageIds.add(messageId);
-    _messageIdTimestamps[messageId] = DateTime.now();
+    // 🔥 重要修复：移除重复的标记代码，避免重复添加到_processedMessageIds
+    // 消息ID已经在方法开始时标记过了
     
     // 添加消息到界面
     _addMessageToChat(message, false);
@@ -1480,10 +1484,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       final storageInfo = await _localStorage.getStorageInfo();
       final fileCacheInfo = await _localStorage.getFileCacheInfo();
       
+      // 🔥 新增：获取去重诊断信息
+      _debugDuplicationState(); // 输出到控制台
+      
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('存储信息'),
+          title: const Text('调试信息'),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1506,10 +1513,31 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 Text('总文件数: ${fileCacheInfo['totalFiles']}'),
                 Text('有效文件: ${fileCacheInfo['validFiles']}'),
                 Text('无效文件: ${fileCacheInfo['invalidFiles']}'),
+                const SizedBox(height: 16),
+                // 🔥 新增：去重诊断信息
+                Text('去重诊断:'),
+                const SizedBox(height: 8),
+                Text('已处理消息ID: ${_processedMessageIds.length}'),
+                Text('时间戳记录: ${_messageIdTimestamps.length}'),
+                Text('界面消息数: ${_messages.length}'),
+                Text('WebSocket连接: ${_websocketService.isConnected ? "已连接" : "未连接"}'),
+                if (_lastMessageReceivedTime != null) ...[
+                  Text('最后收到消息: ${DateTime.now().difference(_lastMessageReceivedTime!).inMinutes}分钟前'),
+                ],
               ],
             ),
           ),
           actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _forceClearDuplicationRecords();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('已强制清理去重记录并重启WebSocket监听')),
+                );
+              },
+              child: const Text('清理去重记录'),
+            ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('关闭'),
@@ -1518,9 +1546,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         ),
       );
     } catch (e) {
-      print('显示存储信息失败: $e');
+      print('显示调试信息失败: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('获取存储信息失败: $e')),
+        SnackBar(content: Text('获取调试信息失败: $e')),
       );
     }
   }
@@ -2481,6 +2509,124 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       return filePath;
     }
     return null;
+  }
+
+  // 🔥 新增：去重诊断工具
+  void _debugDuplicationState() {
+    print('=== 去重诊断报告 ===');
+    print('已处理消息ID数量: ${_processedMessageIds.length}');
+    print('消息ID时间戳记录数量: ${_messageIdTimestamps.length}');
+    print('当前界面消息数量: ${_messages.length}');
+    
+    final now = DateTime.now();
+    int recentCount = 0;
+    int oldCount = 0;
+    
+    _messageIdTimestamps.forEach((id, timestamp) {
+      final age = now.difference(timestamp);
+      if (age.inMinutes < 10) {
+        recentCount++;
+      } else if (age.inHours > 2) {
+        oldCount++;
+      }
+    });
+    
+    print('最近10分钟处理的消息: $recentCount');
+    print('超过2小时的旧消息ID: $oldCount');
+    print('WebSocket连接状态: ${_websocketService.isConnected}');
+    print('最后收到消息时间: $_lastMessageReceivedTime');
+    
+    if (_lastMessageReceivedTime != null) {
+      final timeSinceLastMessage = now.difference(_lastMessageReceivedTime!);
+      print('距离最后收到消息: ${timeSinceLastMessage.inMinutes}分钟');
+      
+      if (timeSinceLastMessage.inMinutes > 5) {
+        print('⚠️ 警告：可能存在WebSocket同步问题');
+      }
+    }
+    
+    print('=== 诊断报告结束 ===');
+  }
+  
+  // 🔥 新增：强制清理去重记录（诊断用）
+  void _forceClearDuplicationRecords() {
+    print('🧹 强制清理去重记录...');
+    final oldSize = _processedMessageIds.length;
+    
+    _processedMessageIds.clear();
+    _messageIdTimestamps.clear();
+    
+    print('已清理 $oldSize 个消息ID记录');
+    
+    // 重新启动WebSocket监听
+    _chatMessageSubscription?.cancel();
+    _subscribeToChatMessages();
+    
+    print('已重新启动WebSocket监听');
+  }
+
+  // 🔥 紧急诊断：实时WebSocket状态监控
+  void _startEmergencyDiagnostics() {
+    // 每30秒检查一次WebSocket状态和消息接收情况
+    Timer.periodic(Duration(seconds: 30), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      
+      print('🩺 === 紧急WebSocket诊断 ===');
+      print('WebSocket连接状态: ${_websocketService.isConnected}');
+      print('最后收到消息时间: $_lastMessageReceivedTime');
+      print('已处理消息数量: ${_processedMessageIds.length}');
+      print('界面消息数量: ${_messages.length}');
+      
+      if (_lastMessageReceivedTime != null) {
+        final timeSinceLastMessage = DateTime.now().difference(_lastMessageReceivedTime!);
+        print('距离最后消息: ${timeSinceLastMessage.inMinutes}分钟');
+        
+        // 如果超过2分钟没收到任何消息，进行恢复尝试
+        if (timeSinceLastMessage.inMinutes >= 2) {
+          print('⚠️ 消息接收异常，尝试恢复连接');
+          _emergencyWebSocketRecovery();
+        }
+      } else {
+        print('⚠️ 从未收到过消息，可能存在连接问题');
+        _emergencyWebSocketRecovery();
+      }
+    });
+  }
+
+  // 🔥 紧急WebSocket恢复
+  void _emergencyWebSocketRecovery() {
+    print('🚨 执行紧急WebSocket恢复...');
+    
+    // 1. 重新订阅消息流
+    _chatMessageSubscription?.cancel();
+    _subscribeToChatMessages();
+    
+    // 2. 强制刷新WebSocket状态
+    _websocketService.refreshDeviceStatus();
+    
+    // 3. 手动请求最近消息
+    _websocketService.emit('get_recent_messages', {
+      'timestamp': DateTime.now().toIso8601String(),
+      'reason': 'emergency_recovery',
+      'limit': 20,
+    });
+    
+    // 4. 清理部分旧的消息ID（防止过度累积）
+    if (_processedMessageIds.length > 500) {
+      print('🧹 清理过多的消息ID记录');
+      final oldIds = _processedMessageIds.take(200).toList();
+      _processedMessageIds.removeAll(oldIds);
+      
+      // 同时清理对应的时间戳
+      oldIds.forEach((id) {
+        _messageIdTimestamps.remove(id);
+      });
+    }
+    
+    print('✅ 紧急恢复完成');
   }
 }
 
