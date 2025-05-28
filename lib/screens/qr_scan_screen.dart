@@ -92,16 +92,20 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
             ),
           );
         } else {
+          final errorMessage = groupProvider.error ?? '加入失败，请检查加入码';
+          print('加入群组失败: $errorMessage');
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('加入失败，请检查加入码'),
+            SnackBar(
+              content: Text(errorMessage),
               backgroundColor: AppTheme.errorColor,
               behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
             ),
           );
         }
       }
     } catch (e) {
+      print('加入群组异常: $e');
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -110,8 +114,15 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
             backgroundColor: AppTheme.errorColor,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            duration: const Duration(seconds: 4),
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isJoining = false;
+        });
       }
     }
   }

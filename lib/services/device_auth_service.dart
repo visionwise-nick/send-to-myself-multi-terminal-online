@@ -481,11 +481,29 @@ class DeviceAuthService {
       print('============ 开始加入群组 ============');
       print('加入码: $joinCode');
       
+      // 🔥 增强：输入验证
+      if (joinCode.isEmpty) {
+        return {
+          'success': false,
+          'message': '加入码不能为空'
+        };
+      }
+      
+      if (joinCode.length != 8) {
+        return {
+          'success': false,
+          'message': '加入码必须为8位字符'
+        };
+      }
+      
       // 获取必要的认证信息
       final token = await getAuthToken();
       if (token == null) {
         print('认证失败: 未找到有效的认证令牌');
-        throw Exception('未登录，无法加入群组');
+        return {
+          'success': false,
+          'message': '请先登录设备'
+        };
       }
       
       // 获取设备ID（重要！测试脚本中使用X-Device-Id请求头）
@@ -541,13 +559,15 @@ class DeviceAuthService {
                 'group': targetGroup
               };
             }
+          } else {
+            print('本地加入码不匹配或已过期');
           }
         } catch (e) {
           print('解析本地加入码失败: $e');
         }
       }
       
-      // 完全按照测试脚本的实现方式
+      // 🔥 增强：API调用
       print('尝试通过API加入群组: $joinCode');
       
       // 准备HTTP头部
@@ -557,7 +577,7 @@ class DeviceAuthService {
         'X-Device-Id': effectiveDeviceId // 添加设备ID头部
       };
       
-      print('请求头: $headers');
+      print('请求头: ${headers.keys.toList()}');
       print('请求体: {"joinCode": "$joinCode"}');
       
       try {
@@ -582,9 +602,32 @@ class DeviceAuthService {
             'message': '已成功加入群组',
             'group': data['group']
           };
+        } else if (response.statusCode == 400) {
+          // 🔥 增强：处理400错误（通常是加入码无效）
+          String errorMessage = '加入码无效或已过期';
+          try {
+            final errorData = jsonDecode(response.body);
+            errorMessage = errorData['message'] ?? errorData['error'] ?? errorMessage;
+          } catch (_) {}
+          
+          print('加入码验证失败: $errorMessage');
+          return {
+            'success': false,
+            'message': errorMessage
+          };
+        } else if (response.statusCode == 404) {
+          return {
+            'success': false,
+            'message': '加入码不存在或已过期'
+          };
+        } else if (response.statusCode == 409) {
+          return {
+            'success': false,
+            'message': '您已经在该群组中'
+          };
         } else {
-          // 尝试解析错误信息
-          String errorMessage;
+          // 🔥 增强：其他HTTP错误
+          String errorMessage = '服务器错误';
           try {
             final errorData = jsonDecode(response.body);
             errorMessage = errorData['message'] ?? errorData['error'] ?? '服务器错误: ${response.statusCode}';
@@ -593,27 +636,30 @@ class DeviceAuthService {
           }
           
           print('API请求失败: $errorMessage');
-          throw Exception(errorMessage);
+          return {
+            'success': false,
+            'message': errorMessage
+          };
         }
       } catch (e) {
-        if (e is Exception && e.toString().contains('SocketException')) {
-          print('连接服务器失败: $e');
-          
-          // 网络错误时，尝试使用模拟数据
-          print('网络错误，尝试使用模拟数据');
-          final profileData = await getProfile();
-          final groups = profileData['groups'];
-          if (groups != null && groups.isNotEmpty) {
-            print('使用模拟数据加入成功');
-            return {
-              'success': true,
-              'message': '已成功加入群组',
-              'group': groups[0]
-            };
-          }
-        }
+        print('网络请求异常: $e');
         
-        throw e; // 重新抛出其他错误
+        if (e.toString().contains('SocketException') || e.toString().contains('TimeoutException')) {
+          return {
+            'success': false,
+            'message': '网络连接失败，请检查网络设置'
+          };
+        } else if (e.toString().contains('FormatException')) {
+          return {
+            'success': false,
+            'message': '服务器响应格式错误'
+          };
+        } else {
+          return {
+            'success': false,
+            'message': '网络请求失败: ${e.toString()}'
+          };
+        }
       }
     } catch (e) {
       print('加入群组失败: $e');

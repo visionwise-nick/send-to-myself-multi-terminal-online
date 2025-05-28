@@ -40,7 +40,7 @@ class MemoryCategoryGrid extends StatelessWidget {
               itemCount: categories.length,
               itemBuilder: (context, index) {
                 final category = categories[index];
-                final isSelected = memoryProvider.selectedCategory == category['name'];
+                final isSelected = false;
                 
                 return _CategoryItem(
                   icon: category['icon'],

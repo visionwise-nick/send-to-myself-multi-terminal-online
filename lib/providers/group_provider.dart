@@ -4,11 +4,13 @@ import 'dart:async';
 import '../services/group_service.dart';
 import '../services/websocket_service.dart';
 import '../services/websocket_manager.dart';
+import '../services/device_auth_service.dart';
 
 class GroupProvider extends ChangeNotifier {
   final GroupService _groupService = GroupService();
   final WebSocketService _websocketService = WebSocketService();
   final WebSocketManager _wsManager = WebSocketManager();
+  final DeviceAuthService _authService = DeviceAuthService();
   
   List<Map<String, dynamic>>? _groups;
   Map<String, dynamic>? _currentGroup;
@@ -364,7 +366,10 @@ class GroupProvider extends ChangeNotifier {
     notifyListeners();
     
     try {
-      final response = await _groupService.joinGroup(joinCode, groupId: groupId);
+      final response = await _authService.joinGroup(joinCode);
+      
+      print('加入群组响应: $response');
+      
       if (response['success'] == true) {
         // 重新加载群组列表
         await loadGroups();
@@ -380,6 +385,7 @@ class GroupProvider extends ChangeNotifier {
         return true;
       } else {
         _error = response['message'] ?? '加入群组失败';
+        print('加入群组失败: $_error');
       }
     } catch (e) {
       _error = '加入群组失败: $e';
