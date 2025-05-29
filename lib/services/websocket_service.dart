@@ -130,6 +130,24 @@ class WebSocketService {
         _chatMessageController.add(data);
         break;
         
+      case 'offline_messages': // 🔥 新增：处理离线消息
+        // 转发离线消息到聊天消息流
+        print('📥 桥接离线消息到聊天流');
+        _chatMessageController.add(data);
+        break;
+        
+      case 'group_messages_synced': // 🔥 新增：处理群组消息同步
+        // 转发群组消息同步到聊天消息流
+        print('📝 桥接群组消息同步到聊天流');
+        _chatMessageController.add(data);
+        break;
+        
+      case 'private_messages_synced': // 🔥 新增：处理私聊消息同步
+        // 转发私聊消息同步到聊天消息流
+        print('📝 桥接私聊消息同步到聊天流');
+        _chatMessageController.add(data);
+        break;
+        
       case 'message_sent_confirmation':
       case 'group_message_sent_confirmation':
       case 'message_status_updated':

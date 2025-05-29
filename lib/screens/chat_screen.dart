@@ -358,6 +358,22 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             print('处理新的群组消息');
             _handleIncomingMessage(data, true);
             break;
+          case 'recent_messages': // 🔥 新增：处理最近消息
+            print('处理最近消息同步');
+            _handleRecentMessages(data);
+            break;
+          case 'offline_messages': // 🔥 新增：处理离线消息
+            print('处理离线消息同步');
+            _handleOfflineMessages(data);
+            break;
+          case 'group_messages_synced': // 🔥 新增：处理群组消息同步
+            print('处理群组消息同步');
+            _handleGroupMessagesSynced(data);
+            break;
+          case 'private_messages_synced': // 🔥 新增：处理私聊消息同步
+            print('处理私聊消息同步');
+            _handlePrivateMessagesSynced(data);
+            break;
           case 'message_sent_confirmation':
           case 'group_message_sent_confirmation':
             print('处理消息发送确认');
@@ -2680,6 +2696,166 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
     
     print('✅ 紧急恢复完成');
+  }
+  
+  // 🔥 新增：处理最近消息同步
+  void _handleRecentMessages(Map<String, dynamic> data) {
+    print('📬 收到最近消息同步，开始处理...');
+    final messages = data['data']?['messages'];
+    if (messages == null || messages is! List) {
+      print('最近消息数据格式错误');
+      return;
+    }
+    
+    _processSyncMessages(List<Map<String, dynamic>>.from(messages), '最近消息同步');
+  }
+  
+  // 🔥 新增：处理离线消息同步
+  void _handleOfflineMessages(Map<String, dynamic> data) {
+    print('📥 收到离线消息同步，开始处理...');
+    final messages = data['data']?['messages'];
+    if (messages == null || messages is! List) {
+      print('离线消息数据格式错误');
+      return;
+    }
+    
+    // 离线消息处理逻辑
+    final offlineMessages = List<Map<String, dynamic>>.from(messages);
+    print('📥 处理${offlineMessages.length}条离线消息');
+    
+    // 显示离线消息恢复提示
+    if (offlineMessages.isNotEmpty && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('正在恢复${offlineMessages.length}条离线消息...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+    
+    _processSyncMessages(offlineMessages, '离线消息同步');
+  }
+  
+  // 🔥 新增：处理群组消息同步
+  void _handleGroupMessagesSynced(Map<String, dynamic> data) {
+    print('📝 收到群组消息同步，开始处理...');
+    
+    // 仅处理当前群组的消息
+    if (widget.conversation['type'] != 'group') {
+      print('当前不是群组对话，忽略群组消息同步');
+      return;
+    }
+    
+    final messages = data['data']?['messages'];
+    if (messages == null || messages is! List) {
+      print('群组消息数据格式错误');
+      return;
+    }
+    
+    _processSyncMessages(List<Map<String, dynamic>>.from(messages), '群组消息同步');
+  }
+  
+  // 🔥 新增：处理私聊消息同步
+  void _handlePrivateMessagesSynced(Map<String, dynamic> data) {
+    print('📝 收到私聊消息同步，开始处理...');
+    
+    // 仅处理当前私聊的消息
+    if (widget.conversation['type'] == 'group') {
+      print('当前不是私聊对话，忽略私聊消息同步');
+      return;
+    }
+    
+    final messages = data['data']?['messages'];
+    if (messages == null || messages is! List) {
+      print('私聊消息数据格式错误');
+      return;
+    }
+    
+    _processSyncMessages(List<Map<String, dynamic>>.from(messages), '私聊消息同步');
+  }
+  
+  // 🔥 新增：统一处理同步消息的方法
+  void _processSyncMessages(List<Map<String, dynamic>> syncMessages, String syncType) async {
+    if (syncMessages.isEmpty) {
+      print('$syncType: 无消息需要处理');
+      return;
+    }
+    
+    print('$syncType: 开始处理${syncMessages.length}条消息');
+    
+    // 获取当前设备ID
+    final prefs = await SharedPreferences.getInstance();
+    final serverDeviceData = prefs.getString('server_device_data');
+    String? currentDeviceId;
+    if (serverDeviceData != null) {
+      try {
+        final Map<String, dynamic> data = jsonDecode(serverDeviceData);
+        currentDeviceId = data['id'];
+      } catch (e) {
+        print('解析设备ID失败: $e');
+      }
+    }
+    
+    // 转换消息格式（使用现有的转换逻辑）
+    final convertedMessages = syncMessages.map((msg) {
+      final isMe = msg['sourceDeviceId'] == currentDeviceId;
+      return {
+        'id': msg['id'],
+        'text': msg['content'],
+        'fileType': (msg['fileUrl'] != null || msg['fileName'] != null) ? _getFileType(msg['fileName']) : null,
+        'fileName': msg['fileName'],
+        'fileUrl': msg['fileUrl'],
+        'fileSize': msg['fileSize'],
+        'timestamp': _normalizeTimestamp(msg['createdAt'] ?? DateTime.now().toUtc().toIso8601String()),
+        'isMe': isMe,
+        'status': msg['status'] ?? 'sent',
+        'sourceDeviceId': msg['sourceDeviceId'],
+      };
+    }).toList();
+    
+    // 过滤掉重复消息
+    final newMessages = <Map<String, dynamic>>[];
+    for (final msg in convertedMessages) {
+      final msgId = msg['id'].toString();
+      
+      // 检查是否已存在
+      final exists = _messages.any((localMsg) => localMsg['id'].toString() == msgId);
+      if (!exists) {
+        newMessages.add(msg);
+      }
+    }
+    
+    if (newMessages.isNotEmpty && mounted) {
+      print('$syncType: 添加${newMessages.length}条新消息到界面');
+      
+      setState(() {
+        _messages.addAll(newMessages);
+        _messages.sort((a, b) {
+          try {
+            final timeA = DateTime.parse(a['timestamp']);
+            final timeB = DateTime.parse(b['timestamp']);
+            return timeA.compareTo(timeB);
+          } catch (e) {
+            return 0;
+          }
+        });
+      });
+      
+      // 为文件消息自动下载文件
+      for (final message in newMessages) {
+        if (message['fileUrl'] != null && !message['isMe']) {
+          _autoDownloadFile(message);
+        }
+      }
+      
+      // 保存消息
+      _saveMessages();
+      _scrollToBottom();
+      
+      print('$syncType: 完成，新增${newMessages.length}条消息');
+    } else {
+      print('$syncType: 无新消息需要添加');
+    }
   }
 }
 

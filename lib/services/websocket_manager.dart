@@ -39,6 +39,10 @@ class WebSocketManager {
   DateTime? _lastSuccessfulConnection;
   DateTime? _lastMessageReceived;
   
+  // 🔥 新增：最后在线时间追踪
+  DateTime? _lastOnlineTime;
+  bool _wasOffline = false;
+  
   // 认证信息
   String? _deviceId;
   String? _token;
@@ -290,14 +294,54 @@ class WebSocketManager {
         'timestamp': DateTime.now().toIso8601String()
       });
     });
+    
+    // 🔥 新增：离线消息响应
+    _socket?.on('offline_messages', (data) {
+      _log('📥 收到离线消息列表');
+      _lastMessageReceived = DateTime.now();
+      _messageController.add({
+        'type': 'offline_messages',
+        'data': data,
+        'timestamp': DateTime.now().toIso8601String()
+      });
+    });
+    
+    // 🔥 新增：群组消息同步响应
+    _socket?.on('group_messages_synced', (data) {
+      _log('📝 收到群组消息同步');
+      _lastMessageReceived = DateTime.now();
+      _messageController.add({
+        'type': 'group_messages_synced',
+        'data': data,
+        'timestamp': DateTime.now().toIso8601String()
+      });
+    });
+    
+    // 🔥 新增：私聊消息同步响应
+    _socket?.on('private_messages_synced', (data) {
+      _log('📝 收到私聊消息同步');
+      _lastMessageReceived = DateTime.now();
+      _messageController.add({
+        'type': 'private_messages_synced',
+        'data': data,
+        'timestamp': DateTime.now().toIso8601String()
+      });
+    });
   }
 
   /// 连接成功处理
   void _onConnectionSuccess() {
+    // 🔥 检测是否从离线状态恢复
+    final wasOfflineBefore = _wasOffline;
+    _wasOffline = false;
+    
     _setConnectionState(ConnectionState.connected);
     _reconnectAttempts = 0;
     _lastSuccessfulConnection = DateTime.now();
     _lastMessageReceived = DateTime.now();
+    
+    // 🔥 更新在线时间
+    _lastOnlineTime = DateTime.now();
     
     _startHeartbeat();
     _startConnectionHealthCheck();
@@ -306,6 +350,14 @@ class WebSocketManager {
     
     // 🔥 关键修复：连接成功后立即同步所有状态
     _performFullStateSync();
+    
+    // 🔥 如果是从离线状态恢复，触发特殊的离线消息同步
+    if (wasOfflineBefore) {
+      _log('🔄 从离线状态恢复，触发离线消息同步');
+      Timer(Duration(seconds: 2), () {
+        _performOfflineMessageSync();
+      });
+    }
     
     _log('🎉 WebSocket连接建立成功，开始状态同步');
   }
@@ -342,6 +394,27 @@ class WebSocketManager {
           'limit': 50 // 获取最近50条消息
         });
         
+        // 🔥 新增：请求离线期间的消息
+        _socket?.emit('get_offline_messages', {
+          'timestamp': DateTime.now().toIso8601String(),
+          'reason': 'device_online',
+          'since': _getLastOnlineTime(), // 获取最后在线时间
+        });
+        
+        // 🔥 新增：请求所有群组的未读消息
+        _socket?.emit('sync_all_group_messages', {
+          'timestamp': DateTime.now().toIso8601String(),
+          'reason': 'connection_restored',
+          'sync_offline': true
+        });
+        
+        // 🔥 新增：请求所有私聊的未读消息
+        _socket?.emit('sync_all_private_messages', {
+          'timestamp': DateTime.now().toIso8601String(),
+          'reason': 'connection_restored',
+          'sync_offline': true
+        });
+        
         _log('🔔 通知设备活跃状态...');
         _socket?.emit('device_activity_update', {
           'status': 'active',
@@ -357,6 +430,9 @@ class WebSocketManager {
 
   /// 连接断开处理
   void _onConnectionLost(dynamic reason) {
+    // 🔥 标记为离线状态
+    _wasOffline = true;
+    
     _stopHeartbeat();
     _stopConnectionHealthCheck();
     _stopMessageReceiveTest();
@@ -379,6 +455,30 @@ class WebSocketManager {
     _log('🔄 连接断开，准备重连...');
     _setConnectionState(ConnectionState.reconnecting);
     _scheduleReconnect();
+  }
+  
+  /// 🔥 新增：执行离线消息同步
+  void _performOfflineMessageSync() {
+    if (_socket?.connected == true) {
+      _log('📥 开始同步离线期间的消息...');
+      
+      // 获取离线期间的所有消息
+      _socket?.emit('get_offline_messages', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'offline_recovery',
+        'since': _getLastOnlineTime()?.toIso8601String(),
+        'include_files': true, // 包含文件消息
+      });
+      
+      // 强制同步所有对话的最新消息
+      _socket?.emit('force_sync_all_conversations', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'offline_recovery',
+        'sync_limit': 100, // 同步最近100条消息
+      });
+      
+      _log('✅ 离线消息同步请求已发送');
+    }
   }
 
   /// 处理连接错误
@@ -1054,5 +1154,10 @@ class WebSocketManager {
       
       _log('✅ 主动同步请求已发送');
     }
+  }
+
+  /// 🔥 新增：最后在线时间追踪
+  DateTime? _getLastOnlineTime() {
+    return _lastOnlineTime;
   }
 } 
