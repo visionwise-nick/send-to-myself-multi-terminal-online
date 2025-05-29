@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:convert';
-import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
@@ -193,6 +192,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
     final groupName = _result?['groupName']?.toString() ?? '';
     final expiresAt = _result?['expiresAt']?.toString() ?? '';
     final groupId = _result?['groupId']?.toString() ?? '';
+    final inviterDeviceId = _result?['inviterDeviceId']?.toString() ?? '';
     
     final qrData = {
       'type': 'sendtomyself_group_join',
@@ -200,11 +200,16 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
       'groupId': groupId,
       'groupName': groupName,
       'joinCode': joinCode,
+      'inviterDeviceId': inviterDeviceId,
       'expiresAt': expiresAt,
       'createdAt': DateTime.now().toIso8601String(),
     };
     
     final qrDataString = jsonEncode(qrData);
+    print('生成的二维码数据: $qrDataString');
+    print('加入码长度: ${joinCode.length}');
+    print('加入码内容: $joinCode');
+    print('邀请者设备ID: $inviterDeviceId');
 
     return FadeTransition(
       opacity: _fadeAnimation,

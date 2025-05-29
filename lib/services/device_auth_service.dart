@@ -489,10 +489,11 @@ class DeviceAuthService {
         };
       }
       
-      if (joinCode.length != 8) {
+      // 放宽长度限制，支持4-20位加入码
+      if (joinCode.length < 4 || joinCode.length > 20) {
         return {
           'success': false,
-          'message': '加入码必须为8位字符'
+          'message': '加入码长度必须在4-20位之间'
         };
       }
       

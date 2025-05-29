@@ -366,7 +366,7 @@ class GroupProvider extends ChangeNotifier {
     notifyListeners();
     
     try {
-      final response = await _authService.joinGroup(joinCode);
+      final response = await _groupService.joinGroup(joinCode, groupId: groupId);
       
       print('加入群组响应: $response');
       
@@ -491,34 +491,50 @@ class GroupProvider extends ChangeNotifier {
   
   // 群组重命名
   Future<bool> renameGroup(String groupId, String newName) async {
+    print('🔥 GroupProvider.renameGroup 开始: groupId=$groupId, newName=$newName');
+    
     _isLoading = true;
     _error = null;
     notifyListeners();
+    print('🔥 GroupProvider: 设置loading状态为true，已通知UI');
     
     try {
+      print('🔥 GroupProvider: 调用GroupService.renameGroup...');
       final response = await _groupService.renameGroup(groupId, newName);
+      print('🔥 GroupProvider: GroupService.renameGroup返回: $response');
+      
       if (response['success'] == true) {
+        print('🔥 GroupProvider: API调用成功，开始刷新群组列表...');
+        
         // 重新加载群组列表
         await loadGroups();
+        print('🔥 GroupProvider: 群组列表刷新完成');
         
         // 如果重命名的是当前群组，更新当前群组信息
         if (_currentGroup != null && _currentGroup!['id'] == groupId) {
+          print('🔥 GroupProvider: 更新当前群组名称: ${_currentGroup!['name']} → $newName');
           _currentGroup!['name'] = newName;
         }
         
+        print('🔥 GroupProvider: 设置loading状态为false (成功)');
         _isLoading = false;
         notifyListeners();
+        print('🔥 GroupProvider: 重命名成功，返回true');
         return true;
       } else {
+        print('🔥 GroupProvider: API返回success=false: ${response['message']}');
         _error = response['message'] ?? '重命名群组失败';
       }
     } catch (e) {
+      print('🔥 GroupProvider: 捕获异常: $e');
       _error = '重命名群组失败: $e';
       print(_error);
     }
     
+    print('🔥 GroupProvider: 设置loading状态为false (失败)');
     _isLoading = false;
     notifyListeners();
+    print('🔥 GroupProvider: 重命名失败，返回false');
     return false;
   }
   

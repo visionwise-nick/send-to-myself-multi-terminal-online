@@ -25,9 +25,15 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   
+  // 🔥 新增：可变的群组数据
+  late Map<String, dynamic> _currentGroupData;
+  
   @override
   void initState() {
     super.initState();
+    // 🔥 初始化可变的群组数据
+    _currentGroupData = Map<String, dynamic>.from(widget.group);
+    
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
@@ -55,10 +61,10 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
       final groupProvider = Provider.of<GroupProvider>(context, listen: false);
       
       // 获取群组详情
-      final groupDetails = await groupProvider.getGroupDetails(widget.group['id']);
+      final groupDetails = await groupProvider.getGroupDetails(_currentGroupData['id']);
       
       // 获取群组成员
-      final members = await groupProvider.getGroupMembers(widget.group['id']);
+      final members = await groupProvider.getGroupMembers(_currentGroupData['id']);
       
       if (mounted) {
         setState(() {
@@ -80,7 +86,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
   }
   
   void _showRenameGroupDialog() {
-    final controller = TextEditingController(text: widget.group['name']);
+    final controller = TextEditingController(text: _currentGroupData['name']);
     
     showDialog(
       context: context,
@@ -109,39 +115,89 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                 return;
               }
               
-              Navigator.pop(context);
+              Navigator.pop(context); // 关闭重命名对话框
               
-              // 显示加载提示
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              );
+              // 🔥 修复：添加try-catch确保加载对话框总是被关闭
+              BuildContext? dialogContext;
               
-              final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-              final success = await groupProvider.renameGroup(widget.group['id'], newName);
-              
-              // 关闭加载提示
-              Navigator.pop(context);
-              
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('群组已重命名为"$newName"'),
-                    backgroundColor: Colors.green,
-                  ),
+              try {
+                print('🔥 UI: 准备显示加载对话框...');
+                
+                // 显示加载提示并保存context
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) {
+                    dialogContext = context; // 保存对话框context
+                    return const AlertDialog(
+                      content: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(width: 16),
+                          Text('正在重命名群组...'),
+                        ],
+                      ),
+                    );
+                  },
                 );
-                // 立即刷新页面
-                await _loadGroupDetails();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(groupProvider.error ?? '重命名失败'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                print('🔥 UI: 加载对话框已显示');
+                
+                print('🔥 UI: 调用GroupProvider.renameGroup...');
+                final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+                final success = await groupProvider.renameGroup(_currentGroupData['id'], newName);
+                print('🔥 UI: GroupProvider.renameGroup返回: $success');
+                
+                // 🔥 关键修复：安全关闭对话框
+                if (dialogContext != null && mounted) {
+                  Navigator.of(dialogContext!).pop();
+                  print('🔥 UI: 加载对话框已关闭');
+                  
+                  if (success) {
+                    print('🔥 UI: 显示成功提示');
+                    // 🔥 新增：更新本地群组数据
+                    setState(() {
+                      _currentGroupData['name'] = newName;
+                    });
+                    print('🔥 UI: 本地群组名称已更新为: $newName');
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('群组重命名成功'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } else {
+                    print('🔥 UI: 显示失败提示');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('群组重命名失败'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                print('🔥 UI: 捕获异常: $e');
+                
+                // 🔥 安全关闭对话框：使用保存的context
+                if (dialogContext != null) {
+                  try {
+                    Navigator.of(dialogContext!).pop();
+                    print('🔥 UI: 异常处理 - 加载对话框已关闭');
+                  } catch (navError) {
+                    print('🔥 UI: Navigator操作失败: $navError');
+                  }
+                }
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('重命名失败: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
             child: const Text('确定'),
@@ -156,7 +212,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('退出群组'),
-        content: Text('确定要退出群组"${widget.group['name']}"吗？'),
+        content: Text('确定要退出群组"${_currentGroupData['name']}"吗？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -165,38 +221,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              
-              // 显示加载提示
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              );
-              
-              final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-              final success = await groupProvider.leaveGroup(widget.group['id']);
-              
-              // 关闭加载提示
-              Navigator.pop(context);
-              
-              if (success) {
-                Navigator.pop(context); // 返回上一页
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('已退出群组'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(groupProvider.error ?? '退出失败'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
+              await _performLeaveGroup();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -207,6 +232,53 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
         ],
       ),
     );
+  }
+  
+  Future<void> _performLeaveGroup() async {
+    // 显示加载状态
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      final success = await groupProvider.leaveGroup(_currentGroupData['id']);
+      
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        if (success) {
+          Navigator.pop(context); // 返回上一页
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('已退出群组'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(groupProvider.error ?? '退出失败'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('退出失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
   
   void _showRemoveDeviceDialog(Map<String, dynamic> device) {
@@ -223,42 +295,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              
-              // 显示加载提示
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              );
-              
-              final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-              final success = await groupProvider.removeDevice(
-                widget.group['id'], 
-                device['deviceId'] ?? device['id']
-              );
-              
-              // 关闭加载提示
-              Navigator.pop(context);
-              
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('已移除设备"${device['name']}"'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-                // 立即刷新页面
-                await _loadGroupDetails();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(groupProvider.error ?? '移除失败'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
+              await _performRemoveDevice(device);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -269,6 +306,57 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
         ],
       ),
     );
+  }
+  
+  Future<void> _performRemoveDevice(Map<String, dynamic> device) async {
+    // 显示加载状态
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      final success = await groupProvider.removeDevice(
+        _currentGroupData['id'], 
+        device['deviceId'] ?? device['id']
+      );
+      
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('已移除设备"${device['name']}"'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // 立即刷新页面
+          await _loadGroupDetails();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(groupProvider.error ?? '移除失败'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('移除失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
   
   void _showRenameDeviceDialog() {
@@ -301,39 +389,72 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                 return;
               }
               
-              Navigator.pop(context);
+              Navigator.pop(context); // 关闭重命名对话框
               
-              // 显示加载提示
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              );
+              // 🔥 修复：添加try-catch确保加载对话框总是被关闭
+              BuildContext? dialogContext;
               
-              final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-              final success = await groupProvider.renameDevice(newName);
-              
-              // 关闭加载提示
-              Navigator.pop(context);
-              
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('设备已重命名为"$newName"'),
-                    backgroundColor: Colors.green,
-                  ),
+              try {
+                // 显示加载提示并保存context
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) {
+                    dialogContext = context;
+                    return const AlertDialog(
+                      content: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(width: 16),
+                          Text('正在重命名设备...'),
+                        ],
+                      ),
+                    );
+                  },
                 );
-                // 立即刷新页面
-                await _loadGroupDetails();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(groupProvider.error ?? '重命名失败'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                
+                final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+                final success = await groupProvider.renameDevice(newName);
+                
+                // 🔥 关键修复：安全关闭对话框
+                if (dialogContext != null && mounted) {
+                  Navigator.of(dialogContext!).pop();
+                  
+                  if (success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('设备重命名成功'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('设备重命名失败'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                // 🔥 安全关闭对话框：使用保存的context
+                if (dialogContext != null) {
+                  try {
+                    Navigator.of(dialogContext!).pop();
+                  } catch (navError) {
+                    print('🔥 设备重命名Navigator操作失败: $navError');
+                  }
+                }
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('重命名失败: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
             child: const Text('确定'),
@@ -368,52 +489,9 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: Text(widget.group['name'] ?? '群组管理'),
+        title: Text(_currentGroupData['name'] ?? '群组管理'),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'rename_group':
-                  _showRenameGroupDialog();
-                  break;
-                case 'generate_qr':
-                  _showQrGenerate();
-                  break;
-                case 'leave_group':
-                  _showLeaveGroupDialog();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'rename_group',
-                child: ListTile(
-                  leading: Icon(Icons.edit),
-                  title: Text('重命名群组'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'generate_qr',
-                child: ListTile(
-                  leading: Icon(Icons.qr_code_2_rounded, color: AppTheme.primaryColor),
-                  title: Text('生成二维码', style: TextStyle(color: AppTheme.primaryColor)),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'leave_group',
-                child: ListTile(
-                  leading: Icon(Icons.exit_to_app, color: Colors.red),
-                  title: Text('退出群组', style: TextStyle(color: Colors.red)),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -439,7 +517,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
   }
   
   Widget _buildGroupInfoCard() {
-    final group = _groupDetails ?? widget.group;
+    final group = _groupDetails ?? _currentGroupData;
     final deviceCount = group['deviceCount'] ?? (_members?.length ?? 0);
     
     return Container(
@@ -521,6 +599,47 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                   icon: Icons.schedule,
                   label: '创建时间',
                   value: TimeUtils.formatDateTime(group['createdAt']),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // 操作按钮
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _showRenameGroupDialog,
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text('重命名群组'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _showQrGenerate,
+                  icon: const Icon(Icons.qr_code_2_rounded, size: 18),
+                  label: const Text('生成二维码'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -616,7 +735,6 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
   }
   
   Widget _buildMemberCard(Map<String, dynamic> member, int index) {
-    final isOwner = member['isOwner'] == true;
     final isMe = member['isMe'] == true;
     final isOnline = member['status'] == 'online';
     
@@ -633,10 +751,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: isMe ? null : () {
-                    if (isOwner) return; // 不能操作群主
-                    _showMemberOptions(member);
-                  },
+                  onTap: () => _showMemberOptions(member),
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -716,22 +831,6 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                                     ),
                                   ),
                                   
-                                  if (isOwner)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        '群主',
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                          color: Colors.orange,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  
                                   if (isMe)
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -772,12 +871,11 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                         ),
                         
                         // 操作按钮
-                        if (!isOwner) // 群主无法被操作，包括自己是群主的情况
-                          IconButton(
-                            onPressed: () => _showMemberOptions(member),
-                            icon: const Icon(Icons.more_vert),
-                            color: AppTheme.textTertiaryColor,
-                          ),
+                        IconButton(
+                          onPressed: () => _showMemberOptions(member),
+                          icon: const Icon(Icons.more_vert),
+                          color: AppTheme.textTertiaryColor,
+                        ),
                       ],
                     ),
                   ),
@@ -838,16 +936,18 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                       },
                     ),
                   
-                  // 如果不是自己的设备，显示移除选项
-                  if (!isMe)
-                    ListTile(
-                      leading: const Icon(Icons.remove_circle, color: Colors.red),
-                      title: const Text('移除设备', style: TextStyle(color: Colors.red)),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _showRemoveDeviceDialog(member);
-                      },
+                  // 所有设备都显示移除选项
+                  ListTile(
+                    leading: const Icon(Icons.remove_circle, color: Colors.red),
+                    title: Text(
+                      isMe ? '移除我的设备' : '移除设备',
+                      style: const TextStyle(color: Colors.red),
                     ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showRemoveDeviceDialog(member);
+                    },
+                  ),
                 ],
               ),
             ),

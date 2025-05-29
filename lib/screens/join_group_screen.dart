@@ -164,9 +164,9 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
       return;
     }
     
-    if (code.length != 8) {
+    if (code.length < 4 || code.length > 20) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('邀请码应为8位字符')),
+        const SnackBar(content: Text('邀请码长度必须在4-20位之间')),
       );
       return;
     }
@@ -535,7 +535,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
           const SizedBox(height: 8),
           
           const Text(
-            '请输入8位群组邀请码',
+            '请输入群组邀请码（4-20位）',
             style: TextStyle(
               fontSize: 14,
               color: Color(0xFF64748B),
@@ -551,7 +551,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w600,
-              letterSpacing: 4,
+              letterSpacing: 2,
             ),
             decoration: InputDecoration(
               hintText: '邀请码',
@@ -577,7 +577,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
               filled: true,
               counterText: '',
             ),
-            maxLength: 8,
+            maxLength: 20,
             textCapitalization: TextCapitalization.characters,
             onSubmitted: (_) => _handleManualInput(),
           ),
