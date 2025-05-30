@@ -227,8 +227,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
     
     _dio.options.headers['Content-Type'] = 'application/json';
-    _dio.options.connectTimeout = const Duration(seconds: 30);
-    _dio.options.receiveTimeout = const Duration(seconds: 30);
+    // 🔥 优化：增加大文件传输的超时时间
+    _dio.options.connectTimeout = const Duration(seconds: 60); // 连接超时60秒
+    _dio.options.receiveTimeout = const Duration(minutes: 10); // 接收超时10分钟，支持大文件
+    _dio.options.sendTimeout = const Duration(minutes: 10); // 发送超时10分钟，支持大文件上传
     
     // 添加拦截器来确保每次请求都有最新的token
     _dio.interceptors.add(InterceptorsWrapper(
@@ -239,6 +241,23 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           options.headers['Authorization'] = 'Bearer $currentToken';
         }
         handler.next(options);
+      },
+      // 🔥 新增：添加响应拦截器，处理大文件下载的特殊情况
+      onResponse: (response, handler) {
+        // 记录大文件下载信息
+        if (response.data is List<int> && (response.data as List<int>).length > 10 * 1024 * 1024) {
+          print('大文件下载完成: ${(response.data as List<int>).length / (1024 * 1024)} MB');
+        }
+        handler.next(response);
+      },
+      onError: (error, handler) {
+        // 🔥 优化：大文件传输错误处理
+        if (error.type == DioExceptionType.receiveTimeout) {
+          print('大文件下载超时，建议检查网络连接');
+        } else if (error.type == DioExceptionType.sendTimeout) {
+          print('大文件上传超时，建议检查网络连接');
+        }
+        handler.next(error);
       },
     ));
   }
@@ -1156,6 +1175,28 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   // 发送文件消息
   Future<void> _sendFileMessage(File file, String fileName, String fileType) async {
+    // 🔥 新增：检查文件大小限制（100MB）
+    const int maxFileSize = 100 * 1024 * 1024; // 100MB
+    final fileSize = await file.length();
+    
+    if (fileSize > maxFileSize) {
+      final fileSizeMB = (fileSize / (1024 * 1024)).toStringAsFixed(1);
+      print('发送文件失败：文件大小超过限制 - ${fileSizeMB}MB > 100MB');
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('文件太大无法发送\n文件大小: ${fileSizeMB}MB\n最大允许: 100MB'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return; // 阻止发送
+    }
+    
     // 立即复制文件到永久存储
     String? permanentFilePath;
     try {
@@ -1200,8 +1241,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         // 发送群组文件
         final groupId = widget.conversation['groupData']?['id'];
         if (groupId != null) {
-          // 模拟上传进度
-          await _simulateUploadProgress(fileMessage['id'] as String);
+          // 🔥 改进的模拟上传进度，增加速度和ETA计算
+          _simulateEnhancedUploadProgress(fileMessage['id'] as String, fileSize);
           
           apiResult = await _chatService.sendGroupFile(
             groupId: groupId,
@@ -1260,8 +1301,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         // 发送私聊文件
         final deviceId = widget.conversation['deviceData']?['id'];
         if (deviceId != null) {
-          // 模拟上传进度
-          await _simulateUploadProgress(fileMessage['id'] as String);
+          // 🔥 改进的模拟上传进度，增加速度和ETA计算
+          _simulateEnhancedUploadProgress(fileMessage['id'] as String, fileSize);
           
           apiResult = await _chatService.sendPrivateFile(
             targetDeviceId: deviceId,
@@ -1329,21 +1370,105 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       });
       await _saveMessages();
       
+      // 🔥 优化：根据文件大小和错误类型提供更详细的错误提示
+      String errorMessage = '发送文件失败';
+      if (e.toString().contains('timeout')) {
+        if (fileSize > 50 * 1024 * 1024) {
+          errorMessage = '大文件上传超时，请检查网络连接并重试\n文件大小: ${_formatFileSize(fileSize)}';
+        } else {
+          errorMessage = '文件上传超时，请检查网络连接';
+        }
+      } else if (e.toString().contains('413')) {
+        errorMessage = '文件太大，服务器拒绝处理\n请选择小于100MB的文件';
+      } else if (e.toString().contains('network')) {
+        errorMessage = '网络连接错误，请检查网络设置';
+      } else {
+        errorMessage = '发送文件失败: ${e.toString().length > 50 ? e.toString().substring(0, 50) + '...' : e.toString()}';
+      }
+      
       // 显示错误提示
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('发送文件失败: $e'),
+          content: Text(errorMessage),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
+          duration: const Duration(seconds: 5), // 增加显示时间，让用户有时间阅读
+          action: fileSize <= 100 * 1024 * 1024 ? SnackBarAction(
+            label: '重试',
+            textColor: Colors.white,
+            onPressed: () => _sendFileMessage(file, fileName, fileType),
+          ) : null,
         ),
       );
     }
   }
 
-  // 模拟上传进度
+  // 🔥 新增：增强的模拟上传进度
+  Future<void> _simulateEnhancedUploadProgress(String messageId, int? fileSize) async {
+    if (!mounted) return;
+    
+    final totalBytes = fileSize ?? 1024 * 1024; // 默认1MB
+    final startTime = DateTime.now();
+    var lastUpdateTime = startTime;
+    var lastUploadedBytes = 0;
+    
+    // 模拟网络速度变化 (100KB/s - 2MB/s)
+    final baseSpeedKBps = 500 + (math.Random().nextDouble() * 1500);
+    
+    for (int i = 0; i <= 100; i += 2) {
+      if (!mounted) break;
+      
+      final progress = i / 100.0;
+      final uploadedBytes = (totalBytes * progress).toInt();
+      final currentTime = DateTime.now();
+      
+      // 计算传输速度
+      final timeDiff = currentTime.difference(lastUpdateTime).inMilliseconds;
+      double speedKBps = baseSpeedKBps;
+      
+      if (timeDiff > 0 && i > 0) {
+        final bytesDiff = uploadedBytes - lastUploadedBytes;
+        speedKBps = (bytesDiff / timeDiff) * 1000 / 1024; // 转换为KB/s
+        
+        // 计算预计剩余时间
+        final remainingBytes = totalBytes - uploadedBytes;
+        final etaSeconds = speedKBps > 0 ? (remainingBytes / 1024 / speedKBps).round() : null;
+        
+        setState(() {
+          final index = _messages.indexWhere((msg) => msg['id'] == messageId);
+          if (index != -1) {
+            _messages[index]['uploadProgress'] = progress;
+            _messages[index]['transferSpeed'] = speedKBps;
+            _messages[index]['eta'] = etaSeconds;
+          }
+        });
+        
+        lastUpdateTime = currentTime;
+        lastUploadedBytes = uploadedBytes;
+      }
+      
+      // 可变延迟，模拟真实网络条件
+      final delay = 150 + (math.Random().nextInt(100));
+      await Future.delayed(Duration(milliseconds: delay));
+    }
+    
+    // 上传完成，清除进度信息
+    if (mounted) {
+      setState(() {
+        final index = _messages.indexWhere((msg) => msg['id'] == messageId);
+        if (index != -1) {
+          _messages[index]['uploadProgress'] = 1.0;
+          _messages[index]['transferSpeed'] = 0.0;
+          _messages[index]['eta'] = null;
+        }
+      });
+    }
+  }
+
+  // 模拟上传进度（保留旧方法以兼容）
   Future<void> _simulateUploadProgress(String messageId) async {
     for (int i = 0; i <= 100; i += 10) {
       await Future.delayed(const Duration(milliseconds: 200));
@@ -1404,6 +1529,27 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         final fileName = result.files.single.name;
         final fileType = _getMimeType(fileName);
         
+        // 🔥 新增：检查文件大小限制（100MB）
+        const int maxFileSize = 100 * 1024 * 1024; // 100MB
+        final fileSize = await file.length();
+        
+        if (fileSize > maxFileSize) {
+          // 文件超过100MB，显示错误提示
+          final fileSizeMB = (fileSize / (1024 * 1024)).toStringAsFixed(1);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('文件太大无法发送\n文件大小: ${fileSizeMB}MB\n最大允许: 100MB'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+          return; // 阻止上传
+        }
+        
         await _sendFileMessage(file, fileName, fileType);
       }
     } catch (e) {
@@ -1452,22 +1598,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        title: GestureDetector(
-          onLongPress: _showStorageInfo,
-          child: Text(title ?? '聊天'),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: const Color(0xFFE5E7EB),
-            height: 1,
-          ),
-        ),
-      ),
+      // 🔥 移除AppBar，聊天页面不需要标题栏
       body: Column(
         children: [
           // 消息列表
@@ -1725,106 +1856,403 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final filePath = message['filePath']; // 本地文件路径
     final fileUrl = message['fileUrl']; // 远程文件URL
     final uploadProgress = message['uploadProgress'] ?? 1.0;
+    final downloadProgress = message['downloadProgress'];
     final status = message['status'] ?? 'sent';
+    final transferSpeed = message['transferSpeed'] ?? 0.0; // KB/s
+    final eta = message['eta']; // 预计剩余时间（秒）
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 300),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 文件预览区域
+          // 🔥 修复：移除显眼的成功指示器覆盖层，只显示文件预览
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: _buildFilePreview(fileType, filePath, fileUrl, isMe),
           ),
           
-          // 上传/下载进度条
+          // 🔥 新的上传进度UI
           if (status == 'uploading' && uploadProgress < 1.0)
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.cloud_upload_rounded,
-                        size: 14,
-                        color: isMe ? Colors.white.withOpacity(0.8) : const Color(0xFF6B7280),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '上传中 ${(uploadProgress * 100).toInt()}%',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isMe ? Colors.white.withOpacity(0.8) : const Color(0xFF6B7280),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
-                    value: uploadProgress,
-                    backgroundColor: isMe ? Colors.white.withOpacity(0.3) : const Color(0xFFE5E7EB),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isMe ? Colors.white : AppTheme.primaryColor,
-                    ),
-                    borderRadius: BorderRadius.circular(2),
-                    minHeight: 3,
-                  ),
-                ],
-              ),
+            _buildTransferProgressWidget(
+              isUpload: true,
+              progress: uploadProgress,
+              fileName: fileName,
+              fileSize: fileSize,
+              transferSpeed: transferSpeed,
+              eta: eta,
+              isMe: isMe,
+              messageId: message['id'],
             ),
           
-          if (message['downloadProgress'] != null && message['downloadProgress'] < 1.0)
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.cloud_download_rounded,
-                        size: 14,
-                        color: Color(0xFF3B82F6),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '下载中 ${(message['downloadProgress'] * 100).toInt()}%',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF3B82F6),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
-                    value: message['downloadProgress'],
-                    backgroundColor: const Color(0xFFE5E7EB),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
-                    borderRadius: BorderRadius.circular(2),
-                    minHeight: 3,
-                  ),
-                ],
-              ),
+          // 🔥 新的下载进度UI
+          if (downloadProgress != null && downloadProgress < 1.0)
+            _buildTransferProgressWidget(
+              isUpload: false,
+              progress: downloadProgress,
+              fileName: fileName,
+              fileSize: fileSize,
+              transferSpeed: transferSpeed,
+              eta: eta,
+              isMe: isMe,
+              messageId: message['id'],
             ),
         ],
       ),
     );
   }
 
+  // 🔥 新增：构建传输进度组件
+  Widget _buildTransferProgressWidget({
+    required bool isUpload,
+    required double progress,
+    required String fileName,
+    required int? fileSize,
+    required double transferSpeed,
+    required int? eta,
+    required bool isMe,
+    required String messageId,
+  }) {
+    final progressPercent = (progress * 100).toInt();
+    final transferType = isUpload ? '上传' : '下载';
+    
+    // 🔥 修复：改进颜色主题，确保文字可见性
+    final primaryColor = isUpload 
+      ? (isMe ? AppTheme.primaryColor : AppTheme.primaryColor)
+      : const Color(0xFF3B82F6);
+    
+    final backgroundColor = const Color(0xFFF8FAFC);
+    final borderColor = AppTheme.primaryColor.withOpacity(0.2);
+    
+    // 🔥 修复：确保文字颜色在所有背景下都可见
+    final textColor = AppTheme.textPrimaryColor;
+    final secondaryTextColor = AppTheme.textSecondaryColor;
+    
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: borderColor,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 🔥 改进：标题行设计
+          Row(
+            children: [
+              // 传输图标（带动画和更好的视觉效果）
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: AnimatedRotation(
+                  turns: progress * 2, // 随进度旋转
+                  duration: const Duration(milliseconds: 300),
+                  child: Icon(
+                    isUpload ? Icons.cloud_upload_rounded : Icons.cloud_download_rounded,
+                    size: 18,
+                    color: primaryColor,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              
+              // 文件信息
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      fileName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '$transferType中',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '$progressPercent%',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: primaryColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              // 取消按钮
+              GestureDetector(
+                onTap: () => _cancelTransfer(messageId, isUpload),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 16,
+                    color: Colors.red.shade600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // 🔥 修复：改进的进度条，修复宽度计算
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final progressWidth = constraints.maxWidth * progress;
+              
+              return Stack(
+                children: [
+                  // 背景进度条
+                  Container(
+                    height: 8,
+                    width: constraints.maxWidth,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  // 实际进度条（带动画）
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    height: 8,
+                    width: progressWidth,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          primaryColor,
+                          primaryColor.withOpacity(0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryColor.withOpacity(0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // 🔥 改进：详细信息行设计
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // 文件大小信息
+              if (fileSize != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${_formatFileSize((fileSize * progress).toInt())} / ${_formatFileSize(fileSize)}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: secondaryTextColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+              
+              // 传输速度和预计时间
+              if (transferSpeed > 0) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.speed_rounded,
+                        size: 12,
+                        color: primaryColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatTransferSpeed(transferSpeed),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: primaryColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (eta != null) ...[
+                        Text(
+                          ' • ${_formatETA(eta)}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: secondaryTextColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔥 新增：取消传输
+  void _cancelTransfer(String messageId, bool isUpload) {
+    // 显示确认对话框
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isUpload ? '取消上传' : '取消下载'),
+        content: Text('确定要${isUpload ? '取消上传' : '取消下载'}这个文件吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('继续传输'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performCancelTransfer(messageId, isUpload);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('确定取消'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔥 新增：执行取消传输
+  void _performCancelTransfer(String messageId, bool isUpload) {
+    setState(() {
+      final messageIndex = _messages.indexWhere((m) => m['id'] == messageId);
+      if (messageIndex != -1) {
+        if (isUpload) {
+          _messages[messageIndex]['status'] = 'cancelled';
+          _messages[messageIndex]['uploadProgress'] = 0.0;
+        } else {
+          _messages[messageIndex]['downloadProgress'] = null;
+        }
+      }
+    });
+    
+    // 保存状态
+    _saveMessages();
+    
+    // 显示取消提示
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${isUpload ? '上传' : '下载'}已取消'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // 🔥 新增：格式化传输速度
+  String _formatTransferSpeed(double speedKBps) {
+    if (speedKBps < 1024) {
+      return '${speedKBps.toStringAsFixed(1)} KB/s';
+    } else {
+      return '${(speedKBps / 1024).toStringAsFixed(1)} MB/s';
+    }
+  }
+
+  // 🔥 新增：格式化预计剩余时间
+  String _formatETA(int seconds) {
+    if (seconds < 60) {
+      return '${seconds}秒';
+    } else if (seconds < 3600) {
+      final minutes = seconds ~/ 60;
+      return '${minutes}分钟';
+    } else {
+      final hours = seconds ~/ 3600;
+      final minutes = (seconds % 3600) ~/ 60;
+      return '${hours}小时${minutes}分钟';
+    }
+  }
+
   // 构建文件预览 - 简化版本
   Widget _buildFilePreview(String? fileType, String? filePath, String? fileUrl, bool isMe) {
-    print('=== 构建文件预览调试 ===');
-    print('fileType: $fileType, filePath: $filePath, fileUrl: $fileUrl');
+    // 🔥 简化：减少调试日志，保持代码简洁
+    
+    // 🔥 新增：检查是否正在下载
+    if (fileUrl != null) {
+      String fullUrl = fileUrl;
+      if (fileUrl.startsWith('/api/')) {
+        fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+      }
+      
+      // 如果正在下载，显示下载中状态
+      if (_downloadingFiles.contains(fullUrl)) {
+        return _buildDownloadingPreview(fileType);
+      }
+    }
     
     // 1. 优先使用传入的本地文件路径
     if (filePath != null) {
       if (File(filePath).existsSync()) {
-        print('✅ 使用本地文件路径: $filePath');
         return _buildActualFilePreview(fileType, filePath, fileUrl, isMe);
-      } else {
-        print('❌ 本地文件不存在: $filePath');
       }
     }
     
@@ -1838,7 +2266,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       // 检查内存缓存
       final cachedPath = _getFromCache(fullUrl);
       if (cachedPath != null && File(cachedPath).existsSync()) {
-        print('✅ 使用内存缓存: $cachedPath');
         return _buildActualFilePreview(fileType, cachedPath, fileUrl, isMe);
       }
       
@@ -1853,17 +2280,83 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           final persistentPath = snapshot.data;
           if (persistentPath != null && File(persistentPath).existsSync()) {
             _addToCache(fullUrl, persistentPath);
-            print('✅ 使用持久化缓存: $persistentPath');
             return _buildActualFilePreview(fileType, persistentPath, fileUrl, isMe);
           }
           
-          print('❌ 文件未找到，显示占位符');
-          return _buildFileNotFoundPreview(fileType, fullUrl);
+          // 🔥 修复：显示准备下载状态而不是"文件不存在"
+          return _buildPrepareDownloadPreview(fileType);
         },
       );
     }
     
     return _buildFileNotFoundPreview(fileType, fileUrl);
+  }
+
+  // 🔥 新增：下载中预览
+  Widget _buildDownloadingPreview(String? fileType) {
+    return Container(
+      height: 80,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '下载中...',
+            style: TextStyle(
+              fontSize: 11,
+              color: AppTheme.textSecondaryColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔥 新增：准备下载预览
+  Widget _buildPrepareDownloadPreview(String? fileType) {
+    return Container(
+      height: 80,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            _getFileTypeIcon(fileType),
+            size: 24,
+            color: AppTheme.primaryColor,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '准备下载',
+            style: TextStyle(
+              fontSize: 11,
+              color: AppTheme.textSecondaryColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // 加载中预览
@@ -2245,43 +2738,69 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   Widget _buildMessageStatusIcon(Map<String, dynamic> message) {
     final status = message['status'];
     final isTemporary = message['isTemporary'] == true;
+    final uploadProgress = message['uploadProgress'] ?? 1.0;
+    final downloadProgress = message['downloadProgress'];
+    final hasFile = message['fileType'] != null;
+    final isMe = message['isMe'] == true;
     
     if (isTemporary && status == 'sending') {
       return SizedBox(
-        width: 10, // 减小尺寸
+        width: 10,
         height: 10,
         child: CircularProgressIndicator(
-          strokeWidth: 1.5, // 减小线宽
+          strokeWidth: 1.5,
           valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.8)),
         ),
       );
     } else if (status == 'uploading') {
       return SizedBox(
-        width: 10, // 减小尺寸
+        width: 10,
         height: 10,
         child: CircularProgressIndicator(
-          strokeWidth: 1.5, // 减小线宽
+          strokeWidth: 1.5,
           valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withOpacity(0.8)),
         ),
       );
     } else if (status == 'failed') {
       return Icon(
         Icons.error_outline,
-        size: 10, // 减小图标
-          color: Colors.red,
+        size: 10,
+        color: Colors.red,
       );
     } else if (status == 'read') {
       return Icon(
         Icons.done_all,
-        size: 10, // 减小图标
+        size: 10,
         color: Colors.green,
       );
     } else if (status == 'sent') {
-      return Icon(
-        Icons.done,
-        size: 10, // 减小图标
-        color: Colors.white.withOpacity(0.8),
-      );
+      // 🔥 简化：统一使用简单的勾选图标，不区分文件类型
+      // 遵循简洁、低调的设计原则
+      if (hasFile) {
+        // 文件消息：根据传输完成状态显示不同颜色的勾
+        if ((isMe && uploadProgress >= 1.0) || (!isMe && downloadProgress == null)) {
+          // 传输完成：绿色勾选
+          return Icon(
+            Icons.done,
+            size: 10,
+            color: Colors.green.withOpacity(0.8),
+          );
+        } else {
+          // 传输中或未开始：普通勾选
+          return Icon(
+            Icons.done,
+            size: 10,
+            color: Colors.white.withOpacity(0.8),
+          );
+        }
+      } else {
+        // 普通文本消息：简单勾选
+        return Icon(
+          Icons.done,
+          size: 10,
+          color: Colors.white.withOpacity(0.8),
+        );
+      }
     }
     return const SizedBox();
   }
@@ -2327,10 +2846,20 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       print('开始下载文件: $fileName (${fileSize ?? 'unknown'} bytes)');
       _downloadingFiles.add(fullUrl);
       
-      // 3. 下载文件
+      // 🔥 新增：初始化下载进度跟踪
+      final startTime = DateTime.now();
+      var lastUpdateTime = startTime;
+      var lastDownloadedBytes = 0;
+      
+      // 3. 带进度的文件下载
       final dio = Dio();
       final authService = DeviceAuthService();
       final token = await authService.getAuthToken();
+      
+      // 🔥 优化：为大文件下载配置更长的超时时间
+      dio.options.connectTimeout = const Duration(seconds: 60);
+      dio.options.receiveTimeout = const Duration(minutes: 15); // 大文件下载15分钟超时
+      dio.options.sendTimeout = const Duration(minutes: 5);
       
       final response = await dio.get(
         fullUrl,
@@ -2338,9 +2867,55 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           responseType: ResponseType.bytes,
           headers: token != null ? {'Authorization': 'Bearer $token'} : null,
         ),
+        onReceiveProgress: (receivedBytes, totalBytes) {
+          // 🔥 新增：计算下载进度和速度
+          if (totalBytes > 0 && mounted) {
+            final progress = receivedBytes / totalBytes;
+            final currentTime = DateTime.now();
+            final timeDiff = currentTime.difference(lastUpdateTime).inMilliseconds;
+            
+            // 每500ms更新一次UI（避免过于频繁）
+            if (timeDiff >= 500) {
+              final bytesDiff = receivedBytes - lastDownloadedBytes;
+              final speedBytesPerMs = bytesDiff / timeDiff;
+              final speedKBps = speedBytesPerMs * 1000 / 1024; // 转换为KB/s
+              
+              // 计算预计剩余时间
+              final remainingBytes = totalBytes - receivedBytes;
+              final etaSeconds = speedKBps > 0 ? (remainingBytes / 1024 / speedKBps).round() : null;
+              
+              // 🔥 优化：大文件下载进度日志
+              if (totalBytes > 50 * 1024 * 1024) { // 大于50MB的文件
+                print('大文件下载进度: ${(progress * 100).toStringAsFixed(1)}% (${_formatFileSize(receivedBytes)}/${_formatFileSize(totalBytes)}) 速度: ${_formatTransferSpeed(speedKBps)}');
+              }
+              
+              setState(() {
+                final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+                if (messageIndex != -1) {
+                  _messages[messageIndex]['downloadProgress'] = progress;
+                  _messages[messageIndex]['transferSpeed'] = speedKBps;
+                  _messages[messageIndex]['eta'] = etaSeconds;
+                }
+              });
+              
+              lastUpdateTime = currentTime;
+              lastDownloadedBytes = receivedBytes;
+            }
+          }
+        },
       );
       
       if (response.statusCode == 200 && response.data != null) {
+        // 🔥 新增：下载完成，清除进度信息
+        setState(() {
+          final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+          if (messageIndex != -1) {
+            _messages[messageIndex]['downloadProgress'] = null;
+            _messages[messageIndex]['transferSpeed'] = 0.0;
+            _messages[messageIndex]['eta'] = null;
+          }
+        });
+        
         // 直接保存到永久存储
         final savedPath = await _localStorage.saveFileToCache(fullUrl, response.data as List<int>, fileName);
         
@@ -2355,12 +2930,60 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           
           // 保存消息更新
           await _saveMessages();
+          
+          // 🔥 移除：不再显示下载完成提示，保持界面简洁
+          // 文件下载完成后直接显示，无需额外提示
         }
       } else {
         throw Exception('下载失败: HTTP ${response.statusCode}');
       }
     } catch (e) {
       print('文件下载失败: $fileName - $e');
+      
+      // 🔥 新增：下载失败处理
+      if (mounted) {
+        setState(() {
+          final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+          if (messageIndex != -1) {
+            _messages[messageIndex]['downloadProgress'] = null;
+            _messages[messageIndex]['transferSpeed'] = 0.0;
+            _messages[messageIndex]['eta'] = null;
+          }
+        });
+        
+        // 🔥 优化：根据文件大小和错误类型提供更详细的错误提示
+        String errorMessage = '文件下载失败';
+        if (e.toString().contains('timeout')) {
+          if (fileSize != null && fileSize > 50 * 1024 * 1024) {
+            errorMessage = '大文件下载超时，请检查网络连接\n文件大小: ${_formatFileSize(fileSize)}\n建议在WiFi环境下重试';
+          } else {
+            errorMessage = '文件下载超时，请检查网络连接';
+          }
+        } else if (e.toString().contains('404')) {
+          errorMessage = '文件不存在或已过期';
+        } else if (e.toString().contains('403')) {
+          errorMessage = '没有权限下载此文件';
+        } else if (e.toString().contains('network')) {
+          errorMessage = '网络连接错误，请检查网络设置';
+        } else if (e.toString().contains('space') || e.toString().contains('storage')) {
+          errorMessage = '设备存储空间不足，请清理空间后重试';
+        } else {
+          errorMessage = '文件下载失败: ${fileName}';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5), // 增加显示时间
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: '重试',
+              textColor: Colors.white,
+              onPressed: () => _autoDownloadFile(message),
+            ),
+          ),
+        );
+      }
     } finally {
       _downloadingFiles.remove(fullUrl);
     }

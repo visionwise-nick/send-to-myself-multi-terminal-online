@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
 import 'dart:convert';
@@ -45,96 +46,31 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
     for (final barcode in barcodes) {
       if (barcode.rawValue != null && barcode.rawValue!.isNotEmpty) {
         final code = barcode.rawValue!.trim();
-        print('扫描到二维码: $code');
-        
-        String? joinCode;
-        String? groupId;
         
         try {
-          // 🔥 按照API文档解析JSON格式的二维码
           final Map<String, dynamic> data = jsonDecode(code);
-          print('解析JSON成功: $data');
-          
-          // 🔥 严格按照API文档验证二维码格式
+          // 检查是否是群组邀请二维码
           if (data['type'] == 'sendtomyself_group_join' && 
-              data['version'] == '1.0' &&
-              data.containsKey('groupId') &&
               data.containsKey('joinCode') && 
-              data.containsKey('expiresAt') &&
               data['joinCode'] != null) {
-            
-            joinCode = data['joinCode'].toString();
-            groupId = data['groupId']?.toString();
-            
-            // 🔥 检查二维码是否过期
-            final expiresAt = data['expiresAt']?.toString();
-            if (expiresAt != null) {
-              try {
-                final expireTime = DateTime.parse(expiresAt);
-                if (DateTime.now().isAfter(expireTime)) {
-                  print('二维码已过期: $expiresAt');
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('邀请码已过期，请重新获取'),
-                        backgroundColor: AppTheme.errorColor,
-                        behavior: SnackBarBehavior.floating,
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                  }
-                  return;
-                }
-              } catch (e) {
-                print('解析过期时间失败: $e');
-              }
+            final joinCode = data['joinCode'].toString();
+            if (joinCode.length == 8) {
+              _joinGroup(joinCode);
+              break;
             }
-            
-            print('从JSON中提取加入码: $joinCode, 群组ID: $groupId');
-          } else {
-            print('二维码格式验证失败: 缺少必需字段或版本不匹配');
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('无效的群组邀请二维码格式'),
-                  backgroundColor: AppTheme.errorColor,
-                  behavior: SnackBarBehavior.floating,
-                  duration: Duration(seconds: 3),
-                ),
-              );
-            }
-            return;
           }
         } catch (e) {
-          print('JSON解析失败，尝试直接使用原始码: $e');
-          // 🔥 如果不是JSON格式，直接使用原始码作为加入码（向后兼容）
-          joinCode = code;
-          print('直接使用原始码作为加入码: $joinCode');
-        }
-        
-        // 🔥 验证加入码格式 - 根据后端要求支持4-20位
-        if (joinCode != null && joinCode.isNotEmpty && joinCode.length >= 4 && joinCode.length <= 20) {
-          print('准备加入群组，加入码: $joinCode, 群组ID: $groupId');
-          _joinGroup(joinCode, groupId: groupId);
-          break;
-        } else {
-          print('无效的加入码格式: $joinCode');
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('无效的加入码格式，加入码长度应为4-20位'),
-                backgroundColor: AppTheme.errorColor,
-                behavior: SnackBarBehavior.floating,
-                duration: Duration(seconds: 3),
-              ),
-            );
+          // 如果不是JSON格式，检查是否是8位加入码
+          if (code.length == 8) {
+            _joinGroup(code);
+            break;
           }
         }
       }
     }
   }
 
-  Future<void> _joinGroup(String code, {String? groupId}) async {
+  Future<void> _joinGroup(String code) async {
     if (_isJoining) return;
 
     setState(() {
@@ -143,9 +79,7 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
 
     try {
       final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-      
-      // 🔥 传递groupId参数给加入方法进行额外验证
-      final result = await groupProvider.joinGroup(code, groupId: groupId);
+      final result = await groupProvider.joinGroup(code);
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -205,14 +139,14 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
-            hintText: '加入码（4-20位）',
+            hintText: '8位加入码',
             counterText: '',
           ),
-          maxLength: 20,
+          maxLength: 8,
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 20,
-            letterSpacing: 2,
+            letterSpacing: 4,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -224,16 +158,9 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
           ElevatedButton(
             onPressed: () {
               final code = controller.text.trim();
-              if (code.length >= 4 && code.length <= 20) {
+              if (code.length == 8) {
                 Navigator.pop(context);
                 _joinGroup(code);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('加入码长度必须在4-20位之间'),
-                    backgroundColor: AppTheme.errorColor,
-                  ),
-                );
               }
             },
             child: const Text('加入'),

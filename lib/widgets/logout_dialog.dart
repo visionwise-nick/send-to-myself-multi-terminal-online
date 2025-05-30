@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -85,8 +86,23 @@ class LogoutDialog {
         
         if (success) {
           _showLogoutSuccessMessage(context, '已成功退出登录');
+          
+          // 🔥 修复：强制导航到登录页面，清除所有页面堆栈
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (context.mounted) {
+              // 使用GoRouter强制跳转并清除堆栈
+              context.go('/login');
+            }
+          });
         } else {
           _showLogoutErrorMessage(context, '退出登录时发生错误');
+          
+          // 🔥 即使失败也提供跳转选项
+          Future.delayed(const Duration(seconds: 2), () {
+            if (context.mounted) {
+              _showForceLogoutDialog(context);
+            }
+          });
         }
       }
       
@@ -151,6 +167,51 @@ class LogoutDialog {
                 foregroundColor: Colors.white,
               ),
               child: const Text('确定'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+  
+  // 🔥 新增：显示强制登出对话框（用于退出登录失败时）
+  static void _showForceLogoutDialog(BuildContext context) {
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red),
+              SizedBox(width: 8),
+              Text('退出登录失败'),
+            ],
+          ),
+          content: const Text('退出登录失败，您可以选择强制退出或重试。'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // 重试退出登录
+                showLogoutConfirmDialog(context);
+              },
+              child: Text(
+                '重试',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // 强制跳转到登录页面
+                context.go('/login');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('强制退出'),
             ),
           ],
         ),

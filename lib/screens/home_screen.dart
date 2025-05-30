@@ -204,13 +204,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     );
   }
 
-  // 桌面端布局
+  // 🔥 优化：桌面端布局
   Widget _buildDesktopLayout(String deviceName) {
     return Row(
       children: [
-        // 左侧边栏
+        // 🔥 优化：重新设计左侧边栏
         Container(
-          width: 280,
+          width: 280, // 🔥 增加宽度适应群组选择器
           decoration: BoxDecoration(
             color: Colors.white,
             border: Border(
@@ -222,27 +222,52 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           ),
           child: Column(
             children: [
-              // 侧边栏顶部
-              _buildDesktopSidebarHeader(deviceName),
+              // 🔥 优化：简洁的应用标题区
+              _buildDesktopAppHeader(deviceName),
               
-              // 导航项
-              _buildDesktopNavigation(),
-              
-              // 群组选择器
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: GroupSelector(),
+              // 🔥 新增：群组选择器区域
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 群组选择器
+                    GroupSelector(),
+                    
+                    const SizedBox(height: 8),
+                    
+                    // 🔥 新增：状态信息行
+                    Row(
+                      children: [
+                        // 连接状态
+                        const ConnectionStatusWidget(
+                          showDeviceCount: false,
+                        ),
+                        
+                        const SizedBox(width: 8),
+                        
+                        // 在线设备状态
+                        Expanded(
+                          child: _buildOnlineIndicator(),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
+              
+              // 🔥 优化：主导航区域
+              _buildDesktopNavigation(),
               
               const Spacer(),
               
-              // 底部操作区
+              // 🔥 优化：底部状态和操作区
               _buildDesktopSidebarFooter(),
             ],
           ),
         ),
         
-        // 主内容区
+        // 🔥 简化：主内容区无需顶部栏
         Expanded(
           child: _buildDesktopMainContent(),
         ),
@@ -308,11 +333,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     );
   }
 
-  // 桌面端侧边栏头部
-  Widget _buildDesktopSidebarHeader(String deviceName) {
+  // 🔥 优化：桌面端应用标题区
+  Widget _buildDesktopAppHeader(String deviceName) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16), // 🔥 减小内边距
       decoration: BoxDecoration(
+        color: Colors.white,
         border: Border(
           bottom: BorderSide(
             color: AppTheme.dividerColor,
@@ -323,7 +349,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       child: Row(
         children: [
           Container(
-            width: 32,
+            width: 32, // 🔥 减小logo尺寸
             height: 32,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
@@ -331,26 +357,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                 end: Alignment.bottomRight,
                 colors: [AppTheme.primaryColor, AppTheme.primaryDarkColor],
               ),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8), // 🔥 减小圆角
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withOpacity(0.2), // 🔥 减淡阴影
+                  blurRadius: 6,
+                  offset: const Offset(0, 1),
+                ),
+              ],
             ),
             child: const Icon(
               Icons.send_rounded,
-              size: 18,
+              size: 18, // 🔥 减小图标
               color: Colors.white,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10), // 🔥 减小间距
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Send To Myself',
-                  style: AppTheme.titleStyle,
+                  style: TextStyle(
+                    fontSize: 14, // 🔥 进一步减小字体
+                    fontWeight: FontWeight.w300, // 🔥 改为更细字体
+                    color: AppTheme.textPrimaryColor,
+                  ),
                 ),
                 Text(
                   deviceName,
-                  style: AppTheme.captionStyle,
+                  style: TextStyle(
+                    fontSize: 10, // 🔥 进一步减小字体
+                    fontWeight: FontWeight.w200, // 🔥 改为超细字体
+                    color: AppTheme.textSecondaryColor,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -361,21 +402,39 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     );
   }
 
-  // 桌面端导航
+  // 🔥 优化：桌面端导航区域
   Widget _buildDesktopNavigation() {
-    return Column(
-      children: [
-        _buildDesktopNavItem(
-          icon: Icons.chat_bubble_rounded,
-          label: '聊天',
-          index: 0,
-        ),
-        _buildDesktopNavItem(
-          icon: Icons.psychology_rounded,
-          label: '记忆',
-          index: 1,
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16), // 🔥 减小垂直边距
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), // 🔥 减小垂直边距
+            child: Text(
+              '导航',
+              style: TextStyle(
+                fontSize: 9, // 🔥 进一步减小字体
+                fontWeight: FontWeight.w400, // 🔥 改为细体
+                letterSpacing: 0.5,
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6), // 🔥 减小间距
+          _buildDesktopNavItem(
+            icon: Icons.chat_bubble_rounded,
+            label: '聊天',
+            index: 0,
+          ),
+          const SizedBox(height: 3), // 🔥 减小间距
+          _buildDesktopNavItem(
+            icon: Icons.psychology_rounded,
+            label: '记忆',
+            index: 1,
+          ),
+        ],
+      ),
     );
   }
 
@@ -387,34 +446,52 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     final isSelected = _selectedIndex == index;
     
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      margin: const EdgeInsets.symmetric(vertical: 1), // 🔥 减小外边距
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _onItemTapped(index),
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          borderRadius: BorderRadius.circular(10), // 🔥 减小圆角
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // 🔥 减小内边距
             decoration: BoxDecoration(
               color: isSelected 
                 ? AppTheme.primaryColor.withOpacity(0.1)
                 : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10), // 🔥 减小圆角
+              border: Border.all(
+                color: isSelected 
+                  ? AppTheme.primaryColor.withOpacity(0.2)
+                  : Colors.transparent,
+                width: 1,
+              ),
             ),
             child: Row(
               children: [
-                Icon(
-                  icon,
-                  size: 18,
-                  color: isSelected 
-                    ? AppTheme.primaryColor
-                    : AppTheme.textSecondaryColor,
+                Container(
+                  width: 28, // 🔥 减小图标容器
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                      ? AppTheme.primaryColor
+                      : AppTheme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6), // 🔥 减小圆角
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 14, // 🔥 减小图标
+                    color: isSelected 
+                      ? Colors.white
+                      : AppTheme.primaryColor,
+                  ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 10), // 🔥 减小间距
                 Text(
                   label,
-                  style: AppTheme.bodyStyle.copyWith(
-                    fontWeight: isSelected ? AppTheme.fontWeightMedium : AppTheme.fontWeightNormal,
+                  style: TextStyle(
+                    fontWeight: isSelected ? FontWeight.w400 : FontWeight.w300, // 🔥 改为更细字体
+                    fontSize: 12, // 🔥 进一步减小字体
                     color: isSelected 
                       ? AppTheme.primaryColor
                       : AppTheme.textSecondaryColor,
@@ -428,11 +505,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     );
   }
 
-  // 桌面端侧边栏底部
+  // 🔥 优化：桌面端底部状态区 - 简化版
   Widget _buildDesktopSidebarFooter() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
+        color: Colors.white,
         border: Border(
           top: BorderSide(
             color: AppTheme.dividerColor,
@@ -442,27 +520,48 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center, // 🔥 居中对齐
         children: [
-          // WebSocket连接状态
-          Row(
-            children: [
-              const ConnectionStatusWidget(),
-              const Spacer(),
-              // 退出登录按钮
-              _buildIconButton(
-                icon: Icons.logout_rounded,
-                onTap: _showLogoutDialog,
+          // 🔥 新增：退出登录按钮
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              onPressed: () {
+                LogoutDialog.showLogoutConfirmDialog(context);
+              },
+              icon: Icon(
+                Icons.logout,
+                size: 12,
+                color: Colors.red.shade600,
               ),
-            ],
+              label: Text(
+                '退出登录',
+                style: TextStyle(
+                  color: Colors.red.shade600,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.red.shade50,
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+              ),
+            ),
           ),
           
           const SizedBox(height: 8),
           
-          // 在线设备状态
-          Row(
-            children: [
-              Expanded(child: _buildOnlineIndicator()),
-            ],
+          // 版权信息
+          Text(
+            '© 2024 Send To Myself',
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.w200,
+              color: AppTheme.textSecondaryColor.withOpacity(0.6),
+            ),
           ),
         ],
       ),

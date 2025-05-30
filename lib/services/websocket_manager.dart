@@ -398,7 +398,7 @@ class WebSocketManager {
         _socket?.emit('get_offline_messages', {
           'timestamp': DateTime.now().toIso8601String(),
           'reason': 'device_online',
-          'since': _getLastOnlineTime(), // 获取最后在线时间
+          'since': _getLastOnlineTime()?.toIso8601String(),
         });
         
         // 🔥 新增：请求所有群组的未读消息

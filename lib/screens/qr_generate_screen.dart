@@ -7,7 +7,9 @@ import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
 
 class QrGenerateScreen extends StatefulWidget {
-  const QrGenerateScreen({super.key});
+  final Map<String, dynamic>? group;
+  
+  const QrGenerateScreen({super.key, this.group});
 
   @override
   State<QrGenerateScreen> createState() => _QrGenerateScreenState();
@@ -49,6 +51,28 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
   Future<void> _generateQRCode() async {
     try {
       final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      
+      // 🔥 修复：使用传入的群组或当前群组
+      Map<String, dynamic>? targetGroup;
+      if (widget.group != null) {
+        targetGroup = widget.group;
+        print('🔧 使用传入的群组: ${targetGroup!['name']}');
+      } else {
+        targetGroup = groupProvider.currentGroup;
+        print('🔧 使用当前群组: ${targetGroup?['name']}');
+      }
+      
+      if (targetGroup == null) {
+        throw Exception('没有可用的群组信息');
+      }
+      
+      // 🔥 修复：如果传入了特定群组，先设置为当前群组
+      if (widget.group != null && groupProvider.currentGroup?['id'] != targetGroup['id']) {
+        print('🔧 临时切换当前群组以生成二维码: ${targetGroup['name']}');
+        await groupProvider.setCurrentGroup(targetGroup);
+      }
+      
+      // 为指定群组生成邀请码
       final result = await groupProvider.generateInviteCode();
 
       if (mounted) {
