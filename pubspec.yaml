@@ -37,10 +37,10 @@ dependencies:
   
   # 网络请求
   http: ^1.1.0
-  dio: ^5.3.0
+  dio: ^5.3.2
   
   # WebSocket
-  socket_io_client: ^2.0.0
+  socket_io_client: ^2.0.3+1
   
   # 本地存储
   shared_preferences: ^2.2.0
@@ -54,7 +54,8 @@ dependencies:
   
   # 二维码相关
   qr_flutter: ^4.1.0
-  mobile_scanner: ^3.2.0
+  qr_code_scanner: ^1.0.1
+  mobile_scanner: ^3.5.6
   
   # 路由管理
   go_router: ^10.1.2
@@ -75,7 +76,7 @@ dependencies:
   pull_to_refresh: ^2.0.0
   
   # 文件选择器
-  file_picker: ^8.1.2
+  file_picker: ^8.0.0+1
   
   # 文件打开
   open_filex: ^4.3.4
@@ -84,9 +85,18 @@ dependencies:
   # 桌面端拖拽上传
   desktop_drop: ^0.4.4
   
-  # 视频缩略图
-  fc_native_video_thumbnail: ^0.17.2
-  video_thumbnail: ^0.5.6  # 移动端备用方案
+  # 🔥 修复：更新视频缩略图插件版本以解决Android构建问题
+  # fc_native_video_thumbnail: ^0.5.1
+  video_thumbnail: ^0.5.3
+  
+  # 🔥 新增：推送通知支持（暂时注释以解决iOS构建问题）
+  # firebase_core: ^3.0.0
+  # firebase_messaging: ^15.0.0
+  flutter_local_notifications: ^17.0.0
+  
+  # 新增：国际化支持
+  intl: ^0.18.1
+  flutter_secure_storage: ^9.0.0
 
 dev_dependencies:
   flutter_test:

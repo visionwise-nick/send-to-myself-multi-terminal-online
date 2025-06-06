@@ -12,15 +12,20 @@ import '../utils/time_utils.dart';
 import '../services/chat_service.dart';
 import '../services/websocket_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/message_actions_service.dart';
+import '../widgets/message_action_menu.dart';
+import '../widgets/multi_select_mode.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:open_filex/open_filex.dart';
 import 'dart:math' as math;
-import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import '../services/device_auth_service.dart';
+import '../services/enhanced_sync_manager.dart'; // 🔥 新增导入
+import '../services/websocket_manager.dart' as ws_manager; // 🔥 新增导入
+import 'package:provider/provider.dart'; // 🔥 新增导入
 
 // 文件下载处理器类
 class FileDownloadHandler {
@@ -118,7 +123,7 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
+class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, WidgetsBindingObserver {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<Map<String, dynamic>> _messages = [];
@@ -130,6 +135,20 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final ChatService _chatService = ChatService();
   final WebSocketService _websocketService = WebSocketService();
   final LocalStorageService _localStorage = LocalStorageService();
+  
+  // 🔥 新增：EnhancedSyncManager的UI更新监听
+  StreamSubscription? _syncUIUpdateSubscription;
+  
+  // 🔥 新增：网络状态监听
+  StreamSubscription? _networkStatusSubscription;
+  
+  // 🔥 新增：APP状态跟踪
+  AppLifecycleState? _lastAppLifecycleState;
+  bool _wasInBackground = false;
+  
+  // 长按消息功能相关
+  final MessageActionsService _messageActionsService = MessageActionsService();
+  final MultiSelectController _multiSelectController = MultiSelectController();
   
   // 消息处理相关
   final Set<String> _processedMessageIds = <String>{}; // 防止重复处理
@@ -177,6 +196,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    
+    // 🔥 关键新增：注册APP生命周期监听
+    WidgetsBinding.instance.addObserver(this);
+    
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -185,10 +208,24 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
+    
+    // 🔥 关键修复：设置当前群组ID到EnhancedSyncManager
+    final groupId = widget.conversation['groupData']?['id'] as String?;
+    if (groupId != null) {
+      EnhancedSyncManager().setCurrentGroupId(groupId);
+      print('📱 ChatScreen设置当前群组ID: $groupId');
+    }
+    
     _initializeDio();
     _loadFileCache();
     _loadMessages();
     _subscribeToChatMessages();
+    
+    // 🔥 关键修复：监听EnhancedSyncManager的UI更新事件
+    _subscribeToSyncUIUpdates();
+    
+    // 🔥 新增：监听网络状态变化
+    _subscribeToNetworkStatusChanges();
     
     // 🔥 关键修复：启动消息ID清理定时器
     _startMessageIdCleanup();
@@ -264,17 +301,196 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    // 🔥 关键新增：移除APP生命周期监听
+    WidgetsBinding.instance.removeObserver(this);
+    
     _messageController.dispose();
     _scrollController.dispose();
     _animationController.dispose();
     _messageAnimationController.dispose();
     _chatMessageSubscription?.cancel();
     
-    // 🔥 关键修复：清理新增的定时器
+    // 🔥 关键修复：清理新增的订阅和定时器
+    _syncUIUpdateSubscription?.cancel();
     _messageIdCleanupTimer?.cancel();
     _connectionHealthTimer?.cancel();
+    _networkStatusSubscription?.cancel(); // 🔥 新增：清理网络状态订阅
     
     super.dispose();
+  }
+
+  // 🔥 关键修复：禁用ChatScreen的应用生命周期监听，避免与main.dart冲突
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    print('📱 ChatScreen APP生命周期状态变化: ${_lastAppLifecycleState} -> $state (已禁用同步)');
+    
+    // 🔥 关键修复：禁用ChatScreen中的后台恢复同步逻辑
+    // 所有后台恢复同步现在由main.dart统一处理，避免重复触发
+    
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // 🔥 只记录状态变化，不触发同步
+        print('📱 ChatScreen: APP从后台恢复到前台 (同步由主程序处理)');
+        _wasInBackground = false;
+        // 移除了 _performFullMessageSyncOnAppResume() 调用
+        break;
+        
+      case AppLifecycleState.paused:
+        // APP进入后台
+        print('📱 ChatScreen: APP进入后台');
+        _wasInBackground = true;
+        break;
+        
+      case AppLifecycleState.detached:
+        // APP被系统杀死
+        print('📱 ChatScreen: APP被系统终止');
+        break;
+        
+      case AppLifecycleState.hidden:
+        // APP被隐藏
+        print('📱 ChatScreen: APP被隐藏');
+        _wasInBackground = true;
+        break;
+        
+      case AppLifecycleState.inactive:
+        // APP处于非活跃状态
+        print('📱 ChatScreen: APP处于非活跃状态');
+        break;
+    }
+    
+    _lastAppLifecycleState = state;
+  }
+
+  // 🔥 已禁用：订阅网络状态变化（现在由main.dart统一处理）
+  void _subscribeToNetworkStatusChanges() {
+    // 🔥 禁用ChatScreen的网络状态监听，防止重复处理
+    print('⚠️ ChatScreen网络状态监听已禁用，由主程序统一处理');
+    return;
+    
+    /*
+    final wsManager = ws_manager.WebSocketManager();
+    
+    _networkStatusSubscription = wsManager.onNetworkStatusChanged.listen((networkStatus) {
+      print('📶 网络状态变化: $networkStatus');
+      
+      // 🔥 关键：检测离线→在线状态变化
+      if (networkStatus == ws_manager.NetworkStatus.available) {
+        print('🌐 网络恢复可用，执行完整消息同步...');
+        _performFullMessageSyncOnNetworkRestore();
+      }
+    });
+    */
+  }
+
+  // 🔥 已禁用：APP从后台恢复时的完整消息同步（现在由main.dart统一处理）
+  Future<void> _performFullMessageSyncOnAppResume_DISABLED() async {
+    // 🔥 此方法已禁用，防止与main.dart中的同步逻辑冲突
+    print('⚠️ ChatScreen后台恢复同步已禁用，由主程序统一处理');
+    return;
+    
+    /*
+    if (!mounted) return;
+    
+    print('🔄 开始APP后台恢复的完整消息同步流程...');
+    
+    try {
+      // 🔥 步骤1：重置初始加载状态，模拟首次登录
+      _isInitialLoad = true;
+      
+      // 🔥 步骤2：清空本地消息ID集合，允许重新检查
+      _localMessageIds.clear();
+      
+      // 🔥 步骤3：执行完整的消息加载流程（和首次登录完全一样）
+      await _loadMessages();
+      
+      // 🔥 步骤4：强制WebSocket重连并同步
+      if (!_websocketService.isConnected) {
+        print('🔄 WebSocket未连接，尝试重连...');
+        await _websocketService.connect();
+      }
+      
+      // 🔥 步骤5：请求实时同步
+      _requestWebSocketRealTimeSync();
+      
+      // 🔥 步骤6：刷新设备状态
+      _websocketService.refreshDeviceStatus();
+      
+      print('✅ APP后台恢复的完整消息同步完成');
+      
+      // 显示恢复提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('📱 应用已从后台恢复，消息已同步'),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+      
+    } catch (e) {
+      print('❌ APP后台恢复消息同步失败: $e');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('⚠️ 消息同步失败，请检查网络连接'),
+            duration: Duration(seconds: 3),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    }
+    */
+  }
+
+  // 🔥 已禁用：网络恢复时的完整消息同步（现在由main.dart统一处理）
+  Future<void> _performFullMessageSyncOnNetworkRestore_DISABLED() async {
+    // 🔥 此方法已禁用，防止与main.dart中的同步逻辑冲突
+    print('⚠️ ChatScreen网络恢复同步已禁用，由主程序统一处理');
+    return;
+    
+    /*
+    if (!mounted) return;
+    
+    // 避免重复执行（如果APP刚从后台恢复，已经执行过同步）
+    if (_lastAppLifecycleState == AppLifecycleState.resumed && 
+        DateTime.now().difference(_lastMessageReceivedTime ?? DateTime.now()).inSeconds < 10) {
+      print('🔄 最近已执行过同步，跳过网络恢复同步');
+      return;
+    }
+    
+    print('🔄 开始网络恢复的完整消息同步流程...');
+    
+    try {
+      // 🔥 步骤1：重置初始加载状态，模拟首次登录
+      _isInitialLoad = true;
+      
+      // 🔥 步骤2：执行完整的消息加载流程（和首次登录完全一样）
+      await _loadMessages();
+      
+      // 🔥 步骤3：WebSocket重连后同步
+      await _performWebSocketReconnectSync();
+      
+      print('✅ 网络恢复的完整消息同步完成');
+      
+      // 显示恢复提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('🌐 网络已恢复，消息已同步'),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.blue,
+          ),
+        );
+      }
+      
+    } catch (e) {
+      print('❌ 网络恢复消息同步失败: $e');
+    }
+    */
   }
   
   // 🔥 关键修复：启动消息ID清理定时器
@@ -357,8 +573,82 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     // 通知WebSocket服务进行健康检查
     if (!_websocketService.isConnected) {
       print('🔄 WebSocket未连接，尝试重连...');
-      _websocketService.connect().catchError((e) {
+      _websocketService.connect().then((_) {
+        // 🔥 关键修复：WebSocket重连成功后，立即拉取消息，就像首次登录一样
+        print('✅ WebSocket重连成功，开始同步历史消息...');
+        _performWebSocketReconnectSync();
+      }).catchError((e) {
         print('WebSocket重连失败: $e');
+      });
+    } else {
+      // 🔥 即使已连接，也要执行同步
+      print('🔄 WebSocket已连接，执行重连后同步...');
+      _performWebSocketReconnectSync();
+    }
+  }
+
+  // 🔥 新增：WebSocket重连后的完整同步，借鉴首次登录逻辑
+  Future<void> _performWebSocketReconnectSync() async {
+    print('🔄 WebSocket重连后同步开始...');
+    
+    try {
+      // 🔥 步骤1：立即重新加载本地消息，刷新UI
+      print('📱 重新加载本地消息...');
+      await _loadLocalMessages();
+      
+      // 🔥 步骤2：等待UI更新后，开始后台同步（借鉴首次登录的逻辑）
+      await Future.delayed(Duration(milliseconds: 500));
+      
+      // 🔥 步骤3：使用HTTP API拉取最新消息（和首次登录完全一样的逻辑）
+      print('🌐 通过HTTP API同步最新消息...');
+      await _syncLatestMessages();
+      
+      // 🔥 步骤4：通过WebSocket请求实时同步
+      print('📡 请求WebSocket实时同步...');
+      _requestWebSocketRealTimeSync();
+      
+      // 🔥 步骤5：刷新设备状态
+      print('📱 刷新设备状态...');
+      _websocketService.refreshDeviceStatus();
+      
+      print('✅ WebSocket重连后同步完成');
+      
+    } catch (e) {
+      print('❌ WebSocket重连后同步失败: $e');
+    }
+  }
+
+  // 🔥 新增：请求WebSocket实时同步
+  void _requestWebSocketRealTimeSync() {
+    if (_websocketService.isConnected) {
+      // 请求当前对话的最新消息
+      if (widget.conversation['type'] == 'group') {
+        final groupId = widget.conversation['groupData']?['id'];
+        if (groupId != null) {
+          _websocketService.emit('sync_group_messages', {
+            'groupId': groupId,
+            'limit': 50,
+            'timestamp': DateTime.now().toIso8601String(),
+            'reason': 'websocket_reconnect'
+          });
+        }
+      } else {
+        final deviceId = widget.conversation['deviceData']?['id'];
+        if (deviceId != null) {
+          _websocketService.emit('sync_private_messages', {
+            'targetDeviceId': deviceId,
+            'limit': 50,
+            'timestamp': DateTime.now().toIso8601String(),
+            'reason': 'websocket_reconnect'
+          });
+        }
+      }
+      
+      // 请求离线期间的消息
+      _websocketService.emit('get_offline_messages', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'websocket_reconnect',
+        'include_files': true
       });
     }
   }
@@ -392,6 +682,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           case 'private_messages_synced': // 🔥 新增：处理私聊消息同步
             print('处理私聊消息同步');
             _handlePrivateMessagesSynced(data);
+            break;
+          case 'sync_group_messages_response': // 🔥 新增：处理群组消息同步响应
+            print('处理群组消息同步响应');
+            _handleSyncGroupMessagesResponse(data);
+            break;
+          case 'sync_private_messages_response': // 🔥 新增：处理私聊消息同步响应
+            print('处理私聊消息同步响应');
+            _handleSyncPrivateMessagesResponse(data);
             break;
           case 'message_sent_confirmation':
           case 'group_message_sent_confirmation':
@@ -554,6 +852,173 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     });
   }
 
+  // 🔥 新增：处理最近消息同步
+  void _handleRecentMessages(Map<String, dynamic> data) {
+    final messages = data['messages'] as List<dynamic>?;
+    if (messages == null || messages.isEmpty) {
+      print('最近消息同步：无消息');
+      return;
+    }
+    
+    print('📥 收到最近消息同步: ${messages.length}条');
+    _processSyncedMessages(messages, 'recent_messages');
+  }
+
+  // 🔥 新增：处理离线消息同步
+  void _handleOfflineMessages(Map<String, dynamic> data) {
+    final messages = data['messages'] as List<dynamic>?;
+    if (messages == null || messages.isEmpty) {
+      print('离线消息同步：无消息');
+      return;
+    }
+    
+    print('📥 收到离线消息同步: ${messages.length}条');
+    _processSyncedMessages(messages, 'offline_messages');
+  }
+
+  // 🔥 新增：处理群组消息同步
+  void _handleGroupMessagesSynced(Map<String, dynamic> data) {
+    final messages = data['messages'] as List<dynamic>?;
+    if (messages == null || messages.isEmpty) {
+      print('群组消息同步：无消息');
+      return;
+    }
+    
+    print('📥 收到群组消息同步: ${messages.length}条');
+    _processSyncedMessages(messages, 'group_messages_synced');
+  }
+
+  // 🔥 新增：处理私聊消息同步
+  void _handlePrivateMessagesSynced(Map<String, dynamic> data) {
+    final messages = data['messages'] as List<dynamic>?;
+    if (messages == null || messages.isEmpty) {
+      print('私聊消息同步：无消息');
+      return;
+    }
+    
+    print('📥 收到私聊消息同步: ${messages.length}条');
+    _processSyncedMessages(messages, 'private_messages_synced');
+  }
+
+  // 🔥 新增：处理群组消息同步响应
+  void _handleSyncGroupMessagesResponse(Map<String, dynamic> data) {
+    final messages = data['messages'] as List<dynamic>?;
+    if (messages == null || messages.isEmpty) {
+      print('群组消息同步响应：无消息');
+      return;
+    }
+    
+    print('📥 收到群组消息同步响应: ${messages.length}条');
+    _processSyncedMessages(messages, 'sync_group_messages_response');
+  }
+
+  // 🔥 新增：处理私聊消息同步响应
+  void _handleSyncPrivateMessagesResponse(Map<String, dynamic> data) {
+    final messages = data['messages'] as List<dynamic>?;
+    if (messages == null || messages.isEmpty) {
+      print('私聊消息同步响应：无消息');
+      return;
+    }
+    
+    print('📥 收到私聊消息同步响应: ${messages.length}条');
+    _processSyncedMessages(messages, 'sync_private_messages_response');
+  }
+
+  // 🔥 新增：统一处理同步消息
+  Future<void> _processSyncedMessages(List<dynamic> messages, String syncType) async {
+    print('🔄 开始处理同步消息: $syncType, 数量: ${messages.length}');
+    
+    final prefs = await SharedPreferences.getInstance();
+    final serverDeviceData = prefs.getString('server_device_data');
+    String? currentDeviceId;
+    if (serverDeviceData != null) {
+      try {
+        final Map<String, dynamic> data = jsonDecode(serverDeviceData);
+        currentDeviceId = data['id'];
+      } catch (e) {
+        print('解析设备ID失败: $e');
+      }
+    }
+
+    final List<Map<String, dynamic>> newMessages = [];
+    
+    for (final msgData in messages) {
+      final message = Map<String, dynamic>.from(msgData);
+      final messageId = message['id']?.toString();
+      
+      if (messageId == null) continue;
+      
+      // 🔥 关键：过滤掉本机发送的消息
+      final sourceDeviceId = message['sourceDeviceId'];
+      if (sourceDeviceId == currentDeviceId) {
+        print('🚫 跳过本机发送的消息: $messageId');
+        continue;
+      }
+      
+      // 检查是否已存在
+      if (_localMessageIds.contains(messageId)) {
+        print('🎯 消息已存在于本地: $messageId');
+        continue;
+      }
+      
+      // 检查当前显示列表
+      final existsInDisplay = _messages.any((localMsg) => localMsg['id']?.toString() == messageId);
+      if (existsInDisplay) {
+        print('🎯 消息已在显示列表: $messageId');
+        continue;
+      }
+      
+      // 转换消息格式
+      final convertedMessage = {
+        'id': messageId,
+        'text': message['content'],
+        'fileType': (message['fileUrl'] != null || message['fileName'] != null) ? _getFileType(message['fileName']) : null,
+        'fileName': message['fileName'],
+        'fileUrl': message['fileUrl'],
+        'fileSize': message['fileSize'],
+        'timestamp': _normalizeTimestamp(message['createdAt'] ?? DateTime.now().toUtc().toIso8601String()),
+        'isMe': false, // 已过滤本机消息，这些都是其他设备的
+        'status': message['status'] ?? 'sent',
+        'sourceDeviceId': message['sourceDeviceId'],
+      };
+      
+      newMessages.add(convertedMessage);
+      _localMessageIds.add(messageId);
+    }
+    
+    if (newMessages.isNotEmpty && mounted) {
+      print('✅ 同步到${newMessages.length}条新消息，更新UI');
+      
+      setState(() {
+        _messages.addAll(newMessages);
+        _messages.sort((a, b) {
+          try {
+            final timeA = DateTime.parse(a['timestamp']);
+            final timeB = DateTime.parse(b['timestamp']);
+            return timeA.compareTo(timeB);
+          } catch (e) {
+            return 0;
+          }
+        });
+      });
+      
+      // 为新消息自动下载文件
+      for (final message in newMessages) {
+        if (message['fileUrl'] != null && !message['isMe']) {
+          _autoDownloadFile(message);
+        }
+      }
+      
+      // 保存到本地
+      await _saveMessages();
+      _scrollToBottom();
+      
+      print('🎉 WebSocket同步完成: 新增${newMessages.length}条消息 ($syncType)');
+    } else {
+      print('📋 WebSocket同步完成: 无新消息 ($syncType)');
+    }
+  }
+
   // 添加消息到聊天界面
   void _addMessageToChat(Map<String, dynamic> message, bool isMe) {
     final messageId = message['id'];
@@ -682,24 +1147,27 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     });
 
     try {
-      // 优先从本地快速加载
+      // 🔥 步骤1：优先从本地快速加载，并立即显示
       await _loadLocalMessages();
       
-      // 注意：不要将本地消息ID添加到_processedMessageIds中
-      // _processedMessageIds只用于防止实时WebSocket消息的重复处理
-      // 本地消息同步应该通过直接对比消息ID来判断
-      print('本地消息加载完成，不添加到_processedMessageIds以避免阻止同步');
-      
+      // 🔥 步骤2：确保UI立即更新，让用户先看到本地消息
+      if (mounted) {
       setState(() {
         _isLoading = false;
         _isInitialLoad = false; // 标记初始加载完成
       });
       
-      print('本地消息加载完成: ${_messages.length}条');
+        print('✅ 本地消息优先显示完成: ${_messages.length}条');
       _scrollToBottom();
 
-      // 后台同步最新消息（非阻塞）
-      _syncLatestMessages();
+        // 🔥 步骤3：等待500ms让UI稳定，再开始后台同步
+        await Future.delayed(Duration(milliseconds: 500));
+      }
+
+      // 🔥 步骤4：后台同步最新消息（在本地消息显示后）
+      print('🔄 开始后台同步，检查新消息...');
+      await _syncLatestMessages();
+      
     } catch (e) {
       print('加载消息失败: $e');
       setState(() {
@@ -749,9 +1217,26 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         }
       }
 
-      // 转换API消息格式为本地格式
-      final List<Map<String, dynamic>> convertedMessages = apiMessages.map((msg) {
-        final isMe = msg['sourceDeviceId'] == currentDeviceId;
+      // 🔥 关键修复：先过滤掉本机发送的消息，再转换格式
+      print('🔍 同步前过滤：总消息${apiMessages.length}条，当前设备ID: $currentDeviceId');
+      
+      final List<Map<String, dynamic>> filteredApiMessages = apiMessages.where((msg) {
+        final sourceDeviceId = msg['sourceDeviceId'];
+        final isFromCurrentDevice = sourceDeviceId == currentDeviceId;
+        
+        if (isFromCurrentDevice) {
+          print('🚫 过滤掉本机发送的消息: ${msg['id']} (${msg['content']?.substring(0, math.min(20, msg['content']?.length ?? 0)) ?? 'file'}...)');
+          return false; // 排除本机发送的消息
+        }
+        
+        return true; // 保留其他设备发送的消息
+      }).toList();
+      
+      print('🔍 过滤后剩余：${filteredApiMessages.length}条消息需要同步');
+      
+      // 转换过滤后的API消息格式为本地格式
+      final List<Map<String, dynamic>> convertedMessages = filteredApiMessages.map((msg) {
+        final isMe = false; // 已经过滤掉本机消息，这里都是其他设备的消息
         return {
           'id': msg['id'],
           'text': msg['content'],
@@ -778,104 +1263,56 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         }
       });
 
-      // 修复的去重逻辑：主要基于本地消息ID检查，而不是_processedMessageIds
+      // 🔥 简化的去重逻辑：由于已经过滤掉本机消息，主要检查ID重复即可
       final List<Map<String, dynamic>> newMessages = [];
       
       for (final serverMsg in convertedMessages) {
         final serverId = serverMsg['id'].toString();
         
-        // 首先检查是否已经存在相同ID的本地消息
+        // 🔥 检查消息ID是否已存在（最主要的去重检查）
+        if (_localMessageIds.contains(serverId)) {
+          print('🎯 消息ID已存在于本地消息集合，跳过: $serverId');
+          continue;
+        }
+        
+        // 🔥 双重检查：确认消息是否在当前显示列表中
         final existsById = _messages.any((localMsg) => localMsg['id'].toString() == serverId);
         if (existsById) {
-          print('消息ID已存在于本地，跳过同步: $serverId');
+          print('🎯 消息ID已存在于显示列表，跳过: $serverId');
           continue;
         }
         
-        // 检查WebSocket实时消息去重（防止实时消息重复）
+        // 🔥 检查WebSocket实时消息去重
         if (_processedMessageIds.contains(serverId)) {
-          print('消息ID在实时处理中已存在，跳过: $serverId');
+          print('🎯 消息ID在实时处理中已存在，跳过: $serverId');
           continue;
         }
             
-        // 如果是文件消息，进行额外的文件去重检查
-        if (serverMsg['fileType'] != null && serverMsg['fileName'] != null) {
-          // 基于文件元数据的去重检查
-          final metadataKey = FileDownloadHandler.generateFileMetadataKey(
-            serverMsg['fileName'], 
-            serverMsg['fileSize'] ?? 0, 
-            DateTime.tryParse(serverMsg['timestamp'] ?? '') ?? DateTime.now()
-          );
-          
-          // 检查是否已有相同元数据的文件消息
-          final duplicateFileMessage = _messages.any((existingMsg) {
-            if (existingMsg['fileType'] == null) return false; // 不是文件消息
-            
-            final existingMetadataKey = FileDownloadHandler.generateFileMetadataKey(
-              existingMsg['fileName'] ?? '', 
-              existingMsg['fileSize'] ?? 0, 
-              DateTime.tryParse(existingMsg['timestamp'] ?? '') ?? DateTime.now()
-            );
-            
-            return existingMetadataKey == metadataKey;
-          });
-          
-          if (duplicateFileMessage) {
-            print('发现重复文件消息（同步时，相同元数据），跳过添加: ${serverMsg['fileName']}');
-            continue;
-          }
-          
-          // 检查是否已有相同文件名和大小的消息（更宽松的检查）
-          final similarFileMessage = _messages.any((existingMsg) {
-            if (existingMsg['fileType'] == null) return false; // 不是文件消息
-            
-            return existingMsg['fileName'] == serverMsg['fileName'] && 
-                   existingMsg['fileSize'] == serverMsg['fileSize'];
-          });
-          
-          if (similarFileMessage) {
-            print('发现相似文件消息（同步时，相同文件名和大小），跳过添加: ${serverMsg['fileName']} (${serverMsg['fileSize'] ?? 0} bytes)');
+        // 🔥 彻底简化：完全基于消息ID的重复检测
+        // 消息ID是服务器生成的唯一标识符，这是最可靠的去重方法
+        if (serverId.isNotEmpty) {
+          // 检查消息ID是否已存在
+          final isDuplicate = _messages.any((existingMsg) => existingMsg['id'] == serverId);
+          if (isDuplicate) {
+            // 静默跳过ID重复的消息，不打印日志避免刷屏
             continue;
           }
         }
         
-        // 如果是文本消息，进行基于内容的去重检查
-        if (serverMsg['fileType'] == null && serverMsg['text'] != null && serverMsg['text'].trim().isNotEmpty) {
-          final content = serverMsg['text'];
-          final sourceDeviceId = serverMsg['sourceDeviceId'];
-          final messageTime = DateTime.tryParse(serverMsg['timestamp'] ?? '') ?? DateTime.now();
-          
-          // 检查是否已有相同内容和发送者的消息
-          final duplicateTextMessage = _messages.any((existingMsg) {
-            if (existingMsg['fileType'] != null) return false; // 不是文本消息
-            if (existingMsg['text'] != content) return false; // 内容不同
-            if (existingMsg['sourceDeviceId'] != sourceDeviceId) return false; // 发送者不同
-            
-            // 检查时间窗口（30秒内认为是重复，同步时更宽松）
-            try {
-              final existingTime = DateTime.parse(existingMsg['timestamp']);
-              final timeDiff = (messageTime.millisecondsSinceEpoch - existingTime.millisecondsSinceEpoch).abs();
-              return timeDiff < 30000; // 30秒内
-            } catch (e) {
-              print('文本消息时间比较失败: $e');
-              return true; // 时间解析失败但内容和发送者相同，保守地认为是重复
-            }
-          });
-          
-          if (duplicateTextMessage) {
-            print('发现重复文本消息（同步时，相同内容+发送者+时间窗口），跳过添加: $content');
-            continue;
-          }
-        }
+        // 🔥 完全移除内容级别的重复检测
+        // 只要消息ID不重复，就认为是新消息，确保不会误判任何有效消息
         
         // 通过检查，添加到新消息列表
         newMessages.add(serverMsg);
         // 🔥 关键修复：标记为已处理并记录时间戳，防止后续WebSocket实时消息重复
         _processedMessageIds.add(serverId);
         _messageIdTimestamps[serverId] = DateTime.now();
+        // 🔥 关键：同时添加到本地消息ID集合
+        _localMessageIds.add(serverId);
       }
 
       if (newMessages.isNotEmpty && mounted) {
-        print('发现${newMessages.length}条真正的新消息，添加到界面');
+        print('✅ 发现${newMessages.length}条其他设备的新消息，添加到界面');
         
         setState(() {
           _messages.addAll(newMessages);
@@ -902,14 +1339,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         await _saveMessages();
         _scrollToBottom();
         
-        print('后台同步完成，新增${newMessages.length}条消息');
+        print('🎉 后台同步成功：新增${newMessages.length}条来自其他设备的消息');
       } else {
-        print('后台同步完成，无新消息（已过滤掉${convertedMessages.length - newMessages.length}条重复消息）');
+        final filteredCount = apiMessages.length - filteredApiMessages.length;
+        final duplicateCount = convertedMessages.length - newMessages.length;
+        print('📋 后台同步完成：过滤${filteredCount}条本机消息，${duplicateCount}条重复消息，无新消息需要显示');
       }
     } catch (e) {
       print('同步最新消息失败: $e');
     }
   }
+
+  // 🔥 本地消息ID集合，用于后台同步时的精确去重
+  final Set<String> _localMessageIds = {};
 
   // 加载本地缓存消息
   Future<void> _loadLocalMessages() async {
@@ -918,6 +1360,15 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     try {
       final messages = await _localStorage.loadChatMessages(chatId);
       if (mounted) {
+        // 🔥 重要：清空并重建本地消息ID集合
+        _localMessageIds.clear();
+        for (final msg in messages) {
+          if (msg['id'] != null) {
+            _localMessageIds.add(msg['id'].toString());
+          }
+        }
+        print('🔥 本地消息ID集合已建立: ${_localMessageIds.length}条');
+        
         // 获取当前的永久存储路径
         final currentPermanentPath = await _localStorage.getPermanentStoragePath();
         final currentCacheDir = path.join(currentPermanentPath, 'files_cache');
@@ -1596,12 +2047,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final isGroup = widget.conversation['type'] == 'group';
     final title = widget.conversation['title'];
     
-    return Scaffold(
+    return ListenableBuilder(
+      listenable: _multiSelectController,
+      builder: (context, child) {
+                    return GestureDetector(
+          onTap: () {
+            // 点击空白区域收起键盘
+            FocusScope.of(context).unfocus();
+          },
+          child: Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      // 🔥 移除AppBar，聊天页面不需要标题栏
-      body: Column(
-        children: [
-          // 消息列表
+                  body: Column(
+              children: [
+              // 消息列表
           Expanded(
             child: _isLoading
               ? const Center(
@@ -1616,23 +2074,176 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.symmetric(vertical: 8), // 减少顶部和底部间距
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                       itemCount: _messages.length,
                       itemBuilder: (context, index) {
                         final message = _messages[index];
-                        
-                        // 简化：不再显示日期分组，直接在每条消息显示完整时间
                         return _buildMessageBubble(message);
                       },
                     ),
                   ),
           ),
           
+              // 多选模式工具栏
+              if (_multiSelectController.isMultiSelectMode)
+                _buildMultiSelectToolbar(),
+          
           // 输入区域
+              if (!_multiSelectController.isMultiSelectMode)
           _buildInputArea(),
         ],
-      ),
+          ),
+        ),
+      );
+      },
     );
+  }
+  
+  // 构建多选模式工具栏
+  Widget _buildMultiSelectToolbar() {
+    final selectedMessages = _multiSelectController.selectedMessages;
+    final selectedMessageObjects = _messages
+        .where((msg) => selectedMessages.contains(msg['id']?.toString() ?? ''))
+        .toList();
+    
+    final hasTextMessages = selectedMessageObjects
+        .any((msg) => msg['text'] != null && msg['text'].toString().isNotEmpty);
+    final hasOwnMessages = selectedMessageObjects
+        .any((msg) => msg['isMe'] == true);
+    
+    return MultiSelectMode(
+      selectedCount: _multiSelectController.selectedCount,
+      onCancel: () => _multiSelectController.exitMultiSelectMode(),
+      hasTextMessages: hasTextMessages,
+      hasOwnMessages: hasOwnMessages,
+      onCopy: hasTextMessages ? () => _batchCopyMessages(selectedMessageObjects) : null,
+      onForward: () => _batchForwardMessages(selectedMessageObjects),
+      onFavorite: () => _batchFavoriteMessages(selectedMessageObjects),
+      onRevoke: hasOwnMessages ? () => _batchRevokeMessages(selectedMessages.toList()) : null,
+      onDelete: hasOwnMessages ? () => _batchDeleteMessages(selectedMessages.toList()) : null,
+    );
+  }
+  
+  // 批量复制消息
+  Future<void> _batchCopyMessages(List<Map<String, dynamic>> messages) async {
+    final textMessages = messages
+        .where((msg) => msg['text'] != null && msg['text'].toString().isNotEmpty)
+        .map((msg) => msg['text'].toString())
+        .join('\n\n');
+    
+    if (textMessages.isNotEmpty) {
+      final success = await _messageActionsService.copyMessageText(textMessages);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('已复制${messages.length}条消息到剪贴板')),
+        );
+        _multiSelectController.exitMultiSelectMode();
+      }
+    }
+  }
+  
+  // 批量转发消息
+  void _batchForwardMessages(List<Map<String, dynamic>> messages) {
+    final forwardTexts = messages
+        .map((msg) => _messageActionsService.formatMessageForForward(msg))
+        .join('\n\n---\n\n');
+    
+    _messageController.text = forwardTexts;
+    _multiSelectController.exitMultiSelectMode();
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${messages.length}条消息内容已添加到输入框')),
+      );
+    }
+  }
+  
+  // 批量收藏消息
+  Future<void> _batchFavoriteMessages(List<Map<String, dynamic>> messages) async {
+    int successCount = 0;
+    
+    for (final message in messages) {
+      final success = await _messageActionsService.favoriteMessage(message);
+      if (success) successCount++;
+    }
+    
+    _multiSelectController.exitMultiSelectMode();
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已收藏${successCount}/${messages.length}条消息')),
+      );
+    }
+  }
+  
+  // 批量撤回消息
+  Future<void> _batchRevokeMessages(List<String> messageIds) async {
+    final confirmed = await _showConfirmDialog(
+      title: '批量撤回',
+      content: '确定要撤回选中的${messageIds.length}条消息吗？',
+      confirmText: '撤回',
+    );
+    
+    if (confirmed) {
+      final result = await _messageActionsService.batchRevokeMessages(
+        messageIds: messageIds,
+        reason: '批量撤回',
+      );
+      
+      _multiSelectController.exitMultiSelectMode();
+      
+      if (mounted) {
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('已撤回${messageIds.length}条消息')),
+          );
+          // 更新本地消息状态
+          for (final messageId in messageIds) {
+            _updateMessageAfterRevoke(messageId);
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('批量撤回失败: ${result['error']}')),
+          );
+        }
+      }
+    }
+  }
+  
+  // 批量删除消息
+  Future<void> _batchDeleteMessages(List<String> messageIds) async {
+    final confirmed = await _showConfirmDialog(
+      title: '批量删除',
+      content: '确定要删除选中的${messageIds.length}条消息吗？删除后无法恢复。',
+      confirmText: '删除',
+      isDestructive: true,
+    );
+    
+    if (confirmed) {
+      final result = await _messageActionsService.batchDeleteMessages(
+        messageIds: messageIds,
+        reason: '批量删除',
+      );
+      
+      _multiSelectController.exitMultiSelectMode();
+      
+      if (mounted) {
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('已删除${messageIds.length}条消息')),
+          );
+          // 从本地移除消息
+          setState(() {
+            _messages.removeWhere((msg) => messageIds.contains(msg['id']?.toString()));
+          });
+          _saveMessages();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('批量删除失败: ${result['error']}')),
+          );
+        }
+      }
+    }
   }
   
   // 显示存储信息（调试功能）
@@ -1762,14 +2373,46 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   Widget _buildMessageBubble(Map<String, dynamic> message) {
     final isMe = message['isMe'] == true;
     final hasFile = message['fileType'] != null;
+    final messageId = message['id']?.toString() ?? '';
     
     // 添加调试日志
     if (message['fileUrl'] != null || message['fileName'] != null) {
       print('构建消息气泡: ID=${message['id']}, fileName=${message['fileName']}, fileType=${message['fileType']}, hasFile=$hasFile, fileUrl=${message['fileUrl']}');
     }
     
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8), // 减少消息间距
+    return ListenableBuilder(
+      listenable: _multiSelectController,
+      builder: (context, child) {
+        final isSelected = _multiSelectController.isSelected(messageId);
+        final isMultiSelectMode = _multiSelectController.isMultiSelectMode;
+        
+        return GestureDetector(
+          onTap: () {
+            if (isMultiSelectMode) {
+              // 多选模式下点击切换选中状态
+              _multiSelectController.toggleMessage(messageId);
+            }
+          },
+          onLongPress: () {
+            if (isMultiSelectMode) {
+              // 已在多选模式，切换选中状态
+              _multiSelectController.toggleMessage(messageId);
+            } else {
+              // 显示长按菜单
+              _showMessageActionMenu(message, isMe);
+            }
+          },
+          onSecondaryTapDown: (details) {
+            // 桌面端右键支持
+            print('🖱️ 右键点击消息: ${message['id']}');
+            if (isMultiSelectMode) {
+              _multiSelectController.toggleMessage(messageId);
+            } else {
+              _showMessageActionMenuAtPosition(message, isMe, details.globalPosition);
+            }
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 8),
       child: Column(
         crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
@@ -1778,23 +2421,48 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+                    // 多选模式下显示选择框
+                    if (isMultiSelectMode) ...[
+                      Container(
+                        margin: EdgeInsets.only(
+                          right: isMe ? 0 : 8,
+                          left: isMe ? 8 : 0,
+                        ),
+                        child: Checkbox(
+                          value: isSelected,
+                          onChanged: (bool? value) {
+                            _multiSelectController.toggleMessage(messageId);
+                          },
+                          activeColor: AppTheme.primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                    ],
+                    
           Flexible(
             child: Container(
               constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
+                          maxWidth: MediaQuery.of(context).size.width * 
+                            (isMultiSelectMode ? 0.65 : 0.75),
               ),
-                  padding: EdgeInsets.all(hasFile ? 6 : 10), // 减少内边距
+                        padding: EdgeInsets.all(hasFile ? 6 : 10),
               decoration: BoxDecoration(
-                    color: isMe 
+                          color: isSelected 
+                            ? AppTheme.primaryColor.withOpacity(0.1)
+                            : (isMe 
                       ? (hasFile ? Colors.white : AppTheme.primaryColor) 
-                      : Colors.white,
-                    borderRadius: BorderRadius.circular(16).copyWith( // 稍微减小圆角
+                              : Colors.white),
+                          borderRadius: BorderRadius.circular(16).copyWith(
                   bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
                   bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
                 ),
                     border: Border.all(
-                      color: const Color(0xFFE5E7EB), 
-                      width: 0.5,
+                            color: isSelected 
+                              ? AppTheme.primaryColor.withOpacity(0.5)
+                              : const Color(0xFFE5E7EB), 
+                            width: isSelected ? 2 : 0.5,
                     ),
               ),
               child: Column(
@@ -1803,9 +2471,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   // 文件内容
                   if (hasFile) _buildFileContent(message, isMe),
                   
-                      // 文本内容 - 统一字体
+                            // 文本内容
                   if (message['text'] != null && message['text'].isNotEmpty) ...[
-                        if (hasFile) const SizedBox(height: 6), // 减少间距
+                              if (hasFile) const SizedBox(height: 6),
                     Text(
                       message['text'],
                           style: AppTheme.bodyStyle.copyWith(
@@ -1822,22 +2490,24 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             ],
           ),
           
-          // 时间戳和状态 - 使用完整日期时间
-          const SizedBox(height: 2), // 减少间距
+                // 时间戳和状态
+                const SizedBox(height: 2),
           Row(
             mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: [
+                    if (isMultiSelectMode && !isMe) 
+                      const SizedBox(width: 40), // 为复选框留出空间
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                    TimeUtils.formatChatDateTime(message['timestamp']), // 使用完整日期时间
+                          TimeUtils.formatChatDateTime(message['timestamp']),
                     style: AppTheme.smallStyle.copyWith(
-                      fontSize: 9, // 进一步减小时间戳字体
+                            fontSize: 9,
                         ),
                       ),
                       if (isMe) ...[
-                    const SizedBox(width: 3), // 减少间距
+                          const SizedBox(width: 3),
                         _buildMessageStatusIcon(message),
                       ],
                     ],
@@ -1845,7 +2515,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 ],
           ),
         ],
+            ),
       ),
+        );
+      },
     );
   }
 
@@ -3259,33 +3932,196 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   // 🔥 紧急诊断：实时WebSocket状态监控
   void _startEmergencyDiagnostics() {
-    // 每30秒检查一次WebSocket状态和消息接收情况
-    Timer.periodic(Duration(seconds: 30), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      
-      print('🩺 === 紧急WebSocket诊断 ===');
-      print('WebSocket连接状态: ${_websocketService.isConnected}');
-      print('最后收到消息时间: $_lastMessageReceivedTime');
-      print('已处理消息数量: ${_processedMessageIds.length}');
-      print('界面消息数量: ${_messages.length}');
-      
+    Timer.periodic(Duration(minutes: 5), (_) {
+      if (mounted) {
+        print('🔍 WebSocket状态诊断: 连接=${_websocketService.isConnected}, 最后收到消息=${_lastMessageReceivedTime}');
+        
+        // 如果长时间没收到消息，执行紧急恢复
       if (_lastMessageReceivedTime != null) {
         final timeSinceLastMessage = DateTime.now().difference(_lastMessageReceivedTime!);
-        print('距离最后消息: ${timeSinceLastMessage.inMinutes}分钟');
-        
-        // 如果超过2分钟没收到任何消息，进行恢复尝试
-        if (timeSinceLastMessage.inMinutes >= 2) {
-          print('⚠️ 消息接收异常，尝试恢复连接');
+          if (timeSinceLastMessage.inMinutes >= 10) {
+            print('🚨 执行紧急WebSocket恢复');
           _emergencyWebSocketRecovery();
         }
-      } else {
-        print('⚠️ 从未收到过消息，可能存在连接问题');
-        _emergencyWebSocketRecovery();
+        }
       }
     });
+  }
+  
+  // 🔥 关键修复：监听EnhancedSyncManager的UI更新事件 - 增强版
+  void _subscribeToSyncUIUpdates() {
+    try {
+      final enhancedSyncManager = Provider.of<EnhancedSyncManager>(context, listen: false);
+      _syncUIUpdateSubscription = enhancedSyncManager.onUIUpdateRequired.listen((event) {
+        if (mounted) {
+          print('📢 收到同步UI更新事件: ${event.toString()}');
+          
+          switch (event.type) {
+            case 'messages_updated':
+            case 'sync_completed':
+              _handleNormalSyncUpdate(event);
+              break;
+            case 'force_refresh_all':
+            case 'force_global_refresh':
+            case 'force_ui_refresh':
+              _handleForceRefreshUpdate(event);
+              break;
+            default:
+              _handleNormalSyncUpdate(event);
+              break;
+          }
+        }
+      });
+      
+      print('✅ 已订阅EnhancedSyncManager的UI更新事件');
+    } catch (e) {
+      print('❌ 订阅EnhancedSyncManager UI更新事件失败: $e');
+    }
+  }
+  
+  // 🔥 新增：处理普通同步更新
+  void _handleNormalSyncUpdate(SyncUIUpdateEvent event) {
+    final currentConversationId = widget.conversation['id'];
+    final shouldRefresh = event.conversationId == null || 
+                         event.conversationId == currentConversationId;
+    
+    if (shouldRefresh) {
+      print('🔄 普通同步刷新: $currentConversationId');
+      _refreshMessagesFromStorage();
+      
+      if (event.messageCount > 0) {
+        _showSyncNotification(event);
+      }
+    }
+  }
+  
+  // 🔥 新增：处理强制刷新更新
+  void _handleForceRefreshUpdate(SyncUIUpdateEvent event) {
+    print('🔄 强制全局刷新');
+    _forceRefreshFromAllSources();
+    
+    if (event.messageCount > 0) {
+      _showSyncNotification(event);
+    }
+  }
+  
+  // 🔥 关键修复：从本地存储刷新消息
+  Future<void> _refreshMessagesFromStorage() async {
+    try {
+      print('🔄 从本地存储刷新消息...');
+      
+      final chatId = widget.conversation['id'];
+      final refreshedMessages = await _localStorage.loadChatMessages(chatId);
+      
+      if (mounted && refreshedMessages.isNotEmpty) {
+        // 检查是否有新消息
+        final currentMessageIds = _messages.map((m) => m['id'].toString()).toSet();
+        final refreshedMessageIds = refreshedMessages.map((m) => m['id'].toString()).toSet();
+        final newMessageIds = refreshedMessageIds.difference(currentMessageIds);
+        
+        if (newMessageIds.isNotEmpty) {
+          print('✅ 发现${newMessageIds.length}条新消息，更新UI');
+          
+          setState(() {
+            _messages = refreshedMessages;
+          });
+          
+          // 滚动到底部显示新消息
+          _scrollToBottom();
+          
+          // 为新的文件消息自动下载文件
+          final newMessages = refreshedMessages.where((msg) => 
+            newMessageIds.contains(msg['id'].toString())
+          ).toList();
+          
+          for (final message in newMessages) {
+            if (message['fileUrl'] != null && !message['isMe']) {
+              _autoDownloadFile(message);
+            }
+        }
+      } else {
+          print('📄 没有发现新消息');
+        }
+      }
+    } catch (e) {
+      print('❌ 从本地存储刷新消息失败: $e');
+    }
+  }
+  
+  // 🔥 新增：强制从所有源刷新消息
+  Future<void> _forceRefreshFromAllSources() async {
+    print('🔄 强制从所有源刷新消息...');
+    
+    // 1. 清理过度累积的消息ID缓存
+    if (_processedMessageIds.length > 100) {
+      final oldSize = _processedMessageIds.length;
+      _processedMessageIds.clear();
+      _messageIdTimestamps.clear();
+      print('🧹 清理了 $oldSize 个消息ID缓存');
+    }
+    
+    // 2. 强制重新从本地存储加载（完全替换）
+    try {
+      final chatId = widget.conversation['id'];
+      final allStoredMessages = await _localStorage.loadChatMessages(chatId);
+      
+      if (mounted) {
+        setState(() {
+          _messages.clear();
+          _messages.addAll(allStoredMessages);
+          _messages.sort((a, b) {
+            try {
+              final timeA = DateTime.parse(a['timestamp']);
+              final timeB = DateTime.parse(b['timestamp']);
+              return timeA.compareTo(timeB);
+            } catch (e) {
+              return 0;
+            }
+          });
+        });
+        
+        print('✅ 强制重载了 ${allStoredMessages.length} 条消息');
+        _scrollToBottom();
+      }
+    } catch (e) {
+      print('❌ 强制重载消息失败: $e');
+    }
+    
+    // 3. 强制请求最新消息
+    if (_websocketService.isConnected) {
+      _websocketService.emit('get_recent_messages', {
+        'conversationId': widget.conversation['id'],
+        'limit': 50,
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'force_refresh'
+      });
+    }
+    
+    // 4. 重新订阅WebSocket
+    _chatMessageSubscription?.cancel();
+    _subscribeToChatMessages();
+    
+    print('✅ 强制刷新完成');
+  }
+  
+  // 🔥 新增：显示同步通知
+  void _showSyncNotification(SyncUIUpdateEvent event) {
+    if (mounted && event.messageCount > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.sync, color: Colors.white, size: 16),
+              const SizedBox(width: 8),
+              Text('收到 ${event.messageCount} 条新消息'),
+            ],
+          ),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green[600],
+        ),
+      );
+    }
   }
 
   // 🔥 紧急WebSocket恢复
@@ -3321,164 +4157,612 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     print('✅ 紧急恢复完成');
   }
   
-  // 🔥 新增：处理最近消息同步
-  void _handleRecentMessages(Map<String, dynamic> data) {
-    print('📬 收到最近消息同步，开始处理...');
-    final messages = data['data']?['messages'];
-    if (messages == null || messages is! List) {
-      print('最近消息数据格式错误');
-      return;
-    }
+
+
+  // 测试API连接（调试功能）
+  Future<void> _testApiConnection() async {
+    print('🧪 开始测试API连接...');
+    final result = await _messageActionsService.testApiConnection();
+    print('🧪 测试结果: $result');
     
-    _processSyncMessages(List<Map<String, dynamic>>.from(messages), '最近消息同步');
-  }
-  
-  // 🔥 新增：处理离线消息同步
-  void _handleOfflineMessages(Map<String, dynamic> data) {
-    print('📥 收到离线消息同步，开始处理...');
-    final messages = data['data']?['messages'];
-    if (messages == null || messages is! List) {
-      print('离线消息数据格式错误');
-      return;
-    }
-    
-    // 离线消息处理逻辑
-    final offlineMessages = List<Map<String, dynamic>>.from(messages);
-    print('📥 处理${offlineMessages.length}条离线消息');
-    
-    // 显示离线消息恢复提示
-    if (offlineMessages.isNotEmpty && mounted) {
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('正在恢复${offlineMessages.length}条离线消息...'),
-          duration: Duration(seconds: 2),
+          content: Text(result['success'] 
+            ? 'API连接正常 (${result['statusCode']})' 
+            : 'API连接失败: ${result['error']} (${result['statusCode'] ?? 'N/A'})'),
+          backgroundColor: result['success'] ? Colors.green : Colors.red,
+        ),
+      );
+    }
+  }
+
+  // 显示调试菜单
+  void _showDebugMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(top: 8, bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Text(
+                '调试菜单',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 16),
+              _buildDebugMenuItem(
+                icon: Icons.wifi,
+                title: '测试API连接',
+                onTap: () {
+                  Navigator.pop(context);
+                  _testApiConnection();
+                },
+              ),
+              _buildDebugMenuItem(
+                icon: Icons.message,
+                title: '查看消息统计',
+                onTap: () {
+                  Navigator.pop(context);
+                  _showMessageStats();
+                },
+              ),
+              _buildDebugMenuItem(
+                icon: Icons.cleaning_services,
+                title: '清理缓存',
+                onTap: () {
+                  Navigator.pop(context);
+                  _clearDebugCache();
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDebugMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.grey[600]),
+            const SizedBox(width: 16),
+            Text(title, style: const TextStyle(fontSize: 16)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 显示消息统计
+  void _showMessageStats() {
+    final stats = '''
+消息总数: ${_messages.length}
+已处理ID数: ${_processedMessageIds.length}
+本地ID数: ${_localMessageIds.length}
+对话类型: ${widget.conversation['type']}
+对话ID: ${widget.conversation['id']}
+''';
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('消息统计'),
+        content: Text(stats),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('关闭'),
+          ),
+        ],
         ),
       );
     }
     
-    _processSyncMessages(offlineMessages, '离线消息同步');
+  // 清理调试缓存
+  void _clearDebugCache() {
+    _processedMessageIds.clear();
+    _messageIdTimestamps.clear();
+    _localMessageIds.clear();
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('调试缓存已清理')),
+      );
+    }
+  }
+
+
+
+  // 显示消息操作菜单（在指定位置，用于右键）
+  Future<void> _showMessageActionMenuAtPosition(Map<String, dynamic> message, bool isOwnMessage, Offset position) async {
+    final messageId = message['id']?.toString() ?? '';
+    print('📋 准备在位置 $position 显示消息操作菜单: messageId=$messageId, isOwnMessage=$isOwnMessage');
+    
+    if (messageId.isEmpty) {
+      print('❌ 消息ID为空，无法显示操作菜单');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('消息ID无效，无法操作')),
+        );
+      }
+      return;
+    }
+    
+    final isFavorited = await _messageActionsService.isMessageFavorited(messageId);
+    
+    // 创建右键菜单
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RelativeRect rect = RelativeRect.fromRect(
+      Rect.fromLTWH(position.dx, position.dy, 0, 0),
+      Offset.zero & overlay.size,
+    );
+    
+    final action = await showMenu<MessageAction>(
+      context: context,
+      position: rect,
+      color: Colors.white,
+      surfaceTintColor: Colors.white,
+      shadowColor: Colors.black.withOpacity(0.2),
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      items: _buildContextMenuItems(message, isOwnMessage, isFavorited),
+    );
+    
+    if (action != null) {
+      await _handleMessageAction(action, message);
+    }
+  }
+
+  // 构建右键菜单项
+  List<PopupMenuItem<MessageAction>> _buildContextMenuItems(
+    Map<String, dynamic> message, 
+    bool isOwnMessage, 
+    bool isFavorited
+  ) {
+    final items = <PopupMenuItem<MessageAction>>[];
+    
+    // 复制
+    if (message['text'] != null && message['text'].toString().isNotEmpty) {
+      items.add(PopupMenuItem(
+        value: MessageAction.copy,
+        child: const Row(
+          children: [
+            Icon(Icons.copy_rounded, size: 18, color: Colors.grey),
+            SizedBox(width: 12),
+            Text('复制'),
+          ],
+        ),
+      ));
+    }
+    
+    // 转发
+    items.add(const PopupMenuItem(
+      value: MessageAction.forward,
+      child: Row(
+        children: [
+          Icon(Icons.share_rounded, size: 18, color: Colors.grey),
+          SizedBox(width: 12),
+          Text('转发'),
+        ],
+      ),
+    ));
+    
+    // 收藏/取消收藏
+    items.add(PopupMenuItem(
+      value: isFavorited ? MessageAction.unfavorite : MessageAction.favorite,
+      child: Row(
+        children: [
+          Icon(isFavorited ? Icons.star : Icons.star_border_rounded, size: 18, color: Colors.grey),
+          const SizedBox(width: 12),
+          Text(isFavorited ? '取消收藏' : '收藏'),
+        ],
+      ),
+    ));
+    
+    // 回复
+    items.add(const PopupMenuItem(
+      value: MessageAction.reply,
+      child: Row(
+        children: [
+          Icon(Icons.reply_rounded, size: 18, color: Colors.grey),
+          SizedBox(width: 12),
+          Text('回复'),
+        ],
+      ),
+    ));
+    
+    // 多选
+    items.add(const PopupMenuItem(
+      value: MessageAction.select,
+      child: Row(
+        children: [
+          Icon(Icons.checklist_rounded, size: 18, color: Colors.grey),
+          SizedBox(width: 12),
+          Text('多选'),
+        ],
+      ),
+    ));
+    
+    // 分隔符
+    items.add(const PopupMenuItem<MessageAction>(
+      enabled: false,
+      child: Divider(height: 1),
+    ));
+    
+    // 发送方：撤回；接收方：删除
+    if (isOwnMessage) {
+      items.add(PopupMenuItem(
+        value: MessageAction.revoke,
+        child: Row(
+          children: [
+            Icon(Icons.undo_rounded, size: 18, color: Colors.orange[600]),
+            const SizedBox(width: 12),
+            Text('撤回', style: TextStyle(color: Colors.orange[600])),
+          ],
+        ),
+      ));
+    } else {
+      items.add(PopupMenuItem(
+        value: MessageAction.delete,
+        child: Row(
+          children: [
+            Icon(Icons.delete_rounded, size: 18, color: Colors.red[600]),
+            const SizedBox(width: 12),
+            Text('删除', style: TextStyle(color: Colors.red[600])),
+          ],
+        ),
+      ));
+    }
+    
+    return items;
+  }
+
+  // 显示消息操作菜单
+  Future<void> _showMessageActionMenu(Map<String, dynamic> message, bool isOwnMessage) async {
+    final messageId = message['id']?.toString() ?? '';
+    print('📋 准备显示消息操作菜单: messageId=$messageId, isOwnMessage=$isOwnMessage');
+    print('📋 完整消息数据: $message');
+    
+    if (messageId.isEmpty) {
+      print('❌ 消息ID为空，无法显示操作菜单');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('消息ID无效，无法操作')),
+        );
+      }
+      return;
+    }
+    
+    final isFavorited = await _messageActionsService.isMessageFavorited(messageId);
+    
+    final action = await showMessageActionMenu(
+      context: context,
+      message: message,
+      isOwnMessage: isOwnMessage,
+      isFavorited: isFavorited,
+    );
+    
+    if (action != null) {
+      await _handleMessageAction(action, message);
+    }
   }
   
-  // 🔥 新增：处理群组消息同步
-  void _handleGroupMessagesSynced(Map<String, dynamic> data) {
-    print('📝 收到群组消息同步，开始处理...');
+  // 处理消息操作
+  Future<void> _handleMessageAction(MessageAction action, Map<String, dynamic> message) async {
+    final messageId = message['id']?.toString() ?? '';
+    print('🎯 处理消息操作: action=$action, messageId=$messageId');
     
-    // 仅处理当前群组的消息
-    if (widget.conversation['type'] != 'group') {
-      print('当前不是群组对话，忽略群组消息同步');
+    if (messageId.isEmpty) {
+      print('❌ 消息ID为空，无法执行操作');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('消息ID无效，操作失败')),
+        );
+      }
       return;
     }
     
-    final messages = data['data']?['messages'];
-    if (messages == null || messages is! List) {
-      print('群组消息数据格式错误');
-      return;
+    switch (action) {
+      case MessageAction.copy:
+        await _copyMessage(message);
+        break;
+      
+      case MessageAction.revoke:
+        await _revokeMessage(messageId);
+        break;
+      
+      case MessageAction.delete:
+        await _deleteMessage(messageId);
+        break;
+      
+      case MessageAction.forward:
+        _forwardMessage(message);
+        break;
+      
+      case MessageAction.favorite:
+        await _favoriteMessage(message);
+        break;
+      
+      case MessageAction.unfavorite:
+        await _unfavoriteMessage(messageId);
+        break;
+      
+      case MessageAction.reply:
+        _replyToMessage(message);
+        break;
+      
+      case MessageAction.select:
+        _enterMultiSelectMode(messageId);
+        break;
     }
-    
-    _processSyncMessages(List<Map<String, dynamic>>.from(messages), '群组消息同步');
   }
   
-  // 🔥 新增：处理私聊消息同步
-  void _handlePrivateMessagesSynced(Map<String, dynamic> data) {
-    print('📝 收到私聊消息同步，开始处理...');
-    
-    // 仅处理当前私聊的消息
-    if (widget.conversation['type'] == 'group') {
-      print('当前不是私聊对话，忽略私聊消息同步');
-      return;
-    }
-    
-    final messages = data['data']?['messages'];
-    if (messages == null || messages is! List) {
-      print('私聊消息数据格式错误');
-      return;
-    }
-    
-    _processSyncMessages(List<Map<String, dynamic>>.from(messages), '私聊消息同步');
-  }
-  
-  // 🔥 新增：统一处理同步消息的方法
-  void _processSyncMessages(List<Map<String, dynamic>> syncMessages, String syncType) async {
-    if (syncMessages.isEmpty) {
-      print('$syncType: 无消息需要处理');
-      return;
-    }
-    
-    print('$syncType: 开始处理${syncMessages.length}条消息');
-    
-    // 获取当前设备ID
-    final prefs = await SharedPreferences.getInstance();
-    final serverDeviceData = prefs.getString('server_device_data');
-    String? currentDeviceId;
-    if (serverDeviceData != null) {
-      try {
-        final Map<String, dynamic> data = jsonDecode(serverDeviceData);
-        currentDeviceId = data['id'];
-      } catch (e) {
-        print('解析设备ID失败: $e');
+  // 复制消息
+  Future<void> _copyMessage(Map<String, dynamic> message) async {
+    final text = message['text']?.toString() ?? '';
+    if (text.isNotEmpty) {
+      final success = await _messageActionsService.copyMessageText(text);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('已复制到剪贴板')),
+        );
       }
     }
+  }
+  
+  // 撤回消息
+  Future<void> _revokeMessage(String messageId) async {
+    print('🔄 开始撤回消息流程: $messageId');
     
-    // 转换消息格式（使用现有的转换逻辑）
-    final convertedMessages = syncMessages.map((msg) {
-      final isMe = msg['sourceDeviceId'] == currentDeviceId;
-      return {
-        'id': msg['id'],
-        'text': msg['content'],
-        'fileType': (msg['fileUrl'] != null || msg['fileName'] != null) ? _getFileType(msg['fileName']) : null,
-        'fileName': msg['fileName'],
-        'fileUrl': msg['fileUrl'],
-        'fileSize': msg['fileSize'],
-        'timestamp': _normalizeTimestamp(msg['createdAt'] ?? DateTime.now().toUtc().toIso8601String()),
-        'isMe': isMe,
-        'status': msg['status'] ?? 'sent',
-        'sourceDeviceId': msg['sourceDeviceId'],
-      };
-    }).toList();
-    
-    // 过滤掉重复消息
-    final newMessages = <Map<String, dynamic>>[];
-    for (final msg in convertedMessages) {
-      final msgId = msg['id'].toString();
-      
-      // 检查是否已存在
-      final exists = _messages.any((localMsg) => localMsg['id'].toString() == msgId);
-      if (!exists) {
-        newMessages.add(msg);
+    // 检查消息是否存在
+    final messageIndex = _messages.indexWhere((msg) => msg['id']?.toString() == messageId);
+    if (messageIndex == -1) {
+      print('❌ 本地未找到要撤回的消息: $messageId');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('消息不存在，无法撤回')),
+        );
       }
+      return;
     }
     
-    if (newMessages.isNotEmpty && mounted) {
-      print('$syncType: 添加${newMessages.length}条新消息到界面');
-      
-      setState(() {
-        _messages.addAll(newMessages);
-        _messages.sort((a, b) {
-          try {
-            final timeA = DateTime.parse(a['timestamp']);
-            final timeB = DateTime.parse(b['timestamp']);
-            return timeA.compareTo(timeB);
-          } catch (e) {
-            return 0;
-          }
-        });
-      });
-      
-      // 为文件消息自动下载文件
-      for (final message in newMessages) {
-        if (message['fileUrl'] != null && !message['isMe']) {
-          _autoDownloadFile(message);
+    final message = _messages[messageIndex];
+    print('🔄 找到要撤回的消息: ${message['text']}, isMe: ${message['isMe']}');
+    
+    final confirmed = await _showConfirmDialog(
+      title: '撤回消息',
+      content: '确定要撤回这条消息吗？撤回后所有人都无法看到此消息。',
+      confirmText: '撤回',
+    );
+    
+    if (confirmed) {
+      final result = await _messageActionsService.revokeMessage(messageId: messageId);
+      if (mounted) {
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('消息已撤回')),
+          );
+          // 更新本地消息状态
+          _updateMessageAfterRevoke(messageId);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('撤回失败: ${result['error']}')),
+          );
         }
       }
-      
-      // 保存消息
-      _saveMessages();
-      _scrollToBottom();
-      
-      print('$syncType: 完成，新增${newMessages.length}条消息');
-    } else {
-      print('$syncType: 无新消息需要添加');
     }
+  }
+  
+  // 删除消息
+  Future<void> _deleteMessage(String messageId) async {
+    print('🗑️ 开始删除消息流程: $messageId');
+    
+    // 检查消息是否存在
+    final messageIndex = _messages.indexWhere((msg) => msg['id']?.toString() == messageId);
+    if (messageIndex == -1) {
+      print('❌ 本地未找到要删除的消息: $messageId');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('消息不存在，无法删除')),
+        );
+      }
+      return;
+    }
+    
+    final message = _messages[messageIndex];
+    final isOwnMessage = message['isMe'] == true;
+    print('🗑️ 找到要删除的消息: ${message['text']}, isMe: $isOwnMessage');
+    
+    // 根据消息所有者决定删除行为
+    final deleteTitle = isOwnMessage ? '撤回消息' : '删除消息';
+    final deleteContent = isOwnMessage 
+      ? '确定要撤回这条消息吗？撤回后群组内所有设备都将删除此消息。'
+      : '确定要删除这条消息吗？此操作仅在当前设备删除，其他设备不受影响。';
+    final deleteButton = isOwnMessage ? '撤回' : '删除';
+    
+    final confirmed = await _showConfirmDialog(
+      title: deleteTitle,
+      content: deleteContent,
+      confirmText: deleteButton,
+      isDestructive: true,
+    );
+    
+    if (confirmed) {
+      if (isOwnMessage) {
+        // 发送方：调用撤回API，群组内所有设备删除
+        final result = await _messageActionsService.revokeMessage(messageId: messageId);
+        if (mounted) {
+          if (result['success']) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('消息已撤回')),
+            );
+            // 更新本地消息状态为已撤回
+            _updateMessageAfterRevoke(messageId);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('撤回失败: ${result['error']}')),
+            );
+          }
+        }
+      } else {
+        // 接收方：仅本地删除，不调用API
+        print('🗑️ 接收方消息，仅本地删除');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('消息已删除（仅本地）')),
+          );
+          // 直接从本地消息列表中移除
+          _removeMessageFromLocal(messageId);
+        }
+      }
+    }
+  }
+  
+  // 转发消息
+  void _forwardMessage(Map<String, dynamic> message) {
+    final forwardText = _messageActionsService.formatMessageForForward(message);
+    _messageController.text = forwardText;
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('消息内容已添加到输入框')),
+      );
+    }
+  }
+  
+  // 收藏消息
+  Future<void> _favoriteMessage(Map<String, dynamic> message) async {
+    final success = await _messageActionsService.favoriteMessage(message);
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('已添加到收藏')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('收藏失败')),
+        );
+      }
+    }
+  }
+  
+  // 取消收藏消息
+  Future<void> _unfavoriteMessage(String messageId) async {
+    final success = await _messageActionsService.unfavoriteMessage(messageId);
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('已从收藏中移除')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('取消收藏失败')),
+        );
+      }
+    }
+  }
+  
+  // 回复消息
+  void _replyToMessage(Map<String, dynamic> message) {
+    final text = message['text']?.toString() ?? '';
+    final fileName = message['fileName']?.toString() ?? '';
+    
+    String replyText = '';
+    if (text.isNotEmpty) {
+      replyText = '回复: $text\n\n';
+    } else if (fileName.isNotEmpty) {
+      replyText = '回复: [文件] $fileName\n\n';
+    }
+    
+    _messageController.text = replyText;
+    _messageController.selection = TextSelection.fromPosition(
+      TextPosition(offset: _messageController.text.length),
+    );
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('回复内容已添加到输入框')),
+      );
+    }
+  }
+  
+  // 进入多选模式
+  void _enterMultiSelectMode(String messageId) {
+    _multiSelectController.enterMultiSelectMode();
+    _multiSelectController.selectMessage(messageId);
+  }
+  
+  // 显示确认对话框
+  Future<bool> _showConfirmDialog({
+    required String title,
+    required String content,
+    required String confirmText,
+    bool isDestructive = false,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: isDestructive 
+              ? TextButton.styleFrom(foregroundColor: AppTheme.errorColor)
+              : null,
+            child: Text(confirmText),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+  
+  // 撤回后更新消息状态
+  void _updateMessageAfterRevoke(String messageId) {
+    setState(() {
+      final messageIndex = _messages.indexWhere((msg) => msg['id'].toString() == messageId);
+      if (messageIndex != -1) {
+        _messages[messageIndex]['text'] = '[此消息已被撤回]';
+        _messages[messageIndex]['isRevoked'] = true;
+      }
+    });
+    _saveMessages();
+  }
+  
+  // 从本地移除消息
+  void _removeMessageFromLocal(String messageId) {
+    setState(() {
+      _messages.removeWhere((msg) => msg['id'].toString() == messageId);
+    });
+    _saveMessages();
   }
 }
 
@@ -3488,6 +4772,7 @@ class _VideoGifPreview extends StatefulWidget {
   final String? videoUrl;
 
   const _VideoGifPreview({
+    super.key,
     this.videoPath,
     this.videoUrl,
   });
@@ -3518,52 +4803,7 @@ class _VideoGifPreviewState extends State<_VideoGifPreview> {
       String videoSource = widget.videoPath ?? widget.videoUrl!;
       Uint8List? thumbnailData;
       
-      // 方案1: 优先尝试使用fc_native_video_thumbnail（支持桌面端）
-      try {
-        final plugin = FcNativeVideoThumbnail();
-        
-        // 创建临时文件路径用于保存缩略图
-        final directory = await getApplicationDocumentsDirectory();
-        final thumbnailDir = Directory(path.join(directory.path, 'thumbnails'));
-        if (!thumbnailDir.existsSync()) {
-          thumbnailDir.createSync(recursive: true);
-        }
-        
-        final thumbnailPath = path.join(
-          thumbnailDir.path, 
-          'thumb_${DateTime.now().millisecondsSinceEpoch}.jpg'
-        );
-        
-        // 生成缩略图文件
-        final success = await plugin.getVideoThumbnail(
-          srcFile: videoSource,
-          destFile: thumbnailPath,
-          width: 400, // 高分辨率
-          height: 300, // 高分辨率  
-          format: 'jpeg',
-          quality: 90, // 高质量
-        );
-        
-        if (success) {
-          // 读取生成的缩略图文件
-          final thumbnailFile = File(thumbnailPath);
-          if (thumbnailFile.existsSync()) {
-            thumbnailData = await thumbnailFile.readAsBytes();
-            
-            // 清理临时文件
-            try {
-              await thumbnailFile.delete();
-            } catch (e) {
-              print('清理缩略图临时文件失败: $e');
-            }
-          }
-        }
-      } catch (e) {
-        print('fc_native_video_thumbnail 失败，尝试备用方案: $e');
-      }
-      
-      // 方案2: 如果fc_native_video_thumbnail失败，使用video_thumbnail（移动端）
-      if (thumbnailData == null) {
+      // 使用video_thumbnail生成缩略图
         try {
           thumbnailData = await VideoThumbnail.thumbnailData(
             video: videoSource,
@@ -3575,10 +4815,7 @@ class _VideoGifPreviewState extends State<_VideoGifPreview> {
           );
           print('使用video_thumbnail生成缩略图成功');
         } catch (e) {
-          print('video_thumbnail 也失败了: $e');
-        }
-      } else {
-        print('使用fc_native_video_thumbnail生成缩略图成功');
+        print('video_thumbnail生成缩略图失败: $e');
       }
       
       if (mounted && thumbnailData != null) {
@@ -3607,13 +4844,9 @@ class _VideoGifPreviewState extends State<_VideoGifPreview> {
       return Container(
         color: const Color(0xFF1F2937),
         child: const Center(
-          child: SizedBox(
-            width: 20,
-            height: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white54),
-            ),
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
           ),
         ),
       );
@@ -3633,29 +4866,12 @@ class _VideoGifPreviewState extends State<_VideoGifPreview> {
           
           // 播放按钮覆盖层
           Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.2),
-                  Colors.black.withOpacity(0.05),
-                ],
-              ),
-            ),
-            child: Center(
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  color: Colors.black54,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.play_arrow,
-                  size: 28,
+            color: Colors.black.withOpacity(0.3),
+            child: const Center(
+              child: Icon(
+                Icons.play_circle_filled,
                   color: Colors.white,
-                ),
+                size: 48,
               ),
             ),
           ),
@@ -3663,14 +4879,14 @@ class _VideoGifPreviewState extends State<_VideoGifPreview> {
       );
     }
     
-    // 如果缩略图生成失败，显示默认图标
+    // 加载失败时显示默认图标
     return Container(
-      color: const Color(0xFF1F2937),
+      color: const Color(0xFF374151),
       child: const Center(
         child: Icon(
-          Icons.play_circle_fill,
-          size: 48,
-          color: Colors.white70,
+          Icons.videocam_off,
+          color: Colors.white54,
+          size: 32,
         ),
       ),
     );

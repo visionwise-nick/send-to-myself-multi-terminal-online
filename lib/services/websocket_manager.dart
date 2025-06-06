@@ -1160,4 +1160,196 @@ class WebSocketManager {
   DateTime? _getLastOnlineTime() {
     return _lastOnlineTime;
   }
+
+  /// 🔥 新增：群组切换同步
+  void syncGroupMessages(String groupId) {
+    if (_socket?.connected == true) {
+      _log('🔄 同步群组消息: $groupId');
+      
+      _socket?.emit('sync_group_messages', {
+        'groupId': groupId,
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'group_switch',
+        'sync_limit': 50, // 同步最近50条消息
+        'include_offline': true, // 包含离线消息
+      });
+      
+      // 标记当前活跃群组
+      _socket?.emit('set_active_group', {
+        'groupId': groupId,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      _log('✅ 群组消息同步请求已发送: $groupId');
+    } else {
+      _log('⚠️ WebSocket未连接，无法同步群组消息: $groupId');
+    }
+  }
+
+  /// 🔥 新增：私聊切换同步
+  void syncPrivateMessages(String targetUserId) {
+    if (_socket?.connected == true) {
+      _log('🔄 同步私聊消息: $targetUserId');
+      
+      _socket?.emit('sync_private_messages', {
+        'targetUserId': targetUserId,
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'chat_switch',
+        'sync_limit': 50, // 同步最近50条消息
+        'include_offline': true, // 包含离线消息
+      });
+      
+      // 标记当前活跃私聊
+      _socket?.emit('set_active_chat', {
+        'targetUserId': targetUserId,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      _log('✅ 私聊消息同步请求已发送: $targetUserId');
+    } else {
+      _log('⚠️ WebSocket未连接，无法同步私聊消息: $targetUserId');
+    }
+  }
+
+  /// 🔥 新增：强制重连并同步
+  Future<bool> forceReconnectAndSync() async {
+    _log('🔄 强制重连并同步...');
+    
+    // 标记为离线状态
+    _wasOffline = true;
+    
+    // 断开现有连接
+    disconnect();
+    
+    // 等待短暂时间
+    await Future.delayed(Duration(seconds: 1));
+    
+    // 重新连接
+    final success = await initialize(
+      deviceId: _deviceId!,
+      token: _token!,
+    );
+    
+    if (success) {
+      // 延迟等待连接稳定
+      await Future.delayed(Duration(seconds: 2));
+      
+      // 执行强化同步
+      _performEnhancedSync();
+      
+      _log('✅ 强制重连并同步完成');
+    } else {
+      _log('❌ 强制重连失败');
+    }
+    
+    return success;
+  }
+
+  /// 🔥 新增：执行增强同步
+  void _performEnhancedSync() {
+    if (_socket?.connected == true) {
+      _log('🚀 执行增强同步...');
+      
+      // 1. 获取最近消息
+      _socket?.emit('get_recent_messages', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'enhanced_sync',
+        'limit': 100,
+        'include_all_conversations': true,
+      });
+      
+      // 2. 获取离线消息
+      _socket?.emit('get_all_offline_messages', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'enhanced_sync',
+        'since': _getLastOnlineTime()?.toIso8601String(),
+        'include_files': true,
+        'include_status_updates': true,
+      });
+      
+      // 3. 同步所有群组
+      _socket?.emit('sync_all_groups', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'enhanced_sync',
+        'include_offline': true,
+        'sync_limit': 50,
+      });
+      
+      // 4. 同步所有私聊
+      _socket?.emit('sync_all_private_chats', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'enhanced_sync',
+        'include_offline': true,
+        'sync_limit': 50,
+      });
+      
+      // 5. 获取消息状态更新
+      _socket?.emit('get_message_status_updates', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'enhanced_sync',
+        'since': _getLastOnlineTime()?.toIso8601String(),
+      });
+      
+      _log('✅ 增强同步请求已全部发送');
+    }
+  }
+
+  /// 🔥 新增：应用恢复时的特殊同步
+  void performAppResumeSync() {
+    _log('📱 应用恢复同步...');
+    
+    if (_socket?.connected == true) {
+      // 直接执行增强同步
+      _performEnhancedSync();
+      
+      // 额外发送应用恢复通知
+      _socket?.emit('app_resumed', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'app_foreground',
+        'last_active': _lastOnlineTime?.toIso8601String(),
+      });
+    } else {
+      // 如果未连接，尝试重新连接
+      _log('🔄 WebSocket未连接，尝试重新连接...');
+      Timer(Duration(seconds: 1), () {
+        initialize(
+          deviceId: _deviceId!,
+          token: _token!,
+        ).then((success) {
+          if (success) {
+            Timer(Duration(seconds: 2), () {
+              _performEnhancedSync();
+            });
+          }
+        });
+      });
+    }
+  }
+
+  /// 🔥 新增：网络恢复时的特殊同步
+  void performNetworkResumeSync() {
+    _log('🌐 网络恢复同步...');
+    
+    if (_socket?.connected == true) {
+      _performEnhancedSync();
+      
+      // 发送网络恢复通知
+      _socket?.emit('network_resumed', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'network_reconnection',
+      });
+    }
+  }
+
+  /// 🔥 新增：获取未读消息数量
+  void requestUnreadCounts() {
+    if (_socket?.connected == true) {
+      _log('📊 请求未读消息数量...');
+      
+      _socket?.emit('get_unread_counts', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'include_all_conversations': true,
+      });
+    }
+  }
 } 
