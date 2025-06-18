@@ -469,29 +469,34 @@ class EnhancedSyncManager {
     }
   }
 
-  /// 增强的消息去重处理
+  /// 🔥 统一的消息去重处理 - 仅基于消息ID进行唯一去重
   Future<int> _processMessagesWithEnhancedDeduplication(List<Map<String, dynamic>> messages) async {
     int processedCount = 0;
     final Map<String, List<Map<String, dynamic>>> conversationMessages = {};
-    final Map<String, List<String>> conversationMessageIds = {}; // 记录每个对话的消息ID
+    
+    debugPrint('📥 开始处理消息，统一使用消息ID去重机制');
     
     for (final message in messages) {
       final messageId = message['id'] as String?;
-      if (messageId == null) continue;
-      
-      // 检查消息是否已处理
-      if (_isMessageAlreadyProcessed(messageId, message)) {
-        debugPrint('⏭️ 跳过重复消息: $messageId');
+      if (messageId == null) {
+        debugPrint('⚠️ 跳过无ID消息');
         continue;
       }
       
-      // 标记消息已处理
-      _markMessageAsProcessed(messageId, message);
+      // 🔥 统一去重机制：仅检查消息ID是否已处理
+      if (_isMessageIdProcessed(messageId)) {
+        debugPrint('⏭️ 跳过重复消息ID: $messageId');
+        continue;
+      }
       
-      // 分组消息
+      // 标记消息ID已处理
+      _markMessageIdProcessed(messageId);
+      
+      // 分组消息到对应的对话
       final conversationId = _getConversationId(message);
       conversationMessages.putIfAbsent(conversationId, () => []).add(message);
-      conversationMessageIds.putIfAbsent(conversationId, () => []).add(messageId);
+      
+      debugPrint('✅ 消息ID通过去重检查: $messageId -> $conversationId');
     }
     
     // 处理每个对话的消息
@@ -499,163 +504,117 @@ class EnhancedSyncManager {
       try {
         final conversationId = entry.key;
         final newMessages = entry.value;
-        final messageIds = conversationMessageIds[conversationId] ?? [];
         
         // 加载现有消息
         final existingMessages = await _localStorage.loadChatMessages(conversationId);
         
-        // 智能合并消息
-        final allMessages = _smartMergeMessages(existingMessages, newMessages);
+        // 🔥 简化的消息合并：直接基于消息ID去重
+        final mergedMessages = _mergeMessagesByIdOnly(existingMessages, newMessages);
         
         // 保存合并后的消息
-        await _localStorage.saveChatMessages(conversationId, allMessages);
+        await _localStorage.saveChatMessages(conversationId, mergedMessages);
         
         processedCount += newMessages.length;
-        debugPrint('💾 保存对话 $conversationId: ${newMessages.length} 条新消息');
-        
-            // 🔥 关键修复：发送UI更新通知 - 增强版
-    if (newMessages.isNotEmpty) {
-      _notifyUIUpdate(SyncUIUpdateEvent(
-        type: 'messages_updated',
-        conversationId: conversationId,
-        messageCount: newMessages.length,
-        messageIds: messageIds,
-        timestamp: DateTime.now(),
-        syncType: 'enhanced_deduplication',
-      ));
-      
-      // 🔥 新增：延迟发送强制刷新所有界面的事件
-      Timer(Duration(seconds: 1), () {
-        _notifyUIUpdate(SyncUIUpdateEvent(
-          type: 'force_global_refresh',
-          conversationId: conversationId,
-          messageCount: newMessages.length,
-          messageIds: messageIds,
-          timestamp: DateTime.now(),
-          syncType: 'post_sync_refresh',
-        ));
-      });
-    }
+        debugPrint('💾 对话 $conversationId: 新增 ${newMessages.length} 条消息');
         
       } catch (e) {
         debugPrint('❌ 处理对话消息失败: ${entry.key}, $e');
       }
     }
     
-    // 清理消息缓存
-    _cleanupMessageCache();
+    // 清理过期的消息ID缓存
+    _cleanupMessageIdCache();
     
-    // 🔥 关键修复：发送总体同步完成通知
     if (processedCount > 0) {
       _notifyUIUpdate(SyncUIUpdateEvent(
         type: 'sync_completed',
         messageCount: processedCount,
         timestamp: DateTime.now(),
-        syncType: 'enhanced_deduplication',
+        syncType: 'id_based_deduplication',
       ));
     }
     
+    debugPrint('✅ 消息处理完成，共处理 $processedCount 条消息');
     return processedCount;
   }
 
-  /// 检查消息是否已处理
-  bool _isMessageAlreadyProcessed(String messageId, Map<String, dynamic> message) {
-    // 检查ID缓存
-    if (_processedMessageIds.contains(messageId)) {
-      return true;
-    }
-    
-    // 检查时间戳（允许小幅差异）
-    final timestamp = DateTime.tryParse(message['timestamp'] ?? '');
-    if (timestamp != null) {
-      final existingTimestamp = _messageTimestamps[messageId];
-      if (existingTimestamp != null) {
-        // 🔧 修复：允许1秒内的时间差异，而不是要求完全相同
-        final timeDiff = (timestamp.millisecondsSinceEpoch - existingTimestamp.millisecondsSinceEpoch).abs();
-        if (timeDiff < 1000) { // 1秒内认为是同一条消息
-          return true;
-        }
-      }
-    }
-    
-    return false;
+  /// 🔥 新增：检查消息ID是否已处理（仅基于ID）
+  bool _isMessageIdProcessed(String messageId) {
+    return _processedMessageIds.contains(messageId);
   }
 
-  /// 标记消息已处理
-  void _markMessageAsProcessed(String messageId, Map<String, dynamic> message) {
+  /// 🔥 新增：标记消息ID已处理（仅记录ID和时间）
+  void _markMessageIdProcessed(String messageId) {
     _processedMessageIds.add(messageId);
-    
-    final timestamp = DateTime.tryParse(message['timestamp'] ?? '');
-    if (timestamp != null) {
-      _messageTimestamps[messageId] = timestamp;
-    }
+    _messageTimestamps[messageId] = DateTime.now();
   }
 
-  /// 智能合并消息
-  List<Map<String, dynamic>> _smartMergeMessages(
+  /// 🔥 新增：基于消息ID的简化合并
+  List<Map<String, dynamic>> _mergeMessagesByIdOnly(
     List<Map<String, dynamic>> existingMessages,
     List<Map<String, dynamic>> newMessages,
   ) {
-    final Map<String, Map<String, dynamic>> messageMap = {};
+    final existingIds = existingMessages.map((msg) => msg['id']?.toString()).toSet();
+    final mergedMessages = List<Map<String, dynamic>>.from(existingMessages);
     
-    // 添加现有消息
-    for (final message in existingMessages) {
-      final id = message['id'];
-      if (id != null) {
-        messageMap[id] = Map<String, dynamic>.from(message);
+    // 只添加ID不存在的新消息
+    for (final newMessage in newMessages) {
+      final messageId = newMessage['id']?.toString();
+      if (messageId != null && !existingIds.contains(messageId)) {
+        mergedMessages.add(newMessage);
+        debugPrint('🆕 添加新消息: $messageId');
+      } else {
+        debugPrint('🔄 跳过已存在消息ID: $messageId');
       }
     }
     
-    // 添加新消息（智能覆盖）
-    for (final message in newMessages) {
-      final id = message['id'];
-      if (id != null) {
-        final existing = messageMap[id];
-        if (existing != null) {
-          // 智能合并：保留更完整的信息
-          final merged = _mergeMessageInfo(existing, message);
-          messageMap[id] = merged;
-        } else {
-          messageMap[id] = Map<String, dynamic>.from(message);
-        }
+    // 按时间排序
+    mergedMessages.sort((a, b) {
+      try {
+        final timeA = DateTime.parse(a['timestamp'] ?? DateTime.now().toIso8601String());
+        final timeB = DateTime.parse(b['timestamp'] ?? DateTime.now().toIso8601String());
+        return timeA.compareTo(timeB);
+      } catch (e) {
+        debugPrint('⚠️ 消息时间排序失败: $e');
+        return 0;
       }
-    }
-    
-    // 排序并返回
-    final allMessages = messageMap.values.toList();
-    allMessages.sort((a, b) {
-      final timeA = DateTime.tryParse(a['timestamp'] ?? '');
-      final timeB = DateTime.tryParse(b['timestamp'] ?? '');
-      if (timeA == null || timeB == null) return 0;
-      return timeA.compareTo(timeB);
     });
     
-    return allMessages;
+    return mergedMessages;
   }
 
-  /// 合并消息信息
-  Map<String, dynamic> _mergeMessageInfo(
-    Map<String, dynamic> existing,
-    Map<String, dynamic> incoming,
-  ) {
-    final merged = Map<String, dynamic>.from(existing);
+  /// 🔥 新增：清理消息ID缓存（简化版）
+  void _cleanupMessageIdCache() {
+    final now = DateTime.now();
     
-    // 优先使用更新的字段
-    for (final key in incoming.keys) {
-      final incomingValue = incoming[key];
-      final existingValue = existing[key];
+    // 清理2小时前的消息ID
+    final expiredIds = <String>[];
+    _messageTimestamps.forEach((id, timestamp) {
+      if (now.difference(timestamp).inHours >= 2) {
+        expiredIds.add(id);
+      }
+    });
+    
+    // 如果缓存过大，清理最旧的记录
+    if (_processedMessageIds.length > _maxCacheSize) {
+      final sortedEntries = _messageTimestamps.entries.toList()
+        ..sort((a, b) => a.value.compareTo(b.value));
       
-      if (incomingValue != null) {
-        if (existingValue == null || 
-            (incomingValue is String && incomingValue.isNotEmpty) ||
-            (incomingValue is List && incomingValue.isNotEmpty) ||
-            (incomingValue is Map && incomingValue.isNotEmpty)) {
-          merged[key] = incomingValue;
-        }
+      final excess = _processedMessageIds.length - (_maxCacheSize * 0.8).round();
+      for (int i = 0; i < excess && i < sortedEntries.length; i++) {
+        expiredIds.add(sortedEntries[i].key);
       }
     }
     
-    return merged;
+    // 执行清理
+    for (final id in expiredIds) {
+      _processedMessageIds.remove(id);
+      _messageTimestamps.remove(id);
+    }
+    
+    if (expiredIds.isNotEmpty) {
+      debugPrint('🧹 清理了 ${expiredIds.length} 个过期消息ID');
+    }
   }
 
   /// 快速同步（短暂暂停后）- 增强版
@@ -877,63 +836,18 @@ class EnhancedSyncManager {
         _webSocketManager.emit(event, data);
         debugPrint('✅ WebSocket已连接，发送消息: $event');
       } else {
-        debugPrint('⚠️ WebSocket未连接，尝试重连后发送消息: $event');
-        
-        // 🔥 新增：WebSocket未连接时，尝试立即重连
-        Timer(Duration(seconds: 1), () async {
-          try {
-            // 获取认证信息进行重连
-            await _ensureWebSocketConnection();
-            
-            // 重连成功后发送消息
-            if (_webSocketManager.isConnected) {
-              _webSocketManager.emit(event, data);
-              debugPrint('✅ 重连成功，发送消息: $event');
-            }
-          } catch (e) {
-            debugPrint('❌ WebSocket重连失败: $e');
-          }
-        });
+        debugPrint('⚠️ WebSocket未连接，消息丢弃: $event (让WebSocketManager处理重连)');
+        // 🔥 修复：移除独立重连逻辑，交给WebSocketManager统一处理
+        // 避免重复重连导致的连接混乱
       }
     } catch (e) {
       debugPrint('❌ 发送WebSocket消息失败: $e');
     }
   }
   
-  /// 🔥 新增：确保WebSocket连接
-  Future<void> _ensureWebSocketConnection() async {
-    if (!_webSocketManager.isConnected) {
-      debugPrint('🔄 WebSocket未连接，开始重连...');
-      
-      try {
-        // 获取认证信息
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('auth_token');
-        final serverDeviceData = prefs.getString('server_device_data');
-        
-        if (token != null && serverDeviceData != null) {
-          final deviceData = jsonDecode(serverDeviceData);
-          final deviceId = deviceData['id'];
-          
-          if (deviceId != null) {
-            // 重新初始化WebSocket连接
-            final success = await _webSocketManager.initialize(
-              deviceId: deviceId,
-              token: token,
-            );
-            
-            if (success) {
-              debugPrint('✅ WebSocket重连成功');
-            } else {
-              debugPrint('❌ WebSocket重连失败');
-            }
-          }
-        }
-      } catch (e) {
-        debugPrint('❌ WebSocket重连过程出错: $e');
-      }
-    }
-  }
+  /// 🔥 已移除：确保WebSocket连接 (避免重复重连)
+  /// 重连逻辑统一由WebSocketManager处理，避免多处重连导致的冲突
+  // Future<void> _ensureWebSocketConnection() async { ... }
 
   /// 处理离线消息
   Future<void> _handleOfflineMessages(dynamic data) async {
@@ -1085,40 +999,6 @@ class EnhancedSyncManager {
       debugPrint('💾 保存了 ${idsList.length} 个已处理消息ID');
     } catch (e) {
       debugPrint('⚠️ 保存已处理消息ID失败: $e');
-    }
-  }
-
-  /// 清理消息缓存
-  void _cleanupMessageCache() {
-    final now = DateTime.now();
-    
-    // 1. 基于时间的清理（清理2小时前的记录）
-    final expiredIds = <String>[];
-    _messageTimestamps.forEach((id, timestamp) {
-      if (now.difference(timestamp).inHours >= 2) {
-        expiredIds.add(id);
-      }
-    });
-    
-    // 2. 基于数量的清理（保留最近的记录）
-    if (_processedMessageIds.length > _maxCacheSize) {
-      final excess = _processedMessageIds.length - (_maxCacheSize * 0.8).round(); // 清理到80%
-      final sortedIds = _messageTimestamps.entries.toList()
-        ..sort((a, b) => a.value.compareTo(b.value));
-      
-      for (int i = 0; i < excess && i < sortedIds.length; i++) {
-        expiredIds.add(sortedIds[i].key);
-      }
-    }
-    
-    // 执行清理
-    for (final id in expiredIds) {
-      _processedMessageIds.remove(id);
-      _messageTimestamps.remove(id);
-    }
-    
-    if (expiredIds.isNotEmpty) {
-      debugPrint('🧹 清理了 ${expiredIds.length} 个过期消息ID');
     }
   }
 

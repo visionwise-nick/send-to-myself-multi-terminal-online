@@ -55,11 +55,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   void _startStatusSyncTimer() {
     _statusSyncTimer?.cancel();
     
-    // 每20秒检查一次设备状态同步
-    _statusSyncTimer = Timer.periodic(Duration(seconds: 20), (timer) {
+    // 🔥 优化：每5秒检查一次设备状态同步（原来20秒）
+    _statusSyncTimer = Timer.periodic(Duration(seconds: 5), (timer) {
       final websocketService = WebSocketService();
       if (websocketService.isConnected) {
-        print('🔄 定期设备状态同步检查');
+        print('🔄 定期设备状态同步检查（5秒间隔）');
         websocketService.refreshDeviceStatus();
       }
     });

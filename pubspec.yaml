@@ -47,7 +47,7 @@ dependencies:
   
   # 设备信息和UUID
   device_info_plus: ^9.0.2
-  uuid: ^3.0.7
+  uuid: ^4.5.1
   
   # 加密和哈希
   crypto: ^3.0.3
@@ -85,9 +85,15 @@ dependencies:
   # 桌面端拖拽上传
   desktop_drop: ^0.4.4
   
+  # 桌面端剪贴板文件支持
+  super_clipboard: ^0.8.0
+  
   # 🔥 修复：更新视频缩略图插件版本以解决Android构建问题
   # fc_native_video_thumbnail: ^0.5.1
   video_thumbnail: ^0.5.3
+  
+  # 🔥 新增：桌面端视频缩略图解决方案 - 使用video_player进行帧截取
+  video_player: ^2.9.1
   
   # 🔥 新增：推送通知支持（暂时注释以解决iOS构建问题）
   # firebase_core: ^3.0.0
@@ -97,6 +103,12 @@ dependencies:
   # 新增：国际化支持
   intl: ^0.18.1
   flutter_secure_storage: ^9.0.0
+  
+  # 🔥 新增：保存图片和视频到相册
+  gal: ^2.3.0
+  
+  # 桌面端右键菜单
+  context_menus: ^2.0.0+1
 
 dev_dependencies:
   flutter_test:

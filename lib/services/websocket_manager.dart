@@ -35,7 +35,9 @@ class WebSocketManager {
   Timer? _connectionHealthTimer;
   Timer? _messageReceiveTestTimer;
   Timer? _activeSyncTimer;
+  Timer? _deviceStatusRefreshTimer;
   bool _isManualDisconnect = false;
+  bool _isReconnecting = false; // 🔥 新增：防止重复重连的锁
   DateTime? _lastSuccessfulConnection;
   DateTime? _lastMessageReceived;
   
@@ -131,7 +133,7 @@ class WebSocketManager {
   void _setupEventHandlers() {
     _socket?.on('connect', (_) {
       _log('✅ WebSocket连接成功! Socket ID: ${_socket?.id}');
-      _onConnectionSuccess();
+      _onConnectionEstablished();
     });
 
     _socket?.on('disconnect', (reason) {
@@ -330,43 +332,47 @@ class WebSocketManager {
   }
 
   /// 连接成功处理
-  void _onConnectionSuccess() {
-    // 🔥 检测是否从离线状态恢复
-    final wasOfflineBefore = _wasOffline;
+  void _onConnectionEstablished() {
+    _log('🎉 WebSocket连接已建立');
+    _lastSuccessfulConnection = DateTime.now();
+    _reconnectAttempts = 0;
+    _isReconnecting = false; // 🔥 释放重连锁
+    _reconnectTimer?.cancel(); // 停止重连定时器
+    
+    // 🔥 更新在线时间追踪
+    final wasReconnecting = _wasOffline;
+    _lastOnlineTime = DateTime.now();
     _wasOffline = false;
     
     _setConnectionState(ConnectionState.connected);
-    _reconnectAttempts = 0;
-    _lastSuccessfulConnection = DateTime.now();
-    _lastMessageReceived = DateTime.now();
     
-    // 🔥 更新在线时间
-    _lastOnlineTime = DateTime.now();
-    
+    // 启动心跳
     _startHeartbeat();
     _startConnectionHealthCheck();
     _startMessageReceiveTest();
     _startActiveSync();
+    // 🔥 新增：启动设备状态实时刷新
+    _startDeviceStatusRefresh();
     
-    // 🔥 关键修复：连接成功后立即同步所有状态
-    _performFullStateSync();
-    
-    // 🔥 如果是从离线状态恢复，触发特殊的离线消息同步
-    if (wasOfflineBefore) {
-      _log('🔄 从离线状态恢复，触发离线消息同步');
-      Timer(Duration(seconds: 2), () {
-        _performOfflineMessageSync();
-      });
+    // 如果从离线状态恢复，执行增强同步
+    if (wasReconnecting) {
+      _log('🔄 从离线状态恢复，执行完整同步...');
+      _performConnectionRestoredSync();
+    } else {
+             // 首次连接，执行增强同步
+       _log('🚀 首次连接，执行增强同步...');
+       // 延迟2秒确保连接稳定后再执行同步
+    Timer(Duration(seconds: 2), () {
+         _performEnhancedSync();
+       });
     }
-    
-    _log('🎉 WebSocket连接建立成功，开始状态同步');
   }
   
-  /// 执行完整的状态同步
-  void _performFullStateSync() {
-    _log('🔄 执行完整状态同步...');
+  /// 🔥 新增：连接恢复后的同步处理
+  void _performConnectionRestoredSync() {
+    _log('🔄 执行连接恢复同步...');
     
-    // 延迟1秒确保连接稳定后再请求状态
+    // 延迟1秒确保连接稳定后再请求状态和历史消息
     Timer(Duration(seconds: 1), () {
       if (_socket?.connected == true) {
         _log('📡 请求群组设备状态...');
@@ -385,6 +391,16 @@ class WebSocketManager {
         _socket?.emit('sync_messages', {
           'timestamp': DateTime.now().toIso8601String(),
           'reason': 'connection_restored'
+        });
+        
+        // 🔥 新增：强制获取所有群组的历史消息
+        _log('📥 强制获取群组历史消息...');
+        _socket?.emit('force_sync_group_history', {
+          'timestamp': DateTime.now().toIso8601String(),
+          'reason': 'connection_restored',
+          'limit': 50, // 获取最近50条历史消息
+          'include_all_groups': true, // 包含所有群组
+          'sync_offline': true, // 同步离线期间的消息
         });
         
         // 🔥 新增：请求最近消息
@@ -423,7 +439,19 @@ class WebSocketManager {
           'reason': 'connection_restored'
         });
         
-        _log('✅ 状态同步请求已发送');
+        // 🔥 新增：触发UI历史消息刷新事件
+        _messageController.add({
+          'type': 'force_refresh_history',
+          'reason': 'connection_restored',
+          'timestamp': DateTime.now().toIso8601String(),
+          'data': {
+            'refresh_group_messages': true,
+            'refresh_private_messages': true,
+            'sync_limit': 50,
+          }
+        });
+        
+        _log('✅ 连接恢复同步请求已发送');
       }
     });
   }
@@ -437,6 +465,8 @@ class WebSocketManager {
     _stopConnectionHealthCheck();
     _stopMessageReceiveTest();
     _stopActiveSync();
+    // 🔥 新增：停止设备状态实时刷新
+    _stopDeviceStatusRefresh();
     
     if (_isManualDisconnect) {
       _setConnectionState(ConnectionState.disconnected);
@@ -608,8 +638,13 @@ class WebSocketManager {
     return false;
   }
 
-  /// 智能重连调度
+  /// 智能重连调度 - 防重复版本
   void _scheduleReconnect({bool isError = false}) {
+    if (_isReconnecting) {
+      _log('⚠️ 已在重连中，跳过重复重连请求');
+      return;
+    }
+    
     if (_reconnectAttempts >= AppConfig.MAX_RECONNECT_ATTEMPTS) {
       _log('❌ 达到最大重连次数(${AppConfig.MAX_RECONNECT_ATTEMPTS})，停止重连');
       _setConnectionState(ConnectionState.failed);
@@ -621,6 +656,7 @@ class WebSocketManager {
     final delay = AppConfig.RECONNECT_DELAYS[delayIndex];
     
     _reconnectAttempts++;
+    _isReconnecting = true; // 🔥 设置重连锁
     
     _log('⏰ 安排${delay}秒后进行第${_reconnectAttempts}次重连 (${isError ? "错误重连" : "正常重连"})');
     
@@ -632,7 +668,10 @@ class WebSocketManager {
 
   /// 尝试重连
   Future<void> _attemptReconnect() async {
-    if (_isManualDisconnect) return;
+    if (_isManualDisconnect) {
+      _isReconnecting = false; // 🔥 释放重连锁
+      return;
+    }
     
     _log('🔄 开始第${_reconnectAttempts}次重连... (${_reconnectAttempts}/${AppConfig.MAX_RECONNECT_ATTEMPTS})');
     
@@ -650,8 +689,11 @@ class WebSocketManager {
       // 重新创建连接
       await _createSocketConnection();
       
+      // 🔥 连接成功，重连锁将在_onConnectionEstablished中释放
+      
     } catch (e) {
       _log('❌ 重连失败: $e');
+      _isReconnecting = false; // 🔥 释放重连锁
       _scheduleReconnect(isError: true);
     }
   }
@@ -744,7 +786,7 @@ class WebSocketManager {
     if (_socket?.connected == true) {
       // 重新订阅消息流
       _log('📡 重新订阅消息流...');
-      _performFullStateSync();
+      _performEnhancedSync();
       
       // 检查连接状态
       _socket?.emit('connection_health_check', {
@@ -872,7 +914,7 @@ class WebSocketManager {
       });
       
       // 重新请求状态同步
-      _performFullStateSync();
+      _performEnhancedSync();
       
       _log('✅ 事件监听器已安全刷新');
     }
@@ -932,10 +974,10 @@ class WebSocketManager {
 
   /// 监控网络状态
   void _monitorNetwork() {
-    if (!isConnected) {
+    if (!isConnected && !_isReconnecting) {
       _log('🔍 检查网络状态恢复...');
       _checkNetworkConnectivity().then((isAvailable) {
-        if (isAvailable && !_isManualDisconnect && _connectionState != ConnectionState.connecting) {
+        if (isAvailable && !_isManualDisconnect && !_isReconnecting && _connectionState != ConnectionState.connecting) {
           _log('📶 网络已恢复，尝试重连...');
           _reconnectAttempts = 0; // 重置重连计数
           _attemptReconnect();
@@ -946,6 +988,11 @@ class WebSocketManager {
 
   /// 强制重连
   void _forceReconnect() {
+    if (_isReconnecting) {
+      _log('⚠️ 已在重连中，跳过强制重连请求');
+      return;
+    }
+    
     _log('🔄 执行强制重连...');
     
     _cleanupSocket();
@@ -972,6 +1019,8 @@ class WebSocketManager {
     _stopConnectionHealthCheck();
     _stopMessageReceiveTest();
     _stopActiveSync();
+    // 🔥 新增：停止设备状态实时刷新
+    _stopDeviceStatusRefresh();
   }
 
   /// 设置连接状态
@@ -1021,6 +1070,7 @@ class WebSocketManager {
   void disconnect() {
     _log('🔌 手动断开WebSocket连接');
     _isManualDisconnect = true;
+    _isReconnecting = false; // 🔥 重置重连锁
     _stopAllTimers();
     _stopNetworkMonitoring();
     _cleanupSocket();
@@ -1038,6 +1088,7 @@ class WebSocketManager {
     disconnect();
     await Future.delayed(Duration(milliseconds: 500));
     _isManualDisconnect = false;
+    _isReconnecting = false; // 🔥 重置重连锁
     _reconnectAttempts = 0;
     return await initialize(deviceId: _deviceId!, token: _token!);
   }
@@ -1350,6 +1401,36 @@ class WebSocketManager {
         'timestamp': DateTime.now().toIso8601String(),
         'include_all_conversations': true,
       });
+    }
+  }
+
+  /// 🔥 新增：启动设备状态实时刷新
+  void _startDeviceStatusRefresh() {
+    _stopDeviceStatusRefresh();
+    
+    _deviceStatusRefreshTimer = Timer.periodic(Duration(milliseconds: AppConfig.INSTANT_STATUS_UPDATE_INTERVAL), (_) {
+      _performDeviceStatusRefresh();
+    });
+  }
+  
+  /// 🔥 新增：停止设备状态实时刷新
+  void _stopDeviceStatusRefresh() {
+    _deviceStatusRefreshTimer?.cancel();
+    _deviceStatusRefreshTimer = null;
+  }
+  
+  /// 🔥 新增：执行设备状态实时刷新
+  void _performDeviceStatusRefresh() {
+    if (_socket?.connected == true) {
+      _log('🔄 执行设备状态实时刷新...');
+      
+      // 主动请求设备状态
+      _socket?.emit('request_group_devices_status', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'device_status_refresh',
+      });
+      
+      _log('✅ 设备状态实时刷新请求已发送');
     }
   }
 } 

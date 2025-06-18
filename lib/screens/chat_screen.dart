@@ -22,10 +22,22 @@ import 'package:path/path.dart' as path;
 import 'package:open_filex/open_filex.dart';
 import 'dart:math' as math;
 import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:video_player/video_player.dart';
 import '../services/device_auth_service.dart';
 import '../services/enhanced_sync_manager.dart'; // 🔥 新增导入
-import '../services/websocket_manager.dart' as ws_manager; // 🔥 新增导入
 import 'package:provider/provider.dart'; // 🔥 新增导入
+import 'package:gal/gal.dart'; // 🔥 新增：相册保存功能
+import 'package:desktop_drop/desktop_drop.dart'; // 🔥 新增：桌面端拖拽支持
+import 'package:cross_file/cross_file.dart'; // 🔥 新增：XFile支持
+import 'package:super_clipboard/super_clipboard.dart'; // 🔥 新增：剪贴板文件支持（只在桌面端使用）
+
+// 🔥 条件导入：只在非移动端导入 super_clipboard
+import 'package:super_clipboard/super_clipboard.dart' if (dart.library.js) 'dart:html' show SystemClipboard, Formats;
+
+// 🔥 新增：桌面端右键菜单支持
+import 'package:context_menus/context_menus.dart';
+
+import '../services/websocket_manager.dart' as ws_manager; // 🔥 修复：使用别名避免命名冲突
 
 // 文件下载处理器类
 class FileDownloadHandler {
@@ -123,7 +135,7 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, WidgetsBindingObserver {
+class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<Map<String, dynamic>> _messages = [];
@@ -139,13 +151,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
   // 🔥 新增：EnhancedSyncManager的UI更新监听
   StreamSubscription? _syncUIUpdateSubscription;
   
-  // 🔥 新增：网络状态监听
-  StreamSubscription? _networkStatusSubscription;
-  
-  // 🔥 新增：APP状态跟踪
-  AppLifecycleState? _lastAppLifecycleState;
-  bool _wasInBackground = false;
-  
   // 长按消息功能相关
   final MessageActionsService _messageActionsService = MessageActionsService();
   final MultiSelectController _multiSelectController = MultiSelectController();
@@ -153,6 +158,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
   // 消息处理相关
   final Set<String> _processedMessageIds = <String>{}; // 防止重复处理
   bool _isInitialLoad = true;
+  bool _hasScrolledToBottom = false; // 🔥 新增：标记是否已滚动到底部
   
   // 🔥 关键修复：添加消息ID清理机制，防止内存泄漏和阻止同步
   Timer? _messageIdCleanupTimer;
@@ -183,6 +189,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
   static const String _fileHashCachePrefix = 'file_hash_cache_';
   static const String _fileMetadataCachePrefix = 'file_metadata_cache_';
 
+  // 🔥 新增：输入框文件预览功能
+  final List<Map<String, dynamic>> _pendingFiles = []; // 待发送的文件列表
+  bool _showFilePreview = false; // 是否显示文件预览
+
   // 判断是否为桌面端
   bool _isDesktop() {
     if (kIsWeb) {
@@ -193,117 +203,318 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
            defaultTargetPlatform == TargetPlatform.linux;
   }
 
+  // 🔥 新增：WebSocket连接状态监听
+  StreamSubscription? _connectionStateSubscription;
+  
+  // 🔥 新增：连接状态跟踪
+  bool _isWebSocketConnected = false;
+  bool _wasOfflineBeforeReconnect = false;
+  DateTime? _lastDisconnectTime;
+  
   @override
   void initState() {
     super.initState();
+    // 移除_multiSelectController的重复赋值，它已经在声明时初始化
+    _setupScrollListener();
     
-    // 🔥 关键新增：注册APP生命周期监听
-    WidgetsBinding.instance.addObserver(this);
+    // 🔥 增强：启动WebSocket连接状态监听
+    _setupWebSocketConnectionStateListener();
     
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _messageAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
+    // 🔥 修复：立即加载本地消息
+    _loadLocalMessages();
     
-    // 🔥 关键修复：设置当前群组ID到EnhancedSyncManager
-    final groupId = widget.conversation['groupData']?['id'] as String?;
-    if (groupId != null) {
-      EnhancedSyncManager().setCurrentGroupId(groupId);
-      print('📱 ChatScreen设置当前群组ID: $groupId');
-    }
-    
-    _initializeDio();
-    _loadFileCache();
-    _loadMessages();
-    _subscribeToChatMessages();
-    
-    // 🔥 关键修复：监听EnhancedSyncManager的UI更新事件
-    _subscribeToSyncUIUpdates();
-    
-    // 🔥 新增：监听网络状态变化
-    _subscribeToNetworkStatusChanges();
-    
-    // 🔥 关键修复：启动消息ID清理定时器
-    _startMessageIdCleanup();
-    
-    // 🔥 新增：启动连接健康检查
-    _startConnectionHealthCheck();
-    
-    // 启动时进行文件迁移
-    _migrateOldFilesOnStartup();
-    
-    // 🔥 紧急诊断：实时WebSocket状态监控
-    _startEmergencyDiagnostics();
+    // 延迟执行后台任务，避免阻塞UI
+    Future.delayed(Duration(milliseconds: 500), () {
+      if (mounted) {
+        _subscribeToChatMessages();
+        _syncLatestMessages();
+        _startConnectionHealthCheck();
+      }
+    });
   }
   
-  // 启动时迁移旧文件到永久存储
-  Future<void> _migrateOldFilesOnStartup() async {
-    try {
-      // 输出永久存储目录路径
-      final permanentPath = await _localStorage.getPermanentStoragePath();
-      print('=== 永久存储目录: $permanentPath ===');
+  // 🔥 新增：设置WebSocket连接状态监听
+  void _setupWebSocketConnectionStateListener() {
+    // 🔥 修复：通过WebSocketManager实例直接访问连接状态流
+    final wsManager = ws_manager.WebSocketManager();
+    _connectionStateSubscription = wsManager.onConnectionStateChanged.listen((state) {
+      if (!mounted) return;
       
-      await _localStorage.migrateOldFiles();
-      print('启动时文件迁移完成');
+      final isConnected = state == ws_manager.ConnectionState.connected;
+      
+      print('🔌 WebSocket连接状态变化: $state, 当前连接: $_isWebSocketConnected -> $isConnected');
+      
+      // 检测从断线到重连的状态变化
+      if (!_isWebSocketConnected && isConnected) {
+        // 从断线状态恢复到连接状态
+        print('🔄 检测到WebSocket重连成功，开始执行离线消息同步...');
+        _wasOfflineBeforeReconnect = true;
+        _handleWebSocketReconnected();
+      } else if (_isWebSocketConnected && !isConnected) {
+        // 从连接状态变为断线状态
+        print('⚠️ 检测到WebSocket断线，记录断线时间');
+        _lastDisconnectTime = DateTime.now();
+        _handleWebSocketDisconnected();
+      }
+      
+      _isWebSocketConnected = isConnected;
+      
+      // 更新UI状态
+      if (mounted) {
+        setState(() {
+          // 触发UI更新，显示连接状态
+        });
+      }
+    });
+  }
+  
+  // 🔥 新增：处理WebSocket重连成功
+  Future<void> _handleWebSocketReconnected() async {
+    print('✅ WebSocket重连成功，开始完整的离线消息同步...');
+    
+    try {
+      // 显示重连成功提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.wifi, color: Colors.white, size: 16),
+                SizedBox(width: 8),
+                Text('网络已恢复，正在同步消息...'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      
+      // 延迟1秒确保连接稳定后再同步
+      await Future.delayed(Duration(seconds: 1));
+      
+      // 执行完整的消息同步流程
+      await _performReconnectMessageSync();
+      
+      // 显示同步完成提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.sync, color: Colors.white, size: 16),
+                SizedBox(width: 8),
+                Text('✅ 消息同步完成'),
+              ],
+            ),
+            backgroundColor: Colors.blue,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+      
     } catch (e) {
-      print('启动时文件迁移失败: $e');
+      print('❌ WebSocket重连后消息同步失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.white, size: 16),
+                SizedBox(width: 8),
+                Text('消息同步失败: $e'),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
-
-  // 初始化Dio配置，添加认证头
-  void _initializeDio() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
+  
+  // 🔥 新增：处理WebSocket断线
+  void _handleWebSocketDisconnected() {
+    print('⚠️ WebSocket连接断开');
     
-    if (token != null) {
-      _dio.options.headers['Authorization'] = 'Bearer $token';
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.wifi_off, color: Colors.white, size: 16),
+              SizedBox(width: 8),
+              Text('网络连接中断，正在尝试重连...'),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+  
+  // 🔥 新增：执行重连后的消息同步
+  Future<void> _performReconnectMessageSync() async {
+    print('🔄 开始执行重连后的完整消息同步...');
+    
+    try {
+      // 第1步：重新加载本地消息，更新UI
+      print('📱 步骤1: 重新加载本地消息');
+      await _loadLocalMessages();
+      
+      // 第2步：通过HTTP API获取最新消息
+      print('🌐 步骤2: 通过HTTP API同步最新消息');
+      await _syncLatestMessages();
+      
+      // 第3步：请求WebSocket同步离线期间的消息
+      print('📡 步骤3: 请求WebSocket同步离线消息');
+      await _requestOfflineMessageSync();
+      
+      // 第4步：强制刷新当前对话消息
+      print('💬 步骤4: 强制刷新当前对话消息');
+      await _forceRefreshCurrentConversation();
+      
+      // 第5步：请求服务器推送任何遗漏的消息
+      print('🔔 步骤5: 请求服务器推送遗漏消息');
+      _requestMissedMessages();
+      
+      print('✅ 重连后消息同步流程完成');
+      
+    } catch (e) {
+      print('❌ 重连后消息同步失败: $e');
+      rethrow;
+    }
+  }
+  
+  // 🔥 新增：请求离线消息同步
+  Future<void> _requestOfflineMessageSync() async {
+    if (!_websocketService.isConnected) {
+      print('⚠️ WebSocket未连接，跳过离线消息同步');
+      return;
     }
     
-    _dio.options.headers['Content-Type'] = 'application/json';
-    // 🔥 优化：增加大文件传输的超时时间
-    _dio.options.connectTimeout = const Duration(seconds: 60); // 连接超时60秒
-    _dio.options.receiveTimeout = const Duration(minutes: 10); // 接收超时10分钟，支持大文件
-    _dio.options.sendTimeout = const Duration(minutes: 10); // 发送超时10分钟，支持大文件上传
+    try {
+      final since = _lastDisconnectTime?.toIso8601String() ?? 
+                   DateTime.now().subtract(Duration(hours: 1)).toIso8601String();
+      
+      print('📥 请求离线消息，断线时间: $since');
+      
+      // 请求离线期间的所有消息
+      _websocketService.emit('get_offline_messages', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'reconnect_sync',
+        'since': since,
+        'include_files': true,
+        'include_deleted': false,
+        'limit': 200,
+      });
+      
+      // 如果是群组对话，请求群组的历史消息
+      if (widget.conversation['type'] == 'group') {
+        final groupId = widget.conversation['groupData']?['id'];
+        if (groupId != null) {
+          _websocketService.emit('sync_group_messages', {
+            'groupId': groupId,
+            'timestamp': DateTime.now().toIso8601String(),
+            'reason': 'reconnect_sync',
+            'since': since,
+            'limit': 100,
+            'include_offline': true,
+          });
+        }
+      } else {
+        // 如果是私聊，请求私聊的历史消息
+        final deviceId = widget.conversation['deviceData']?['id'];
+        if (deviceId != null) {
+          _websocketService.emit('sync_private_messages', {
+            'targetDeviceId': deviceId,
+            'timestamp': DateTime.now().toIso8601String(),
+            'reason': 'reconnect_sync',
+            'since': since,
+            'limit': 100,
+            'include_offline': true,
+          });
+        }
+      }
+      
+      print('✅ 离线消息同步请求已发送');
+      
+    } catch (e) {
+      print('❌ 请求离线消息同步失败: $e');
+    }
+  }
+  
+  // 🔥 新增：强制刷新当前对话消息
+  Future<void> _forceRefreshCurrentConversation() async {
+    try {
+      print('💬 强制刷新当前对话消息...');
+      
+      List<Map<String, dynamic>> apiMessages = [];
+      
+      // 根据对话类型获取最新消息
+      if (widget.conversation['type'] == 'group') {
+        final groupId = widget.conversation['groupData']?['id'];
+        if (groupId != null) {
+          final result = await _chatService.getGroupMessages(groupId: groupId, limit: 100);
+          if (result['messages'] != null) {
+            apiMessages = List<Map<String, dynamic>>.from(result['messages']);
+          }
+        }
+      } else {
+        final deviceId = widget.conversation['deviceData']?['id'];
+        if (deviceId != null) {
+          final result = await _chatService.getPrivateMessages(targetDeviceId: deviceId, limit: 100);
+          if (result['messages'] != null) {
+            apiMessages = List<Map<String, dynamic>>.from(result['messages']);
+          }
+        }
+      }
+      
+      if (apiMessages.isNotEmpty) {
+        // 处理新获取的消息
+        await _processServerMessages(apiMessages);
+        print('✅ 当前对话消息刷新完成，获取到 ${apiMessages.length} 条消息');
+      } else {
+        print('📭 当前对话没有新消息');
+      }
+      
+    } catch (e) {
+      print('❌ 强制刷新当前对话消息失败: $e');
+    }
+  }
+  
+  // 🔥 新增：请求遗漏的消息
+  void _requestMissedMessages() {
+    if (!_websocketService.isConnected) return;
     
-    // 添加拦截器来确保每次请求都有最新的token
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final currentPrefs = await SharedPreferences.getInstance();
-        final currentToken = currentPrefs.getString('auth_token');
-        if (currentToken != null) {
-          options.headers['Authorization'] = 'Bearer $currentToken';
-        }
-        handler.next(options);
-      },
-      // 🔥 新增：添加响应拦截器，处理大文件下载的特殊情况
-      onResponse: (response, handler) {
-        // 记录大文件下载信息
-        if (response.data is List<int> && (response.data as List<int>).length > 10 * 1024 * 1024) {
-          print('大文件下载完成: ${(response.data as List<int>).length / (1024 * 1024)} MB');
-        }
-        handler.next(response);
-      },
-      onError: (error, handler) {
-        // 🔥 优化：大文件传输错误处理
-        if (error.type == DioExceptionType.receiveTimeout) {
-          print('大文件下载超时，建议检查网络连接');
-        } else if (error.type == DioExceptionType.sendTimeout) {
-          print('大文件上传超时，建议检查网络连接');
-        }
-        handler.next(error);
-      },
-    ));
+    try {
+      print('🔔 请求服务器推送任何遗漏的消息...');
+      
+      // 请求当前对话的最新消息
+      _websocketService.emit('get_recent_messages', {
+        'conversationId': widget.conversation['id'],
+        'limit': 50,
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'check_missed_messages'
+      });
+      
+      // 强制同步所有对话
+      _websocketService.emit('force_sync_all_conversations', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'reconnect_check_missed',
+        'sync_limit': 50,
+      });
+      
+      print('✅ 遗漏消息检查请求已发送');
+      
+    } catch (e) {
+      print('❌ 请求遗漏消息失败: $e');
+    }
   }
 
   @override
   void dispose() {
-    // 🔥 关键新增：移除APP生命周期监听
-    WidgetsBinding.instance.removeObserver(this);
-    
     _messageController.dispose();
     _scrollController.dispose();
     _animationController.dispose();
@@ -314,183 +525,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
     _syncUIUpdateSubscription?.cancel();
     _messageIdCleanupTimer?.cancel();
     _connectionHealthTimer?.cancel();
-    _networkStatusSubscription?.cancel(); // 🔥 新增：清理网络状态订阅
+    
+    // 🔥 新增：清理WebSocket连接状态订阅
+    _connectionStateSubscription?.cancel();
     
     super.dispose();
-  }
-
-  // 🔥 关键修复：禁用ChatScreen的应用生命周期监听，避免与main.dart冲突
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    
-    print('📱 ChatScreen APP生命周期状态变化: ${_lastAppLifecycleState} -> $state (已禁用同步)');
-    
-    // 🔥 关键修复：禁用ChatScreen中的后台恢复同步逻辑
-    // 所有后台恢复同步现在由main.dart统一处理，避免重复触发
-    
-    switch (state) {
-      case AppLifecycleState.resumed:
-        // 🔥 只记录状态变化，不触发同步
-        print('📱 ChatScreen: APP从后台恢复到前台 (同步由主程序处理)');
-        _wasInBackground = false;
-        // 移除了 _performFullMessageSyncOnAppResume() 调用
-        break;
-        
-      case AppLifecycleState.paused:
-        // APP进入后台
-        print('📱 ChatScreen: APP进入后台');
-        _wasInBackground = true;
-        break;
-        
-      case AppLifecycleState.detached:
-        // APP被系统杀死
-        print('📱 ChatScreen: APP被系统终止');
-        break;
-        
-      case AppLifecycleState.hidden:
-        // APP被隐藏
-        print('📱 ChatScreen: APP被隐藏');
-        _wasInBackground = true;
-        break;
-        
-      case AppLifecycleState.inactive:
-        // APP处于非活跃状态
-        print('📱 ChatScreen: APP处于非活跃状态');
-        break;
-    }
-    
-    _lastAppLifecycleState = state;
-  }
-
-  // 🔥 已禁用：订阅网络状态变化（现在由main.dart统一处理）
-  void _subscribeToNetworkStatusChanges() {
-    // 🔥 禁用ChatScreen的网络状态监听，防止重复处理
-    print('⚠️ ChatScreen网络状态监听已禁用，由主程序统一处理');
-    return;
-    
-    /*
-    final wsManager = ws_manager.WebSocketManager();
-    
-    _networkStatusSubscription = wsManager.onNetworkStatusChanged.listen((networkStatus) {
-      print('📶 网络状态变化: $networkStatus');
-      
-      // 🔥 关键：检测离线→在线状态变化
-      if (networkStatus == ws_manager.NetworkStatus.available) {
-        print('🌐 网络恢复可用，执行完整消息同步...');
-        _performFullMessageSyncOnNetworkRestore();
-      }
-    });
-    */
-  }
-
-  // 🔥 已禁用：APP从后台恢复时的完整消息同步（现在由main.dart统一处理）
-  Future<void> _performFullMessageSyncOnAppResume_DISABLED() async {
-    // 🔥 此方法已禁用，防止与main.dart中的同步逻辑冲突
-    print('⚠️ ChatScreen后台恢复同步已禁用，由主程序统一处理');
-    return;
-    
-    /*
-    if (!mounted) return;
-    
-    print('🔄 开始APP后台恢复的完整消息同步流程...');
-    
-    try {
-      // 🔥 步骤1：重置初始加载状态，模拟首次登录
-      _isInitialLoad = true;
-      
-      // 🔥 步骤2：清空本地消息ID集合，允许重新检查
-      _localMessageIds.clear();
-      
-      // 🔥 步骤3：执行完整的消息加载流程（和首次登录完全一样）
-      await _loadMessages();
-      
-      // 🔥 步骤4：强制WebSocket重连并同步
-      if (!_websocketService.isConnected) {
-        print('🔄 WebSocket未连接，尝试重连...');
-        await _websocketService.connect();
-      }
-      
-      // 🔥 步骤5：请求实时同步
-      _requestWebSocketRealTimeSync();
-      
-      // 🔥 步骤6：刷新设备状态
-      _websocketService.refreshDeviceStatus();
-      
-      print('✅ APP后台恢复的完整消息同步完成');
-      
-      // 显示恢复提示
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('📱 应用已从后台恢复，消息已同步'),
-            duration: Duration(seconds: 2),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-      
-    } catch (e) {
-      print('❌ APP后台恢复消息同步失败: $e');
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('⚠️ 消息同步失败，请检查网络连接'),
-            duration: Duration(seconds: 3),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    }
-    */
-  }
-
-  // 🔥 已禁用：网络恢复时的完整消息同步（现在由main.dart统一处理）
-  Future<void> _performFullMessageSyncOnNetworkRestore_DISABLED() async {
-    // 🔥 此方法已禁用，防止与main.dart中的同步逻辑冲突
-    print('⚠️ ChatScreen网络恢复同步已禁用，由主程序统一处理');
-    return;
-    
-    /*
-    if (!mounted) return;
-    
-    // 避免重复执行（如果APP刚从后台恢复，已经执行过同步）
-    if (_lastAppLifecycleState == AppLifecycleState.resumed && 
-        DateTime.now().difference(_lastMessageReceivedTime ?? DateTime.now()).inSeconds < 10) {
-      print('🔄 最近已执行过同步，跳过网络恢复同步');
-      return;
-    }
-    
-    print('🔄 开始网络恢复的完整消息同步流程...');
-    
-    try {
-      // 🔥 步骤1：重置初始加载状态，模拟首次登录
-      _isInitialLoad = true;
-      
-      // 🔥 步骤2：执行完整的消息加载流程（和首次登录完全一样）
-      await _loadMessages();
-      
-      // 🔥 步骤3：WebSocket重连后同步
-      await _performWebSocketReconnectSync();
-      
-      print('✅ 网络恢复的完整消息同步完成');
-      
-      // 显示恢复提示
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('🌐 网络已恢复，消息已同步'),
-            duration: Duration(seconds: 2),
-            backgroundColor: Colors.blue,
-          ),
-        );
-      }
-      
-    } catch (e) {
-      print('❌ 网络恢复消息同步失败: $e');
-    }
-    */
   }
   
   // 🔥 关键修复：启动消息ID清理定时器
@@ -560,9 +599,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
         _hasWebSocketIssue = false;
       }
     }
+    
+    // 🔥 新增：检测到重连后立即同步历史消息
+    if (_websocketService.isConnected && _hasWebSocketIssue) {
+      print('🔄 检测到WebSocket重连，立即执行历史消息同步...');
+      _hasWebSocketIssue = false;
+      _performWebSocketReconnectSync();
+    }
   }
   
-  // 🔥 新增：尝试WebSocket恢复
+  // 🔥 修复：简化WebSocket恢复逻辑，避免重复重连
   void _attemptWebSocketRecovery() {
     print('🔄 尝试恢复WebSocket连接...');
     
@@ -570,66 +616,72 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
     _chatMessageSubscription?.cancel();
     _subscribeToChatMessages();
     
-    // 通知WebSocket服务进行健康检查
-    if (!_websocketService.isConnected) {
-      print('🔄 WebSocket未连接，尝试重连...');
-      _websocketService.connect().then((_) {
-        // 🔥 关键修复：WebSocket重连成功后，立即拉取消息，就像首次登录一样
-        print('✅ WebSocket重连成功，开始同步历史消息...');
-        _performWebSocketReconnectSync();
-      }).catchError((e) {
-        print('WebSocket重连失败: $e');
-      });
-    } else {
-      // 🔥 即使已连接，也要执行同步
-      print('🔄 WebSocket已连接，执行重连后同步...');
+    // 🔥 修复：不再主动触发重连，让WebSocketManager自己处理
+    // 只负责在连接可用时执行同步
+    if (_websocketService.isConnected) {
+      print('🔄 WebSocket已连接，执行恢复后同步...');
       _performWebSocketReconnectSync();
+    } else {
+      print('⚠️ WebSocket未连接，等待WebSocketManager自动重连后再同步');
+      // 不再手动调用connect()，避免与WebSocketManager的重连逻辑冲突
     }
   }
 
-  // 🔥 新增：WebSocket重连后的完整同步，借鉴首次登录逻辑
+
+
+  // 🔥 WebSocket重连后的完整登录流程同步
   Future<void> _performWebSocketReconnectSync() async {
-    print('🔄 WebSocket重连后同步开始...');
+    print('🔄 WebSocket重连后开始完整登录流程同步...');
     
     try {
-      // 🔥 步骤1：立即重新加载本地消息，刷新UI
-      print('📱 重新加载本地消息...');
+      // 🔥 步骤1：立即重新加载本地消息，刷新UI（就像首次登录）
+      print('📱 步骤1：重新加载本地消息...');
       await _loadLocalMessages();
       
-      // 🔥 步骤2：等待UI更新后，开始后台同步（借鉴首次登录的逻辑）
+      // 🔥 步骤2：等待UI更新后，开始完整的后台同步
       await Future.delayed(Duration(milliseconds: 500));
       
-      // 🔥 步骤3：使用HTTP API拉取最新消息（和首次登录完全一样的逻辑）
-      print('🌐 通过HTTP API同步最新消息...');
+      // 🔥 步骤3：使用HTTP API拉取最新消息（完全模拟首次登录的拉取逻辑）
+      print('🌐 步骤3：通过HTTP API同步最新消息（模拟首次登录）...');
       await _syncLatestMessages();
       
-      // 🔥 步骤4：通过WebSocket请求实时同步
-      print('📡 请求WebSocket实时同步...');
-      _requestWebSocketRealTimeSync();
+      // 🔥 步骤4：等待HTTP同步完成后，再进行WebSocket实时同步
+      await Future.delayed(Duration(milliseconds: 1000));
       
-      // 🔥 步骤5：刷新设备状态
-      print('📱 刷新设备状态...');
+      // 🔥 步骤5：通过WebSocket请求完整的实时同步（就像首次登录后的实时同步）
+      print('📡 步骤5：请求WebSocket完整实时同步...');
+      _requestWebSocketCompleteSync();
+      
+      // 🔥 步骤6：刷新设备状态和在线列表
+      print('📱 步骤6：刷新设备状态...');
       _websocketService.refreshDeviceStatus();
       
-      print('✅ WebSocket重连后同步完成');
+      // 🔥 步骤7：强制刷新整个聊天界面
+      print('🔄 步骤7：强制刷新聊天界面...');
+      await _forceRefreshChatMessages();
+      
+      print('✅ WebSocket重连后完整登录流程同步完成');
       
     } catch (e) {
-      print('❌ WebSocket重连后同步失败: $e');
+      print('❌ WebSocket重连后完整登录流程同步失败: $e');
     }
   }
 
-  // 🔥 新增：请求WebSocket实时同步
-  void _requestWebSocketRealTimeSync() {
+  // 🔥 新增：请求WebSocket完整同步（模拟首次登录后的同步）
+  void _requestWebSocketCompleteSync() {
     if (_websocketService.isConnected) {
+      print('📡 开始WebSocket完整同步请求...');
+      
       // 请求当前对话的最新消息
       if (widget.conversation['type'] == 'group') {
         final groupId = widget.conversation['groupData']?['id'];
         if (groupId != null) {
           _websocketService.emit('sync_group_messages', {
             'groupId': groupId,
-            'limit': 50,
+            'limit': 100, // 增加限制，模拟首次登录
             'timestamp': DateTime.now().toIso8601String(),
-            'reason': 'websocket_reconnect'
+            'reason': 'login_sync_reconnect',
+            'include_offline': true,
           });
         }
       } else {
@@ -637,19 +689,56 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
         if (deviceId != null) {
           _websocketService.emit('sync_private_messages', {
             'targetDeviceId': deviceId,
-            'limit': 50,
+            'limit': 100, // 增加限制，模拟首次登录
             'timestamp': DateTime.now().toIso8601String(),
-            'reason': 'websocket_reconnect'
+            'reason': 'login_sync_reconnect',
+            'include_offline': true,
           });
         }
       }
       
-      // 请求离线期间的消息
+      // 请求所有离线期间的消息
       _websocketService.emit('get_offline_messages', {
         'timestamp': DateTime.now().toIso8601String(),
-        'reason': 'websocket_reconnect',
-        'include_files': true
+        'reason': 'login_sync_reconnect',
+        'include_files': true,
+        'include_deleted': false,
+        'limit': 200, // 增加限制，模拟首次登录
       });
+      
+      // 请求所有对话的同步
+      _websocketService.emit('force_sync_all_conversations', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'login_sync_reconnect',
+        'sync_limit': 100,
+      });
+      
+      print('✅ WebSocket完整同步请求已发送');
+    }
+  }
+  
+  // 🔥 新增：强制刷新聊天消息
+  Future<void> _forceRefreshChatMessages() async {
+    print('🔄 强制刷新聊天消息...');
+    
+    try {
+      // 重新从本地存储加载消息
+      await _refreshMessagesFromStorage();
+      
+      // 强制重新构建UI
+      if (mounted) {
+        setState(() {
+          // 触发UI重建
+        });
+        
+        // 🔥 修复：移除强制刷新后的自动滚动，保持用户当前阅读位置
+        // await Future.delayed(Duration(milliseconds: 300));
+        // _scrollToBottom();
+      }
+      
+      print('✅ 聊天消息强制刷新完成');
+    } catch (e) {
+      print('❌ 强制刷新聊天消息失败: $e');
     }
   }
 
@@ -722,13 +811,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
       return;
     }
 
-    // 🔥 关键修复：检查消息是否已处理，如果已处理则直接返回
+    // 🔥 统一去重机制：仅检查消息ID是否已处理
     if (_processedMessageIds.contains(messageId)) {
-      print('消息已处理过，跳过: $messageId');
-      return; // 防止重复处理
+      print('消息ID已处理过，跳过: $messageId');
+      return;
     }
     
-    // 🔥 关键修复：立即标记消息已处理并记录时间戳（只标记一次）
+    // 🔥 立即标记消息ID已处理
     _processedMessageIds.add(messageId);
     _messageIdTimestamps[messageId] = DateTime.now();
     
@@ -751,45 +840,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
     
     print('收到消息: ID=$messageId, 文件消息=$isFileMessage, 内容=${content ?? fileName}');
     
-    // 如果是文件消息，记录日志即可
-    if (isFileMessage && fileName != null) {
-      print('接收文件消息: $fileName, 大小: ${fileSize ?? 0} bytes, ID: $messageId');
-    } else if (!isFileMessage && content != null && content.trim().isNotEmpty) {
-      // 如果是文本消息，进行基于内容的去重检查
-      final sourceDeviceId = message['sourceDeviceId'];
-      final messageTime = DateTime.tryParse(message['createdAt'] ?? '') ?? DateTime.now();
-      
-      // 检查是否已有相同内容和发送者的消息
-      final duplicateTextMessage = _messages.any((existingMsg) {
-        if (existingMsg['fileType'] != null) return false; // 不是文本消息
-        if (existingMsg['text'] != content) return false; // 内容不同
-        if (existingMsg['sourceDeviceId'] != sourceDeviceId) return false; // 发送者不同
-        
-        // 检查时间窗口（5秒内认为是重复）
-        try {
-          final existingTime = DateTime.parse(existingMsg['timestamp']);
-          final timeDiff = (messageTime.millisecondsSinceEpoch - existingTime.millisecondsSinceEpoch).abs();
-          return timeDiff < 5000; // 5秒内
-        } catch (e) {
-          print('文本消息时间比较失败: $e');
-          return false; // 时间解析失败时不认为重复
-        }
-      });
-    
-      if (duplicateTextMessage) {
-        print('发现重复文本消息（相同内容+发送者+5秒窗口），跳过添加: $content');
-        // 🔥 关键修复：重复文本消息不需要移除ID标记，因为已经在开头标记了
-        return;
-      }
-    }
-
-    // 🔥 重要修复：移除重复的标记代码，避免重复添加到_processedMessageIds
-    // 消息ID已经在方法开始时标记过了
-    
-    // 添加消息到界面
+    // 添加消息到界面（去除所有额外的重复检查）
     _addMessageToChat(message, false);
     
-    // 发送已接收回执（只发送一次）
+    // 发送已接收回执
     _websocketService.sendMessageReceived(messageId);
     
     print('成功处理消息: $messageId, 类型: ${isFileMessage ? "文件" : "文本"}');
@@ -1011,7 +1065,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
       
       // 保存到本地
       await _saveMessages();
-      _scrollToBottom();
+      // 🔥 修复：移除WebSocket同步后的自动滚动，避免打断用户阅读
+      // _scrollToBottom();
       
       print('🎉 WebSocket同步完成: 新增${newMessages.length}条消息 ($syncType)');
     } else {
@@ -1090,8 +1145,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
           print('保存消息失败: $e');
         });
 
-        // 滚动到底部
-        _scrollToBottom();
+        // 🔥 修复：移除接收新消息后的自动滚动，避免打断用户阅读历史消息
+        // _scrollToBottom();
         
         print('消息已添加到界面: $messageId, isMe: $actualIsMe');
       }
@@ -1158,7 +1213,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
       });
       
         print('✅ 本地消息优先显示完成: ${_messages.length}条');
-      _scrollToBottom();
+        // 🔥 修复：使用新的滚动机制，避免与build方法中的滚动冲突
+        // _scrollToBottom(); // 已被新的滚动机制替代
 
         // 🔥 步骤3：等待500ms让UI稳定，再开始后台同步
         await Future.delayed(Duration(milliseconds: 500));
@@ -1269,16 +1325,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
       for (final serverMsg in convertedMessages) {
         final serverId = serverMsg['id'].toString();
         
-        // 🔥 检查消息ID是否已存在（最主要的去重检查）
+        // 🔥 统一的消息ID去重检查：只检查消息ID是否已存在
         if (_localMessageIds.contains(serverId)) {
-          print('🎯 消息ID已存在于本地消息集合，跳过: $serverId');
+          print('🎯 消息ID已存在于本地，跳过: $serverId');
           continue;
         }
         
-        // 🔥 双重检查：确认消息是否在当前显示列表中
+        // 🔥 检查当前显示列表
         final existsById = _messages.any((localMsg) => localMsg['id'].toString() == serverId);
         if (existsById) {
-          print('🎯 消息ID已存在于显示列表，跳过: $serverId');
+          print('🎯 消息ID已在显示列表，跳过: $serverId');
           continue;
         }
         
@@ -1288,26 +1344,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
           continue;
         }
             
-        // 🔥 彻底简化：完全基于消息ID的重复检测
-        // 消息ID是服务器生成的唯一标识符，这是最可靠的去重方法
-        if (serverId.isNotEmpty) {
-          // 检查消息ID是否已存在
-          final isDuplicate = _messages.any((existingMsg) => existingMsg['id'] == serverId);
-          if (isDuplicate) {
-            // 静默跳过ID重复的消息，不打印日志避免刷屏
-            continue;
-          }
-        }
-        
-        // 🔥 完全移除内容级别的重复检测
-        // 只要消息ID不重复，就认为是新消息，确保不会误判任何有效消息
-        
-        // 通过检查，添加到新消息列表
+        // 通过ID检查，添加到新消息列表
         newMessages.add(serverMsg);
-        // 🔥 关键修复：标记为已处理并记录时间戳，防止后续WebSocket实时消息重复
+        // 🔥 标记消息ID已处理
         _processedMessageIds.add(serverId);
         _messageIdTimestamps[serverId] = DateTime.now();
-        // 🔥 关键：同时添加到本地消息ID集合
         _localMessageIds.add(serverId);
       }
 
@@ -1337,7 +1378,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
         
         // 保存更新后的消息到本地
         await _saveMessages();
-        _scrollToBottom();
+        // 🔥 修复：移除后台同步后的自动滚动，避免打断用户阅读
+        // _scrollToBottom();
         
         print('🎉 后台同步成功：新增${newMessages.length}条来自其他设备的消息');
       } else {
@@ -1466,7 +1508,18 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
           await _saveMessages();
         }
         
-        _scrollToBottom();
+        // 🔥 修复：消息加载完成后，确保能滚动到底部
+        print('📱 本地消息加载完成，消息数量: ${_messages.length}');
+        if (_messages.isNotEmpty && !_hasScrolledToBottom) {
+          // 延迟一点确保setState完成
+          Future.delayed(Duration(milliseconds: 100), () {
+            if (mounted && !_hasScrolledToBottom) {
+              print('🔄 消息加载完成后执行滚动');
+              _hasScrolledToBottom = true;
+              _scrollToBottomWithRetry();
+            }
+          });
+        }
       }
     } catch (e) {
       print('加载本地消息失败: $e');
@@ -1479,13 +1532,95 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
           setState(() {
             _messages = messagesList.map((msg) => Map<String, dynamic>.from(msg)).toList();
           });
-          _scrollToBottom();
+          
+          // 🔥 修复：兼容模式消息加载完成后，确保能滚动到底部
+          print('📱 兼容模式消息加载完成，消息数量: ${_messages.length}');
+          if (_messages.isNotEmpty && !_hasScrolledToBottom) {
+            // 延迟一点确保setState完成
+            Future.delayed(Duration(milliseconds: 100), () {
+              if (mounted && !_hasScrolledToBottom) {
+                print('🔄 兼容模式消息加载完成后执行滚动');
+                _hasScrolledToBottom = true;
+                _scrollToBottomWithRetry();
+              }
+            });
+          }
           
           // 迁移到新存储
           await _localStorage.saveChatMessages(chatId, _messages);
         }
       } catch (legacyError) {
         print('兼容旧版本存储也失败: $legacyError');
+      }
+    }
+  }
+
+  // 🔥 新增：带重试机制的滚动到底部方法
+  Future<void> _scrollToBottomWithRetry({int maxRetries = 6}) async {
+    print('🔄 开始滚动到底部，消息数量: ${_messages.length}');
+    
+    for (int i = 0; i < maxRetries; i++) {
+      try {
+        if (!mounted) {
+          print('❌ Widget已卸载，停止滚动尝试');
+          return;
+        }
+        
+        // 等待时间逐渐增加，确保ListView完全构建
+        final delayMs = [50, 150, 300, 500, 800, 1200][i];
+        await Future.delayed(Duration(milliseconds: delayMs));
+        
+        if (_scrollController.hasClients && mounted) {
+          final maxScrollExtent = _scrollController.position.maxScrollExtent;
+          final viewportDimension = _scrollController.position.viewportDimension;
+          print('📏 ScrollController - 最大滚动: $maxScrollExtent, 视口高度: $viewportDimension (尝试 ${i + 1}/$maxRetries)');
+          
+          // 如果没有可滚动的内容，说明内容还没有加载完成或者消息不够填满屏幕
+          if (maxScrollExtent <= 0) {
+            if (i < maxRetries - 1) {
+              print('⏳ 内容还未完全加载或消息不够填满屏幕，等待下次尝试...');
+              continue;
+            } else {
+              print('ℹ️ 消息不够填满屏幕，无需滚动');
+              return;
+            }
+          }
+          
+          // 🔥 修复：使用animateTo而不是jumpTo，确保滚动到真正的底部
+          await _scrollController.animateTo(
+            maxScrollExtent,
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+          
+          print('✅ 成功滚动到底部 (尝试 ${i + 1}/$maxRetries，位置: $maxScrollExtent)');
+          
+          // 验证是否真的滚动到了底部
+          await Future.delayed(Duration(milliseconds: 100));
+          if (_scrollController.hasClients) {
+            final currentPosition = _scrollController.position.pixels;
+            final actualMaxExtent = _scrollController.position.maxScrollExtent;
+            final isAtBottom = (currentPosition >= actualMaxExtent - 10); // 允许10像素误差
+            print('🔍 滚动验证 - 当前位置: $currentPosition, 最大位置: $actualMaxExtent, 是否在底部: $isAtBottom');
+            
+            if (isAtBottom) {
+              print('✅ 确认已滚动到底部');
+              return; // 真正成功
+            } else if (i < maxRetries - 1) {
+              print('⚠️ 未能滚动到底部，继续重试...');
+              continue;
+            }
+          }
+          
+          return; // 成功后退出
+        } else {
+          print('❌ ScrollController未绑定或Widget已卸载 (尝试 ${i + 1}/$maxRetries)');
+        }
+      } catch (e) {
+        print('❌ 滚动到底部失败 (尝试 ${i + 1}/$maxRetries): $e');
+        if (i == maxRetries - 1) {
+          print('⚠️ 达到最大重试次数，滚动到底部失败');
+        }
       }
     }
   }
@@ -1970,38 +2105,81 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
     Navigator.pop(context);
     
     try {
+      // 🔥 移动端支持多选文件
+      final bool allowMultiple = !_isDesktop(); // 移动端允许多选，桌面端单选（因为有拖拽功能）
+      
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: type,
-        allowMultiple: false,
+        allowMultiple: allowMultiple,
       );
 
-      if (result != null && result.files.single.path != null) {
-        final file = File(result.files.single.path!);
-        final fileName = result.files.single.name;
-        final fileType = _getMimeType(fileName);
+      if (result != null && result.files.isNotEmpty) {
+        // 🔥 处理多个选中的文件
+        int processedCount = 0;
+        int errorCount = 0;
         
-        // 🔥 新增：检查文件大小限制（100MB）
-        const int maxFileSize = 100 * 1024 * 1024; // 100MB
-        final fileSize = await file.length();
-        
-        if (fileSize > maxFileSize) {
-          // 文件超过100MB，显示错误提示
-          final fileSizeMB = (fileSize / (1024 * 1024)).toStringAsFixed(1);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('文件太大无法发送\n文件大小: ${fileSizeMB}MB\n最大允许: 100MB'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              duration: const Duration(seconds: 4),
-            ),
-          );
-          return; // 阻止上传
+        for (final fileData in result.files) {
+          if (fileData.path == null) {
+            errorCount++;
+            continue;
+          }
+          
+          final file = File(fileData.path!);
+          final fileName = fileData.name;
+          
+          // 🔥 检查文件大小限制（100MB）
+          const int maxFileSize = 100 * 1024 * 1024; // 100MB
+          final fileSize = fileData.size;
+          
+          if (fileSize > maxFileSize) {
+            // 文件超过100MB，显示错误提示但继续处理其他文件
+            final fileSizeMB = (fileSize / (1024 * 1024)).toStringAsFixed(1);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('文件 $fileName 太大无法发送\n文件大小: ${fileSizeMB}MB\n最大允许: 100MB'),
+                  backgroundColor: Colors.orange,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+            errorCount++;
+            continue;
+          }
+          
+          // 🔥 修改：移动端多选文件直接发送，无需预览步骤
+          final fileType = _getMimeType(fileName);
+          await _sendFileMessage(file, fileName, fileType);
+          processedCount++;
+          
+          // 添加短暂延迟避免发送过快
+          if (allowMultiple && processedCount < result.files.length) {
+            await Future.delayed(const Duration(milliseconds: 200));
+          }
         }
         
-        await _sendFileMessage(file, fileName, fileType);
+        // 🔥 显示处理结果
+        if (result.files.length > 1 && mounted) {
+          final successMessage = processedCount > 0 
+            ? '已发送 $processedCount 个文件'
+            : '没有文件可以发送';
+          
+          final statusMessage = errorCount > 0
+            ? '$successMessage (${errorCount}个文件有问题)'
+            : successMessage;
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(statusMessage),
+              backgroundColor: processedCount > 0 ? Colors.green : Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     } catch (e) {
       print('选择文件失败: $e');
@@ -2050,55 +2228,422 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
     return ListenableBuilder(
       listenable: _multiSelectController,
       builder: (context, child) {
-                    return GestureDetector(
-          onTap: () {
-            // 点击空白区域收起键盘
-            FocusScope.of(context).unfocus();
-          },
-          child: Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-                  body: Column(
-              children: [
+        // 🔥 桌面端拖拽支持
+        Widget scaffoldWidget = Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          // 🔥 彻底移除AppBar - 完全沉浸式聊天界面
+          body: Column(
+            children: [
               // 消息列表
-          Expanded(
-            child: _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppTheme.primaryColor,
-                  ),
-                )
-              : _messages.isEmpty
-                ? _buildEmptyState()
-                : Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ListView.builder(
-                      controller: _scrollController,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: _messages.length,
-                      itemBuilder: (context, index) {
-                        final message = _messages[index];
-                        return _buildMessageBubble(message);
-                      },
-                    ),
-                  ),
-          ),
-          
+              Expanded(
+                child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.primaryColor,
+                      ),
+                    )
+                  : _messages.isEmpty
+                    ? _buildEmptyState()
+                    : Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: _handleScrollNotification,
+                          child: GestureDetector(
+                            onPanUpdate: _handlePanUpdate,
+                            onPanEnd: _handlePanEnd,
+                            child: Stack(
+                              children: [
+                                Builder(
+                                  builder: (context) {
+                                    // 🔥 修复：确保ListView构建完成后滚动到底部
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      if (mounted && _messages.isNotEmpty && !_hasScrolledToBottom) {
+                                        print('🔄 执行首次滚动到底部，消息数量: ${_messages.length}');
+                                        _hasScrolledToBottom = true; // 标记已经滚动过
+                                        _scrollToBottomWithRetry();
+                                      }
+                                    });
+                                    
+                                    return ListView.builder(
+                                      controller: _scrollController,
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      itemCount: _messages.length,
+                                      itemBuilder: (context, index) {
+                                        final message = _messages[index];
+                                        return _buildMessageBubble(message);
+                                      },
+                                    );
+                                  },
+                                ),
+                                // 🔥 简洁的下拉刷新指示器 - 只在刷新时显示
+                                _buildPullToRefreshIndicator(),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+              
               // 多选模式工具栏
               if (_multiSelectController.isMultiSelectMode)
                 _buildMultiSelectToolbar(),
-          
-          // 输入区域
+              
+              // 输入区域
               if (!_multiSelectController.isMultiSelectMode)
-          _buildInputArea(),
-        ],
+                _buildInputArea(),
+                        ],
           ),
-        ),
-      );
+        );
+        
+        // 🔥 桌面端添加拖拽和粘贴支持
+        if (_isDesktop()) {
+          return DropTarget(
+            onDragDone: (detail) async {
+              print('🔥 拖拽文件到聊天界面: ${detail.files.length} 个文件');
+              await _handleDroppedFiles(detail.files);
+            },
+            onDragEntered: (detail) {
+              print('拖拽进入聊天界面');
+            },
+            onDragExited: (detail) {
+              print('拖拽离开聊天界面');
+            },
+            child: Focus(
+              onKey: (node, event) {
+                // 🔥 处理桌面端粘贴 (Ctrl+V 或 Cmd+V)
+                if (event is RawKeyDownEvent &&
+                    ((defaultTargetPlatform == TargetPlatform.macOS && event.isMetaPressed) ||
+                     (defaultTargetPlatform != TargetPlatform.macOS && event.isControlPressed)) &&
+                    event.logicalKey == LogicalKeyboardKey.keyV) {
+                  _handleClipboardPaste();
+                  return KeyEventResult.handled;
+                }
+                return KeyEventResult.ignored;
+              },
+              child: scaffoldWidget,
+            ),
+          );
+        }
+        
+        return scaffoldWidget;
       },
     );
   }
-  
+
+  // 🔥 新增：处理剪贴板粘贴（支持文本和文件）
+  Future<void> _handleClipboardPaste() async {
+    try {
+      // 🔥 桌面端使用 super_clipboard，移动端使用传统API
+      if (_isDesktop() && !kIsWeb) {
+        await _handleDesktopClipboardPaste();
+      } else {
+        await _handleMobileClipboardPaste();
+      }
+    } catch (e) {
+      print('❌ 剪贴板粘贴失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('粘贴失败: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  // 🔥 桌面端剪贴板处理（使用 super_clipboard）
+  Future<void> _handleDesktopClipboardPaste() async {
+    try {
+      final clipboard = SystemClipboard.instance;
+      if (clipboard != null) {
+        final reader = await clipboard.read();
+        
+        print('📋 检查桌面端剪贴板内容...');
+        
+        // 检查是否有文件URI
+        if (reader.canProvide(Formats.fileUri)) {
+          print('🔍 剪贴板包含文件，开始读取...');
+          try {
+            final fileUriData = await reader.readValue(Formats.fileUri);
+            if (fileUriData != null) {
+              print('📁 从剪贴板读取到文件URI: $fileUriData');
+              
+              // 处理文件URI字符串，可能是多个用换行分隔
+              final String uriString = fileUriData.toString();
+              final List<String> uriStrings = uriString.split('\n')
+                  .where((uri) => uri.trim().isNotEmpty)
+                  .toList();
+              
+              // 🔥 修复：处理多文件粘贴，确保所有文件都被处理
+              int processedCount = 0;
+              int errorCount = 0;
+              
+              for (final uriStr in uriStrings) {
+                try {
+                  final uri = Uri.parse(uriStr.trim());
+                  String filePath;
+                  
+                  // 处理不同格式的URI
+                  if (uri.scheme == 'file') {
+                    filePath = uri.toFilePath();
+                  } else if (uri.scheme.isEmpty) {
+                    // 可能是相对路径
+                    filePath = uriStr.trim();
+                  } else {
+                    print('❌ 不支持的URI格式: $uriStr');
+                    errorCount++;
+                    continue;
+                  }
+                  
+                  final file = File(filePath);
+                  
+                  if (await file.exists()) {
+                    final fileName = path.basename(filePath);
+                    final fileSize = await file.length();
+                    
+                    print('📄 处理粘贴文件 ${processedCount + 1}/${uriStrings.length}: $fileName (${fileSize} 字节)');
+                    
+                    // 检查文件大小限制 (100MB)
+                    if (fileSize > 100 * 1024 * 1024) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('文件 $fileName 太大，请选择小于100MB的文件'),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                      }
+                      errorCount++;
+                      continue;
+                    }
+                    
+                    // 将文件添加到预览列表
+                    await _addFileToPreview(file, fileName, fileSize);
+                    processedCount++;
+                  } else {
+                    print('❌ 文件不存在: $filePath');
+                    errorCount++;
+                  }
+                } catch (e) {
+                  print('❌ 处理文件URI失败: $uriStr, 错误: $e');
+                  errorCount++;
+                  continue;
+                }
+              }
+              
+              // 🔥 新增：显示处理结果统计
+              if (uriStrings.isNotEmpty && mounted) {
+                final successMessage = processedCount > 0 
+                  ? '已添加 $processedCount 个文件到预览'
+                  : '没有文件可以添加';
+                
+                final statusMessage = errorCount > 0
+                  ? '$successMessage (${errorCount}个文件有问题)'
+                  : successMessage;
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(statusMessage),
+                    backgroundColor: processedCount > 0 ? Colors.green : Colors.orange,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+                
+                // 🔥 修复：如果有文件被处理，则不继续处理文本
+                if (processedCount > 0) {
+                  return;
+                }
+              }
+            }
+          } catch (e) {
+            print('❌ 读取剪贴板文件失败: $e');
+          }
+        }
+        
+        // 如果没有文件，尝试读取文本
+        if (reader.canProvide(Formats.plainText)) {
+          try {
+            final text = await reader.readValue(Formats.plainText);
+            if (text != null && text.isNotEmpty) {
+              _messageController.text = _messageController.text + text;
+              setState(() {
+                _isTyping = _messageController.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
+              });
+              print('✅ 粘贴文本到输入框: ${text.length} 个字符');
+              return;
+            }
+          } catch (e) {
+            print('❌ 读取剪贴板文本失败: $e');
+          }
+        }
+      }
+      
+      // 兜底：使用传统的剪贴板API
+      await _handleMobileClipboardPaste();
+      
+    } catch (e) {
+      print('❌ 桌面端剪贴板处理失败: $e');
+      // 兜底到移动端处理
+      await _handleMobileClipboardPaste();
+    }
+  }
+
+  // 🔥 移动端剪贴板处理（传统API，只支持文本）
+  Future<void> _handleMobileClipboardPaste() async {
+    try {
+      print('📋 检查移动端剪贴板内容...');
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      if (data?.text != null && data!.text!.isNotEmpty) {
+        _messageController.text = _messageController.text + data.text!;
+        setState(() {
+          _isTyping = _messageController.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
+        });
+        print('✅ 粘贴文本到输入框: ${data.text!.length} 个字符');
+      }
+    } catch (e) {
+      print('❌ 移动端剪贴板处理失败: $e');
+    }
+  }
+
+  // 🔥 新增：处理拖拽的文件（添加到输入框预览）
+  Future<void> _handleDroppedFiles(List<XFile> files) async {
+    if (files.isEmpty) return;
+    
+    try {
+      for (final file in files) {
+        print('📁 处理拖拽文件: ${file.name} (${file.path})');
+        
+        // 检查文件是否存在
+        final fileObj = File(file.path);
+        if (!await fileObj.exists()) {
+          print('❌ 文件不存在: ${file.path}');
+          continue;
+        }
+        
+        // 获取文件大小
+        final fileStat = await fileObj.stat();
+        final fileSize = fileStat.size;
+        
+        // 检查文件大小限制 (100MB)
+        if (fileSize > 100 * 1024 * 1024) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('文件 ${file.name} 太大，请选择小于100MB的文件'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          continue;
+        }
+        
+        // 🔥 将文件添加到预览列表
+        await _addFileToPreview(fileObj, file.name, fileSize);
+      }
+    } catch (e) {
+      print('❌ 拖拽文件处理失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('文件处理失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // 🔥 新增：将文件添加到预览列表
+  Future<void> _addFileToPreview(File file, String fileName, int fileSize) async {
+    final fileType = _getFileType(fileName);
+    
+    final fileInfo = {
+      'file': file,
+      'name': fileName,
+      'size': fileSize,
+      'type': fileType,
+      'path': file.path,
+      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+    };
+    
+    // 如果是图片，生成缩略图
+    if (fileType == 'image') {
+      try {
+        final bytes = await file.readAsBytes();
+        fileInfo['thumbnail'] = bytes;
+      } catch (e) {
+        print('❌ 生成图片缩略图失败: $e');
+      }
+    }
+    
+    setState(() {
+      _pendingFiles.add(fileInfo);
+      _showFilePreview = true;
+      _isTyping = _messageController.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
+    });
+    
+    print('✅ 文件已添加到预览: $fileName');
+  }
+
+  // 🔥 新增：从预览列表移除文件
+  void _removeFileFromPreview(String fileId) {
+    setState(() {
+      _pendingFiles.removeWhere((file) => file['id'] == fileId);
+      _showFilePreview = _pendingFiles.isNotEmpty;
+      _isTyping = _messageController.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
+    });
+  }
+
+  // 🔥 新增：发送带文件的消息
+  Future<void> _sendMessageWithFiles() async {
+    final text = _messageController.text.trim();
+    final files = List<Map<String, dynamic>>.from(_pendingFiles);
+    
+    if (text.isEmpty && files.isEmpty) return;
+    
+    try {
+      // 清空输入框和预览
+      setState(() {
+        _messageController.clear();
+        _pendingFiles.clear();
+        _showFilePreview = false;
+        _isTyping = false;
+      });
+      
+      // 如果有文本，先发送文本消息
+      if (text.isNotEmpty) {
+        await _sendTextMessage(text);
+      }
+      
+      // 发送所有文件
+      for (final fileInfo in files) {
+        final file = fileInfo['file'] as File;
+        final fileName = fileInfo['name'] as String;
+        final fileType = fileInfo['type'] as String;
+        
+        await _sendFileMessage(file, fileName, fileType);
+        await Future.delayed(const Duration(milliseconds: 100)); // 避免发送过快
+      }
+      
+      print('✅ 已发送消息和 ${files.length} 个文件');
+    } catch (e) {
+      print('❌ 发送带文件消息失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('发送失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+
+
   // 构建多选模式工具栏
   Widget _buildMultiSelectToolbar() {
     final selectedMessages = _multiSelectController.selectedMessages;
@@ -2402,25 +2947,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
               _showMessageActionMenu(message, isMe);
             }
           },
-          onSecondaryTapDown: (details) {
-            // 桌面端右键支持
-            print('🖱️ 右键点击消息: ${message['id']}');
-            if (isMultiSelectMode) {
-              _multiSelectController.toggleMessage(messageId);
-            } else {
-              _showMessageActionMenuAtPosition(message, isMe, details.globalPosition);
-            }
-          },
           child: Container(
             margin: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          // 消息气泡
-          Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
+            child: Column(
+              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                // 消息气泡
+                Row(
+                  mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
                     // 多选模式下显示选择框
                     if (isMultiSelectMode) ...[
                       Container(
@@ -2441,82 +2977,120 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
                       ),
                     ],
                     
-          Flexible(
-            child: Container(
-              constraints: BoxConstraints(
+                    Flexible(
+                      child: Container(
+                        constraints: BoxConstraints(
                           maxWidth: MediaQuery.of(context).size.width * 
                             (isMultiSelectMode ? 0.65 : 0.75),
-              ),
+                        ),
                         padding: EdgeInsets.all(hasFile ? 6 : 10),
-              decoration: BoxDecoration(
+                        decoration: BoxDecoration(
                           color: isSelected 
                             ? AppTheme.primaryColor.withOpacity(0.1)
                             : (isMe 
-                      ? (hasFile ? Colors.white : AppTheme.primaryColor) 
+                              ? (hasFile ? Colors.white : AppTheme.primaryColor) 
                               : Colors.white),
                           borderRadius: BorderRadius.circular(16).copyWith(
-                  bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
-                  bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
-                ),
-                    border: Border.all(
+                            bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
+                            bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
+                          ),
+                          border: Border.all(
                             color: isSelected 
                               ? AppTheme.primaryColor.withOpacity(0.5)
                               : const Color(0xFFE5E7EB), 
                             width: isSelected ? 2 : 0.5,
-                    ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 文件内容
-                  if (hasFile) _buildFileContent(message, isMe),
-                  
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 文件内容
+                            if (hasFile) _buildFileContent(message, isMe),
+                            
                             // 文本内容
-                  if (message['text'] != null && message['text'].isNotEmpty) ...[
+                            if (message['text'] != null && message['text'].isNotEmpty) ...[
                               if (hasFile) const SizedBox(height: 6),
-                    Text(
-                      message['text'],
-                          style: AppTheme.bodyStyle.copyWith(
-                            color: isMe 
-                              ? (hasFile ? AppTheme.textPrimaryColor : Colors.white)
-                              : AppTheme.textPrimaryColor,
+                              // 🔥 桌面端添加右键菜单和可选择性
+                              _isDesktop()
+                                ? ContextMenuRegion(
+                                    contextMenu: GenericContextMenu(
+                                      buttonConfigs: [
+                                        ContextMenuButtonConfig(
+                                          "复制文字",
+                                          onPressed: () => _copyMessageText(message),
+                                        ),
+                                        ContextMenuButtonConfig(
+                                          "选择全部文字",
+                                          onPressed: () => _selectAllText(message),
+                                        ),
+                                        if (message['fileType'] != null) ...[
+                                          ContextMenuButtonConfig(
+                                            "复制全部内容",
+                                            onPressed: () => _copyAllContent(message),
+                                          ),
+                                        ],
+                                        ContextMenuButtonConfig(
+                                          "回复",
+                                          onPressed: () => _replyToMessage(message),
+                                        ),
+                                        ContextMenuButtonConfig(
+                                          "转发",
+                                          onPressed: () => _forwardMessage(message),
+                                        ),
+                                      ],
+                                    ),
+                                    child: SelectableText(
+                                      message['text'],
+                                      style: AppTheme.bodyStyle.copyWith(
+                                        color: isMe 
+                                          ? (hasFile ? AppTheme.textPrimaryColor : Colors.white)
+                                          : AppTheme.textPrimaryColor,
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    message['text'],
+                                    style: AppTheme.bodyStyle.copyWith(
+                                      color: isMe 
+                                        ? (hasFile ? AppTheme.textPrimaryColor : Colors.white)
+                                        : AppTheme.textPrimaryColor,
+                                    ),
+                                  ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
-                    ],
-                  ),
                 ),
-              ),
-            ],
-          ),
-          
+                
                 // 时间戳和状态
                 const SizedBox(height: 2),
-          Row(
-            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-            children: [
+                Row(
+                  mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                  children: [
                     if (isMultiSelectMode && !isMe) 
                       const SizedBox(width: 40), // 为复选框留出空间
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
                           TimeUtils.formatChatDateTime(message['timestamp']),
-                    style: AppTheme.smallStyle.copyWith(
+                          style: AppTheme.smallStyle.copyWith(
                             fontSize: 9,
+                          ),
                         ),
-                      ),
-                      if (isMe) ...[
+                        if (isMe) ...[
                           const SizedBox(width: 3),
-                        _buildMessageStatusIcon(message),
+                          _buildMessageStatusIcon(message),
+                        ],
                       ],
-                    ],
-                  ),
-                ],
-          ),
-        ],
+                    ),
+                  ],
+                ),
+              ],
             ),
-      ),
+          ),
         );
       },
     );
@@ -2994,6 +3568,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
               color: AppTheme.textSecondaryColor,
               fontWeight: FontWeight.w500,
             ),
+
           ),
         ],
       ),
@@ -3084,57 +3659,71 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
 
   // 实际构建文件预览的方法
   Widget _buildActualFilePreview(String? fileType, String? filePath, String? fileUrl, bool isMe) {
-    return GestureDetector(
-      onTap: () => _openFile(filePath, fileUrl, fileType),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 200),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 图片和视频只显示预览，不显示额外信息
-            if (fileType == 'image') 
-              _buildSimpleImagePreview(filePath, fileUrl)
-            else if (fileType == 'video')
-              _buildSimpleVideoPreview(filePath, fileUrl)
-            else
-              // 其他文件类型显示简洁信息
-              Container(
-                padding: const EdgeInsets.all(8), // 减少内边距
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
-                  borderRadius: BorderRadius.circular(6), // 减小圆角
-                  border: Border.all(
-                    color: AppTheme.borderColor,
-                    width: 0.5,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _getFileTypeIcon(fileType),
-                      size: 14, // 减小图标
-                      color: AppTheme.textSecondaryColor,
-                    ),
-                    const SizedBox(width: 6), // 减少间距
-                    Flexible(
-                      child: Text(
-                        _getFileName(filePath, fileUrl) ?? '文件',
-                        style: AppTheme.captionStyle.copyWith(
-                          color: AppTheme.textPrimaryColor,
-                          fontSize: 10, // 减小文字
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+    Widget fileWidget = Container(
+      constraints: const BoxConstraints(maxWidth: 200),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 图片和视频只显示预览，不显示额外信息
+          if (fileType == 'image') 
+            _buildSimpleImagePreview(filePath, fileUrl)
+          else if (fileType == 'video')
+            _buildSimpleVideoPreview(filePath, fileUrl)
+          else
+            // 其他文件类型显示简洁信息
+            Container(
+              padding: const EdgeInsets.all(8), // 减少内边距
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceColor,
+                borderRadius: BorderRadius.circular(6), // 减小圆角
+                border: Border.all(
+                  color: AppTheme.borderColor,
+                  width: 0.5,
                 ),
               ),
-          ],
-        ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _getFileTypeIcon(fileType),
+                    size: 14, // 减小图标
+                    color: AppTheme.textSecondaryColor,
+                  ),
+                  const SizedBox(width: 6), // 减少间距
+                  Flexible(
+                    child: Text(
+                      _getFileName(filePath, fileUrl) ?? '文件',
+                      style: AppTheme.captionStyle.copyWith(
+                        color: AppTheme.textPrimaryColor,
+                        fontSize: 10, // 减小文字
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
+    
+    // 🔥 桌面端添加右键菜单和点击功能
+    if (_isDesktop()) {
+      return ContextMenuRegion(
+        contextMenu: _buildFileContextMenu(filePath, fileUrl, fileType),
+        child: GestureDetector(
+          onTap: () => _openFile(filePath, fileUrl, fileType),
+          child: fileWidget,
+        ),
+      );
+    } else {
+      // 移动端只有点击功能
+      return GestureDetector(
+        onTap: () => _openFile(filePath, fileUrl, fileType),
+        child: fileWidget,
+      );
+    }
   }
 
   // 构建简单图片预览
@@ -3272,7 +3861,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
 
   Widget _buildInputArea() {
     return Container(
-      padding: const EdgeInsets.all(8), // 减少内边距
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -3280,126 +3868,128 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
         ),
       ),
       child: SafeArea(
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // 附件按钮 - 极简设计
-            GestureDetector(
-              onTap: _showFileOptions,
-              child: Container(
-                width: 32, // 与发送按钮保持一致
-                height: 32,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(
-                  Icons.add,
-                  size: 14, // 减小图标
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-            ),
+            // 🔥 文件预览区域
+            if (_showFilePreview && _pendingFiles.isNotEmpty)
+              _buildFilePreviewArea(),
             
-            const SizedBox(width: 6), // 减少间距
-            
-            // 输入框 - 极简设计
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB), // 更浅的背景色
-                  borderRadius: BorderRadius.circular(16), // 减小圆角
-                ),
-                child: RawKeyboardListener(
-                  focusNode: FocusNode(),
-                  onKey: (RawKeyEvent event) {
-                    // 只在桌面端处理键盘事件
-                    if (!_isDesktop()) return;
-                    
-                    if (event is RawKeyDownEvent) {
-                      final isEnterPressed = event.logicalKey == LogicalKeyboardKey.enter;
-                      final isShiftPressed = event.isShiftPressed;
-                      
-                      if (isEnterPressed && !isShiftPressed) {
-                        // Enter键发送消息（桌面端）
-                        final text = _messageController.text.trim();
-                        if (text.isNotEmpty) {
-                          _sendTextMessage(text);
-                        }
-                        // 阻止事件继续传播，防止TextField处理Enter键
-                        return;
-                      }
-                      // Shift+Enter换行由TextField自动处理
-                    }
-                  },
-                  child: Focus(
-                    onKey: (FocusNode node, RawKeyEvent event) {
-                      // 在桌面端拦截Enter键事件，防止TextField处理
-                      if (_isDesktop() && event is RawKeyDownEvent) {
-                        final isEnterPressed = event.logicalKey == LogicalKeyboardKey.enter;
-                        final isShiftPressed = event.isShiftPressed;
-                        
-                        if (isEnterPressed && !isShiftPressed) {
-                          // 返回KeyEventResult.handled表示事件已处理，阻止进一步传播
-                          return KeyEventResult.handled;
-                        }
-                      }
-                      // 其他情况让TextField正常处理
-                      return KeyEventResult.ignored;
-                    },
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: InputDecoration(
-                        hintText: _isDesktop() ? '输入消息... (Enter发送, Shift+Enter换行)' : '输入消息...',
-                        hintStyle: AppTheme.bodyStyle.copyWith(
-                          color: AppTheme.textTertiaryColor,
-                          fontSize: _isDesktop() ? 13 : 14,
-                        ),
-                        border: InputBorder.none, // 去掉所有边框
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // 减小内边距
+            // 输入框区域
+            Container(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  // 附件按钮
+                  GestureDetector(
+                    onTap: _showFileOptions,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      style: AppTheme.bodyStyle,
-                      maxLines: 4,
-                      minLines: 1,
-                      textInputAction: _isDesktop() ? TextInputAction.newline : TextInputAction.send,
-                      onChanged: (text) {
-                        setState(() {
-                          _isTyping = text.trim().isNotEmpty;
-                        });
-                      },
-                      onSubmitted: (text) {
-                        // 移动端：Enter键发送消息
-                        if (!_isDesktop() && text.trim().isNotEmpty) {
-                          _sendTextMessage(text.trim());
-                        }
-                      },
+                      child: const Icon(
+                        Icons.add,
+                        size: 14,
+                        color: Color(0xFF6B7280),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
-            
-            const SizedBox(width: 6), // 减少间距
-            
-            // 发送按钮 - 极简设计
-            GestureDetector(
-              onTap: () {
-                final text = _messageController.text.trim();
-                if (text.isNotEmpty) {
-                  _sendTextMessage(text);
-                }
-              },
-              child: Container(
-                width: 32, // 再减小按钮
-                height: 32,
-                decoration: BoxDecoration(
-                  color: _isTyping ? AppTheme.primaryColor : const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.send,
-                  size: 14, // 减小图标
-                  color: _isTyping ? Colors.white : AppTheme.textSecondaryColor,
-                ),
+                  
+                  const SizedBox(width: 6),
+                  
+                  // 输入框
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9FAFB),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: RawKeyboardListener(
+                        focusNode: FocusNode(),
+                        onKey: (RawKeyEvent event) {
+                          if (!_isDesktop()) return;
+                          
+                          if (event is RawKeyDownEvent) {
+                            final isEnterPressed = event.logicalKey == LogicalKeyboardKey.enter;
+                            final isShiftPressed = event.isShiftPressed;
+                            
+                            if (isEnterPressed && !isShiftPressed) {
+                              // 🔥 修改：发送带文件的消息
+                              _sendMessageWithFiles();
+                              return;
+                            }
+                          }
+                        },
+                        child: Focus(
+                          onKey: (FocusNode node, RawKeyEvent event) {
+                            if (_isDesktop() && event is RawKeyDownEvent) {
+                              final isEnterPressed = event.logicalKey == LogicalKeyboardKey.enter;
+                              final isShiftPressed = event.isShiftPressed;
+                              
+                              if (isEnterPressed && !isShiftPressed) {
+                                return KeyEventResult.handled;
+                              }
+                            }
+                            return KeyEventResult.ignored;
+                          },
+                          child: TextField(
+                            controller: _messageController,
+                            decoration: InputDecoration(
+                              hintText: _isDesktop() 
+                                ? (_pendingFiles.isNotEmpty 
+                                  ? '添加说明文字...(Enter发送)' 
+                                  : '输入消息或拖拽文件...(Enter发送)')
+                                : '输入消息或拖拽文件...',
+                              hintStyle: AppTheme.bodyStyle.copyWith(
+                                color: AppTheme.textTertiaryColor,
+                                fontSize: _isDesktop() ? 13 : 14,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                            style: AppTheme.bodyStyle,
+                            maxLines: 4,
+                            minLines: 1,
+                            textInputAction: _isDesktop() ? TextInputAction.newline : TextInputAction.send,
+                            onChanged: (text) {
+                              setState(() {
+                                _isTyping = text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
+                              });
+                            },
+                            onSubmitted: (text) {
+                              if (!_isDesktop()) {
+                                _sendMessageWithFiles();
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 6),
+                  
+                  // 发送按钮
+                  GestureDetector(
+                    onTap: _sendMessageWithFiles,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: _isTyping ? AppTheme.primaryColor : const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        Icons.send,
+                        size: 14,
+                        color: _isTyping ? Colors.white : AppTheme.textSecondaryColor,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -3407,6 +3997,168 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
       ),
     );
   }
+
+  // 🔥 新增：构建文件预览区域
+  Widget _buildFilePreviewArea() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 标题栏
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 8, 4),
+              child: Row(
+                children: [
+                  const Icon(Icons.attach_file, size: 16, color: Color(0xFF6B7280)),
+                  const SizedBox(width: 4),
+                  Text(
+                    '待发送文件 (${_pendingFiles.length})',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6B7280),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _pendingFiles.clear();
+                        _showFilePreview = false;
+                        _isTyping = _messageController.text.trim().isNotEmpty;
+                      });
+                    },
+                    child: const Icon(Icons.close, size: 16, color: Color(0xFF6B7280)),
+                  ),
+                ],
+              ),
+            ),
+            
+            // 文件列表
+            SizedBox(
+              height: 80,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                itemCount: _pendingFiles.length,
+                itemBuilder: (context, index) {
+                  final fileInfo = _pendingFiles[index];
+                  return _buildFilePreviewItem(fileInfo);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 🔥 新增：构建单个文件预览项
+  Widget _buildFilePreviewItem(Map<String, dynamic> fileInfo) {
+    final fileName = fileInfo['name'] as String;
+    final fileSize = fileInfo['size'] as int;
+    final fileType = fileInfo['type'] as String;
+    final fileId = fileInfo['id'] as String;
+    
+    return Container(
+      width: 120,
+      margin: const EdgeInsets.only(right: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 文件预览/图标
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(7)),
+                  ),
+                  child: fileType == 'image' && fileInfo['thumbnail'] != null
+                    ? ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(7)),
+                        child: Image.memory(
+                          fileInfo['thumbnail'] as Uint8List,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Icon(
+                        _getFileTypeIcon(fileType),
+                        size: 24,
+                        color: const Color(0xFF6B7280),
+                      ),
+                ),
+              ),
+              
+              // 文件信息
+              Padding(
+                padding: const EdgeInsets.all(6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      fileName,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      _formatFileSize(fileSize),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          // 删除按钮
+          Positioned(
+            top: 4,
+            right: 4,
+            child: GestureDetector(
+              onTap: () => _removeFileFromPreview(fileId),
+              child: Container(
+                width: 16,
+                height: 16,
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close,
+                  size: 10,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _buildMessageStatusIcon(Map<String, dynamic> message) {
     final status = message['status'];
@@ -3658,7 +4410,18 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
         );
       }
     } finally {
+      // 🔥 修复：确保下载完成后清除下载状态
       _downloadingFiles.remove(fullUrl);
+      if (mounted) {
+        setState(() {
+          final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+          if (messageIndex != -1) {
+            _messages[messageIndex]['downloadProgress'] = null;
+            _messages[messageIndex]['transferSpeed'] = 0.0;
+            _messages[messageIndex]['eta'] = null;
+          }
+        });
+      }
     }
   }
   
@@ -3787,7 +4550,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
             const SizedBox(height: 12), // 减少间距
             
             Text(
-              '选择文件类型',
+              _isDesktop() ? '选择文件类型' : '选择文件类型（多选直接发送）',
               style: AppTheme.bodyStyle.copyWith( // 使用更小的字体
                 fontWeight: AppTheme.fontWeightMedium,
               ),
@@ -3947,7 +4710,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
       }
     });
   }
-  
+
   // 🔥 关键修复：监听EnhancedSyncManager的UI更新事件 - 增强版
   void _subscribeToSyncUIUpdates() {
     try {
@@ -3991,7 +4754,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
       
       if (event.messageCount > 0) {
         _showSyncNotification(event);
-      }
+    }
     }
   }
   
@@ -4009,7 +4772,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
   Future<void> _refreshMessagesFromStorage() async {
     try {
       print('🔄 从本地存储刷新消息...');
-      
+    
       final chatId = widget.conversation['id'];
       final refreshedMessages = await _localStorage.loadChatMessages(chatId);
       
@@ -4026,8 +4789,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
             _messages = refreshedMessages;
           });
           
-          // 滚动到底部显示新消息
-          _scrollToBottom();
+          // 🔥 修复：移除刷新消息后的自动滚动，避免打断用户阅读
+          // _scrollToBottom();
           
           // 为新的文件消息自动下载文件
           final newMessages = refreshedMessages.where((msg) => 
@@ -4038,16 +4801,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
             if (message['fileUrl'] != null && !message['isMe']) {
               _autoDownloadFile(message);
             }
-        }
-      } else {
+          }
+        } else {
           print('📄 没有发现新消息');
         }
       }
-    } catch (e) {
+      } catch (e) {
       print('❌ 从本地存储刷新消息失败: $e');
+      }
     }
-  }
-  
+    
   // 🔥 新增：强制从所有源刷新消息
   Future<void> _forceRefreshFromAllSources() async {
     print('🔄 强制从所有源刷新消息...');
@@ -4066,22 +4829,23 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
       final allStoredMessages = await _localStorage.loadChatMessages(chatId);
       
       if (mounted) {
-        setState(() {
+      setState(() {
           _messages.clear();
           _messages.addAll(allStoredMessages);
-          _messages.sort((a, b) {
-            try {
-              final timeA = DateTime.parse(a['timestamp']);
-              final timeB = DateTime.parse(b['timestamp']);
-              return timeA.compareTo(timeB);
-            } catch (e) {
-              return 0;
-            }
-          });
+        _messages.sort((a, b) {
+          try {
+            final timeA = DateTime.parse(a['timestamp']);
+            final timeB = DateTime.parse(b['timestamp']);
+            return timeA.compareTo(timeB);
+          } catch (e) {
+            return 0;
+          }
         });
-        
+      });
+      
         print('✅ 强制重载了 ${allStoredMessages.length} 条消息');
-        _scrollToBottom();
+        // 🔥 修复：移除强制刷新后的自动滚动，用户手动刷新时保持当前位置
+        // _scrollToBottom();
       }
     } catch (e) {
       print('❌ 强制重载消息失败: $e');
@@ -4121,9 +4885,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
           backgroundColor: Colors.green[600],
         ),
       );
-    }
-  }
-
+        }
+      }
+      
   // 🔥 紧急WebSocket恢复
   void _emergencyWebSocketRecovery() {
     print('🚨 执行紧急WebSocket恢复...');
@@ -4155,308 +4919,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
     }
     
     print('✅ 紧急恢复完成');
-  }
+    }
   
 
-
-  // 测试API连接（调试功能）
-  Future<void> _testApiConnection() async {
-    print('🧪 开始测试API连接...');
-    final result = await _messageActionsService.testApiConnection();
-    print('🧪 测试结果: $result');
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['success'] 
-            ? 'API连接正常 (${result['statusCode']})' 
-            : 'API连接失败: ${result['error']} (${result['statusCode'] ?? 'N/A'})'),
-          backgroundColor: result['success'] ? Colors.green : Colors.red,
-        ),
-      );
-    }
-  }
-
-  // 显示调试菜单
-  void _showDebugMenu() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(top: 8, bottom: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const Text(
-                '调试菜单',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-              _buildDebugMenuItem(
-                icon: Icons.wifi,
-                title: '测试API连接',
-                onTap: () {
-                  Navigator.pop(context);
-                  _testApiConnection();
-                },
-              ),
-              _buildDebugMenuItem(
-                icon: Icons.message,
-                title: '查看消息统计',
-                onTap: () {
-                  Navigator.pop(context);
-                  _showMessageStats();
-                },
-              ),
-              _buildDebugMenuItem(
-                icon: Icons.cleaning_services,
-                title: '清理缓存',
-                onTap: () {
-                  Navigator.pop(context);
-                  _clearDebugCache();
-                },
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildDebugMenuItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.grey[600]),
-            const SizedBox(width: 16),
-            Text(title, style: const TextStyle(fontSize: 16)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 显示消息统计
-  void _showMessageStats() {
-    final stats = '''
-消息总数: ${_messages.length}
-已处理ID数: ${_processedMessageIds.length}
-本地ID数: ${_localMessageIds.length}
-对话类型: ${widget.conversation['type']}
-对话ID: ${widget.conversation['id']}
-''';
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('消息统计'),
-        content: Text(stats),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
-          ),
-        ],
-        ),
-      );
-    }
-    
-  // 清理调试缓存
-  void _clearDebugCache() {
-    _processedMessageIds.clear();
-    _messageIdTimestamps.clear();
-    _localMessageIds.clear();
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('调试缓存已清理')),
-      );
-    }
-  }
-
-
-
-  // 显示消息操作菜单（在指定位置，用于右键）
-  Future<void> _showMessageActionMenuAtPosition(Map<String, dynamic> message, bool isOwnMessage, Offset position) async {
-    final messageId = message['id']?.toString() ?? '';
-    print('📋 准备在位置 $position 显示消息操作菜单: messageId=$messageId, isOwnMessage=$isOwnMessage');
-    
-    if (messageId.isEmpty) {
-      print('❌ 消息ID为空，无法显示操作菜单');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('消息ID无效，无法操作')),
-        );
-      }
-      return;
-    }
-    
-    final isFavorited = await _messageActionsService.isMessageFavorited(messageId);
-    
-    // 创建右键菜单
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final RelativeRect rect = RelativeRect.fromRect(
-      Rect.fromLTWH(position.dx, position.dy, 0, 0),
-      Offset.zero & overlay.size,
-    );
-    
-    final action = await showMenu<MessageAction>(
-      context: context,
-      position: rect,
-      color: Colors.white,
-      surfaceTintColor: Colors.white,
-      shadowColor: Colors.black.withOpacity(0.2),
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      items: _buildContextMenuItems(message, isOwnMessage, isFavorited),
-    );
-    
-    if (action != null) {
-      await _handleMessageAction(action, message);
-    }
-  }
-
-  // 构建右键菜单项
-  List<PopupMenuItem<MessageAction>> _buildContextMenuItems(
-    Map<String, dynamic> message, 
-    bool isOwnMessage, 
-    bool isFavorited
-  ) {
-    final items = <PopupMenuItem<MessageAction>>[];
-    
-    // 复制
-    if (message['text'] != null && message['text'].toString().isNotEmpty) {
-      items.add(PopupMenuItem(
-        value: MessageAction.copy,
-        child: const Row(
-          children: [
-            Icon(Icons.copy_rounded, size: 18, color: Colors.grey),
-            SizedBox(width: 12),
-            Text('复制'),
-          ],
-        ),
-      ));
-    }
-    
-    // 转发
-    items.add(const PopupMenuItem(
-      value: MessageAction.forward,
-      child: Row(
-        children: [
-          Icon(Icons.share_rounded, size: 18, color: Colors.grey),
-          SizedBox(width: 12),
-          Text('转发'),
-        ],
-      ),
-    ));
-    
-    // 收藏/取消收藏
-    items.add(PopupMenuItem(
-      value: isFavorited ? MessageAction.unfavorite : MessageAction.favorite,
-      child: Row(
-        children: [
-          Icon(isFavorited ? Icons.star : Icons.star_border_rounded, size: 18, color: Colors.grey),
-          const SizedBox(width: 12),
-          Text(isFavorited ? '取消收藏' : '收藏'),
-        ],
-      ),
-    ));
-    
-    // 回复
-    items.add(const PopupMenuItem(
-      value: MessageAction.reply,
-      child: Row(
-        children: [
-          Icon(Icons.reply_rounded, size: 18, color: Colors.grey),
-          SizedBox(width: 12),
-          Text('回复'),
-        ],
-      ),
-    ));
-    
-    // 多选
-    items.add(const PopupMenuItem(
-      value: MessageAction.select,
-      child: Row(
-        children: [
-          Icon(Icons.checklist_rounded, size: 18, color: Colors.grey),
-          SizedBox(width: 12),
-          Text('多选'),
-        ],
-      ),
-    ));
-    
-    // 分隔符
-    items.add(const PopupMenuItem<MessageAction>(
-      enabled: false,
-      child: Divider(height: 1),
-    ));
-    
-    // 发送方：撤回；接收方：删除
-    if (isOwnMessage) {
-      items.add(PopupMenuItem(
-        value: MessageAction.revoke,
-        child: Row(
-          children: [
-            Icon(Icons.undo_rounded, size: 18, color: Colors.orange[600]),
-            const SizedBox(width: 12),
-            Text('撤回', style: TextStyle(color: Colors.orange[600])),
-          ],
-        ),
-      ));
-    } else {
-      items.add(PopupMenuItem(
-        value: MessageAction.delete,
-        child: Row(
-          children: [
-            Icon(Icons.delete_rounded, size: 18, color: Colors.red[600]),
-            const SizedBox(width: 12),
-            Text('删除', style: TextStyle(color: Colors.red[600])),
-          ],
-        ),
-      ));
-    }
-    
-    return items;
-  }
 
   // 显示消息操作菜单
   Future<void> _showMessageActionMenu(Map<String, dynamic> message, bool isOwnMessage) async {
     final messageId = message['id']?.toString() ?? '';
-    print('📋 准备显示消息操作菜单: messageId=$messageId, isOwnMessage=$isOwnMessage');
-    print('📋 完整消息数据: $message');
-    
-    if (messageId.isEmpty) {
-      print('❌ 消息ID为空，无法显示操作菜单');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('消息ID无效，无法操作')),
-        );
-      }
-      return;
-    }
-    
     final isFavorited = await _messageActionsService.isMessageFavorited(messageId);
     
     final action = await showMessageActionMenu(
@@ -4474,17 +4943,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
   // 处理消息操作
   Future<void> _handleMessageAction(MessageAction action, Map<String, dynamic> message) async {
     final messageId = message['id']?.toString() ?? '';
-    print('🎯 处理消息操作: action=$action, messageId=$messageId');
-    
-    if (messageId.isEmpty) {
-      print('❌ 消息ID为空，无法执行操作');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('消息ID无效，操作失败')),
-        );
-      }
-      return;
-    }
     
     switch (action) {
       case MessageAction.copy:
@@ -4518,6 +4976,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
       case MessageAction.select:
         _enterMultiSelectMode(messageId);
         break;
+      
+      case MessageAction.saveToLocal:
+        await _saveMessageToLocal(message);
+        break;
     }
   }
   
@@ -4534,25 +4996,56 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
     }
   }
   
-  // 撤回消息
-  Future<void> _revokeMessage(String messageId) async {
-    print('🔄 开始撤回消息流程: $messageId');
-    
-    // 检查消息是否存在
-    final messageIndex = _messages.indexWhere((msg) => msg['id']?.toString() == messageId);
-    if (messageIndex == -1) {
-      print('❌ 本地未找到要撤回的消息: $messageId');
+  // 🔥 新增：复制消息文字
+  Future<void> _copyMessageText(Map<String, dynamic> message) async {
+    final text = message['text']?.toString() ?? '';
+    if (text.isNotEmpty) {
+      await Clipboard.setData(ClipboardData(text: text));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('消息不存在，无法撤回')),
+          const SnackBar(content: Text('文字已复制到剪贴板')),
         );
       }
-      return;
+    }
+  }
+
+  // 🔥 新增：选择全部文字
+  void _selectAllText(Map<String, dynamic> message) {
+    // 这个方法可以触发文字选择，但在 SelectableText 中用户可以直接选择
+    // 这里可以实现自动全选逻辑，或者显示提示
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('可以直接拖拽选择文字内容')),
+      );
+    }
+  }
+
+  // 🔥 新增：复制全部内容（文字+文件信息）
+  Future<void> _copyAllContent(Map<String, dynamic> message) async {
+    final text = message['text']?.toString() ?? '';
+    final fileName = message['fileName']?.toString() ?? '';
+    
+    String fullContent = '';
+    if (text.isNotEmpty) {
+      fullContent += text;
+    }
+    if (fileName.isNotEmpty) {
+      if (fullContent.isNotEmpty) fullContent += '\n';
+      fullContent += '[文件] $fileName';
     }
     
-    final message = _messages[messageIndex];
-    print('🔄 找到要撤回的消息: ${message['text']}, isMe: ${message['isMe']}');
-    
+    if (fullContent.isNotEmpty) {
+      await Clipboard.setData(ClipboardData(text: fullContent));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('全部内容已复制到剪贴板')),
+        );
+      }
+    }
+  }
+  
+  // 撤回消息
+  Future<void> _revokeMessage(String messageId) async {
     final confirmed = await _showConfirmDialog(
       title: '撤回消息',
       content: '确定要撤回这条消息吗？撤回后所有人都无法看到此消息。',
@@ -4579,64 +5072,26 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
   
   // 删除消息
   Future<void> _deleteMessage(String messageId) async {
-    print('🗑️ 开始删除消息流程: $messageId');
-    
-    // 检查消息是否存在
-    final messageIndex = _messages.indexWhere((msg) => msg['id']?.toString() == messageId);
-    if (messageIndex == -1) {
-      print('❌ 本地未找到要删除的消息: $messageId');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('消息不存在，无法删除')),
-        );
-      }
-      return;
-    }
-    
-    final message = _messages[messageIndex];
-    final isOwnMessage = message['isMe'] == true;
-    print('🗑️ 找到要删除的消息: ${message['text']}, isMe: $isOwnMessage');
-    
-    // 根据消息所有者决定删除行为
-    final deleteTitle = isOwnMessage ? '撤回消息' : '删除消息';
-    final deleteContent = isOwnMessage 
-      ? '确定要撤回这条消息吗？撤回后群组内所有设备都将删除此消息。'
-      : '确定要删除这条消息吗？此操作仅在当前设备删除，其他设备不受影响。';
-    final deleteButton = isOwnMessage ? '撤回' : '删除';
-    
     final confirmed = await _showConfirmDialog(
-      title: deleteTitle,
-      content: deleteContent,
-      confirmText: deleteButton,
+      title: '删除消息',
+      content: '确定要删除这条消息吗？删除后无法恢复。',
+      confirmText: '删除',
       isDestructive: true,
     );
     
     if (confirmed) {
-      if (isOwnMessage) {
-        // 发送方：调用撤回API，群组内所有设备删除
-        final result = await _messageActionsService.revokeMessage(messageId: messageId);
-        if (mounted) {
-          if (result['success']) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('消息已撤回')),
-            );
-            // 更新本地消息状态为已撤回
-            _updateMessageAfterRevoke(messageId);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('撤回失败: ${result['error']}')),
-            );
-          }
-        }
-      } else {
-        // 接收方：仅本地删除，不调用API
-        print('🗑️ 接收方消息，仅本地删除');
-        if (mounted) {
+      final result = await _messageActionsService.deleteMessage(messageId: messageId);
+      if (mounted) {
+        if (result['success']) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('消息已删除（仅本地）')),
+            const SnackBar(content: Text('消息已删除')),
           );
-          // 直接从本地消息列表中移除
+          // 从本地消息列表中移除
           _removeMessageFromLocal(messageId);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('删除失败: ${result['error']}')),
+          );
         }
       }
     }
@@ -4714,6 +5169,199 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
     _multiSelectController.enterMultiSelectMode();
     _multiSelectController.selectMessage(messageId);
   }
+
+  // 保存消息到本地（移动端文件消息）
+  Future<void> _saveMessageToLocal(Map<String, dynamic> message) async {
+    final fileName = message['fileName']?.toString() ?? '';
+    final fileUrl = message['fileUrl']?.toString();
+    
+    if (fileName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('文件信息不完整')),
+      );
+      return;
+    }
+    
+    // 检查是否是移动端
+    final isMobile = defaultTargetPlatform == TargetPlatform.android ||
+                    defaultTargetPlatform == TargetPlatform.iOS;
+    
+    if (!isMobile) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('此功能仅在移动端可用')),
+      );
+      return;
+    }
+    
+    // 🔥 修复：优先查找本地文件，如果不存在则先下载
+    String? filePath = message['filePath']?.toString();
+    
+    // 检查本地文件是否存在
+    if (filePath == null || !File(filePath).existsSync()) {
+      // 尝试从缓存查找文件
+      if (fileUrl != null) {
+        String fullUrl = fileUrl;
+        if (fileUrl.startsWith('/api/')) {
+          fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+        }
+        
+        // 检查内存缓存
+        filePath = _getFromCache(fullUrl);
+        if (filePath != null && File(filePath).existsSync()) {
+          print('✅ 从内存缓存找到文件: $filePath');
+        } else {
+          // 检查持久化缓存
+          filePath = await _localStorage.getFileFromCache(fullUrl);
+          if (filePath != null && File(filePath).existsSync()) {
+            print('✅ 从持久化缓存找到文件: $filePath');
+            _addToCache(fullUrl, filePath);
+          } else {
+            // 文件不存在，先下载
+            print('📥 文件不存在，开始下载: $fullUrl');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('文件不存在，正在下载...')),
+            );
+            
+            try {
+              filePath = await _downloadFileForSaving(fullUrl, fileName);
+              if (filePath == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('文件下载失败，无法保存')),
+                );
+                return;
+              }
+              print('✅ 文件下载完成: $filePath');
+            } catch (e) {
+              print('❌ 文件下载失败: $e');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('文件下载失败: $e')),
+              );
+              return;
+            }
+          }
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('文件URL不存在，无法下载')),
+        );
+        return;
+      }
+    }
+    
+     try {
+       // 根据文件类型判断保存方式
+       final fileType = _getFileType(fileName);
+       bool success = false;
+       
+       if (fileType == 'image' || fileType == 'video') {
+         // 图片和视频保存到相册
+         try {
+           // 使用gal插件保存到系统相册
+           if (fileType == 'image') {
+             await Gal.putImage(filePath);
+             print('✅ 图片已成功保存到系统相册: $fileName');
+           } else if (fileType == 'video') {
+             await Gal.putVideo(filePath);
+             print('✅ 视频已成功保存到系统相册: $fileName');
+           }
+           success = true;
+         } catch (galError) {
+           print('❌ 保存到相册失败: $galError');
+           // 备用方案：复制到文档目录
+           try {
+             final appDocDir = await getApplicationDocumentsDirectory();
+             final saveDir = Directory('${appDocDir.path}/SavedMedia');
+             if (!await saveDir.exists()) {
+               await saveDir.create(recursive: true);
+             }
+             
+             final timestamp = DateTime.now().millisecondsSinceEpoch;
+             final extension = fileName.contains('.') ? fileName.split('.').last : '';
+             final baseName = fileName.contains('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+             final uniqueFileName = extension.isNotEmpty ? '${baseName}_$timestamp.$extension' : '${fileName}_$timestamp';
+             
+             final sourceFile = File(filePath);
+             final targetPath = '${saveDir.path}/$uniqueFileName';
+             await sourceFile.copy(targetPath);
+             
+             print('⚠️ 已保存到应用媒体目录（备用方案）: $targetPath');
+             success = true;
+           } catch (backupError) {
+             print('❌ 备用方案也失败了: $backupError');
+             success = false;
+           }
+         }
+       } else {
+         // 其他文件保存到文档目录
+         try {
+           final appDocDir = await getApplicationDocumentsDirectory();
+           final saveDir = Directory('${appDocDir.path}/SavedFiles');
+           if (!await saveDir.exists()) {
+             await saveDir.create(recursive: true);
+           }
+           
+           final timestamp = DateTime.now().millisecondsSinceEpoch;
+           final extension = fileName.contains('.') ? fileName.split('.').last : '';
+           final baseName = fileName.contains('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+           final uniqueFileName = extension.isNotEmpty ? '${baseName}_$timestamp.$extension' : '${fileName}_$timestamp';
+           
+           final sourceFile = File(filePath);
+           final targetPath = '${saveDir.path}/$uniqueFileName';
+           await sourceFile.copy(targetPath);
+           
+           print('📁 文件已保存到文档目录: $targetPath');
+           success = true;
+         } catch (docError) {
+           print('❌ 保存到文档目录失败: $docError');
+           success = false;
+         }
+       }
+       
+       // 显示结果提示
+       if (mounted) {
+         if (success) {
+           final location = (fileType == 'image' || fileType == 'video') ? '相册' : '文档';
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(
+               content: Row(
+                 children: [
+                   Icon(Icons.check_circle, color: Colors.white, size: 20),
+                   const SizedBox(width: 8),
+                   Text('已保存到$location'),
+                 ],
+               ),
+               backgroundColor: Colors.green,
+               duration: const Duration(seconds: 2),
+             ),
+           );
+         } else {
+           ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(
+               content: Row(
+                 children: [
+                   Icon(Icons.error, color: Colors.white, size: 20),
+                   SizedBox(width: 8),
+                   Text('保存失败'),
+                 ],
+               ),
+               backgroundColor: Colors.red,
+               duration: Duration(seconds: 2),
+             ),
+           );
+         }
+       }
+     } catch (e) {
+      print('保存文件到本地失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('保存失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
   
   // 显示确认对话框
   Future<bool> _showConfirmDialog({
@@ -4764,6 +5412,378 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin, 
     });
     _saveMessages();
   }
+
+  // 🔥 新增：构建文件右键菜单（桌面端）
+  Widget _buildFileContextMenu(String? filePath, String? fileUrl, String? fileType) {
+    return GenericContextMenu(
+      buttonConfigs: [
+        ContextMenuButtonConfig(
+          "打开文件",
+          onPressed: () => _openFile(filePath, fileUrl, fileType),
+        ),
+        if (filePath != null && File(filePath).existsSync()) ...[
+          ContextMenuButtonConfig(
+            "打开文件位置",
+            onPressed: () => _openFileLocation(filePath),
+          ),
+          ContextMenuButtonConfig(
+            "复制文件路径",
+            onPressed: () => _copyFilePath(filePath),
+          ),
+        ],
+        if (fileUrl != null) ...[
+          ContextMenuButtonConfig(
+            "复制文件链接",
+            onPressed: () => _copyFileUrl(fileUrl),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // 🔥 新增：打开文件位置
+  Future<void> _openFileLocation(String filePath) async {
+    try {
+      if (_isDesktop()) {
+        // 桌面端使用系统命令打开文件夹
+        if (Platform.isMacOS) {
+          await Process.run('open', ['-R', filePath]);
+        } else if (Platform.isWindows) {
+          await Process.run('explorer', ['/select,', filePath.replaceAll('/', '\\')]);
+        } else if (Platform.isLinux) {
+          // Linux上尝试使用文件管理器
+          try {
+            await Process.run('xdg-open', [path.dirname(filePath)]);
+          } catch (e) {
+            // 备选方案
+            await Process.run('nautilus', [path.dirname(filePath)]);
+          }
+        }
+        print('已打开文件位置: ${path.dirname(filePath)}');
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('已打开文件位置')),
+          );
+        }
+      }
+    } catch (e) {
+      print('打开文件位置失败: $e');
+      _showErrorMessage('无法打开文件位置');
+    }
+  }
+
+  // 🔥 新增：复制文件路径
+  Future<void> _copyFilePath(String filePath) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: filePath));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('文件路径已复制到剪贴板')),
+        );
+      }
+    } catch (e) {
+      print('复制文件路径失败: $e');
+      _showErrorMessage('复制文件路径失败');
+    }
+  }
+
+  // 🔥 新增：复制文件URL
+  Future<void> _copyFileUrl(String fileUrl) async {
+    try {
+      String fullUrl = fileUrl;
+      if (fileUrl.startsWith('/api/')) {
+        fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+      }
+      await Clipboard.setData(ClipboardData(text: fullUrl));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('文件链接已复制到剪贴板')),
+        );
+      }
+    } catch (e) {
+      print('复制文件链接失败: $e');
+      _showErrorMessage('复制文件链接失败');
+    }
+  }
+
+  // 🔥 新增：为保存功能下载文件
+  Future<String?> _downloadFileForSaving(String url, String fileName) async {
+    try {
+      // 创建临时消息对象进行下载
+      final tempMessage = {
+        'id': 'temp_${DateTime.now().millisecondsSinceEpoch}',
+        'fileUrl': url,
+        'fileName': fileName,
+      };
+      
+      // 下载前检查缓存
+      final cachedPath = await _localStorage.getFileFromCache(url);
+      if (cachedPath != null && File(cachedPath).existsSync()) {
+        return cachedPath;
+      }
+      
+      // 使用自动下载逻辑
+      await _autoDownloadFile(tempMessage);
+      
+      // 再次检查是否下载成功
+      final downloadedPath = await _localStorage.getFileFromCache(url);
+      return downloadedPath;
+    } catch (e) {
+      print('下载文件失败: $e');
+      return null;
+    }
+  }
+
+  // 🔥 新增：上拉刷新相关状态
+  // 移除_isPullToRefreshActive变量，简化下拉刷新UI
+  bool _isRefreshing = false; // 是否正在刷新
+  double _refreshTriggerOffset = 80.0; // 触发刷新的拖拽距离
+  double _currentPullOffset = 0.0; // 当前拖拽偏移
+  bool _isAtBottom = false; // 是否在底部
+  
+  // 🔥 新增：滚动监听器设置
+  void _setupScrollListener() {
+    _scrollController.addListener(() {
+      // 检测是否在底部（允许50px的容差）
+      final isAtBottomNow = _scrollController.hasClients &&
+          _scrollController.position.pixels >= 
+          (_scrollController.position.maxScrollExtent - 50);
+      
+      if (_isAtBottom != isAtBottomNow) {
+        setState(() {
+          _isAtBottom = isAtBottomNow;
+        });
+      }
+    });
+  }
+  
+  // 🔥 新增：处理滚动通知 - 简化版本
+  bool _handleScrollNotification(ScrollNotification notification) {
+    // 简化滚动通知处理，无需额外状态管理
+    return false;
+  }
+  
+  // 🔥 简化：处理手势拖拽更新
+  void _handlePanUpdate(DragUpdateDetails details) {
+    if (!_isAtBottom || _isRefreshing) return;
+    
+    // 只处理向上拖拽（下拉刷新）
+    if (details.delta.dy < 0) {
+      _currentPullOffset = (_currentPullOffset - details.delta.dy).clamp(0.0, _refreshTriggerOffset * 2);
+    }
+  }
+  
+  // 🔥 简化：处理手势拖拽结束 - 直接触发刷新
+  void _handlePanEnd(DragEndDetails details) {
+    if (!_isAtBottom || _isRefreshing) return;
+    
+    // 如果拖拽距离超过触发阈值，直接执行刷新
+    if (_currentPullOffset >= _refreshTriggerOffset) {
+      _triggerPullToRefresh();
+    }
+    
+    // 重置拖拽状态
+    _currentPullOffset = 0.0;
+  }
+  
+  // 🔥 简化：触发下拉刷新 - 直接开始刷新
+  Future<void> _triggerPullToRefresh() async {
+    if (_isRefreshing) return;
+    
+    setState(() {
+      _isRefreshing = true;
+    });
+    
+    try {
+      print('🔄 用户触发下拉刷新...');
+      
+      // 重新获取服务器消息（模拟首次登录的加载逻辑）
+      await _performPullToRefreshSync();
+      
+      // 显示成功反馈
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ 消息已刷新'),
+            duration: Duration(seconds: 1),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+      
+    } catch (e) {
+      print('❌ 下拉刷新失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('刷新失败: $e'),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      // 延迟重置状态，让用户看到完成动画
+      await Future.delayed(Duration(milliseconds: 500));
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
+      }
+    }
+  }
+  
+  // 🔥 新增：执行上拉刷新同步
+  Future<void> _performPullToRefreshSync() async {
+    try {
+      // 1. 强制重新从服务器获取消息
+      if (widget.conversation['type'] == 'group') {
+        final groupId = widget.conversation['groupData']?['id'];
+        if (groupId != null) {
+          final result = await _chatService.getGroupMessages(groupId: groupId, limit: 100);
+          if (result['messages'] != null) {
+            await _processServerMessages(List<Map<String, dynamic>>.from(result['messages']));
+          }
+        }
+      } else {
+        final deviceId = widget.conversation['deviceData']?['id'];
+        if (deviceId != null) {
+          final result = await _chatService.getPrivateMessages(targetDeviceId: deviceId, limit: 100);
+          if (result['messages'] != null) {
+            await _processServerMessages(List<Map<String, dynamic>>.from(result['messages']));
+          }
+        }
+      }
+      
+      // 2. 触发WebSocket同步
+      if (_websocketService.isConnected) {
+        _websocketService.emit('get_recent_messages', {
+          'conversationId': widget.conversation['id'],
+          'limit': 100,
+          'timestamp': DateTime.now().toIso8601String(),
+          'reason': 'pull_to_refresh'
+        });
+      }
+      
+      // 3. 强制刷新本地存储的消息
+      await _refreshMessagesFromStorage();
+      
+      print('✅ 上拉刷新同步完成');
+      
+    } catch (e) {
+      print('❌ 上拉刷新同步失败: $e');
+      rethrow;
+    }
+  }
+  
+  // 🔥 新增：处理服务器消息
+  Future<void> _processServerMessages(List<Map<String, dynamic>> serverMessages) async {
+    if (serverMessages.isEmpty) return;
+    
+    // 获取当前设备ID用于过滤
+    final prefs = await SharedPreferences.getInstance();
+    final serverDeviceData = prefs.getString('server_device_data');
+    String? currentDeviceId;
+    if (serverDeviceData != null) {
+      try {
+        final Map<String, dynamic> data = jsonDecode(serverDeviceData);
+        currentDeviceId = data['id'];
+      } catch (e) {
+        print('解析设备ID失败: $e');
+      }
+    }
+    
+    // 转换和过滤服务器消息
+    List<Map<String, dynamic>> newMessages = [];
+    final existingMessageIds = _messages.map((m) => m['id'].toString()).toSet();
+    
+    for (final serverMessage in serverMessages) {
+      final messageId = serverMessage['id']?.toString();
+      if (messageId == null || existingMessageIds.contains(messageId)) {
+        continue; // 跳过重复消息
+      }
+      
+      // 过滤本机发送的消息（避免重复显示）
+      final sourceDeviceId = serverMessage['sourceDeviceId']?.toString();
+      if (sourceDeviceId == currentDeviceId) {
+        continue;
+      }
+      
+      // 转换消息格式
+      final convertedMessage = {
+        'id': messageId,
+        'text': serverMessage['content'] ?? serverMessage['text'],
+        'fileType': serverMessage['fileName'] != null ? _getFileType(serverMessage['fileName']) : null,
+        'fileName': serverMessage['fileName'],
+        'fileUrl': serverMessage['fileUrl'],
+        'fileSize': serverMessage['fileSize'],
+        'timestamp': _normalizeTimestamp(serverMessage['createdAt'] ?? serverMessage['timestamp'] ?? DateTime.now().toUtc().toIso8601String()),
+        'isMe': false,
+        'status': 'sent',
+        'sourceDeviceId': sourceDeviceId,
+      };
+      
+      newMessages.add(convertedMessage);
+    }
+    
+    // 更新UI
+    if (newMessages.isNotEmpty && mounted) {
+      setState(() {
+        _messages.addAll(newMessages);
+        _messages.sort((a, b) {
+          try {
+            final timeA = DateTime.parse(a['timestamp']);
+            final timeB = DateTime.parse(b['timestamp']);
+            return timeA.compareTo(timeB);
+          } catch (e) {
+            return 0;
+          }
+        });
+      });
+      
+      // 保存到本地
+      await _saveMessages();
+      
+      print('✅ 上拉刷新新增 ${newMessages.length} 条消息');
+    }
+  }
+  
+  // 🔥 新增：构建简洁的下拉刷新指示器
+  Widget _buildPullToRefreshIndicator() {
+    // 只在刷新时显示，使用简洁的圆形加载指示器
+    if (!_isRefreshing) return const SizedBox.shrink();
+    
+    return Positioned(
+      bottom: 20,
+      left: 0,
+      right: 0,
+      child: Center(
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: AppTheme.primaryColor,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // 视频静态缩略图预览组件
@@ -4784,6 +5804,7 @@ class _VideoGifPreview extends StatefulWidget {
 class _VideoGifPreviewState extends State<_VideoGifPreview> {
   Uint8List? _thumbnailData;
   bool _isLoading = true;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -4791,48 +5812,309 @@ class _VideoGifPreviewState extends State<_VideoGifPreview> {
     _generateVideoThumbnail();
   }
 
+  /// 桌面端智能缩略图生成 - 优先尝试第三方工具，备用美观预览
+  Future<Uint8List?> _generateDesktopThumbnail(String videoPath) async {
+    try {
+      print('🔄 桌面端开始智能缩略图生成: $videoPath');
+      
+      // 策略1：尝试使用系统的快速查看功能（macOS/Windows）
+      if (defaultTargetPlatform == TargetPlatform.macOS) {
+        try {
+          print('🍎 尝试使用macOS qlmanage生成缩略图');
+          final result = await Process.run('qlmanage', [
+            '-t',
+            '-s',
+            '400',
+            '-o',
+            Directory.systemTemp.path,
+            videoPath
+          ]);
+          
+          if (result.exitCode == 0) {
+            // 🔥 修复：qlmanage生成的文件名保留完整原文件名
+            final originalFileName = videoPath.split('/').last;
+            final thumbnailPath = '${Directory.systemTemp.path}/$originalFileName.png';
+            final thumbnailFile = File(thumbnailPath);
+            
+            if (await thumbnailFile.exists()) {
+              final thumbnailBytes = await thumbnailFile.readAsBytes();
+              print('✅ macOS qlmanage缩略图生成成功! 大小: ${thumbnailBytes.length} bytes');
+              
+              // 清理临时文件
+              try {
+                await thumbnailFile.delete();
+              } catch (e) {
+                print('⚠️ 清理qlmanage临时文件失败: $e');
+              }
+              
+              return thumbnailBytes;
+            }
+          }
+        } catch (e) {
+          print('⚠️ macOS qlmanage失败: $e');
+        }
+      }
+      
+      // 策略2：Windows缩略图生成
+      if (defaultTargetPlatform == TargetPlatform.windows) {
+        try {
+          print('🪟 尝试使用Windows PowerShell生成缩略图');
+          // Windows PowerShell可以生成缩略图
+          final tempPath = '${Directory.systemTemp.path}\\video_thumb_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          final psScript = '''
+Add-Type -AssemblyName System.Drawing
+\$video = [System.Drawing.Image]::FromFile("$videoPath")
+\$thumb = \$video.GetThumbnailImage(400, 300, \$null, [IntPtr]::Zero)
+\$thumb.Save("$tempPath", [System.Drawing.Imaging.ImageFormat]::Jpeg)
+\$video.Dispose()
+\$thumb.Dispose()
+''';
+          
+          final result = await Process.run('powershell', ['-Command', psScript]);
+          
+          if (result.exitCode == 0) {
+            final thumbnailFile = File(tempPath);
+            if (await thumbnailFile.exists()) {
+              final thumbnailBytes = await thumbnailFile.readAsBytes();
+              print('✅ Windows PowerShell缩略图生成成功! 大小: ${thumbnailBytes.length} bytes');
+              
+              try {
+                await thumbnailFile.delete();
+              } catch (e) {
+                print('⚠️ 清理Windows临时文件失败: $e');
+              }
+              
+              return thumbnailBytes;
+            }
+          }
+        } catch (e) {
+          print('⚠️ Windows PowerShell失败: $e');
+        }
+      }
+      
+      // 策略3：Linux使用ffmpegthumbnailer（如果可用）
+      if (defaultTargetPlatform == TargetPlatform.linux) {
+        try {
+          print('🐧 尝试使用Linux ffmpegthumbnailer生成缩略图');
+          final tempPath = '${Directory.systemTemp.path}/video_thumb_${DateTime.now().millisecondsSinceEpoch}.jpg';
+          
+          final result = await Process.run('ffmpegthumbnailer', [
+            '-i', videoPath,
+            '-o', tempPath,
+            '-s', '400',
+            '-t', '10%'
+          ]);
+          
+          if (result.exitCode == 0) {
+            final thumbnailFile = File(tempPath);
+            if (await thumbnailFile.exists()) {
+              final thumbnailBytes = await thumbnailFile.readAsBytes();
+              print('✅ Linux ffmpegthumbnailer缩略图生成成功! 大小: ${thumbnailBytes.length} bytes');
+              
+              try {
+                await thumbnailFile.delete();
+              } catch (e) {
+                print('⚠️ 清理Linux临时文件失败: $e');
+              }
+              
+              return thumbnailBytes;
+            }
+          }
+        } catch (e) {
+          print('⚠️ Linux ffmpegthumbnailer失败: $e');
+        }
+      }
+      
+      print('💡 所有系统级缩略图工具都不可用，使用备用方案');
+      return null;
+      
+    } catch (e) {
+      print('❌ 桌面端缩略图生成异常: $e');
+      return null;
+    }
+  }
+
   Future<void> _generateVideoThumbnail() async {
+    print('🎬 === 开始视频缩略图生成 ===');
+    print('📍 videoPath: ${widget.videoPath}');
+    print('📍 videoUrl: ${widget.videoUrl}');
+    print('📍 平台: ${defaultTargetPlatform}');
+    
     if (widget.videoPath == null && widget.videoUrl == null) {
+      print('❌ 无视频源，跳过生成');
       setState(() {
         _isLoading = false;
+        _hasError = true;
       });
       return;
     }
     
     try {
-      String videoSource = widget.videoPath ?? widget.videoUrl!;
       Uint8List? thumbnailData;
+      final isDesktop = defaultTargetPlatform == TargetPlatform.macOS || 
+                       defaultTargetPlatform == TargetPlatform.windows || 
+                       defaultTargetPlatform == TargetPlatform.linux;
       
-      // 使用video_thumbnail生成缩略图
-        try {
-          thumbnailData = await VideoThumbnail.thumbnailData(
-            video: videoSource,
-            imageFormat: ImageFormat.JPEG,
-            timeMs: 1000, // 从第1秒开始截取
-            maxWidth: 400, // 高分辨率
-            maxHeight: 300, // 高分辨率
-            quality: 90, // 高质量
-          );
-          print('使用video_thumbnail生成缩略图成功');
-        } catch (e) {
-        print('video_thumbnail生成缩略图失败: $e');
+      print('🖥️ 是否桌面端: $isDesktop');
+      
+      if (isDesktop) {
+        print('🖥️ 桌面端使用VideoPlayer生成视频缩略图');
+        
+        // 桌面端使用VideoPlayer
+        String? videoSource = widget.videoPath ?? widget.videoUrl;
+        if (videoSource == null) {
+          throw Exception('桌面端无有效视频源');
+        }
+        
+        // 验证本地文件
+        if (widget.videoPath != null) {
+          try {
+            final localFile = File(widget.videoPath!);
+            final exists = await localFile.exists();
+            print('📁 桌面端本地文件检查: ${widget.videoPath}');
+            print('📁 文件存在: $exists');
+            
+            if (exists) {
+              final fileSize = await localFile.length();
+              print('📁 文件大小: $fileSize bytes');
+              
+              if (fileSize > 0) {
+                print('🔄 桌面端使用VideoPlayer生成本地文件缩略图...');
+                
+                try {
+                  // 使用桌面端智能缩略图生成
+                  thumbnailData = await _generateDesktopThumbnail(widget.videoPath!);
+                  
+                  if (thumbnailData != null && thumbnailData.isNotEmpty) {
+                    print('✅ 桌面端VideoPlayer缩略图生成成功! 大小: ${thumbnailData.length} bytes');
+                  }
+                } catch (e) {
+                  print('❌ 桌面端VideoPlayer缩略图生成失败: $e');
+                }
+              }
+            }
+          } catch (e) {
+            print('❌ 桌面端文件检查失败: $e');
+          }
+        }
+        
+        // 桌面端如果本地文件失败，暂时不尝试网络URL
+        final success = thumbnailData != null && thumbnailData.isNotEmpty;
+        print('🎯 === 桌面端缩略图生成结果: ${success ? "成功" : "失败"} ===');
+        
+        if (mounted) {
+          setState(() {
+            _thumbnailData = thumbnailData;
+            _isLoading = false;
+            _hasError = !success;
+          });
+        }
+        return;
       }
       
-      if (mounted && thumbnailData != null) {
+      // 移动端使用video_thumbnail插件
+      print('📱 移动端使用video_thumbnail插件生成缩略图');
+      
+      String? videoSource = widget.videoPath ?? widget.videoUrl;
+      if (videoSource == null) {
+        throw Exception('移动端无有效视频源');
+      }
+      
+      // 检查本地文件
+      if (widget.videoPath != null) {
+        try {
+          final localFile = File(widget.videoPath!);
+          final exists = await localFile.exists();
+          print('📁 移动端本地文件检查: ${widget.videoPath}');
+          print('📁 文件存在: $exists');
+          
+          if (exists) {
+            final fileSize = await localFile.length();
+            print('📁 文件大小: $fileSize bytes');
+            
+            if (fileSize > 0) {
+              print('🔄 移动端使用本地文件生成缩略图...');
+              
+              try {
+                thumbnailData = await VideoThumbnail.thumbnailData(
+                  video: widget.videoPath!,
+                  imageFormat: ImageFormat.JPEG,
+                  timeMs: 1000,
+                  maxWidth: 400,
+                  maxHeight: 300,
+                  quality: 85,
+                ).timeout(const Duration(seconds: 15));
+                
+                if (thumbnailData != null && thumbnailData.isNotEmpty) {
+                  print('✅ 移动端本地文件缩略图生成成功! 大小: ${thumbnailData.length} bytes');
+                }
+              } catch (e) {
+                print('❌ 移动端本地文件缩略图生成失败: $e');
+                
+                // 尝试第一帧
+                try {
+                  thumbnailData = await VideoThumbnail.thumbnailData(
+                    video: widget.videoPath!,
+                    imageFormat: ImageFormat.JPEG,
+                    timeMs: 0,
+                    maxWidth: 300,
+                    maxHeight: 200,
+                    quality: 75,
+                  ).timeout(const Duration(seconds: 10));
+                  
+                  if (thumbnailData != null && thumbnailData.isNotEmpty) {
+                    print('✅ 移动端第一帧缩略图生成成功! 大小: ${thumbnailData.length} bytes');
+                  }
+                } catch (e2) {
+                  print('❌ 移动端第一帧缩略图也失败: $e2');
+                }
+              }
+            }
+          }
+        } catch (e) {
+          print('❌ 移动端本地文件检查失败: $e');
+        }
+      }
+      
+      // 如果本地失败，尝试网络URL
+      if ((thumbnailData == null || thumbnailData.isEmpty) && widget.videoUrl != null) {
+        print('🔄 移动端尝试使用网络URL生成缩略图: ${widget.videoUrl}');
+        
+        try {
+          thumbnailData = await VideoThumbnail.thumbnailData(
+            video: widget.videoUrl!,
+            imageFormat: ImageFormat.JPEG,
+            timeMs: 0,
+            maxWidth: 300,
+            maxHeight: 200,
+            quality: 70,
+          ).timeout(const Duration(seconds: 15));
+          
+          if (thumbnailData != null && thumbnailData.isNotEmpty) {
+            print('✅ 移动端网络URL缩略图生成成功! 大小: ${thumbnailData.length} bytes');
+          }
+        } catch (e) {
+          print('❌ 移动端网络URL缩略图生成失败: $e');
+        }
+      }
+      
+      final success = thumbnailData != null && thumbnailData.isNotEmpty;
+      print('🎯 === 移动端缩略图生成结果: ${success ? "成功" : "失败"} ===');
+      
+      if (mounted) {
         setState(() {
           _thumbnailData = thumbnailData;
           _isLoading = false;
-        });
-      } else if (mounted) {
-        setState(() {
-          _isLoading = false;
+          _hasError = !success;
         });
       }
     } catch (e) {
-      print('生成视频缩略图失败: $e');
+      print('❌ === 视频缩略图生成完全失败: $e ===');
+      
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _hasError = true;
         });
       }
     }
@@ -4844,14 +6126,15 @@ class _VideoGifPreviewState extends State<_VideoGifPreview> {
       return Container(
         color: const Color(0xFF1F2937),
         child: const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
           ),
         ),
       );
     }
     
+    // 有真实缩略图数据时显示（移动端）
     if (_thumbnailData != null) {
       return Stack(
         fit: StackFit.expand,
@@ -4870,7 +6153,7 @@ class _VideoGifPreviewState extends State<_VideoGifPreview> {
             child: const Center(
               child: Icon(
                 Icons.play_circle_filled,
-                  color: Colors.white,
+                color: Colors.white,
                 size: 48,
               ),
             ),
@@ -4879,7 +6162,77 @@ class _VideoGifPreviewState extends State<_VideoGifPreview> {
       );
     }
     
-    // 加载失败时显示默认图标
+    // 桌面端或无缩略图但不是错误状态时显示默认预览
+    if (!_hasError) {
+      return _buildDefaultVideoPreview();
+    }
+    
+    // 真正的错误状态
+    return _buildErrorWidget();
+  }
+  
+  Widget _buildDefaultVideoPreview() {
+    final isDesktop = defaultTargetPlatform == TargetPlatform.macOS || 
+                     defaultTargetPlatform == TargetPlatform.windows || 
+                     defaultTargetPlatform == TargetPlatform.linux;
+                     
+    return Container(
+      color: const Color(0xFF2D3748),
+      child: Stack(
+        children: [
+          // 背景渐变
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF4A5568),
+                  const Color(0xFF2D3748),
+                ],
+              ),
+            ),
+          ),
+          
+          // 中心视频图标和播放按钮
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 视频图标
+                Icon(
+                  Icons.videocam,
+                  color: Colors.white70,
+                  size: 40,
+                ),
+                const SizedBox(height: 8),
+                
+                // 播放按钮
+                Icon(
+                  Icons.play_circle_outline,
+                  color: Colors.white,
+                  size: 36,
+                ),
+                
+                if (isDesktop) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    '桌面端视频',
+                    style: TextStyle(
+                      color: Colors.white60,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
     return Container(
       color: const Color(0xFF374151),
       child: const Center(
@@ -4890,5 +6243,5 @@ class _VideoGifPreviewState extends State<_VideoGifPreview> {
         ),
       ),
     );
-  } 
+  }
 }

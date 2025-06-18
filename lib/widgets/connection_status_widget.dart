@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/websocket_manager.dart' as ws;
 import '../providers/group_provider.dart';
+import 'dart:async';
 
 class ConnectionStatusWidget extends StatefulWidget {
   final bool showDetailed;
@@ -25,6 +26,7 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
   
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
+  Timer? _statusRefreshTimer; // 🔥 新增：状态刷新定时器
 
   @override
   void initState() {
@@ -66,11 +68,15 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
     });
     
     _updateAnimation();
+    
+    // 🔥 新增：启动状态实时刷新定时器
+    _startStatusRefreshTimer();
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _statusRefreshTimer?.cancel(); // 🔥 新增：清理定时器
     super.dispose();
   }
 
@@ -785,5 +791,17 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
         );
       },
     );
+  }
+
+  // 🔥 新增：启动状态刷新定时器
+  void _startStatusRefreshTimer() {
+    _statusRefreshTimer?.cancel();
+    
+    // 每3秒刷新一次状态
+    _statusRefreshTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+      if (_wsManager.isConnected) {
+        _forceRefreshDeviceStatus();
+      }
+    });
   }
 } 

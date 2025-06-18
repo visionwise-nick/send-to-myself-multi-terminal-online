@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:flutter/foundation.dart';
 import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -18,6 +19,8 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
   MobileScannerController? _scannerController;
   bool _isProcessing = false;
   bool _isScanMode = true; // true=扫描模式，false=输入模式
+  bool _scannerInitialized = false;
+  String? _scannerError;
   
   late AnimationController _animationController;
   late AnimationController _switchAnimationController;
@@ -48,7 +51,14 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
     
-    // 初始化扫描器
+    // 检查平台是否支持摄像头扫描
+    if (_isScanMode && _isDesktop()) {
+      // 在桌面端默认切换到输入模式，因为摄像头扫描可能有问题
+      _isScanMode = false;
+      print('检测到桌面端，默认使用输入模式');
+    }
+    
+    // 初始化扫描器（如果需要）
     if (_isScanMode) {
       _initializeScanner();
     }
@@ -56,11 +66,46 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
     _animationController.forward();
   }
 
+  // 判断是否为桌面端
+  bool _isDesktop() {
+    if (kIsWeb) {
+      return MediaQuery.of(context).size.width >= 800;
+    }
+    return defaultTargetPlatform == TargetPlatform.macOS ||
+           defaultTargetPlatform == TargetPlatform.windows ||
+           defaultTargetPlatform == TargetPlatform.linux;
+  }
+
   void _initializeScanner() {
-    _scannerController = MobileScannerController(
-      detectionSpeed: DetectionSpeed.noDuplicates,
-      formats: [BarcodeFormat.qrCode],
-    );
+    try {
+      print('正在初始化摄像头扫描器...');
+      _scannerController = MobileScannerController(
+        detectionSpeed: DetectionSpeed.noDuplicates,
+        formats: [BarcodeFormat.qrCode],
+      );
+      _scannerInitialized = true;
+      _scannerError = null;
+      print('摄像头扫描器初始化成功');
+    } catch (e) {
+      print('摄像头扫描器初始化失败: $e');
+      _scannerError = '摄像头初始化失败: $e';
+      _scannerInitialized = false;
+      
+      // 如果扫描器初始化失败，自动切换到输入模式
+      if (mounted) {
+        setState(() {
+          _isScanMode = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('摄像头不可用，已切换到手动输入模式'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -73,6 +118,17 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
   }
 
   void _switchMode() {
+    // 如果要切换到扫描模式但在桌面端，显示提示
+    if (!_isScanMode && _isDesktop()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('桌面端建议使用手动输入模式，摄像头扫描可能不稳定'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+    
     setState(() {
       _isScanMode = !_isScanMode;
       
@@ -81,6 +137,8 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
       } else {
         _scannerController?.dispose();
         _scannerController = null;
+        _scannerInitialized = false;
+        _scannerError = null;
       }
     });
 
@@ -368,70 +426,187 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
             Expanded(
               child: Stack(
                 children: [
-                  if (_scannerController != null)
+                  // 扫描器或错误显示
+                  if (_scannerError != null)
+                    // 显示错误状态
+                    Container(
+                      color: const Color(0xFFF8FAFC),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.camera_alt_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '摄像头不可用',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 32),
+                              child: Text(
+                                _isDesktop() 
+                                  ? '桌面端建议使用下方的"输入邀请码"模式'
+                                  : '请检查摄像头权限设置',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _isScanMode = false;
+                                });
+                              },
+                              icon: const Icon(Icons.keyboard_rounded),
+                              label: const Text('切换到输入模式'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else if (_scannerController != null && _scannerInitialized)
+                    // 显示扫描器
                     MobileScanner(
                       controller: _scannerController!,
                       onDetect: (capture) {
+                        if (_isProcessing) return;
+                        
                         final List<Barcode> barcodes = capture.barcodes;
-                        if (barcodes.isNotEmpty && !_isProcessing) {
+                        if (barcodes.isNotEmpty) {
                           final code = barcodes.first.rawValue;
                           if (code != null && code.isNotEmpty) {
+                            print('扫描到二维码: $code');
                             _handleQrCode(code);
                           }
                         }
                       },
+                      onScannerStarted: (MobileScannerArguments? arguments) {
+                        print('摄像头扫描器已启动');
+                      },
+                      errorBuilder: (context, error, child) {
+                        print('摄像头扫描器错误: $error');
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            setState(() {
+                              _scannerError = error.toString();
+                              _scannerInitialized = false;
+                            });
+                          }
+                        });
+                        return Container(
+                          color: Colors.black,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.white,
+                                  size: 48,
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  '摄像头启动失败',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     )
                   else
+                    // 显示加载状态
                     Container(
                       color: Colors.black,
                       child: const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
-                      ),
-                    ),
-                  
-                  // 扫描框
-                  Center(
-                    child: Container(
-                      width: 200,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: AppTheme.primaryColor,
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Stack(
-                        children: [
-                          // 四个角的装饰
-                          ...List.generate(4, (index) {
-                            final positions = [
-                              {'top': -1.0, 'left': -1.0}, // 左上
-                              {'top': -1.0, 'right': -1.0}, // 右上
-                              {'bottom': -1.0, 'left': -1.0}, // 左下
-                              {'bottom': -1.0, 'right': -1.0}, // 右下
-                            ];
-                            return Positioned(
-                              top: positions[index]['top'],
-                              left: positions[index]['left'],
-                              right: positions[index]['right'],
-                              bottom: positions[index]['bottom'],
-                              child: Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(color: Colors.white),
+                            SizedBox(height: 16),
+                            Text(
+                              '正在启动摄像头...',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
                               ),
-                            );
-                          }),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   
-                  // 加载状态
+                  // 扫描框（只在扫描器正常工作时显示）
+                  if (_scannerController != null && _scannerInitialized && _scannerError == null)
+                    Center(
+                      child: Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: AppTheme.primaryColor,
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Stack(
+                          children: [
+                            // 四个角的装饰
+                            ...List.generate(4, (index) {
+                              final positions = [
+                                {'top': -1.0, 'left': -1.0}, // 左上
+                                {'top': -1.0, 'right': -1.0}, // 右上
+                                {'bottom': -1.0, 'left': -1.0}, // 左下
+                                {'bottom': -1.0, 'right': -1.0}, // 右下
+                              ];
+                              return Positioned(
+                                top: positions[index]['top'],
+                                left: positions[index]['left'],
+                                right: positions[index]['right'],
+                                bottom: positions[index]['bottom'],
+                                child: Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryColor,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                  
+                  // 加载状态覆盖层
                   if (_isProcessing)
                     Container(
                       color: Colors.black.withOpacity(0.5),
@@ -460,13 +635,16 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
             // 提示文字
             Container(
               padding: const EdgeInsets.all(20),
-              child: const Text(
-                '将二维码放入框内进行扫描',
-                style: TextStyle(
-                  color: Color(0xFF64748B),
-                  fontSize: 14,
-                ),
+              child: Text(
+                _scannerError != null 
+                  ? '请切换到输入模式或检查摄像头权限'
+                  : '将二维码置于扫描框内',
                 textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],

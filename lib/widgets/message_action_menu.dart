@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../theme/app_theme.dart';
 
 enum MessageAction {
@@ -10,6 +11,7 @@ enum MessageAction {
   unfavorite,
   reply,
   select,
+  saveToLocal, // 新增：保存到本地（移动端文件消息）
 }
 
 class MessageActionMenu extends StatelessWidget {
@@ -74,12 +76,29 @@ class MessageActionMenu extends StatelessWidget {
   List<Widget> _buildActionItems(BuildContext context) {
     final actions = <Widget>[];
     
+    // 检查是否是移动端
+    final isMobile = _isMobile(context);
+    // 检查是否是文件消息
+    final hasFile = message['fileType'] != null && 
+                   message['fileName'] != null && 
+                   message['fileName'].toString().isNotEmpty;
+    
     // 复制
     if (message['text'] != null && message['text'].toString().isNotEmpty) {
       actions.add(_buildActionItem(
         icon: Icons.copy_rounded,
         label: '复制',
         onTap: () => onAction(MessageAction.copy),
+      ));
+    }
+    
+    // 保存到本地（仅移动端文件消息显示）
+    if (isMobile && hasFile) {
+      actions.add(_buildActionItem(
+        icon: Icons.download_rounded,
+        label: '保存到本地',
+        onTap: () => onAction(MessageAction.saveToLocal),
+        textColor: Colors.blue[600],
       ));
     }
     
@@ -112,22 +131,22 @@ class MessageActionMenu extends StatelessWidget {
     ));
     
     // 危险操作分隔符
-    actions.add(Container(
-      height: 0.5,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      color: Colors.grey[200],
-    ));
-    
-    // 发送方：只能撤回（群组内所有设备删除）
     if (isOwnMessage) {
+      actions.add(Container(
+        height: 0.5,
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        color: Colors.grey[200],
+      ));
+      
+      // 撤回
       actions.add(_buildActionItem(
         icon: Icons.undo_rounded,
         label: '撤回',
         textColor: Colors.orange[600],
         onTap: () => onAction(MessageAction.revoke),
       ));
-    } else {
-      // 接收方：只能删除（仅本地删除）
+      
+      // 删除
       actions.add(_buildActionItem(
         icon: Icons.delete_rounded,
         label: '删除',
@@ -137,6 +156,15 @@ class MessageActionMenu extends StatelessWidget {
     }
     
     return actions;
+  }
+
+  // 检查是否是移动端
+  bool _isMobile(BuildContext context) {
+    if (kIsWeb) {
+      return MediaQuery.of(context).size.width < 800;
+    }
+    return defaultTargetPlatform == TargetPlatform.android ||
+           defaultTargetPlatform == TargetPlatform.iOS;
   }
 
   Widget _buildActionItem({

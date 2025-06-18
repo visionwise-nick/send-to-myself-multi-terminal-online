@@ -24,6 +24,11 @@ class AppConfig {
   // 网络监控配置
   static const int NETWORK_MONITOR_INTERVAL = 120000; // 2分钟网络监控间隔
   
+  // 🔥 新增：设备状态配置
+  static const int DEVICE_STATUS_REFRESH_INTERVAL = 5000; // 5秒设备状态刷新间隔
+  static const int DEVICE_STATUS_RESPONSE_TIMEOUT = 3000; // 3秒状态响应超时
+  static const int INSTANT_STATUS_UPDATE_INTERVAL = 2000; // 2秒即时状态更新间隔
+  
   // 开发模式
   static const bool DEBUG_WEBSOCKET = true;
 } 

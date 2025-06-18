@@ -156,6 +156,12 @@ class WebSocketService {
         _chatMessageController.add(data);
         break;
         
+      case 'force_refresh_history': // 🔥 新增：处理强制刷新历史消息事件
+        // 转发强制刷新历史消息事件到聊天消息流
+        print('🔄 桥接强制刷新历史消息事件到聊天流');
+        _chatMessageController.add(data);
+        break;
+        
       default:
         // 转发其他消息到通用消息流
         print('📨 转发其他消息到通用流: $type');

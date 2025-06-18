@@ -375,14 +375,51 @@ class GroupService {
       print('退出群组响应状态码: ${response.statusCode}');
       print('退出群组响应内容: ${response.body}');
       
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+      // 🔥 增强错误处理 - 支持各种状态码
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        // 正常退出成功
+        final responseData = response.body.isNotEmpty 
+          ? jsonDecode(response.body) 
+          : {'success': true, 'message': '成功退出群组'};
+        return responseData;
       } else {
-        throw Exception('退出群组失败: ${response.body}');
+        // 🔥 增强错误处理，特别处理最后一台设备的情况
+        String errorMessage;
+        try {
+          final errorData = jsonDecode(response.body);
+          errorMessage = errorData['message'] ?? _getLeaveGroupErrorMessage(response.statusCode);
+        } catch (_) {
+          errorMessage = _getLeaveGroupErrorMessage(response.statusCode);
+        }
+        
+        print('❌ 退出群组失败: $errorMessage (状态码: ${response.statusCode})');
+        throw Exception(errorMessage);
       }
     } catch (e) {
-      print('退出群组失败: $e');
+      print('❌ 退出群组异常: $e');
       rethrow;
+    }
+  }
+  
+  // 🔥 新增：群组退出专用错误消息
+  String _getLeaveGroupErrorMessage(int statusCode) {
+    switch (statusCode) {
+      case 400:
+        return '群组ID无效或请求参数错误';
+      case 401:
+        return '登录已过期，请重新登录';
+      case 403:
+        return '您无权退出此群组';
+      case 404:
+        return '群组不存在或您不在此群组中';
+      case 409:
+        return '无法退出群组，可能是最后一台设备';
+      case 410:
+        return '群组已解散，无需退出';
+      case 500:
+        return '服务器内部错误，请稍后重试';
+      default:
+        return '退出群组失败，服务器错误: $statusCode';
     }
   }
   
