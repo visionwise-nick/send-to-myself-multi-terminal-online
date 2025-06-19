@@ -6310,14 +6310,14 @@ extension ChatScreenHeader on _ChatScreenState {
           if (isGroup)
             Consumer<GroupProvider>(
               builder: (context, groupProvider, child) {
-                final onlineCount = groupProvider?.onlineDevicesCount ?? 0;
-                final totalCount = groupProvider?.totalDevicesCount ?? 0;
+                final onlineCount = groupProvider.onlineDevicesCount;
+                final totalCount = groupProvider.totalDevicesCount;
                 
                 return GestureDetector(
                   onTap: () {
                     // 🔥 点击时触发设备状态诊断
                     print('🔄 用户点击在线设备数量，触发状态诊断...');
-                    groupProvider?.diagnosisDeviceStatus();
+                    groupProvider.diagnosisDeviceStatus();
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
