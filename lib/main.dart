@@ -17,8 +17,6 @@ import 'services/group_switch_sync_service.dart';
 // import 'services/push_notification_service.dart';  // 暂时注释以解决iOS构建问题
 import 'dart:async';
 import 'package:context_menus/context_menus.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
-import 'dart:io';
 
 void main() async {
   // 确保Flutter绑定初始化
@@ -193,116 +191,16 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   DateTime? _lastPausedTime;
-  late StreamSubscription _intentDataStreamSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    
-    // 🔥 新增：初始化分享接收功能
-    _initializeShareReceiving();
-  }
-  
-  // 🔥 新增：初始化分享接收功能
-  void _initializeShareReceiving() async {
-    try {
-      // 处理应用冷启动时的分享数据（文件和文字都通过getInitialMedia处理）
-      final initialSharedData = await ReceiveSharingIntent.instance.getInitialMedia();
-      if (initialSharedData.isNotEmpty) {
-        print('🎯 检测到应用启动时的分享数据: ${initialSharedData.length}个项目');
-        _handleSharedData(initialSharedData, isInitial: true);
-        
-        // 告诉库我们已经处理完意图
-        ReceiveSharingIntent.instance.reset();
-      }
-      
-      // 监听运行时的分享数据（文件和文字都通过getMediaStream处理）
-      _intentDataStreamSubscription = ReceiveSharingIntent.instance.getMediaStream().listen(
-        (List<SharedMediaFile> value) {
-          print('🎯 接收到分享数据: ${value.length}个项目');
-          _handleSharedData(value, isInitial: false);
-        },
-        onError: (error) {
-          print('❌ 接收分享数据出错: $error');
-        },
-      );
-      
-      print('✅ 分享接收功能初始化完成');
-    } catch (e) {
-      print('❌ 分享接收功能初始化失败: $e');
-    }
-  }
-  
-  // 🔥 新增：处理分享的数据（文件和文字）
-  void _handleSharedData(List<SharedMediaFile> sharedData, {required bool isInitial}) {
-    if (sharedData.isEmpty) return;
-    
-    // 延迟处理以确保应用完全初始化
-    Future.delayed(Duration(seconds: isInitial ? 2 : 0), () {
-      try {
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        
-        // 检查是否已登录
-        if (!authProvider.isLoggedIn) {
-          print('⚠️ 用户未登录，无法处理分享数据');
-          return;
-        }
-        
-        // 导航到聊天界面
-        _navigateToChat();
-        
-        // 处理分享的数据
-        for (final sharedFile in sharedData) {
-          // 检查是否有文字消息（文字分享通过message字段）
-          final message = sharedFile.message;
-          if (message != null && message.isNotEmpty) {
-            print('📤 准备发送分享文字: $message');
-            _sendSharedTextToChat(message);
-          }
-          
-          // 检查是否有文件路径（文件分享通过path字段）
-          final filePath = sharedFile.path;
-          if (filePath != null && filePath.isNotEmpty) {
-            print('📤 准备发送分享文件: $filePath');
-            _sendSharedFileToChat(sharedFile);
-          }
-        }
-        
-      } catch (e) {
-        print('❌ 处理分享数据失败: $e');
-      }
-    });
-  }
-  
-  // 🔥 新增：导航到聊天界面
-  void _navigateToChat() {
-    // 确保导航到主页并切换到聊天标签
-    GoRouter.of(context).go('/');
-  }
-  
-  // 🔥 新增：发送分享的文件到聊天
-  void _sendSharedFileToChat(SharedMediaFile sharedFile) {
-    print('📤 准备发送分享文件: ${sharedFile.path}');
-    
-    // TODO: 实现发送到聊天的逻辑
-    // 可以通过EventBus或Provider状态管理来实现
-    // 这里可以将文件信息存储到全局状态，然后在聊天界面监听并处理
-  }
-  
-  // 🔥 新增：发送分享的文字到聊天
-  void _sendSharedTextToChat(String text) {
-    print('📤 准备发送分享文字: $text');
-    
-    // TODO: 实现发送到聊天的逻辑
-    // 可以通过EventBus或Provider状态管理来实现
-    // 这里可以将文字存储到全局状态，然后在聊天界面监听并处理
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _intentDataStreamSubscription.cancel(); // 🔥 取消分享数据监听
     super.dispose();
   }
 

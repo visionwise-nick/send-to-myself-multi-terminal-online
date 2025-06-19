@@ -31,7 +31,6 @@ import 'package:desktop_drop/desktop_drop.dart'; // 🔥 新增：桌面端拖�
 import 'package:cross_file/cross_file.dart'; // 🔥 新增：XFile支持
 import 'package:super_clipboard/super_clipboard.dart'; // 🔥 新增：剪贴板文件支持（只在桌面端使用）
 import 'package:share_plus/share_plus.dart'; // 🔥 新增：系统分享功能
-import 'package:receive_sharing_intent/receive_sharing_intent.dart'; // 🔥 新增：接收分享功能
 
 // 🔥 条件导入：只在非移动端导入 super_clipboard
 import 'package:super_clipboard/super_clipboard.dart' if (dart.library.js) 'dart:html' show SystemClipboard, Formats;
