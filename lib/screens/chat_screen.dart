@@ -26,8 +26,6 @@ import 'package:video_player/video_player.dart';
 import '../services/device_auth_service.dart';
 import '../services/enhanced_sync_manager.dart'; // 🔥 新增导入
 import 'package:provider/provider.dart'; // 🔥 新增导入
-import '../providers/group_provider.dart'; // 🔥 新增导入
-import '../widgets/connection_status_widget.dart'; // 🔥 新增导入
 import 'package:gal/gal.dart'; // 🔥 新增：相册保存功能
 import 'package:desktop_drop/desktop_drop.dart'; // 🔥 新增：桌面端拖拽支持
 import 'package:cross_file/cross_file.dart'; // 🔥 新增：XFile支持
@@ -2236,8 +2234,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           // 🔥 彻底移除AppBar - 完全沉浸式聊天界面
           body: Column(
             children: [
-              // 🔥 新增：自定义页头，包含返回按钮、群组名称、在线状态
-              _buildChatHeader(isGroup, title),
               // 消息列表
               Expanded(
                 child: _isLoading
@@ -6245,114 +6241,6 @@ Add-Type -AssemblyName System.Drawing
           color: Colors.white54,
           size: 32,
         ),
-      ),
-    );
-  }
-}
-
-// 🔥 在ChatScreen类内部添加_buildChatHeader方法
-extension ChatScreenHeader on _ChatScreenState {
-  // 🔥 新增：构建聊天页头
-  Widget _buildChatHeader(bool isGroup, String title) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: AppTheme.dividerColor,
-            width: 0.5,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          // 🔥 返回按钮
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: Icon(
-              Icons.arrow_back,
-              color: AppTheme.textPrimaryColor,
-              size: 24,
-            ),
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(
-              minWidth: 40,
-              minHeight: 40,
-            ),
-          ),
-          
-          // 🔥 群组/对话标题
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimaryColor,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-          
-          // 🔥 连接状态 - 使用实际的连接状态组件
-          Transform.scale(
-            scale: 0.9, // 稍微缩小以适应页头
-            child: const ConnectionStatusWidget(showDeviceCount: false),
-          ),
-          
-          SizedBox(width: 12),
-          
-          // 🔥 在线设备数量 (仅群组显示)
-          if (isGroup)
-            Consumer<GroupProvider>(
-              builder: (context, groupProvider, child) {
-                final onlineCount = groupProvider.onlineDevicesCount;
-                final totalCount = groupProvider.totalDevicesCount;
-                
-                return GestureDetector(
-                  onTap: () {
-                    // 🔥 点击时触发设备状态诊断
-                    print('🔄 用户点击在线设备数量，触发状态诊断...');
-                    groupProvider.diagnosisDeviceStatus();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppTheme.primaryColor.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.people,
-                          size: 14,
-                          color: AppTheme.primaryColor,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          '$onlineCount/$totalCount在线',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-        ],
       ),
     );
   }

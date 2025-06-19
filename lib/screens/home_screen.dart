@@ -312,8 +312,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                   ),
                     ),
                     const SizedBox(width: 8),
-                    // 🔥 连接状态显示在标题栏
-                    const ConnectionStatusWidget(showDeviceCount: false),
+                    // 🔥 连接状态显示在标题栏，右边显示在线设备数
+                    const ConnectionStatusWidget(showDeviceCount: true),
                   ],
                 ),
                 Text(
@@ -345,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             children: [
               Text(
                 '群组',
-                style: TextStyle(
+              style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textPrimaryColor,
@@ -630,10 +630,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             child: Icon(
               icon,
               size: size * 0.7,
-              color: AppTheme.textSecondaryColor,
+                color: AppTheme.textSecondaryColor,
+              ),
             ),
           ),
-        ),
       ),
     );
   }
@@ -822,7 +822,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             // 抽屉头部
             Container(
               padding: const EdgeInsets.all(12), // 🔥 减小padding从20到12
-              decoration: BoxDecoration(
+      decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -841,7 +841,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                     child: const Icon(
                       Icons.send_rounded, // 🔥 改回产品图标
                       size: 18, // 🔥 减小图标从24到18
-                      color: Colors.white,
+        color: Colors.white,
                     ),
                   ),
                   const SizedBox(width: 8), // 🔥 减小间距从12到8
@@ -1054,19 +1054,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         final currentGroup = groupProvider.currentGroup;
         final groupName = currentGroup?['name'] ?? '无群组';
         
-        return Container(
+    return Container(
           padding: const EdgeInsets.fromLTRB(4, 4, 8, 4), // 🔥 进一步压缩高度
-          decoration: BoxDecoration(
+      decoration: BoxDecoration(
             color: Colors.white,
-            border: Border(
-              bottom: BorderSide(
-                color: AppTheme.dividerColor,
-                width: 0.5,
-              ),
-            ),
+        border: Border(
+          bottom: BorderSide(
+            color: AppTheme.dividerColor,
+            width: 0.5,
           ),
-          child: Row(
-            children: [
+        ),
+      ),
+      child: Row(
+        children: [
               // 🔥 群组图标按钮（可点击打开抽屉）
               Builder(
                 builder: (context) => GestureDetector(
@@ -1122,13 +1122,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
               // 🔥 右对齐区域
               const Spacer(),
               
-              // 🔥 连接状态显示在标题栏右侧
+              // 🔥 连接状态显示在标题栏右侧，包含在线设备数
               Transform.scale(
                 scale: 0.75, // 🔥 进一步缩小到75%
-                child: const ConnectionStatusWidget(showDeviceCount: false),
-              ),
-            ],
+                child: const ConnectionStatusWidget(showDeviceCount: true),
           ),
+        ],
+      ),
         );
       },
     );
@@ -1173,9 +1173,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
 
   // 🔥 桌面端底部操作区
   Widget _buildDesktopSidebarFooter() {
-    return Container(
+        return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+          decoration: BoxDecoration(
         color: Colors.white,
         border: Border(
           top: BorderSide(
@@ -1185,8 +1185,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         ),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+            mainAxisSize: MainAxisSize.min,
+            children: [
           // 退出登录按钮
           SizedBox(
             width: double.infinity,
@@ -1220,17 +1220,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           const SizedBox(height: 12),
           
           // 版权信息
-          Text(
+              Text(
             '© 2024 Send To Myself',
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w400,
               color: AppTheme.textSecondaryColor.withOpacity(0.6),
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
   }
 
   // 🔥 群组操作方法
