@@ -12,6 +12,7 @@ enum MessageAction {
   reply,
   select,
   saveToLocal, // 新增：保存到本地（移动端文件消息）
+  shareToSystem, // 🔥 新增：分享到系统应用
 }
 
 class MessageActionMenu extends StatelessWidget {
@@ -99,6 +100,16 @@ class MessageActionMenu extends StatelessWidget {
         label: '保存到本地',
         onTap: () => onAction(MessageAction.saveToLocal),
         textColor: Colors.blue[600],
+      ));
+    }
+    
+    // 🔥 分享到系统应用（文件消息或有文字内容的消息）
+    if (hasFile || (message['text'] != null && message['text'].toString().isNotEmpty)) {
+      actions.add(_buildActionItem(
+        icon: Icons.ios_share_rounded,
+        label: '分享',
+        onTap: () => onAction(MessageAction.shareToSystem),
+        textColor: Colors.green[600],
       ));
     }
     

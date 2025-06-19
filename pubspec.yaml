@@ -109,6 +109,12 @@ dependencies:
   
   # 桌面端右键菜单
   context_menus: ^2.0.0+1
+  
+  # 🔥 新增：系统分享功能
+  share_plus: ^10.0.2
+  
+  # 🔥 新增：接收分享功能（从外部应用分享到此应用）
+  receive_sharing_intent: ^1.8.0
 
 dev_dependencies:
   flutter_test:

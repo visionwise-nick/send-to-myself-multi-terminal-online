@@ -30,6 +30,8 @@ import 'package:gal/gal.dart'; // 🔥 新增：相册保存功能
 import 'package:desktop_drop/desktop_drop.dart'; // 🔥 新增：桌面端拖拽支持
 import 'package:cross_file/cross_file.dart'; // 🔥 新增：XFile支持
 import 'package:super_clipboard/super_clipboard.dart'; // 🔥 新增：剪贴板文件支持（只在桌面端使用）
+import 'package:share_plus/share_plus.dart'; // 🔥 新增：系统分享功能
+import 'package:receive_sharing_intent/receive_sharing_intent.dart'; // 🔥 新增：接收分享功能
 
 // 🔥 条件导入：只在非移动端导入 super_clipboard
 import 'package:super_clipboard/super_clipboard.dart' if (dart.library.js) 'dart:html' show SystemClipboard, Formats;
@@ -4980,6 +4982,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       case MessageAction.saveToLocal:
         await _saveMessageToLocal(message);
         break;
+      
+      case MessageAction.shareToSystem:
+        await _shareMessageToSystem(message);
+        break;
     }
   }
   
@@ -5359,6 +5365,169 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             backgroundColor: Colors.red,
           ),
         );
+      }
+    }
+  }
+  
+  // 🔥 新增：分享消息到系统应用
+  Future<void> _shareMessageToSystem(Map<String, dynamic> message) async {
+    try {
+      final hasFile = message['fileType'] != null && 
+                     message['fileName'] != null && 
+                     message['fileName'].toString().isNotEmpty;
+      final text = message['text']?.toString() ?? '';
+      
+      if (hasFile) {
+        // 分享文件
+        await _shareFile(message);
+      } else if (text.isNotEmpty) {
+        // 分享文字
+        await Share.share(
+          text,
+          subject: 'Send To Myself - 消息分享',
+        );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text('文字已分享'),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('分享消息失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text('分享失败: $e'),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+  
+  // 🔥 新增：分享文件
+  Future<void> _shareFile(Map<String, dynamic> message) async {
+    final fileName = message['fileName']?.toString() ?? '';
+    final filePath = message['filePath']?.toString();
+    final fileUrl = message['fileUrl']?.toString();
+    final text = message['text']?.toString() ?? '';
+    
+    String? pathToShare;
+    
+    // 1. 优先使用本地路径
+    if (filePath != null && File(filePath).existsSync()) {
+      pathToShare = filePath;
+    }
+    // 2. 如果没有本地文件，尝试从缓存获取
+    else if (fileUrl != null) {
+      pathToShare = await _localStorage.getFileFromCache(fileUrl);
+      
+      // 3. 如果缓存中也没有，先下载文件
+      if (pathToShare == null || !File(pathToShare).existsSync()) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text('正在准备文件...'),
+                ],
+              ),
+              backgroundColor: Colors.blue,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        
+        pathToShare = await _downloadFileForSaving(fileUrl, fileName);
+      }
+    }
+    
+    if (pathToShare != null && File(pathToShare).existsSync()) {
+      // 分享文件
+      final xFile = XFile(pathToShare);
+      
+      if (text.isNotEmpty) {
+        // 如果有文字，一起分享
+        await Share.shareXFiles(
+          [xFile],
+          text: text,
+          subject: 'Send To Myself - $fileName',
+        );
+      } else {
+        // 只分享文件
+        await Share.shareXFiles(
+          [xFile],
+          subject: 'Send To Myself - $fileName',
+        );
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text('文件 $fileName 已分享'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } else {
+      // 文件不可用，只分享文字（如果有）
+      if (text.isNotEmpty) {
+        await Share.share(
+          '$text\n\n[文件] $fileName',
+          subject: 'Send To Myself - 消息分享',
+        );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.info, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text('文件不可用，已分享文字内容'),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        throw Exception('文件不可用且无文字内容可分享');
       }
     }
   }
