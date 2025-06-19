@@ -816,10 +816,101 @@ class GroupProvider extends ChangeNotifier {
   
   // 🔥 新增：获取在线设备数量
   int get onlineDevicesCount {
+    if (_currentGroup == null) {
+      print('🔍 调试：当前群组为空，返回0');
+      return 0;
+    }
+    
+    final devices = List<Map<String, dynamic>>.from(_currentGroup!['devices'] ?? []);
+    print('🔍 调试：当前群组有 ${devices.length} 台设备');
+    
+    int count = 0;
+    
+    for (var device in devices) {
+      bool isOnline = false;
+      
+      print('🔍 调试设备状态：');
+      print('  - 设备名称: ${device['name']}');
+      print('  - 设备ID: ${device['id']}');
+      print('  - is_logged_out: ${device['is_logged_out']}');
+      print('  - isLoggedOut: ${device['isLoggedOut']}');
+      print('  - isOnline: ${device['isOnline']}');
+      print('  - is_online: ${device['is_online']}');
+      print('  - isCurrentDevice: ${device['isCurrentDevice']}');
+      
+      // 🔥 新增：特殊处理当前设备，当前设备始终在线
+      if (device['isCurrentDevice'] == true) {
+        isOnline = true;
+        print('  - 判定结果: 在线 (当前设备)');
+      } else if (device['is_logged_out'] == true || device['isLoggedOut'] == true) {
+        isOnline = false;
+        print('  - 判定结果: 离线 (已登出)');
+      } else if (device['isOnline'] == true || device['is_online'] == true) {
+        isOnline = true;
+        print('  - 判定结果: 在线');
+      } else {
+        isOnline = false;
+        print('  - 判定结果: 离线 (默认)');
+      }
+      
+      if (isOnline) {
+        count++;
+      }
+    }
+    
+    print('🔍 调试：最终统计 $count/${devices.length} 台设备在线');
+    return count;
+  }
+  
+  // 🔥 新增：获取总设备数量
+  int get totalDevicesCount {
     if (_currentGroup == null) return 0;
     
     final devices = List<Map<String, dynamic>>.from(_currentGroup!['devices'] ?? []);
-    int count = 0;
+    return devices.length;
+  }
+  
+  // 🔥 新增：诊断设备状态问题
+  void diagnosisDeviceStatus() {
+    print('\n========== 🔍 设备状态诊断开始 ==========');
+    
+    if (_currentGroup == null) {
+      print('❌ 当前群组为空');
+      return;
+    }
+    
+    print('📋 当前群组信息：');
+    print('  - 群组ID: ${_currentGroup!['id']}');
+    print('  - 群组名称: ${_currentGroup!['name']}');
+    print('  - 设备数量: ${_currentGroup!['devices']?.length ?? 0}');
+    
+    if (_currentGroup!['devices'] == null || _currentGroup!['devices'].isEmpty) {
+      print('❌ 群组中没有设备数据');
+      return;
+    }
+    
+    final devices = List<Map<String, dynamic>>.from(_currentGroup!['devices']);
+    print('\n📱 设备详情：');
+    
+    for (int i = 0; i < devices.length; i++) {
+      final device = devices[i];
+      print('设备 ${i + 1}:');
+      print('  - 名称: ${device['name'] ?? 'unknown'}');
+      print('  - ID: ${device['id'] ?? 'unknown'}');
+      print('  - 类型: ${device['type'] ?? 'unknown'}');
+      print('  - isOnline: ${device['isOnline']}');
+      print('  - is_online: ${device['is_online']}');
+      print('  - is_logged_out: ${device['is_logged_out']}');
+      print('  - isLoggedOut: ${device['isLoggedOut']}');
+      print('  - isCurrentDevice: ${device['isCurrentDevice']}');
+      print('  - lastActivity: ${device['lastActivity']}');
+      print('  - 原始数据: $device');
+      print('');
+    }
+    
+    // 重新计算在线数量
+    int onlineCount = 0;
+    int totalCount = devices.length;
     
     for (var device in devices) {
       bool isOnline = false;
@@ -831,19 +922,16 @@ class GroupProvider extends ChangeNotifier {
       }
       
       if (isOnline) {
-        count++;
+        onlineCount++;
       }
     }
     
-    return count;
-  }
-  
-  // 🔥 新增：获取总设备数量
-  int get totalDevicesCount {
-    if (_currentGroup == null) return 0;
+    print('📊 统计结果：');
+    print('  - 在线设备: $onlineCount');
+    print('  - 总设备数: $totalCount');
+    print('  - 在线率: ${totalCount > 0 ? (onlineCount / totalCount * 100).toStringAsFixed(1) : 0}%');
     
-    final devices = List<Map<String, dynamic>>.from(_currentGroup!['devices'] ?? []);
-    return devices.length;
+    print('========== 🔍 设备状态诊断结束 ==========\n');
   }
 
   @override

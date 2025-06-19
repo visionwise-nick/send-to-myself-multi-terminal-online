@@ -192,7 +192,14 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
           // 设备在线数量
           GestureDetector(
             onTap: () {
-              // 🔥 新增：点击设备数量时强制刷新设备状态
+              // 🔥 修改：点击设备数量时强制刷新设备状态并进行诊断
+              print('🔄 用户点击设备数量，触发状态刷新和诊断...');
+              
+              // 1. 触发诊断
+              final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+              groupProvider.diagnosisDeviceStatus();
+              
+              // 2. 强制刷新设备状态
               _forceRefreshDeviceStatus();
             },
             child: Container(
@@ -645,15 +652,34 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
   void _forceRefreshDeviceStatus() {
     print('🔄 强制刷新设备状态...');
     if (_wsManager.isConnected) {
+      print('🔍 调试：发送设备状态刷新请求');
+      
+      // 1. 请求群组设备状态
       _wsManager.emit('request_group_devices_status', {
         'timestamp': DateTime.now().toIso8601String(),
         'reason': 'manual_refresh'
       });
+      
+      // 2. 请求在线设备列表
       _wsManager.emit('get_online_devices', {
         'timestamp': DateTime.now().toIso8601String(),
         'reason': 'manual_refresh'
       });
-      print('✅ 设备状态刷新请求已发送');
+      
+      // 3. 🔥 新增：请求设备状态更新
+      _wsManager.emit('request_device_status', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'manual_refresh'
+      });
+      
+      // 4. 🔥 新增：通知当前设备活跃状态
+      _wsManager.emit('device_activity_update', {
+        'status': 'active',
+        'timestamp': DateTime.now().toIso8601String(),
+        'last_active': DateTime.now().toIso8601String(),
+      });
+      
+      print('✅ 设备状态刷新请求已发送（包含4个请求）');
     } else {
       print('❌ WebSocket未连接，无法刷新设备状态');
     }

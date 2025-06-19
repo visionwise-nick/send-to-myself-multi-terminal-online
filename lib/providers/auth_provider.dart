@@ -319,30 +319,38 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
             final bool isCurrentDevice = (_deviceInfo?['id'] != null && device['id'] == _deviceInfo?['id']);
             device['isCurrentDevice'] = isCurrentDevice;
             
+            print('🔍 处理设备: ${device['name']}(${device['id']})');
+            print('  - 是否为当前设备: $isCurrentDevice');
+            print('  - 原始 is_online: ${device['is_online']}');
+            print('  - 原始 is_logged_out: ${device['is_logged_out']}');
+            
             // 根据设备的真实状态判断在线状态
             bool isOnline = false;
             
             if (isCurrentDevice) {
-              // 当前设备始终在线
+              // 🔥 关键修复：当前设备始终在线
               isOnline = true;
-              print('当前设备: ${device['name']}(${device['id']}) - 在线');
+              device['isOnline'] = true;
+              device['is_online'] = true; // 同时设置两个字段确保兼容
+              print('  - 当前设备设置为在线');
             } else {
               // 其他设备根据服务器数据判断
               if (device['is_logged_out'] == true) {
                 isOnline = false;
-                print('设备${device['name']}(${device['id']}) - 已登出');
+                print('  - 设备已登出，设置为离线');
               } else if (device['is_online'] == true) {
                 // 服务器说在线，优先相信服务器状态
                 isOnline = true;
-                print('设备${device['name']}(${device['id']}) - 在线 (服务器状态)');
+                print('  - 根据服务器状态设置为在线');
               } else {
                 // 服务器明确说离线
                 isOnline = false;
-                print('设备${device['name']}(${device['id']}) - 离线 (服务器状态)');
+                print('  - 根据服务器状态设置为离线');
               }
+              
+              device['isOnline'] = isOnline;
+              device['is_online'] = isOnline; // 同时设置两个字段确保兼容
             }
-            
-            device['isOnline'] = isOnline;
           }
         }
       }
