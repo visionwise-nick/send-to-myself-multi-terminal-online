@@ -1,4 +1,6 @@
 PODS:
+  - app_links (1.0.0):
+    - FlutterMacOS
   - appkit_ui_element_colors (1.0.0):
     - FlutterMacOS
   - desktop_drop (0.0.1):
@@ -17,8 +19,6 @@ PODS:
   - gal (1.0.0):
     - Flutter
     - FlutterMacOS
-  - irondash_engine_context (0.0.1):
-    - FlutterMacOS
   - macos_ui (0.1.0):
     - FlutterMacOS
   - macos_window_utils (1.0.0):
@@ -33,8 +33,6 @@ PODS:
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - super_native_extensions (0.0.1):
-    - FlutterMacOS
   - url_launcher_macos (0.0.1):
     - FlutterMacOS
   - video_player_avfoundation (0.0.1):
@@ -42,6 +40,7 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - app_links (from `Flutter/ephemeral/.symlinks/plugins/app_links/macos`)
   - appkit_ui_element_colors (from `Flutter/ephemeral/.symlinks/plugins/appkit_ui_element_colors/macos`)
   - desktop_drop (from `Flutter/ephemeral/.symlinks/plugins/desktop_drop/macos`)
   - device_info_plus (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos`)
@@ -51,18 +50,18 @@ DEPENDENCIES:
   - flutter_secure_storage_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_macos/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - gal (from `Flutter/ephemeral/.symlinks/plugins/gal/darwin`)
-  - irondash_engine_context (from `Flutter/ephemeral/.symlinks/plugins/irondash_engine_context/macos`)
   - macos_ui (from `Flutter/ephemeral/.symlinks/plugins/macos_ui/macos`)
   - macos_window_utils (from `Flutter/ephemeral/.symlinks/plugins/macos_window_utils/macos`)
   - mobile_scanner (from `Flutter/ephemeral/.symlinks/plugins/mobile_scanner/macos`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
   - share_plus (from `Flutter/ephemeral/.symlinks/plugins/share_plus/macos`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
-  - super_native_extensions (from `Flutter/ephemeral/.symlinks/plugins/super_native_extensions/macos`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
   - video_player_avfoundation (from `Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin`)
 
 EXTERNAL SOURCES:
+  app_links:
+    :path: Flutter/ephemeral/.symlinks/plugins/app_links/macos
   appkit_ui_element_colors:
     :path: Flutter/ephemeral/.symlinks/plugins/appkit_ui_element_colors/macos
   desktop_drop:
@@ -81,8 +80,6 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral
   gal:
     :path: Flutter/ephemeral/.symlinks/plugins/gal/darwin
-  irondash_engine_context:
-    :path: Flutter/ephemeral/.symlinks/plugins/irondash_engine_context/macos
   macos_ui:
     :path: Flutter/ephemeral/.symlinks/plugins/macos_ui/macos
   macos_window_utils:
@@ -95,14 +92,13 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/share_plus/macos
   shared_preferences_foundation:
     :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
-  super_native_extensions:
-    :path: Flutter/ephemeral/.symlinks/plugins/super_native_extensions/macos
   url_launcher_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
   video_player_avfoundation:
     :path: Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin
 
 SPEC CHECKSUMS:
+  app_links: 9028728e32c83a0831d9db8cf91c526d16cc5468
   appkit_ui_element_colors: c8e13c23cbd781e0f5d9b75cad686e6a4bb958da
   desktop_drop: e0b672a7d84c0a6cbc378595e82cdb15f2970a43
   device_info_plus: b0fafc687fb901e2af612763340f1b0d4352f8e5
@@ -112,14 +108,12 @@ SPEC CHECKSUMS:
   flutter_secure_storage_macos: 7f45e30f838cf2659862a4e4e3ee1c347c2b3b54
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   gal: baecd024ebfd13c441269ca7404792a7152fde89
-  irondash_engine_context: 893c7d96d20ce361d7e996f39d360c4c2f9869ba
   macos_ui: 2047a8e6536a80491ef10684c53ca500e04f1bcf
   macos_window_utils: 3bca8603c2a1cf2257351dfe6bbccc9accf739fd
   mobile_scanner: 2f0c13d5ef778c4e5121348d775dce17f18e79d0
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   share_plus: 510bf0af1a42cd602274b4629920c9649c52f4cc
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
-  super_native_extensions: c2795d6d9aedf4a79fae25cb6160b71b50549189
   url_launcher_macos: 0fba8ddabfc33ce0a9afe7c5fef5aab3d8d2d673
   video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
 

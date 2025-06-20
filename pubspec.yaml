@@ -86,7 +86,8 @@ dependencies:
   desktop_drop: ^0.4.4
   
   # 桌面端剪贴板文件支持
-  super_clipboard: ^0.8.0
+  # super_clipboard: ^0.8.0
+  # 临时禁用以解决构建问题
   
   # 🔥 修复：更新视频缩略图插件版本以解决Android构建问题
   # fc_native_video_thumbnail: ^0.5.1
@@ -112,6 +113,9 @@ dependencies:
   
   # 🔥 新增：系统分享功能
   share_plus: ^10.0.2
+  
+  # 🔥 新增：处理系统分享和app链接
+  app_links: ^3.5.0
 
 dev_dependencies:
   flutter_test:

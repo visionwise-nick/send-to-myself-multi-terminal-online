@@ -14,15 +14,39 @@ import 'services/device_auth_service.dart';
 import 'services/local_storage_service.dart';
 import 'services/enhanced_sync_manager.dart';
 import 'services/group_switch_sync_service.dart';
+import 'services/system_share_service.dart';
+import 'services/background_share_service.dart';
+import 'screens/share_status_screen.dart';
 // import 'services/push_notification_service.dart';  // 暂时注释以解决iOS构建问题
 import 'dart:async';
+import 'package:flutter/services.dart';
 import 'package:context_menus/context_menus.dart';
 
 void main() async {
   // 确保Flutter绑定初始化
   WidgetsFlutterBinding.ensureInitialized();
   
-  // 🔥 修复：立即启动应用UI，将初始化工作移到后台
+  // 🔥 新增：检查是否为分享Intent
+  bool isShareIntent = false;
+  try {
+    const platform = MethodChannel('com.example.send_to_myself/share');
+    final bool? isShare = await platform.invokeMethod('isShareIntent');
+    isShareIntent = isShare ?? false;
+    
+    if (isShareIntent) {
+      print('✅ 检测到分享Intent，将显示分享处理界面');
+      // 启动分享处理界面（不再在此处重复调用后台处理）
+      runApp(MaterialApp(
+        home: const ShareStatusScreen(),
+        debugShowCheckedModeBanner: false,
+      ));
+      return;
+    }
+  } catch (e) {
+    print('❌ 检查分享Intent失败: $e，继续正常启动应用');
+  }
+  
+  // 🔥 修复：正常启动应用UI，将初始化工作移到后台
   runApp(
     // 提供认证状态和群组状态
     MultiProvider(
@@ -38,6 +62,8 @@ void main() async {
         Provider<GroupSwitchSyncService>(create: (_) => GroupSwitchSyncService()),
         // 🔥 新增：提供WebSocket管理器
         Provider<WebSocketManager>(create: (_) => WebSocketManager()),
+        // 🔥 新增：提供系统分享服务
+        Provider<SystemShareService>(create: (_) => SystemShareService()),
         // 🔥 新增：提供推送通知服务（暂时注释以解决iOS构建问题）
         // Provider<PushNotificationService>.value(value: pushNotificationService),
       ],
@@ -63,6 +89,7 @@ Future<void> _performBackgroundInitialization() async {
     final localStorage = LocalStorageService();
     final enhancedSyncManager = EnhancedSyncManager();
     final groupSwitchService = GroupSwitchSyncService();
+    final systemShareService = SystemShareService();
     // final pushNotificationService = PushNotificationService();  // 暂时注释
     
     // 获取设备信息
@@ -85,6 +112,15 @@ Future<void> _performBackgroundInitialization() async {
     // 获取认证信息
     final token = await authService.getAuthToken();
     final serverDeviceId = await authService.getServerDeviceId();
+    
+    // 🔥 初始化系统分享服务
+    try {
+      print('📤 初始化系统分享服务...');
+      await systemShareService.initialize();
+      print('✅ 系统分享服务初始化完成');
+    } catch (e) {
+      print('❌ 系统分享服务初始化失败: $e');
+    }
     
     if (token != null && serverDeviceId != null) {
       // 🔥 初始化推送通知服务（暂时注释以解决iOS构建问题）

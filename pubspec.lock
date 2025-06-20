@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.11"
+  app_links:
+    dependency: "direct main"
+    description:
+      name: app_links
+      sha256: "3ced568a5d9e309e99af71285666f1f3117bddd0bd5b3317979dccc1a40cada4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.5.1"
   appkit_ui_element_colors:
     dependency: transitive
     description:
@@ -360,6 +368,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  gtk:
+    dependency: transitive
+    description:
+      name: gtk
+      sha256: e8ce9ca4b1df106e4d72dad201d345ea1a036cc12c360f1a7d5a758f78ffa42c
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   html:
     dependency: transitive
     description:
@@ -400,22 +416,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.18.1"
-  irondash_engine_context:
-    dependency: transitive
-    description:
-      name: irondash_engine_context
-      sha256: cd7b769db11a2b5243b037c8a9b1ecaef02e1ae27a2d909ffa78c1dad747bb10
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.4"
-  irondash_message_channel:
-    dependency: transitive
-    description:
-      name: irondash_message_channel
-      sha256: dd581214215dca054bd9873209d690ec3609288c28774cb509dbd86b21180cf8
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.6.0"
   js:
     dependency: transitive
     description:
@@ -600,14 +600,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.0"
-  pixel_snap:
-    dependency: transitive
-    description:
-      name: pixel_snap
-      sha256: "677410ea37b07cd37ecb6d5e6c0d8d7615a7cf3bd92ba406fd1ac57e937d1fb0"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.5"
   platform:
     dependency: transitive
     description:
@@ -797,22 +789,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
-  super_clipboard:
-    dependency: "direct main"
-    description:
-      name: super_clipboard
-      sha256: "15d25eb88df8e904e0c2ef77378c6010cc57bbfc0b6f91f2416d08fad5fcca92"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.8.5"
-  super_native_extensions:
-    dependency: transitive
-    description:
-      name: super_native_extensions
-      sha256: f96db6b137a0b135e43034289bb55ca6447b65225076036e81f97ebb6381ffeb
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.8.5"
   term_glyph:
     dependency: transitive
     description:

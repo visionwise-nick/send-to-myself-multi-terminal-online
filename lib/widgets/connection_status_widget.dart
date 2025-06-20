@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../services/websocket_manager.dart' as ws;
 import '../providers/group_provider.dart';
@@ -139,10 +140,10 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
         children: [
           // WebSocket连接状态
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
               color: _getStatusColor().withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: _getStatusColor().withOpacity(0.3),
                 width: 1,
@@ -187,59 +188,60 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
             ),
           ),
           
-          SizedBox(width: 8),
+          SizedBox(width: 6),
           
-          // 设备在线数量
-          GestureDetector(
-            onTap: () {
-              // 🔥 修改：点击设备数量时强制刷新设备状态并进行诊断
-              print('🔄 用户点击设备数量，触发状态刷新和诊断...');
-              
-              // 1. 触发诊断
-              final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-              groupProvider.diagnosisDeviceStatus();
-              
-              // 2. 强制刷新设备状态
-              _forceRefreshDeviceStatus();
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: onlineCount > 0 
-                  ? Colors.green.withOpacity(0.1) 
-                  : Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
+          // 设备在线数量 - 移动端显示"n/m在线"，桌面端隐藏
+          if (_isMobile()) 
+            GestureDetector(
+              onTap: () {
+                // 🔥 修改：点击设备数量时强制刷新设备状态并进行诊断
+                print('🔄 用户点击设备数量，触发状态刷新和诊断...');
+                
+                // 1. 触发诊断
+                final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+                groupProvider.diagnosisDeviceStatus();
+                
+                // 2. 强制刷新设备状态
+                _forceRefreshDeviceStatus();
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
                   color: onlineCount > 0 
-                    ? Colors.green.withOpacity(0.3) 
-                    : Colors.grey.withOpacity(0.3),
-                  width: 1,
+                    ? Colors.green.withOpacity(0.1) 
+                    : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: onlineCount > 0 
+                      ? Colors.green.withOpacity(0.3) 
+                      : Colors.grey.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: onlineCount > 0 ? Colors.green : Colors.grey,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      '$onlineCount/$totalCount在线',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: onlineCount > 0 ? Colors.green[700] : Colors.grey[600],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: onlineCount > 0 ? Colors.green : Colors.grey,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  SizedBox(width: 4),
-                  Text(
-                    '$onlineCount/$totalCount在线',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: onlineCount > 0 ? Colors.green[700] : Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
             ),
-          ),
         ],
       ),
     );
@@ -829,5 +831,14 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
         _forceRefreshDeviceStatus();
       }
     });
+  }
+
+  // 判断是否为移动端
+  bool _isMobile() {
+    if (kIsWeb) {
+      return MediaQuery.of(context).size.width < 800;
+    }
+    return defaultTargetPlatform == TargetPlatform.android ||
+           defaultTargetPlatform == TargetPlatform.iOS;
   }
 } 

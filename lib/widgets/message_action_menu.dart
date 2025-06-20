@@ -9,10 +9,10 @@ enum MessageAction {
   forward,
   favorite,
   unfavorite,
-  reply,
   select,
   saveToLocal, // 新增：保存到本地（移动端文件消息）
   shareToSystem, // 🔥 新增：分享到系统应用
+  openFileLocation, // 🔥 新增：打开文件位置（桌面端）
 }
 
 class MessageActionMenu extends StatelessWidget {
@@ -113,57 +113,52 @@ class MessageActionMenu extends StatelessWidget {
       ));
     }
     
-    // 转发
-    actions.add(_buildActionItem(
-      icon: Icons.share_rounded,
-      label: '转发',
-      onTap: () => onAction(MessageAction.forward),
-    ));
-    
-    // 收藏/取消收藏
-    actions.add(_buildActionItem(
-      icon: isFavorited ? Icons.star : Icons.star_border_rounded,
-      label: isFavorited ? '取消收藏' : '收藏',
-      onTap: () => onAction(isFavorited ? MessageAction.unfavorite : MessageAction.favorite),
-    ));
-    
-    // 回复
-    actions.add(_buildActionItem(
-      icon: Icons.reply_rounded,
-      label: '回复',
-      onTap: () => onAction(MessageAction.reply),
-    ));
-    
-    // 多选
-    actions.add(_buildActionItem(
-      icon: Icons.checklist_rounded,
-      label: '多选',
-      onTap: () => onAction(MessageAction.select),
-    ));
-    
-    // 危险操作分隔符
-    if (isOwnMessage) {
-      actions.add(Container(
-        height: 0.5,
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        color: Colors.grey[200],
-      ));
+    // 🔥 移动端：移除转发、收藏功能
+    // 桌面端：根据需要显示不同的菜单
+    if (!isMobile) {
+      // 桌面端菜单：仅保留"打开文件位置"、"删除"和"回复"
+      if (hasFile) {
+        actions.add(_buildActionItem(
+          icon: Icons.folder_open_rounded,
+          label: '打开文件位置',
+          onTap: () => onAction(MessageAction.openFileLocation),
+          textColor: Colors.blue[600],
+        ));
+      }
       
-      // 撤回
-      actions.add(_buildActionItem(
-        icon: Icons.undo_rounded,
-        label: '撤回',
-        textColor: Colors.orange[600],
-        onTap: () => onAction(MessageAction.revoke),
-      ));
+      // 桌面端回复功能已移除
       
-      // 删除
+      // 桌面端删除
       actions.add(_buildActionItem(
         icon: Icons.delete_rounded,
         label: '删除',
         textColor: Colors.red[600],
         onTap: () => onAction(MessageAction.delete),
       ));
+    } else {
+      // 移动端菜单：移除回复功能，保留多选
+      
+      actions.add(_buildActionItem(
+        icon: Icons.checklist_rounded,
+        label: '多选',
+        onTap: () => onAction(MessageAction.select),
+      ));
+      
+      // 移动端：移除撤回功能，只保留删除（如果是自己的消息）
+      if (isOwnMessage) {
+        actions.add(Container(
+          height: 0.5,
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          color: Colors.grey[200],
+        ));
+        
+        actions.add(_buildActionItem(
+          icon: Icons.delete_rounded,
+          label: '删除',
+          textColor: Colors.red[600],
+          onTap: () => onAction(MessageAction.delete),
+        ));
+      }
     }
     
     return actions;

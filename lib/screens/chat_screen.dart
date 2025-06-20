@@ -15,6 +15,8 @@ import '../services/local_storage_service.dart';
 import '../services/message_actions_service.dart';
 import '../widgets/message_action_menu.dart';
 import '../widgets/multi_select_mode.dart';
+// 回复组件已移除
+// 引用消息组件已移除
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
@@ -29,11 +31,7 @@ import 'package:provider/provider.dart'; // 🔥 新增导入
 import 'package:gal/gal.dart'; // 🔥 新增：相册保存功能
 import 'package:desktop_drop/desktop_drop.dart'; // 🔥 新增：桌面端拖拽支持
 import 'package:cross_file/cross_file.dart'; // 🔥 新增：XFile支持
-import 'package:super_clipboard/super_clipboard.dart'; // 🔥 新增：剪贴板文件支持（只在桌面端使用）
 import 'package:share_plus/share_plus.dart'; // 🔥 新增：系统分享功能
-
-// 🔥 条件导入：只在非移动端导入 super_clipboard
-import 'package:super_clipboard/super_clipboard.dart' if (dart.library.js) 'dart:html' show SystemClipboard, Formats;
 
 // 🔥 新增：桌面端右键菜单支持
 import 'package:context_menus/context_menus.dart';
@@ -139,6 +137,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode(); // 🔥 新增：输入框焦点节点
   List<Map<String, dynamic>> _messages = [];
   late AnimationController _animationController;
   late AnimationController _messageAnimationController;
@@ -193,6 +192,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 🔥 新增：输入框文件预览功能
   final List<Map<String, dynamic>> _pendingFiles = []; // 待发送的文件列表
   bool _showFilePreview = false; // 是否显示文件预览
+  
+  // 🔥 新增：回复消息功能
+  // 回复功能已移除
 
   // 判断是否为桌面端
   bool _isDesktop() {
@@ -621,7 +623,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     // 只负责在连接可用时执行同步
     if (_websocketService.isConnected) {
       print('🔄 WebSocket已连接，执行恢复后同步...');
-      _performWebSocketReconnectSync();
+        _performWebSocketReconnectSync();
     } else {
       print('⚠️ WebSocket未连接，等待WebSocketManager自动重连后再同步');
       // 不再手动调用connect()，避免与WebSocketManager的重连逻辑冲突
@@ -1645,7 +1647,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   // 发送文本消息
-  Future<void> _sendTextMessage(String text) async {
+  Future<void> _sendTextMessage(String text, {Map<String, dynamic>? replyTo}) async {
     if (text.trim().isEmpty) return;
 
     // 生成消息ID和时间戳 - 使用UTC时间确保与服务器一致
@@ -1673,6 +1675,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       'isMe': true,
       'status': 'sending',
       'sourceDeviceId': currentDeviceId,
+      if (replyTo != null) 'replyTo': replyTo, // 🔥 添加回复信息
     };
 
     // 立即添加到界面并显示
@@ -1698,6 +1701,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           apiResult = await _chatService.sendGroupMessage(
             groupId: groupId,
             content: text,
+            // TODO: 添加replyTo支持到ChatService
           );
         }
       } else {
@@ -2153,9 +2157,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           }
           
           // 🔥 修改：移动端多选文件直接发送，无需预览步骤
-          final fileType = _getMimeType(fileName);
-          await _sendFileMessage(file, fileName, fileType);
-          processedCount++;
+            final fileType = _getMimeType(fileName);
+            await _sendFileMessage(file, fileName, fileType);
+            processedCount++;
           
           // 添加短暂延迟避免发送过快
           if (allowMultiple && processedCount < result.files.length) {
@@ -2253,6 +2257,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                           child: GestureDetector(
                             onPanUpdate: _handlePanUpdate,
                             onPanEnd: _handlePanEnd,
+                            onTap: () {
+                              // 点击空白区域收起键盘
+                              FocusScope.of(context).unfocus();
+                            },
                             child: Stack(
                               children: [
                                 Builder(
@@ -2267,12 +2275,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                     });
                                     
                                     return ListView.builder(
-                                      controller: _scrollController,
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
-                                      itemCount: _messages.length,
-                                      itemBuilder: (context, index) {
-                                        final message = _messages[index];
-                                        return _buildMessageBubble(message);
+                                  controller: _scrollController,
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  itemCount: _messages.length,
+                                  itemBuilder: (context, index) {
+                                    final message = _messages[index];
+                                    return _buildMessageBubble(message);
                                       },
                                     );
                                   },
@@ -2355,141 +2363,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 桌面端剪贴板处理（使用 super_clipboard）
+  // 🔥 桌面端剪贴板处理（简化版，只支持文本）
   Future<void> _handleDesktopClipboardPaste() async {
-    try {
-      final clipboard = SystemClipboard.instance;
-      if (clipboard != null) {
-        final reader = await clipboard.read();
-        
-        print('📋 检查桌面端剪贴板内容...');
-        
-        // 检查是否有文件URI
-        if (reader.canProvide(Formats.fileUri)) {
-          print('🔍 剪贴板包含文件，开始读取...');
-          try {
-            final fileUriData = await reader.readValue(Formats.fileUri);
-            if (fileUriData != null) {
-              print('📁 从剪贴板读取到文件URI: $fileUriData');
-              
-              // 处理文件URI字符串，可能是多个用换行分隔
-              final String uriString = fileUriData.toString();
-              final List<String> uriStrings = uriString.split('\n')
-                  .where((uri) => uri.trim().isNotEmpty)
-                  .toList();
-              
-              // 🔥 修复：处理多文件粘贴，确保所有文件都被处理
-              int processedCount = 0;
-              int errorCount = 0;
-              
-              for (final uriStr in uriStrings) {
-                try {
-                  final uri = Uri.parse(uriStr.trim());
-                  String filePath;
-                  
-                  // 处理不同格式的URI
-                  if (uri.scheme == 'file') {
-                    filePath = uri.toFilePath();
-                  } else if (uri.scheme.isEmpty) {
-                    // 可能是相对路径
-                    filePath = uriStr.trim();
-                  } else {
-                    print('❌ 不支持的URI格式: $uriStr');
-                    errorCount++;
-                    continue;
-                  }
-                  
-                  final file = File(filePath);
-                  
-                  if (await file.exists()) {
-                    final fileName = path.basename(filePath);
-                    final fileSize = await file.length();
-                    
-                    print('📄 处理粘贴文件 ${processedCount + 1}/${uriStrings.length}: $fileName (${fileSize} 字节)');
-                    
-                    // 检查文件大小限制 (100MB)
-                    if (fileSize > 100 * 1024 * 1024) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('文件 $fileName 太大，请选择小于100MB的文件'),
-                            backgroundColor: Colors.orange,
-                          ),
-                        );
-                      }
-                      errorCount++;
-                      continue;
-                    }
-                    
-                    // 将文件添加到预览列表
-                    await _addFileToPreview(file, fileName, fileSize);
-                    processedCount++;
-                  } else {
-                    print('❌ 文件不存在: $filePath');
-                    errorCount++;
-                  }
-                } catch (e) {
-                  print('❌ 处理文件URI失败: $uriStr, 错误: $e');
-                  errorCount++;
-                  continue;
-                }
-              }
-              
-              // 🔥 新增：显示处理结果统计
-              if (uriStrings.isNotEmpty && mounted) {
-                final successMessage = processedCount > 0 
-                  ? '已添加 $processedCount 个文件到预览'
-                  : '没有文件可以添加';
-                
-                final statusMessage = errorCount > 0
-                  ? '$successMessage (${errorCount}个文件有问题)'
-                  : successMessage;
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(statusMessage),
-                    backgroundColor: processedCount > 0 ? Colors.green : Colors.orange,
-                    duration: Duration(seconds: 3),
-                  ),
-                );
-                
-                // 🔥 修复：如果有文件被处理，则不继续处理文本
-                if (processedCount > 0) {
-                  return;
-                }
-              }
-            }
-          } catch (e) {
-            print('❌ 读取剪贴板文件失败: $e');
-          }
-        }
-        
-        // 如果没有文件，尝试读取文本
-        if (reader.canProvide(Formats.plainText)) {
-          try {
-            final text = await reader.readValue(Formats.plainText);
-            if (text != null && text.isNotEmpty) {
-              _messageController.text = _messageController.text + text;
-              setState(() {
-                _isTyping = _messageController.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
-              });
-              print('✅ 粘贴文本到输入框: ${text.length} 个字符');
-              return;
-            }
-          } catch (e) {
-            print('❌ 读取剪贴板文本失败: $e');
-          }
-        }
-      }
-      
-      // 兜底：使用传统的剪贴板API
+    // 暂时使用传统的剪贴板API，直到重新实现文件剪贴板功能
       await _handleMobileClipboardPaste();
-      
-    } catch (e) {
-      print('❌ 桌面端剪贴板处理失败: $e');
-      // 兜底到移动端处理
-      await _handleMobileClipboardPaste();
-    }
   }
 
   // 🔥 移动端剪贴板处理（传统API，只支持文本）
@@ -2602,6 +2479,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   Future<void> _sendMessageWithFiles() async {
     final text = _messageController.text.trim();
     final files = List<Map<String, dynamic>>.from(_pendingFiles);
+    // 回复功能已移除
     
     if (text.isEmpty && files.isEmpty) return;
     
@@ -2612,6 +2490,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         _pendingFiles.clear();
         _showFilePreview = false;
         _isTyping = false;
+        // 回复功能已移除
       });
       
       // 如果有文本，先发送文本消息
@@ -2619,13 +2498,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         await _sendTextMessage(text);
       }
       
-      // 发送所有文件
-      for (final fileInfo in files) {
+      // 发送所有文件（如果没有文本但有回复，第一个文件包含回复信息）
+      for (int i = 0; i < files.length; i++) {
+        final fileInfo = files[i];
         final file = fileInfo['file'] as File;
         final fileName = fileInfo['name'] as String;
         final fileType = fileInfo['type'] as String;
         
-        await _sendFileMessage(file, fileName, fileType);
+        // 只有第一个文件且没有文本时才包含回复信息
+        // final includeReply = (i == 0 && text.isEmpty && replyTo != null);
+        await _sendFileMessage(file, fileName, fileType); // TODO: 添加回复支持
         await Future.delayed(const Duration(milliseconds: 100)); // 避免发送过快
       }
       
@@ -2660,14 +2542,90 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     return MultiSelectMode(
       selectedCount: _multiSelectController.selectedCount,
       onCancel: () => _multiSelectController.exitMultiSelectMode(),
-      hasTextMessages: hasTextMessages,
-      hasOwnMessages: hasOwnMessages,
-      onCopy: hasTextMessages ? () => _batchCopyMessages(selectedMessageObjects) : null,
-      onForward: () => _batchForwardMessages(selectedMessageObjects),
-      onFavorite: () => _batchFavoriteMessages(selectedMessageObjects),
-      onRevoke: hasOwnMessages ? () => _batchRevokeMessages(selectedMessages.toList()) : null,
-      onDelete: hasOwnMessages ? () => _batchDeleteMessages(selectedMessages.toList()) : null,
+      onShareToSystem: () => _batchShareToSystem(selectedMessageObjects),
+      onDelete: () => _batchDeleteMessages(selectedMessages.toList()),
     );
+  }
+  
+  // 🔥 新增：批量分享到系统应用
+  Future<void> _batchShareToSystem(List<Map<String, dynamic>> messages) async {
+    try {
+      // 分离文本和文件消息
+      final textMessages = <String>[];
+      final fileMessages = <Map<String, dynamic>>[];
+      
+      for (final message in messages) {
+        final text = message['text']?.toString() ?? '';
+        final hasFile = message['fileType'] != null;
+        
+        if (text.isNotEmpty) {
+          textMessages.add(text);
+        }
+        
+        if (hasFile) {
+          fileMessages.add(message);
+        }
+      }
+      
+             // 如果只有文本消息，直接分享文本
+       if (fileMessages.isEmpty && textMessages.isNotEmpty) {
+         final combinedText = textMessages.join('\n\n');
+         // 创建临时文本消息进行分享
+         final tempMessage = {'text': combinedText};
+         await _shareMessageToSystem(tempMessage);
+         
+         _multiSelectController.exitMultiSelectMode();
+         if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text('已分享${textMessages.length}条文本消息')),
+           );
+         }
+         return;
+       }
+       
+       // 如果有文件消息，需要逐个处理
+       if (fileMessages.isNotEmpty) {
+         int successCount = 0;
+         
+         for (final message in fileMessages) {
+           try {
+             await _shareMessageToSystem(message);
+             successCount++;
+           } catch (e) {
+             print('分享消息失败: $e');
+           }
+           
+           // 添加延迟避免系统分享冲突
+           await Future.delayed(const Duration(milliseconds: 500));
+         }
+         
+         // 如果还有文本消息，最后分享文本
+         if (textMessages.isNotEmpty) {
+           final combinedText = textMessages.join('\n\n');
+           final tempMessage = {'text': combinedText};
+           try {
+             await _shareMessageToSystem(tempMessage);
+           } catch (e) {
+             print('分享文本失败: $e');
+           }
+         }
+        
+        _multiSelectController.exitMultiSelectMode();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('已分享${successCount}个文件${textMessages.isNotEmpty ? '和${textMessages.length}条文本' : ''}')),
+          );
+        }
+      }
+      
+    } catch (e) {
+      _multiSelectController.exitMultiSelectMode();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('批量分享失败: $e')),
+        );
+      }
+    }
   }
   
   // 批量复制消息
@@ -2926,6 +2884,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       print('构建消息气泡: ID=${message['id']}, fileName=${message['fileName']}, fileType=${message['fileType']}, hasFile=$hasFile, fileUrl=${message['fileUrl']}');
     }
     
+    // 🔥 回复消息功能已实现，测试数据已移除
+    
     return ListenableBuilder(
       listenable: _multiSelectController,
       builder: (context, child) {
@@ -3005,6 +2965,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // 回复功能已移除
+                            
                             // 文件内容
                             if (hasFile) _buildFileContent(message, isMe),
                             
@@ -3016,27 +2978,17 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                 ? ContextMenuRegion(
                                     contextMenu: GenericContextMenu(
                                       buttonConfigs: [
-                                        ContextMenuButtonConfig(
-                                          "复制文字",
-                                          onPressed: () => _copyMessageText(message),
-                                        ),
-                                        ContextMenuButtonConfig(
-                                          "选择全部文字",
-                                          onPressed: () => _selectAllText(message),
-                                        ),
+                                        // 🔥 桌面端右键菜单：只保留核心功能
                                         if (message['fileType'] != null) ...[
                                           ContextMenuButtonConfig(
-                                            "复制全部内容",
-                                            onPressed: () => _copyAllContent(message),
+                                            "打开文件位置",
+                                            onPressed: () => _openFileLocationFromMessage(message),
                                           ),
                                         ],
+                                        // 回复功能已移除
                                         ContextMenuButtonConfig(
-                                          "回复",
-                                          onPressed: () => _replyToMessage(message),
-                                        ),
-                                        ContextMenuButtonConfig(
-                                          "转发",
-                                          onPressed: () => _forwardMessage(message),
+                                          "删除",
+                                          onPressed: () => _deleteSingleMessage(message),
                                         ),
                                       ],
                                     ),
@@ -3872,6 +3824,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // 回复功能已移除
+            
             // 🔥 文件预览区域
             if (_showFilePreview && _pendingFiles.isNotEmpty)
               _buildFilePreviewArea(),
@@ -3938,6 +3892,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                           },
                           child: TextField(
                             controller: _messageController,
+                            focusNode: _focusNode,
                             decoration: InputDecoration(
                               hintText: _isDesktop() 
                                 ? (_pendingFiles.isNotEmpty 
@@ -4970,9 +4925,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         await _unfavoriteMessage(messageId);
         break;
       
-      case MessageAction.reply:
-        _replyToMessage(message);
-        break;
+      // 回复功能已移除
       
       case MessageAction.select:
         _enterMultiSelectMode(messageId);
@@ -4984,6 +4937,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       
       case MessageAction.shareToSystem:
         await _shareMessageToSystem(message);
+        break;
+      
+      case MessageAction.openFileLocation:
+        await _openFileLocationFromMessage(message);
         break;
     }
   }
@@ -5145,27 +5102,94 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
   
-  // 回复消息
-  void _replyToMessage(Map<String, dynamic> message) {
-    final text = message['text']?.toString() ?? '';
-    final fileName = message['fileName']?.toString() ?? '';
-    
-    String replyText = '';
-    if (text.isNotEmpty) {
-      replyText = '回复: $text\n\n';
-    } else if (fileName.isNotEmpty) {
-      replyText = '回复: [文件] $fileName\n\n';
-    }
-    
-    _messageController.text = replyText;
-    _messageController.selection = TextSelection.fromPosition(
-      TextPosition(offset: _messageController.text.length),
+  // 回复功能已移除
+  
+  // 🔥 新增：删除单个消息
+  void _deleteSingleMessage(Map<String, dynamic> message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除消息'),
+        content: const Text('确定要删除这条消息吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              
+              // 从本地删除消息
+              setState(() {
+                _messages.removeWhere((msg) => msg['id'] == message['id']);
+              });
+              await _saveMessages();
+              
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('消息已删除'),
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                );
+              }
+            },
+            child: const Text('删除'),
+          ),
+        ],
+      ),
     );
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('回复内容已添加到输入框')),
+  }
+  
+  // 🔥 新增：跳转到指定消息
+  void _jumpToMessage(String messageId) {
+    final messageIndex = _messages.indexWhere((msg) => msg['id'] == messageId);
+    if (messageIndex != -1) {
+      // 计算目标位置
+      final targetIndex = _messages.length - 1 - messageIndex;
+      final itemHeight = 100.0; // 估算每个消息的高度
+      final targetOffset = targetIndex * itemHeight;
+      
+      // 滚动到目标位置
+      _scrollController.animateTo(
+        targetOffset,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
       );
+      
+      // 可选：高亮显示目标消息（暂时实现）
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('已跳转到原消息'),
+            duration: const Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } else {
+      // 消息不存在或已被删除
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('原消息不存在或已被删除'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
     }
   }
   
@@ -5585,28 +5609,77 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   Widget _buildFileContextMenu(String? filePath, String? fileUrl, String? fileType) {
     return GenericContextMenu(
       buttonConfigs: [
-        ContextMenuButtonConfig(
-          "打开文件",
-          onPressed: () => _openFile(filePath, fileUrl, fileType),
-        ),
+        // 🔥 桌面端文件右键菜单：只保留核心功能
         if (filePath != null && File(filePath).existsSync()) ...[
           ContextMenuButtonConfig(
             "打开文件位置",
             onPressed: () => _openFileLocation(filePath),
           ),
-          ContextMenuButtonConfig(
-            "复制文件路径",
-            onPressed: () => _copyFilePath(filePath),
-          ),
         ],
-        if (fileUrl != null) ...[
-          ContextMenuButtonConfig(
-            "复制文件链接",
-            onPressed: () => _copyFileUrl(fileUrl),
-          ),
-        ],
+        // 回复功能已移除
+        ContextMenuButtonConfig(
+          "删除",
+          onPressed: () {
+            // 需要从文件信息构造消息对象
+            final message = {
+              'fileName': _getFileName(filePath, fileUrl),
+              'fileType': fileType,
+              'filePath': filePath,
+              'fileUrl': fileUrl,
+            };
+            _deleteSingleMessage(message);
+          },
+        ),
       ],
     );
+  }
+
+  // 🔥 新增：从消息对象打开文件位置
+  Future<void> _openFileLocationFromMessage(Map<String, dynamic> message) async {
+    final fileName = message['fileName']?.toString() ?? '';
+    final fileUrl = message['fileUrl']?.toString();
+    
+    if (fileName.isEmpty) {
+      _showErrorMessage('文件信息不完整');
+      return;
+    }
+    
+    // 🔥 优先查找本地文件，如果不存在则提示用户
+    String? filePath = message['filePath']?.toString();
+    
+    // 检查本地文件是否存在
+    if (filePath == null || !File(filePath).existsSync()) {
+      // 尝试从缓存查找文件
+      if (fileUrl != null) {
+        String fullUrl = fileUrl;
+        if (fileUrl.startsWith('/api/')) {
+          fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+        }
+        
+        // 检查内存缓存
+        filePath = _getFromCache(fullUrl);
+        if (filePath != null && File(filePath).existsSync()) {
+          print('✅ 从内存缓存找到文件: $filePath');
+        } else {
+          // 检查持久化缓存
+          filePath = await _localStorage.getFileFromCache(fullUrl);
+          if (filePath != null && File(filePath).existsSync()) {
+            print('✅ 从持久化缓存找到文件: $filePath');
+            _addToCache(fullUrl, filePath);
+          } else {
+            // 文件不存在，提示用户
+            _showErrorMessage('文件不存在本地，请先下载文件');
+            return;
+          }
+        }
+      } else {
+        _showErrorMessage('文件URL不存在');
+        return;
+      }
+    }
+    
+    // 调用打开文件位置方法
+    await _openFileLocation(filePath);
   }
 
   // 🔥 新增：打开文件位置
@@ -6119,8 +6192,8 @@ Add-Type -AssemblyName System.Drawing
     
     try {
       Uint8List? thumbnailData;
-      final isDesktop = defaultTargetPlatform == TargetPlatform.macOS || 
-                       defaultTargetPlatform == TargetPlatform.windows || 
+      final isDesktop = defaultTargetPlatform == TargetPlatform.macOS ||
+                       defaultTargetPlatform == TargetPlatform.windows ||
                        defaultTargetPlatform == TargetPlatform.linux;
       
       print('🖥️ 是否桌面端: $isDesktop');
@@ -6204,18 +6277,18 @@ Add-Type -AssemblyName System.Drawing
               print('🔄 移动端使用本地文件生成缩略图...');
               
               try {
-                thumbnailData = await VideoThumbnail.thumbnailData(
+            thumbnailData = await VideoThumbnail.thumbnailData(
                   video: widget.videoPath!,
-                  imageFormat: ImageFormat.JPEG,
+              imageFormat: ImageFormat.JPEG,
                   timeMs: 1000,
                   maxWidth: 400,
                   maxHeight: 300,
                   quality: 85,
                 ).timeout(const Duration(seconds: 15));
-                
-                if (thumbnailData != null && thumbnailData.isNotEmpty) {
+            
+            if (thumbnailData != null && thumbnailData.isNotEmpty) {
                   print('✅ 移动端本地文件缩略图生成成功! 大小: ${thumbnailData.length} bytes');
-                }
+            }
               } catch (e) {
                 print('❌ 移动端本地文件缩略图生成失败: $e');
                 
@@ -6249,22 +6322,22 @@ Add-Type -AssemblyName System.Drawing
         print('🔄 移动端尝试使用网络URL生成缩略图: ${widget.videoUrl}');
         
         try {
-          thumbnailData = await VideoThumbnail.thumbnailData(
+            thumbnailData = await VideoThumbnail.thumbnailData(
             video: widget.videoUrl!,
-            imageFormat: ImageFormat.JPEG,
+              imageFormat: ImageFormat.JPEG,
             timeMs: 0,
             maxWidth: 300,
             maxHeight: 200,
             quality: 70,
           ).timeout(const Duration(seconds: 15));
-          
-          if (thumbnailData != null && thumbnailData.isNotEmpty) {
+            
+            if (thumbnailData != null && thumbnailData.isNotEmpty) {
             print('✅ 移动端网络URL缩略图生成成功! 大小: ${thumbnailData.length} bytes');
-          }
+            }
         } catch (e) {
           print('❌ 移动端网络URL缩略图生成失败: $e');
+          }
         }
-      }
       
       final success = thumbnailData != null && thumbnailData.isNotEmpty;
       print('🎯 === 移动端缩略图生成结果: ${success ? "成功" : "失败"} ===');

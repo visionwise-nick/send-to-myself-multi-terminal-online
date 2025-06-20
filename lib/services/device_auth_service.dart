@@ -12,21 +12,27 @@ class DeviceAuthService {
   
   // 获取或生成设备ID - 基于硬件信息生成稳定ID
   Future<String> getOrCreateDeviceId() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? cachedDeviceId = prefs.getString('device_id');
-    
-    // 生成基于硬件信息的稳定设备ID
-    String stableDeviceId = await _generateStableDeviceId();
-    
-    // 如果缓存的ID和硬件ID不匹配，使用硬件ID并更新缓存
-    if (cachedDeviceId == null || cachedDeviceId != stableDeviceId) {
-      await prefs.setString('device_id', stableDeviceId);
-      print('更新设备ID: $stableDeviceId (基于硬件信息)');
-    } else {
-      print('使用稳定设备ID: $stableDeviceId');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? cachedDeviceId = prefs.getString('device_id');
+      
+      // 生成基于硬件信息的稳定设备ID
+      String stableDeviceId = await _generateStableDeviceId();
+      
+      // 如果缓存的ID和硬件ID不匹配，使用硬件ID并更新缓存
+      if (cachedDeviceId == null || cachedDeviceId != stableDeviceId) {
+        await prefs.setString('device_id', stableDeviceId);
+        print('更新设备ID: $stableDeviceId (基于硬件信息)');
+      } else {
+        print('使用稳定设备ID: $stableDeviceId');
+      }
+      
+      return stableDeviceId;
+    } catch (e) {
+      print('SharedPreferences访问失败，使用硬件生成的设备ID: $e');
+      // 如果SharedPreferences无法访问，直接返回基于硬件信息的ID
+      return await _generateStableDeviceId();
     }
-    
-    return stableDeviceId;
   }
 
   // 基于设备硬件信息生成稳定的设备ID
@@ -149,44 +155,62 @@ class DeviceAuthService {
   
   // 保存服务器设备信息
   Future<void> saveServerDeviceInfo(Map<String, dynamic> deviceData) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('server_device_data', jsonEncode(deviceData));
-    print('已保存服务器设备信息: ID=${deviceData['id']}');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('server_device_data', jsonEncode(deviceData));
+      print('已保存服务器设备信息: ID=${deviceData['id']}');
+    } catch (e) {
+      print('保存服务器设备信息失败: $e');
+      // 如果无法保存到SharedPreferences，可以考虑使用其他持久化方案
+    }
   }
   
   // 获取服务器分配的设备ID
   Future<String?> getServerDeviceId() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? serverDeviceData = prefs.getString('server_device_data');
-    if (serverDeviceData != null) {
-      try {
-        final Map<String, dynamic> data = jsonDecode(serverDeviceData);
-        return data['id'];
-      } catch (e) {
-        print('解析服务器设备ID失败: $e');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? serverDeviceData = prefs.getString('server_device_data');
+      if (serverDeviceData != null) {
+        try {
+          final Map<String, dynamic> data = jsonDecode(serverDeviceData);
+          return data['id'];
+        } catch (e) {
+          print('解析服务器设备ID失败: $e');
+        }
       }
+      return null;
+    } catch (e) {
+      print('获取服务器设备ID失败: $e');
+      return null;
     }
-    return null;
   }
   
   // 清除所有本地存储数据 - 仅用于测试
   Future<void> clearAllStoredData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-    await prefs.remove('device_id');
-    await prefs.remove('server_device_data');
-    print('已清除所有本地存储数据');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+      await prefs.remove('device_id');
+      await prefs.remove('server_device_data');
+      print('已清除所有本地存储数据');
+    } catch (e) {
+      print('清除本地存储数据失败: $e');
+    }
   }
   
   // 设备注册
   Future<Map<String, dynamic>> registerDevice() async {
     try {
       // 清除现有令牌但保持设备ID
-      final prefs = await SharedPreferences.getInstance();
-      final String? oldToken = prefs.getString('auth_token');
-      if (oldToken != null) {
-        print('清除旧令牌: ${oldToken.substring(0, 20)}...');
-        await prefs.remove('auth_token');
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final String? oldToken = prefs.getString('auth_token');
+        if (oldToken != null) {
+          print('清除旧令牌: ${oldToken.substring(0, 20)}...');
+          await prefs.remove('auth_token');
+        }
+      } catch (e) {
+        print('清除旧令牌失败，忽略此错误: $e');
       }
       
       final deviceInfo = await getDeviceInfo();
@@ -206,9 +230,15 @@ class DeviceAuthService {
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        
         // 保存JWT token
-        await prefs.setString('auth_token', data['token']);
-        print('已保存认证令牌: ${data['token'].substring(0, 20)}...');
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', data['token']);
+          print('已保存认证令牌: ${data['token'].substring(0, 20)}...');
+        } catch (e) {
+          print('保存认证令牌失败，但注册成功: $e');
+        }
         
         // 保存服务器返回的设备信息
         if (data['device'] != null) {
@@ -227,14 +257,19 @@ class DeviceAuthService {
   
   // 获取JWT令牌
   Future<String?> getAuthToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-    if (token != null) {
-      print('获取到现有认证令牌: ${token.substring(0, 20)}...');
-    } else {
-      print('未找到认证令牌');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null) {
+        print('获取到现有认证令牌: ${token.substring(0, 20)}...');
+      } else {
+        print('未找到认证令牌');
+      }
+      return token;
+    } catch (e) {
+      print('获取认证令牌失败: $e');
+      return null;
     }
-    return token;
   }
   
   // 检查是否已登录
@@ -295,14 +330,18 @@ class DeviceAuthService {
       print('开始执行登出清理...');
       
       // 清理SharedPreferences中的所有数据
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('auth_token');
-      await prefs.remove('server_device_id');
-      await prefs.remove('device_uuid');
-      await prefs.remove('device_info');
-      await prefs.remove('user_profile');
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('auth_token');
+        await prefs.remove('server_device_id');
+        await prefs.remove('device_uuid');
+        await prefs.remove('device_info');
+        await prefs.remove('user_profile');
+        print('本地存储已清理');
+      } catch (e) {
+        print('清理SharedPreferences失败，但继续清理: $e');
+      }
       
-      print('本地存储已清理');
       print('登出清理完成');
       
     } catch (e) {

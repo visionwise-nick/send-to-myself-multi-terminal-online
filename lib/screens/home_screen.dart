@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
+import 'dart:io';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
 import '../services/websocket_service.dart';
 import '../services/websocket_manager.dart';
+import '../services/system_share_service.dart';
+import '../services/chat_service.dart';
 import '../widgets/connection_status_widget.dart';
 import '../theme/app_theme.dart';
 import '../widgets/logout_dialog.dart';
@@ -27,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   int _selectedIndex = 0;
   late PageController _pageController;
   Timer? _statusSyncTimer;
+  final ChatService _chatService = ChatService();
 
   @override
   void initState() {
@@ -41,6 +45,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       
       // 启动设备状态同步定时器
       _startStatusSyncTimer();
+      
+      // 🔥 新增：设置系统分享监听
+      _setupSystemShareListener();
     });
   }
 
@@ -102,6 +109,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     // 重启状态同步定时器
     _startStatusSyncTimer();
     
+    // 🔥 新增：检查分享内容
+    try {
+      final systemShareService = Provider.of<SystemShareService>(context, listen: false);
+      await systemShareService.handleAndroidIntent();
+    } catch (e) {
+      print('❌ 应用恢复时检查分享内容失败: $e');
+    }
+    
     // 检查并恢复WebSocket连接
     final websocketService = WebSocketService();
     if (!websocketService.isConnected) {
@@ -150,6 +165,286 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     }
     
     print('✅ 状态刷新完成');
+  }
+  
+  // 🔥 新增：设置系统分享监听
+  void _setupSystemShareListener() {
+    try {
+      final systemShareService = Provider.of<SystemShareService>(context, listen: false);
+      systemShareService.onSharedContentReceived = (SharedContent content) {
+        _handleSharedContent(content);
+      };
+      print('✅ 系统分享监听器设置完成');
+    } catch (e) {
+      print('❌ 设置系统分享监听器失败: $e');
+    }
+  }
+  
+  // 🔥 新增：处理分享内容
+  void _handleSharedContent(SharedContent content) async {
+    try {
+      print('📥 处理分享内容: ${content.type}');
+      
+      // 确保用户已登录
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (!authProvider.isLoggedIn) {
+        _showMessage('请先登录应用');
+        return;
+      }
+      
+      // 获取当前群组
+      final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      var currentGroup = groupProvider.currentGroup;
+      
+      // 🔥 新增：如果没有当前群组，尝试加载群组并设置第一个
+      if (currentGroup == null) {
+        print('📥 当前没有选择群组，尝试加载群组列表...');
+        await groupProvider.loadGroups();
+        currentGroup = groupProvider.currentGroup;
+        
+        // 🔥 新增：如果加载后还是没有群组，等待更长时间重试
+        if (currentGroup == null) {
+          print('📥 第一次加载失败，等待2秒后重试...');
+          await Future.delayed(Duration(seconds: 2));
+          
+          // 再次尝试加载群组
+          await groupProvider.loadGroups();
+          currentGroup = groupProvider.currentGroup;
+          
+          // 如果还是没有群组，提示用户
+          if (currentGroup == null) {
+            _showMessage('请先创建或加入一个群组');
+            return;
+          }
+        }
+      }
+      
+      // 🔥 修改：自动发送分享内容，不需要确认对话框
+      print('🚀 自动发送分享内容到群组: ${currentGroup['name']}');
+      await _sendSharedContent(content, currentGroup);
+      
+    } catch (e) {
+      print('❌ 处理分享内容失败: $e');
+      _showMessage('处理分享内容失败: $e');
+    }
+  }
+  
+  // 🔥 新增：显示分享确认对话框
+  Future<bool?> _showShareConfirmDialog(SharedContent content, Map<String, dynamic> group) async {
+    String contentPreview = '';
+    String contentType = '';
+    
+    switch (content.type) {
+      case SharedContentType.text:
+        contentType = '文本';
+               final textLength = content.text?.length ?? 0;
+       contentPreview = textLength > 100 
+           ? '${content.text!.substring(0, 100)}...' 
+           : content.text ?? '';
+        break;
+      case SharedContentType.image:
+        contentType = '图片';
+        contentPreview = content.fileName ?? '未知图片';
+        break;
+      case SharedContentType.video:
+        contentType = '视频';
+        contentPreview = content.fileName ?? '未知视频';
+        break;
+      case SharedContentType.audio:
+        contentType = '音频';
+        contentPreview = content.fileName ?? '未知音频';
+        break;
+      case SharedContentType.file:
+        contentType = '文件';
+        contentPreview = content.fileName ?? '未知文件';
+        break;
+      case SharedContentType.files:
+        contentType = '多个文件';
+        contentPreview = '${content.files?.length ?? 0}个文件';
+        break;
+    }
+    
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('确认分享'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('要将${contentType}分享到群组吗？'),
+              const SizedBox(height: 8),
+              Text('群组: ${group['name']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text('内容: $contentPreview', 
+                   style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('分享'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  // 🔥 新增：发送分享内容
+  Future<void> _sendSharedContent(SharedContent content, Map<String, dynamic> group) async {
+    try {
+      final shareService = Provider.of<SystemShareService>(context, listen: false);
+      if (shareService.isSilentShareMode) {
+        print('📤 静默模式：发送分享内容到群组 ${group['name']}');
+      } else {
+        _showMessage('正在发送...');
+      }
+      
+      switch (content.type) {
+        case SharedContentType.text:
+          if (content.text != null && content.text!.isNotEmpty) {
+            await _chatService.sendGroupMessage(
+              groupId: group['id'],
+              content: content.text!,
+            );
+            // 静默模式下不显示提示消息
+            if (!shareService.isSilentShareMode) {
+              _showMessage('文本已发送');
+            }
+          }
+          break;
+          
+        case SharedContentType.image:
+        case SharedContentType.video:
+        case SharedContentType.audio:
+        case SharedContentType.file:
+          if (content.filePath != null) {
+            await _chatService.sendGroupFile(
+              groupId: group['id'],
+              file: File(content.filePath!),
+              fileName: content.fileName ?? 'shared_file',
+              fileType: _getFileTypeFromPath(content.filePath!),
+            );
+            // 静默模式下不显示提示消息
+            if (!shareService.isSilentShareMode) {
+              _showMessage('文件已发送');
+            }
+          }
+          break;
+          
+        case SharedContentType.files:
+          if (content.files != null && content.files!.isNotEmpty) {
+            for (final file in content.files!) {
+              await _chatService.sendGroupFile(
+                groupId: group['id'],
+                file: File(file.path),
+                fileName: file.name,
+                fileType: _getFileTypeFromPath(file.path),
+              );
+            }
+            // 静默模式下不显示提示消息
+            if (!shareService.isSilentShareMode) {
+              _showMessage('${content.files!.length}个文件已发送');
+            }
+          }
+          break;
+      }
+      
+      // 切换到消息页面
+      if (_selectedIndex != 0) {
+        setState(() {
+          _selectedIndex = 0;
+        });
+        if (!_isDesktop()) {
+          _pageController.animateToPage(0, 
+              duration: const Duration(milliseconds: 300), 
+              curve: Curves.easeInOut);
+        }
+      }
+      
+      // 🔥 新增：如果是分享Intent，完成分享后关闭应用
+      final systemShareService = Provider.of<SystemShareService>(context, listen: false);
+      if (systemShareService.isShareIntent) {
+        // 静默模式下也要确保消息发送完成，给予足够时间
+        final delayTime = systemShareService.isSilentShareMode ? 
+          Duration(seconds: 2) : Duration(seconds: 1);
+        print('⏰ 等待${delayTime.inSeconds}秒确保消息发送完成...');
+        await Future.delayed(delayTime);
+        print('✅ 发送等待完成，准备关闭应用');
+        await systemShareService.finishShareProcess();
+      }
+      
+    } catch (e) {
+      print('❌ 发送分享内容失败: $e');
+      _showMessage('发送失败: $e');
+      
+      // 即使发送失败，也要关闭分享Intent
+      final systemShareService = Provider.of<SystemShareService>(context, listen: false);
+      if (systemShareService.isShareIntent) {
+        final delayTime = systemShareService.isSilentShareMode ? 
+          Duration(milliseconds: 500) : Duration(seconds: 2);
+        await Future.delayed(delayTime);
+        await systemShareService.finishShareProcess();
+      }
+    }
+  }
+  
+  // 🔥 新增：显示消息
+  void _showMessage(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+  
+  // 🔥 新增：从文件路径获取文件类型
+  String _getFileTypeFromPath(String filePath) {
+    final extension = filePath.split('.').last.toLowerCase();
+    
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'bmp':
+      case 'webp':
+        return 'image';
+      case 'mp4':
+      case 'avi':
+      case 'mov':
+      case 'wmv':
+      case 'flv':
+      case 'webm':
+        return 'video';
+      case 'mp3':
+      case 'wav':
+      case 'flac':
+      case 'aac':
+      case 'm4a':
+        return 'audio';
+      case 'pdf':
+      case 'doc':
+      case 'docx':
+      case 'xls':
+      case 'xlsx':
+      case 'ppt':
+      case 'pptx':
+      case 'txt':
+      case 'rtf':
+        return 'document';
+      default:
+        return 'file';
+    }
   }
   
   // 群组变化处理 - 通知页面数据可能已变化
@@ -227,12 +522,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             children: [
               // 🔥 新增：带连接状态的标题栏
               _buildDesktopHeaderWithStatus(deviceName),
-              
+                    
               const SizedBox(height: 12),
-              
+                    
               // 🔥 重新设计：群组模块（平铺显示）
               _buildGroupSection(),
-              
+                        
               const SizedBox(height: 16),
               
               // 🔥 重新设计：导航模块（与群组并列）
@@ -758,7 +1053,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                     color: isSelected 
                       ? AppTheme.primaryColor
                   : AppTheme.textSecondaryColor,
-              ),
+                ),
               const SizedBox(width: 12),
                 Text(
                   label,
@@ -866,10 +1161,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                             color: Colors.white.withOpacity(0.8),
                           ),
                           overflow: TextOverflow.ellipsis,
-                        ),
+          ),
                       ],
-                    ),
-                  ),
+        ),
+      ),
                 ],
               ),
             ),
@@ -1045,7 +1340,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         ),
       ],
     );
-  }
+    }
 
   // 🔥 简化的移动端顶部栏（仅显示连接状态和菜单）
   Widget _buildMobileAppBar(String deviceName) {
@@ -1080,8 +1375,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                     ),
                   ),
                 ),
-              ),
-              
+          ),
+          
               // 🔥 群组名称标题（可点击打开抽屉）
               GestureDetector(
                 onTap: () => Scaffold.of(context).openDrawer(),
@@ -1116,8 +1411,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                       color: AppTheme.primaryColor, // 🔥 玫红色
                     ),
                   ),
-                ),
-              ],
+              ),
+            ],
               
               // 🔥 右对齐区域
               const Spacer(),
@@ -1129,7 +1424,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           ),
         ],
       ),
-        );
+    );
       },
     );
   }
@@ -1157,7 +1452,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         ),
       ],
     );
-  }
+          }
 
   // 🔥 优化：桌面端主内容区
   Widget _buildDesktopMainContent() {
@@ -1168,7 +1463,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         return const MemoriesTab();
       default:
         return const MessagesTab();
-    }
+        }
   }
 
   // 🔥 桌面端底部操作区
@@ -1183,7 +1478,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             width: 0.5,
           ),
         ),
-      ),
+          ),
       child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

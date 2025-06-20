@@ -4,25 +4,15 @@ import '../theme/app_theme.dart';
 class MultiSelectMode extends StatelessWidget {
   final int selectedCount;
   final VoidCallback onCancel;
-  final VoidCallback? onCopy;
-  final VoidCallback? onRevoke;
+  final VoidCallback? onShareToSystem;
   final VoidCallback? onDelete;
-  final VoidCallback? onForward;
-  final VoidCallback? onFavorite;
-  final bool hasTextMessages;
-  final bool hasOwnMessages;
 
   const MultiSelectMode({
     super.key,
     required this.selectedCount,
     required this.onCancel,
-    this.onCopy,
-    this.onRevoke,
+    this.onShareToSystem,
     this.onDelete,
-    this.onForward,
-    this.onFavorite,
-    this.hasTextMessages = false,
-    this.hasOwnMessages = false,
   });
 
   @override
@@ -79,45 +69,21 @@ class MultiSelectMode extends StatelessWidget {
               
               const Spacer(),
               
-              // 右侧：操作按钮
+              // 右侧：操作按钮（只保留分享和删除）
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 复制按钮
-                  if (hasTextMessages && onCopy != null)
+                  // 🔥 分享按钮（分享到系统应用）
+                  if (onShareToSystem != null)
                     _buildActionButton(
-                      icon: Icons.copy_rounded,
-                      onPressed: onCopy!,
-                      tooltip: '复制',
+                      icon: Icons.ios_share_rounded,
+                      onPressed: onShareToSystem!,
+                      tooltip: '分享',
+                      color: Colors.green[600],
                     ),
                   
-                  // 转发按钮
-                  if (onForward != null)
-                    _buildActionButton(
-                      icon: Icons.share_rounded,
-                      onPressed: onForward!,
-                      tooltip: '转发',
-                    ),
-                  
-                  // 收藏按钮
-                  if (onFavorite != null)
-                    _buildActionButton(
-                      icon: Icons.star_border_rounded,
-                      onPressed: onFavorite!,
-                      tooltip: '收藏',
-                    ),
-                  
-                  // 撤回按钮
-                  if (hasOwnMessages && onRevoke != null)
-                    _buildActionButton(
-                      icon: Icons.undo_rounded,
-                      onPressed: onRevoke!,
-                      tooltip: '撤回',
-                      color: Colors.orange[600],
-                    ),
-                  
-                  // 删除按钮
-                  if (hasOwnMessages && onDelete != null)
+                  // 🔥 删除按钮
+                  if (onDelete != null)
                     _buildActionButton(
                       icon: Icons.delete_rounded,
                       onPressed: onDelete!,
