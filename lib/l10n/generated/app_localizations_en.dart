@@ -463,7 +463,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMemories => 'No memories yet';
 
   @override
-  String get searchMemories => 'Search memories...';
+  String get searchMemories => 'Search memories, tags...';
 
   @override
   String get filterByCategory => 'Filter by category';
@@ -758,6 +758,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qrCameraError => 'Camera error';
 
   @override
+  String get manualInput => 'Manual Input';
+
+  @override
+  String get flashlight => 'Flashlight';
+
+  @override
+  String get enterJoinCode => 'Enter Join Code';
+
+  @override
+  String get joinCodeHint => '8-digit join code';
+
+  @override
+  String get joinGroupSuccess => 'Successfully joined group';
+
+  @override
+  String get joinGroupFailed =>
+      'Failed to join group, please check the join code';
+
+  @override
+  String get joinFailed => 'Join failed';
+
+  @override
+  String get joiningGroup => 'Joining group...';
+
+  @override
+  String get placeQRInFrame => 'Place QR code within the frame to scan';
+
+  @override
+  String get deviceJoinCode => 'Device Join Code';
+
+  @override
+  String get regenerate => 'Regenerate';
+
+  @override
+  String get generatingJoinCode => 'Generating join code...';
+
+  @override
+  String get generateFailed => 'Generation failed';
+
+  @override
+  String get noGroupInfo => 'No available group information';
+
+  @override
+  String get join => 'Join';
+
+  @override
   String get sectionnetwork => '';
 
   @override
@@ -995,4 +1041,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get logoutConfirmMessage =>
       'Are you sure you want to logout from this device?';
+
+  @override
+  String get sectionmemory => '';
+
+  @override
+  String memoriesCount(int count) {
+    return 'Saved $count memories';
+  }
+
+  @override
+  String get noMemoriesDesc => 'Start creating your first memory';
+
+  @override
+  String get viewMemory => 'View Memory';
+
+  @override
+  String get quickAdd => 'Quick Add';
+
+  @override
+  String get addMemoryFromText => 'Add from Text';
+
+  @override
+  String get addMemoryFromImage => 'Add from Image';
+
+  @override
+  String get addMemoryFromFile => 'Add from File';
 }

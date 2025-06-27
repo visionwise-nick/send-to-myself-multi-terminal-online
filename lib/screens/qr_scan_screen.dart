@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 import 'dart:convert';
 
 class QrScanScreen extends StatefulWidget {
@@ -85,14 +86,14 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
         Navigator.of(context).pop();
         if (result == true) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('成功加入群组'),
+            SnackBar(
+              content: Text(LocalizationHelper.of(context).joinGroupSuccess),
               backgroundColor: AppTheme.successColor,
               behavior: SnackBarBehavior.floating,
             ),
           );
         } else {
-          final errorMessage = groupProvider.error ?? '加入失败，请检查加入码';
+          final errorMessage = groupProvider.error ?? LocalizationHelper.of(context).joinGroupFailed;
           print('加入群组失败: $errorMessage');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -110,7 +111,7 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('加入失败: $e'),
+            content: Text('${LocalizationHelper.of(context).joinFailed}: $e'),
             backgroundColor: AppTheme.errorColor,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -135,11 +136,11 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.backgroundColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('输入加入码'),
+        title: Text(LocalizationHelper.of(context).enterJoinCode),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: '8位加入码',
+          decoration: InputDecoration(
+            hintText: LocalizationHelper.of(context).joinCodeHint,
             counterText: '',
           ),
           maxLength: 8,
@@ -153,7 +154,7 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -163,7 +164,7 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
                 _joinGroup(code);
               }
             },
-            child: const Text('加入'),
+            child: Text(LocalizationHelper.of(context).join),
           ),
         ],
       ),
@@ -178,12 +179,12 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: const Text('扫描二维码'),
+        title: Text(LocalizationHelper.of(context).scanQRCode),
         actions: [
           IconButton(
             icon: const Icon(Icons.keyboard_rounded),
             onPressed: _showManualInputDialog,
-            tooltip: '手动输入',
+            tooltip: LocalizationHelper.of(context).manualInput,
           ),
           IconButton(
             icon: ValueListenableBuilder(
@@ -195,7 +196,7 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
               },
             ),
             onPressed: () => _scannerController.toggleTorch(),
-            tooltip: '闪光灯',
+            tooltip: LocalizationHelper.of(context).flashlight,
           ),
         ],
       ),
@@ -301,9 +302,9 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
                   color: Colors.black.withOpacity(0.7),
                   borderRadius: BorderRadius.circular(25),
                 ),
-                child: const Text(
-                  '将二维码置于框内进行扫描',
-                  style: TextStyle(
+                child: Text(
+                  LocalizationHelper.of(context).placeQRInFrame,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -325,9 +326,9 @@ class _QrScanScreenState extends State<QrScanScreen> with TickerProviderStateMix
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      '正在加入群组...',
-                      style: TextStyle(
+                    Text(
+                      LocalizationHelper.of(context).joiningGroup,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w500,

@@ -5,6 +5,7 @@ import 'dart:convert';
 import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
+import '../utils/localization_helper.dart';
 
 class QrGenerateScreen extends StatefulWidget {
   final Map<String, dynamic>? group;
@@ -63,7 +64,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
       }
       
       if (targetGroup == null) {
-        throw Exception('没有可用的群组信息');
+        throw Exception(LocalizationHelper.of(context).noGroupInfo);
       }
       
       // 🔥 修复：如果传入了特定群组，先设置为当前群组
@@ -85,7 +86,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
           _animationController.forward();
         } else {
           setState(() {
-            _errorMessage = result?['message'] ?? '生成失败';
+            _errorMessage = result?['message'] ?? LocalizationHelper.of(context).generateFailed;
           });
         }
       }
@@ -108,7 +109,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: const Text('设备加入码'),
+        title: Text(LocalizationHelper.of(context).deviceJoinCode),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -123,7 +124,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
                 });
                 _generateQRCode();
               },
-              tooltip: '重新生成',
+              tooltip: LocalizationHelper.of(context).regenerate,
             ),
         ],
       ),
@@ -138,15 +139,15 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
   }
 
   Widget _buildLoadingState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 24),
+          const CircularProgressIndicator(),
+          const SizedBox(height: 24),
           Text(
-            '正在生成加入码...',
-            style: TextStyle(
+            LocalizationHelper.of(context).generatingJoinCode,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),
@@ -177,7 +178,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
             ),
             const SizedBox(height: 24),
             Text(
-              '生成失败',
+              LocalizationHelper.of(context).generateFailed,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -200,7 +201,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
                 _generateQRCode();
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('重试'),
+              label: Text(LocalizationHelper.of(context).retry),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),

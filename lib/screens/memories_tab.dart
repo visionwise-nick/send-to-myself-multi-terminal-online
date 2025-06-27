@@ -6,6 +6,7 @@ import '../models/memory_model.dart';
 import '../theme/app_theme.dart';
 import '../widgets/memory_card.dart';
 import '../services/ai_service.dart';
+import '../utils/localization_helper.dart';
 import 'create_memory_screen.dart';
 import 'edit_memory_screen.dart';
 
@@ -103,7 +104,7 @@ class _MemoriesTabState extends State<MemoriesTab> {
           Consumer<MemoryProvider>(
             builder: (context, memoryProvider, child) {
               return Text(
-                '已收藏 ${memoryProvider.totalMemories} 条记忆',
+                LocalizationHelper.of(context).memoriesCount(memoryProvider.totalMemories),
                 style: AppTheme.captionStyle.copyWith(
                   color: AppTheme.textSecondaryColor,
                 ),
@@ -124,7 +125,7 @@ class _MemoriesTabState extends State<MemoriesTab> {
               controller: _searchController,
               style: AppTheme.bodyStyle,
               decoration: InputDecoration(
-                hintText: '搜索记忆内容、标签...',
+                hintText: LocalizationHelper.of(context).searchMemories,
                 hintStyle: AppTheme.bodyStyle.copyWith(color: AppTheme.textTertiaryColor),
                 prefixIcon: Icon(Icons.search, color: AppTheme.textSecondaryColor, size: 20),
                 border: InputBorder.none,
@@ -210,9 +211,9 @@ class _MemoriesTabState extends State<MemoriesTab> {
       String dateKey;
       
       if (_isSameDay(date, now)) {
-        dateKey = '今天';
+        dateKey = LocalizationHelper.of(context).today;
       } else if (_isSameDay(date, now.subtract(Duration(days: 1)))) {
-        dateKey = '昨天';
+        dateKey = LocalizationHelper.of(context).yesterday;
       } else if (date.isAfter(now.subtract(Duration(days: 7)))) {
         final weekdays = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
         dateKey = weekdays[date.weekday];
@@ -228,7 +229,9 @@ class _MemoriesTabState extends State<MemoriesTab> {
     
     // 按时间倒序排列
     final sortedKeys = grouped.keys.toList();
-    final keyOrder = ['今天', '昨天', '周日', '周六', '周五', '周四', '周三', '周二', '周一'];
+    final today = LocalizationHelper.of(context).today;
+    final yesterday = LocalizationHelper.of(context).yesterday;
+    final keyOrder = [today, yesterday, '周日', '周六', '周五', '周四', '周三', '周二', '周一'];
     
     sortedKeys.sort((a, b) {
       final aIndex = keyOrder.indexOf(a);
@@ -276,14 +279,14 @@ class _MemoriesTabState extends State<MemoriesTab> {
           ),
           SizedBox(height: 20),
           Text(
-            '开始记录生活',
+            LocalizationHelper.of(context).noMemories,
             style: AppTheme.titleStyle.copyWith(
               fontWeight: AppTheme.fontWeightMedium,
             ),
           ),
           SizedBox(height: 8),
           Text(
-            '快速添加文字、图片、文档等记忆',
+            LocalizationHelper.of(context).noMemoriesDesc,
             style: AppTheme.captionStyle,
             textAlign: TextAlign.center,
           ),
@@ -299,7 +302,7 @@ class _MemoriesTabState extends State<MemoriesTab> {
               ),
             ),
             child: Text(
-              '创建第一条记忆',
+              LocalizationHelper.of(context).createMemory,
               style: AppTheme.bodyStyle.copyWith(
                 color: Colors.white,
                 fontWeight: AppTheme.fontWeightMedium,
@@ -336,7 +339,7 @@ class _MemoriesTabState extends State<MemoriesTab> {
               ),
               SizedBox(height: 20),
               Text(
-                '快速添加记忆',
+                LocalizationHelper.of(context).quickAdd,
                 style: AppTheme.titleStyle.copyWith(
                   fontWeight: AppTheme.fontWeightMedium,
                 ),

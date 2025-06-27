@@ -460,7 +460,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noMemories => '暂无记忆';
 
   @override
-  String get searchMemories => '搜索记忆...';
+  String get searchMemories => '搜索记忆内容、标签...';
 
   @override
   String get filterByCategory => '按分类筛选';
@@ -754,6 +754,51 @@ class AppLocalizationsZh extends AppLocalizations {
   String get qrCameraError => '相机错误';
 
   @override
+  String get manualInput => '手动输入';
+
+  @override
+  String get flashlight => '闪光灯';
+
+  @override
+  String get enterJoinCode => '输入加入码';
+
+  @override
+  String get joinCodeHint => '8位加入码';
+
+  @override
+  String get joinGroupSuccess => '成功加入群组';
+
+  @override
+  String get joinGroupFailed => '加入失败，请检查加入码';
+
+  @override
+  String get joinFailed => '加入失败';
+
+  @override
+  String get joiningGroup => '正在加入群组...';
+
+  @override
+  String get placeQRInFrame => '将二维码置于框内进行扫描';
+
+  @override
+  String get deviceJoinCode => '设备加入码';
+
+  @override
+  String get regenerate => '重新生成';
+
+  @override
+  String get generatingJoinCode => '正在生成加入码...';
+
+  @override
+  String get generateFailed => '生成失败';
+
+  @override
+  String get noGroupInfo => '没有可用的群组信息';
+
+  @override
+  String get join => '加入';
+
+  @override
   String get sectionnetwork => '';
 
   @override
@@ -989,4 +1034,30 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get logoutConfirmMessage => '确定要退出当前设备的登录状态吗？';
+
+  @override
+  String get sectionmemory => '';
+
+  @override
+  String memoriesCount(int count) {
+    return '已收藏 $count 条记忆';
+  }
+
+  @override
+  String get noMemoriesDesc => '开始创建你的第一条记忆吧';
+
+  @override
+  String get viewMemory => '查看记忆';
+
+  @override
+  String get quickAdd => '快速添加';
+
+  @override
+  String get addMemoryFromText => '从文本添加';
+
+  @override
+  String get addMemoryFromImage => '从图片添加';
+
+  @override
+  String get addMemoryFromFile => '从文件添加';
 }

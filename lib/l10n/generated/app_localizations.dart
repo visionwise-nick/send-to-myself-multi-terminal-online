@@ -1039,7 +1039,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchMemories.
   ///
   /// In en, this message translates to:
-  /// **'Search memories...'**
+  /// **'Search memories, tags...'**
   String get searchMemories;
 
   /// No description provided for @filterByCategory.
@@ -1624,6 +1624,96 @@ abstract class AppLocalizations {
   /// **'Camera error'**
   String get qrCameraError;
 
+  /// No description provided for @manualInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual Input'**
+  String get manualInput;
+
+  /// No description provided for @flashlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Flashlight'**
+  String get flashlight;
+
+  /// No description provided for @enterJoinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Join Code'**
+  String get enterJoinCode;
+
+  /// No description provided for @joinCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'8-digit join code'**
+  String get joinCodeHint;
+
+  /// No description provided for @joinGroupSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully joined group'**
+  String get joinGroupSuccess;
+
+  /// No description provided for @joinGroupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to join group, please check the join code'**
+  String get joinGroupFailed;
+
+  /// No description provided for @joinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Join failed'**
+  String get joinFailed;
+
+  /// No description provided for @joiningGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Joining group...'**
+  String get joiningGroup;
+
+  /// No description provided for @placeQRInFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Place QR code within the frame to scan'**
+  String get placeQRInFrame;
+
+  /// No description provided for @deviceJoinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Device Join Code'**
+  String get deviceJoinCode;
+
+  /// No description provided for @regenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate'**
+  String get regenerate;
+
+  /// No description provided for @generatingJoinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating join code...'**
+  String get generatingJoinCode;
+
+  /// No description provided for @generateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Generation failed'**
+  String get generateFailed;
+
+  /// No description provided for @noGroupInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'No available group information'**
+  String get noGroupInfo;
+
+  /// No description provided for @join.
+  ///
+  /// In en, this message translates to:
+  /// **'Join'**
+  String get join;
+
   /// No description provided for @sectionnetwork.
   ///
   /// In en, this message translates to:
@@ -2085,6 +2175,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to logout from this device?'**
   String get logoutConfirmMessage;
+
+  /// No description provided for @sectionmemory.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionmemory;
+
+  /// No description provided for @memoriesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {count} memories'**
+  String memoriesCount(int count);
+
+  /// No description provided for @noMemoriesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Start creating your first memory'**
+  String get noMemoriesDesc;
+
+  /// No description provided for @viewMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'View Memory'**
+  String get viewMemory;
+
+  /// No description provided for @quickAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Add'**
+  String get quickAdd;
+
+  /// No description provided for @addMemoryFromText.
+  ///
+  /// In en, this message translates to:
+  /// **'Add from Text'**
+  String get addMemoryFromText;
+
+  /// No description provided for @addMemoryFromImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add from Image'**
+  String get addMemoryFromImage;
+
+  /// No description provided for @addMemoryFromFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Add from File'**
+  String get addMemoryFromFile;
 }
 
 class _AppLocalizationsDelegate

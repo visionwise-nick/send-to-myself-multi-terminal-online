@@ -297,6 +297,23 @@
   "invalidQRCode": "Invalid QR code",
   "qrPermissionDenied": "Camera permission denied",
   "qrCameraError": "Camera error",
+  "scanQRCode": "Scan QR Code",
+  "manualInput": "Manual Input",
+  "flashlight": "Flashlight",
+  "enterJoinCode": "Enter Join Code",
+  "joinCodeHint": "8-digit join code",
+  "joinGroupSuccess": "Successfully joined group",
+  "joinGroupFailed": "Failed to join group, please check the join code",
+  "joinFailed": "Join failed",
+  "joiningGroup": "Joining group...",
+  "placeQRInFrame": "Place QR code within the frame to scan",
+  "deviceJoinCode": "Device Join Code",
+  "regenerate": "Regenerate",
+  "generatingJoinCode": "Generating join code...",
+  "generateFailed": "Generation failed",
+  "noGroupInfo": "No available group information",
+  "join": "Join",
+  "retry": "Retry",
   
   "sectionnetwork": "",
   "networkStatus": "Network Status",
@@ -403,5 +420,44 @@
   "comingSoon": "Coming Soon",
   "featureComingSoon": "This feature is coming soon, please stay tuned!",
   "logoutConfirmTitle": "Logout",
-  "logoutConfirmMessage": "Are you sure you want to logout from this device?"
+  "logoutConfirmMessage": "Are you sure you want to logout from this device?",
+  
+  "sectionmemory": "",
+  "memories": "Memories",
+  "memoriesCount": "Saved {count} memories",
+  "@memoriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchMemories": "Search memories, tags...",
+  "noMemories": "No memories yet",
+  "noMemoriesDesc": "Start creating your first memory",
+  "createMemory": "Create Memory",
+  "editMemory": "Edit Memory",
+  "deleteMemory": "Delete Memory",
+  "viewMemory": "View Memory",
+  "quickAdd": "Quick Add",
+  "addMemoryFromText": "Add from Text",
+  "addMemoryFromImage": "Add from Image",
+  "addMemoryFromFile": "Add from File",
+  
+  "sectionjoingroup": "",
+  "joinGroup": "Join Group",
+  "scanMode": "Scan Mode",
+  "inputMode": "Input Mode",
+  "cameraInitFailed": "Camera initialization failed",
+  "cameraNotAvailable": "Camera not available, switched to manual input mode",
+  "desktopCameraTip": "Desktop mode recommends manual input, camera scanning may be unstable",
+  "joinGroupSuccess": "Successfully joined group!",
+  "joinGroupFailed": "Failed to join group",
+  "enterGroupCode": "Enter Group Code",
+  "groupCodePlaceholder": "Enter 8-digit group code",
+  "invalidCode": "Invalid code",
+  "codeRequired": "Code is required",
+  "processing": "Processing...",
+  "switchToScan": "Switch to Scan Mode",
+  "switchToInput": "Switch to Input Mode"
 } 

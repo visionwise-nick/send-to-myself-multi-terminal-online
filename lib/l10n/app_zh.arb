@@ -263,6 +263,23 @@
   "invalidQRCode": "无效的二维码",
   "qrPermissionDenied": "相机权限被拒绝",
   "qrCameraError": "相机错误",
+  "scanQRCode": "扫描二维码",
+  "manualInput": "手动输入",
+  "flashlight": "闪光灯",
+  "enterJoinCode": "输入加入码",
+  "joinCodeHint": "8位加入码",
+  "joinGroupSuccess": "成功加入群组",
+  "joinGroupFailed": "加入失败，请检查加入码",
+  "joinFailed": "加入失败",
+  "joiningGroup": "正在加入群组...",
+  "placeQRInFrame": "将二维码置于框内进行扫描",
+  "deviceJoinCode": "设备加入码",
+  "regenerate": "重新生成",
+  "generatingJoinCode": "正在生成加入码...",
+  "generateFailed": "生成失败",
+  "noGroupInfo": "没有可用的群组信息",
+  "join": "加入",
+  "retry": "重试",
   
   "sectionnetwork": "",
   "networkStatus": "网络状态",
@@ -348,5 +365,44 @@
   "comingSoon": "敬请期待",
   "featureComingSoon": "该功能即将上线，敬请期待！",
   "logoutConfirmTitle": "退出登录",
-  "logoutConfirmMessage": "确定要退出当前设备的登录状态吗？"
+  "logoutConfirmMessage": "确定要退出当前设备的登录状态吗？",
+  
+  "sectionmemory": "",
+  "memories": "记忆",
+  "memoriesCount": "已收藏 {count} 条记忆",
+  "@memoriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchMemories": "搜索记忆内容、标签...",
+  "noMemories": "暂无记忆",
+  "noMemoriesDesc": "开始创建你的第一条记忆吧",
+  "createMemory": "创建记忆",
+  "editMemory": "编辑记忆",
+  "deleteMemory": "删除记忆",
+  "viewMemory": "查看记忆",
+  "quickAdd": "快速添加",
+  "addMemoryFromText": "从文本添加",
+  "addMemoryFromImage": "从图片添加",
+  "addMemoryFromFile": "从文件添加",
+  
+  "sectionjoingroup": "",
+  "joinGroup": "加入群组",
+  "scanMode": "扫描模式",
+  "inputMode": "输入模式",
+  "cameraInitFailed": "摄像头初始化失败",
+  "cameraNotAvailable": "摄像头不可用，已切换到手动输入模式",
+  "desktopCameraTip": "桌面端建议使用手动输入模式，摄像头扫描可能不稳定",
+  "joinGroupSuccess": "成功加入群组！",
+  "joinGroupFailed": "加入群组失败",
+  "enterGroupCode": "输入群组代码",
+  "groupCodePlaceholder": "请输入8位群组代码",
+  "invalidCode": "无效代码",
+  "codeRequired": "请输入代码",
+  "processing": "处理中...",
+  "switchToScan": "切换到扫描模式",
+  "switchToInput": "切换到输入模式"
 } 
