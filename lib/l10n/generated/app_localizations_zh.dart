@@ -1249,7 +1249,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get permanentStorageDir => '永久存储目录';
 
   @override
-  String get storageUsage => '存储使用情况';
+  String get storageUsage => '存储使用情况:';
 
   @override
   String get chatData => '聊天数据';
@@ -1267,7 +1267,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get total => '总计';
 
   @override
-  String get fileCacheStats => '文件缓存统计';
+  String get fileCacheStats => '文件缓存统计:';
 
   @override
   String get totalFiles => '总文件数';
@@ -1279,7 +1279,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get invalidFiles => '无效文件';
 
   @override
-  String get deduplicationDiagnostics => '去重诊断';
+  String get deduplicationDiagnostics => '去重诊断:';
 
   @override
   String get processedMessageIds => '已处理消息ID';
@@ -1712,4 +1712,137 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get checking => '检查中';
+
+  @override
+  String get sendFileFailed => '发送文件失败';
+
+  @override
+  String get noFilesToSend => '没有文件可以发送';
+
+  @override
+  String get batchRecall => '批量撤回';
+
+  @override
+  String get recall => '撤回';
+
+  @override
+  String get clearDeduplicationRecords => '清理去重记录';
+
+  @override
+  String get cancelUpload => '取消上传';
+
+  @override
+  String get cancelDownload => '取消下载';
+
+  @override
+  String confirmCancelTransfer(String action) {
+    return '确定要$action这个文件吗？';
+  }
+
+  @override
+  String get continueTransfer => '继续传输';
+
+  @override
+  String get confirmCancel => '确定取消';
+
+  @override
+  String transferCancelled(String action) {
+    return '$action已取消';
+  }
+
+  @override
+  String get preparingDownload => '准备下载';
+
+  @override
+  String get fileNotExists => '文件不存在';
+
+  @override
+  String get file => '文件';
+
+  @override
+  String get fileDownloadFailed => '文件下载失败';
+
+  @override
+  String get fileNotExistsOrExpired => '文件不存在或已过期';
+
+  @override
+  String get noPermissionToDownload => '没有权限下载此文件';
+
+  @override
+  String get imageFile => '图片文件';
+
+  @override
+  String get videoFile => '视频文件';
+
+  @override
+  String get documentFile => '文档文件';
+
+  @override
+  String get audioFile => '音频文件';
+
+  @override
+  String get selectFileType => '选择文件类型';
+
+  @override
+  String get selectFileTypeMultiple => '选择文件类型（多选直接发送）';
+
+  @override
+  String get image => '图片';
+
+  @override
+  String get video => '视频';
+
+  @override
+  String get document => '文档';
+
+  @override
+  String get audio => '音频';
+
+  @override
+  String get canDragToSelectText => '可以直接拖拽选择文字内容';
+
+  @override
+  String get recallMessage => '撤回消息';
+
+  @override
+  String get addToFavoritesFailed => '收藏失败';
+
+  @override
+  String get removeFromFavoritesFailed => '取消收藏失败';
+
+  @override
+  String get gallery => '相册';
+
+  @override
+  String get documents => '文档';
+
+  @override
+  String get saveFailed => '保存失败';
+
+  @override
+  String get textShared => '文字已分享';
+
+  @override
+  String get fileNotAvailableAndNoTextToShare => '文件不可用且无文字内容可分享';
+
+  @override
+  String get messageRecalledText => '[此消息已被撤回]';
+
+  @override
+  String get cannotOpenFileLocation => '无法打开文件位置';
+
+  @override
+  String get copyFilePathFailed => '复制文件路径失败';
+
+  @override
+  String get copyFileLinkFailed => '复制文件链接失败';
+
+  @override
+  String get desktopVideoNoValidSource => '桌面端无有效视频源';
+
+  @override
+  String get mobileVideoNoValidSource => '移动端无有效视频源';
+
+  @override
+  String get desktopVideo => '桌面端视频';
 }

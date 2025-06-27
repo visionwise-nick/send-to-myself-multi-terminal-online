@@ -1261,7 +1261,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get permanentStorageDir => 'Permanent Storage Directory';
 
   @override
-  String get storageUsage => 'Storage Usage';
+  String get storageUsage => 'Storage Usage:';
 
   @override
   String get chatData => 'Chat Data';
@@ -1279,7 +1279,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get total => 'Total';
 
   @override
-  String get fileCacheStats => 'File Cache Stats';
+  String get fileCacheStats => 'File Cache Stats:';
 
   @override
   String get totalFiles => 'Total Files';
@@ -1291,7 +1291,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get invalidFiles => 'Invalid Files';
 
   @override
-  String get deduplicationDiagnostics => 'Deduplication Diagnostics';
+  String get deduplicationDiagnostics => 'Deduplication Diagnostics:';
 
   @override
   String get processedMessageIds => 'Processed Message IDs';
@@ -1370,7 +1370,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Original message does not exist or has been deleted';
 
   @override
-  String get fileInfoIncomplete => 'File info incomplete';
+  String get fileInfoIncomplete => 'File information incomplete';
 
   @override
   String get featureOnlyMobile => 'This feature is only available on mobile';
@@ -1736,4 +1736,139 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get checking => 'Checking';
+
+  @override
+  String get sendFileFailed => 'Failed to send file';
+
+  @override
+  String get noFilesToSend => 'No files to send';
+
+  @override
+  String get batchRecall => 'Batch Recall';
+
+  @override
+  String get recall => 'Recall';
+
+  @override
+  String get clearDeduplicationRecords => 'Clear Deduplication Records';
+
+  @override
+  String get cancelUpload => 'Cancel Upload';
+
+  @override
+  String get cancelDownload => 'Cancel Download';
+
+  @override
+  String confirmCancelTransfer(String action) {
+    return 'Are you sure you want to cancel $action this file?';
+  }
+
+  @override
+  String get continueTransfer => 'Continue Transfer';
+
+  @override
+  String get confirmCancel => 'Confirm Cancel';
+
+  @override
+  String transferCancelled(String action) {
+    return '$action cancelled';
+  }
+
+  @override
+  String get preparingDownload => 'Preparing download';
+
+  @override
+  String get fileNotExists => 'File does not exist';
+
+  @override
+  String get file => 'File';
+
+  @override
+  String get fileDownloadFailed => 'File download failed';
+
+  @override
+  String get fileNotExistsOrExpired => 'File does not exist or has expired';
+
+  @override
+  String get noPermissionToDownload => 'No permission to download this file';
+
+  @override
+  String get imageFile => 'Image file';
+
+  @override
+  String get videoFile => 'Video file';
+
+  @override
+  String get documentFile => 'Document file';
+
+  @override
+  String get audioFile => 'Audio file';
+
+  @override
+  String get selectFileType => 'Select file type';
+
+  @override
+  String get selectFileTypeMultiple =>
+      'Select file type (multiple selection will send directly)';
+
+  @override
+  String get image => 'Image';
+
+  @override
+  String get video => 'Video';
+
+  @override
+  String get document => 'Document';
+
+  @override
+  String get audio => 'Audio';
+
+  @override
+  String get canDragToSelectText => 'You can drag to select text content';
+
+  @override
+  String get recallMessage => 'Recall Message';
+
+  @override
+  String get addToFavoritesFailed => 'Failed to add to favorites';
+
+  @override
+  String get removeFromFavoritesFailed => 'Failed to remove from favorites';
+
+  @override
+  String get gallery => 'Gallery';
+
+  @override
+  String get documents => 'Documents';
+
+  @override
+  String get saveFailed => 'Save failed';
+
+  @override
+  String get textShared => 'Text shared';
+
+  @override
+  String get fileNotAvailableAndNoTextToShare =>
+      'File not available and no text content to share';
+
+  @override
+  String get messageRecalledText => '[This message has been recalled]';
+
+  @override
+  String get cannotOpenFileLocation => 'Cannot open file location';
+
+  @override
+  String get copyFilePathFailed => 'Failed to copy file path';
+
+  @override
+  String get copyFileLinkFailed => 'Failed to copy file link';
+
+  @override
+  String get desktopVideoNoValidSource => 'Desktop: No valid video source';
+
+  @override
+  String get mobileVideoNoValidSource => 'Mobile: No valid video source';
+
+  @override
+  String get desktopVideo => 'Desktop video';
 }

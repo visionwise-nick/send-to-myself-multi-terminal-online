@@ -2569,7 +2569,7 @@ abstract class AppLocalizations {
   /// No description provided for @storageUsage.
   ///
   /// In en, this message translates to:
-  /// **'Storage Usage'**
+  /// **'Storage Usage:'**
   String get storageUsage;
 
   /// No description provided for @chatData.
@@ -2605,7 +2605,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileCacheStats.
   ///
   /// In en, this message translates to:
-  /// **'File Cache Stats'**
+  /// **'File Cache Stats:'**
   String get fileCacheStats;
 
   /// No description provided for @totalFiles.
@@ -2629,7 +2629,7 @@ abstract class AppLocalizations {
   /// No description provided for @deduplicationDiagnostics.
   ///
   /// In en, this message translates to:
-  /// **'Deduplication Diagnostics'**
+  /// **'Deduplication Diagnostics:'**
   String get deduplicationDiagnostics;
 
   /// No description provided for @processedMessageIds.
@@ -2779,7 +2779,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileInfoIncomplete.
   ///
   /// In en, this message translates to:
-  /// **'File info incomplete'**
+  /// **'File information incomplete'**
   String get fileInfoIncomplete;
 
   /// No description provided for @featureOnlyMobile.
@@ -3399,6 +3399,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checking'**
   String get checking;
+
+  /// No description provided for @sendFileFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send file'**
+  String get sendFileFailed;
+
+  /// No description provided for @noFilesToSend.
+  ///
+  /// In en, this message translates to:
+  /// **'No files to send'**
+  String get noFilesToSend;
+
+  /// No description provided for @batchRecall.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch Recall'**
+  String get batchRecall;
+
+  /// No description provided for @recall.
+  ///
+  /// In en, this message translates to:
+  /// **'Recall'**
+  String get recall;
+
+  /// No description provided for @clearDeduplicationRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Deduplication Records'**
+  String get clearDeduplicationRecords;
+
+  /// No description provided for @cancelUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Upload'**
+  String get cancelUpload;
+
+  /// No description provided for @cancelDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Download'**
+  String get cancelDownload;
+
+  /// No description provided for @confirmCancelTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to cancel {action} this file?'**
+  String confirmCancelTransfer(String action);
+
+  /// No description provided for @continueTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue Transfer'**
+  String get continueTransfer;
+
+  /// No description provided for @confirmCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Cancel'**
+  String get confirmCancel;
+
+  /// No description provided for @transferCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'{action} cancelled'**
+  String transferCancelled(String action);
+
+  /// No description provided for @preparingDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing download'**
+  String get preparingDownload;
+
+  /// No description provided for @fileNotExists.
+  ///
+  /// In en, this message translates to:
+  /// **'File does not exist'**
+  String get fileNotExists;
+
+  /// No description provided for @file.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get file;
+
+  /// No description provided for @fileDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'File download failed'**
+  String get fileDownloadFailed;
+
+  /// No description provided for @fileNotExistsOrExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'File does not exist or has expired'**
+  String get fileNotExistsOrExpired;
+
+  /// No description provided for @noPermissionToDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'No permission to download this file'**
+  String get noPermissionToDownload;
+
+  /// No description provided for @imageFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Image file'**
+  String get imageFile;
+
+  /// No description provided for @videoFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Video file'**
+  String get videoFile;
+
+  /// No description provided for @documentFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Document file'**
+  String get documentFile;
+
+  /// No description provided for @audioFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio file'**
+  String get audioFile;
+
+  /// No description provided for @selectFileType.
+  ///
+  /// In en, this message translates to:
+  /// **'Select file type'**
+  String get selectFileType;
+
+  /// No description provided for @selectFileTypeMultiple.
+  ///
+  /// In en, this message translates to:
+  /// **'Select file type (multiple selection will send directly)'**
+  String get selectFileTypeMultiple;
+
+  /// No description provided for @image.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get image;
+
+  /// No description provided for @video.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get video;
+
+  /// No description provided for @document.
+  ///
+  /// In en, this message translates to:
+  /// **'Document'**
+  String get document;
+
+  /// No description provided for @audio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get audio;
+
+  /// No description provided for @canDragToSelectText.
+  ///
+  /// In en, this message translates to:
+  /// **'You can drag to select text content'**
+  String get canDragToSelectText;
+
+  /// No description provided for @recallMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Recall Message'**
+  String get recallMessage;
+
+  /// No description provided for @addToFavoritesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add to favorites'**
+  String get addToFavoritesFailed;
+
+  /// No description provided for @removeFromFavoritesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove from favorites'**
+  String get removeFromFavoritesFailed;
+
+  /// No description provided for @gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get gallery;
+
+  /// No description provided for @documents.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get documents;
+
+  /// No description provided for @saveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed'**
+  String get saveFailed;
+
+  /// No description provided for @textShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Text shared'**
+  String get textShared;
+
+  /// No description provided for @fileNotAvailableAndNoTextToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'File not available and no text content to share'**
+  String get fileNotAvailableAndNoTextToShare;
+
+  /// No description provided for @messageRecalledText.
+  ///
+  /// In en, this message translates to:
+  /// **'[This message has been recalled]'**
+  String get messageRecalledText;
+
+  /// No description provided for @cannotOpenFileLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot open file location'**
+  String get cannotOpenFileLocation;
+
+  /// No description provided for @copyFilePathFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to copy file path'**
+  String get copyFilePathFailed;
+
+  /// No description provided for @copyFileLinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to copy file link'**
+  String get copyFileLinkFailed;
+
+  /// No description provided for @desktopVideoNoValidSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop: No valid video source'**
+  String get desktopVideoNoValidSource;
+
+  /// No description provided for @mobileVideoNoValidSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile: No valid video source'**
+  String get mobileVideoNoValidSource;
+
+  /// No description provided for @desktopVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop video'**
+  String get desktopVideo;
 }
 
 class _AppLocalizationsDelegate

@@ -805,5 +805,82 @@
   "networkNormal": "网络正常",
   "networkLimited": "网络受限",
   "networkUnavailable": "网络不可用",
-  "checking": "检查中"
+  "checking": "检查中",
+  
+  "sectionchat": "",
+  "sendFileFailed": "发送文件失败",
+  "retry": "重试",
+  "noFilesToSend": "没有文件可以发送",
+  "batchRecall": "批量撤回",
+  "recall": "撤回",
+  "batchDelete": "批量删除",
+  "storageUsage": "存储使用情况:",
+  "fileCacheStats": "文件缓存统计:",
+  "deduplicationDiagnostics": "去重诊断:",
+  "clearDeduplicationRecords": "清理去重记录",
+  "close": "关闭",
+  "upload": "上传",
+  "download": "下载",
+  "cancelUpload": "取消上传",
+  "cancelDownload": "取消下载",
+  "confirmCancelTransfer": "确定要{action}这个文件吗？",
+  "@confirmCancelTransfer": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "continueTransfer": "继续传输",
+  "confirmCancel": "确定取消",
+  "transferCancelled": "{action}已取消",
+  "@transferCancelled": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "preparingDownload": "准备下载",
+  "fileNotExists": "文件不存在",
+  "file": "文件",
+  "fileDownloadFailed": "文件下载失败",
+  "fileNotExistsOrExpired": "文件不存在或已过期",
+  "noPermissionToDownload": "没有权限下载此文件",
+  "imageFile": "图片文件",
+  "videoFile": "视频文件",
+  "documentFile": "文档文件",
+  "audioFile": "音频文件",
+  "selectFileType": "选择文件类型",
+  "selectFileTypeMultiple": "选择文件类型（多选直接发送）",
+  "image": "图片",
+  "video": "视频",
+  "document": "文档",
+  "audio": "音频",
+  "textCopiedToClipboard": "文字已复制到剪贴板",
+  "canDragToSelectText": "可以直接拖拽选择文字内容",
+  "allContentCopiedToClipboard": "全部内容已复制到剪贴板",
+  "recallMessage": "撤回消息",
+  "messageRecalled": "消息已撤回",
+  "messageContentAddedToInput": "消息内容已添加到输入框",
+  "addedToFavorites": "已添加到收藏",
+  "addToFavoritesFailed": "收藏失败",
+  "removedFromFavorites": "已从收藏中移除",
+  "removeFromFavoritesFailed": "取消收藏失败",
+  "jumpedToOriginalMessage": "已跳转到原消息",
+  "originalMessageNotExists": "原消息不存在或已被删除",
+  "fileInfoIncomplete": "文件信息不完整",
+  "featureOnlyAvailableOnMobile": "此功能仅在移动端可用",
+  "gallery": "相册",
+  "documents": "文档",
+  "saveFailed": "保存失败",
+  "textShared": "文字已分享",
+  "fileNotAvailableAndNoTextToShare": "文件不可用且无文字内容可分享",
+  "messageRecalledText": "[此消息已被撤回]",
+  "cannotOpenFileLocation": "无法打开文件位置",
+  "copyFilePathFailed": "复制文件路径失败",
+  "copyFileLinkFailed": "复制文件链接失败",
+  "desktopVideoNoValidSource": "桌面端无有效视频源",
+  "mobileVideoNoValidSource": "移动端无有效视频源",
+  "desktopVideo": "桌面端视频"
 } 

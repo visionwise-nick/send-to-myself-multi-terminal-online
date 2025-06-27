@@ -1913,7 +1913,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       await _saveMessages();
       
       // 🔥 优化：根据文件大小和错误类型提供更详细的错误提示
-      String errorMessage = '发送文件失败';
+              String errorMessage = LocalizationHelper.of(context).sendFileFailed;
       if (e.toString().contains('timeout')) {
         if (fileSize > 50 * 1024 * 1024) {
           errorMessage = '大文件上传超时，请检查网络连接并重试\n文件大小: ${_formatFileSize(fileSize)}';
@@ -1939,7 +1939,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           ),
           duration: const Duration(seconds: 5), // 增加显示时间，让用户有时间阅读
           action: fileSize <= 100 * 1024 * 1024 ? SnackBarAction(
-            label: '重试',
+            label: LocalizationHelper.of(context).retry,
             textColor: Colors.white,
             onPressed: () => _sendFileMessage(file, fileName, fileType),
           ) : null,
@@ -2122,7 +2122,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         if (result.files.length > 1 && mounted) {
           final successMessage = processedCount > 0 
             ? '已发送 $processedCount 个文件'
-            : '没有文件可以发送';
+            : LocalizationHelper.of(context).noFilesToSend;
           
           final statusMessage = errorCount > 0
             ? '$successMessage (${errorCount}个文件有问题)'
@@ -2636,9 +2636,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 批量撤回消息
   Future<void> _batchRevokeMessages(List<String> messageIds) async {
     final confirmed = await _showConfirmDialog(
-      title: '批量撤回',
-      content: '确定要撤回选中的${messageIds.length}条消息吗？',
-      confirmText: '撤回',
+                      title: LocalizationHelper.of(context).batchRecall,
+        content: '确定要撤回选中的${messageIds.length}条消息吗？',
+        confirmText: LocalizationHelper.of(context).recall,
     );
     
     if (confirmed) {
@@ -2726,7 +2726,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 const SizedBox(height: 4),
                 Text(permanentPath, style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
                 const SizedBox(height: 16),
-                Text('存储使用情况:'),
+                Text(LocalizationHelper.of(context).storageUsage),
                 const SizedBox(height: 8),
                 Text('聊天数据: ${_formatBytes(storageInfo['chatSize'] ?? 0)}'),
                 Text('记忆数据: ${_formatBytes(storageInfo['memorySize'] ?? 0)}'),
@@ -2734,14 +2734,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 Text('文件缓存: ${_formatBytes(storageInfo['fileCacheSize'] ?? 0)}'),
                 Text('总计: ${_formatBytes(storageInfo['totalSize'] ?? 0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
-                Text('文件缓存统计:'),
+                Text(LocalizationHelper.of(context).fileCacheStats),
                 const SizedBox(height: 8),
                 Text('总文件数: ${fileCacheInfo['totalFiles']}'),
                 Text('有效文件: ${fileCacheInfo['validFiles']}'),
                 Text('无效文件: ${fileCacheInfo['invalidFiles']}'),
                 const SizedBox(height: 16),
                 // 🔥 新增：去重诊断信息
-                Text('去重诊断:'),
+                Text(LocalizationHelper.of(context).deduplicationDiagnostics),
                 const SizedBox(height: 8),
                 Text('已处理消息ID: ${_processedMessageIds.length}'),
                 Text('时间戳记录: ${_messageIdTimestamps.length}'),
@@ -4405,15 +4405,15 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   String _getFileTypeDisplayName(String? fileType) {
     switch (fileType) {
       case 'image':
-        return '图片文件';
+            return LocalizationHelper.of(context).imageFile;
       case 'video':
-        return '视频文件';
+    return LocalizationHelper.of(context).videoFile;
       case 'document':
-        return '文档文件';
+    return LocalizationHelper.of(context).documentFile;
       case 'audio':
-        return '音频文件';
+    return LocalizationHelper.of(context).audioFile;
       default:
-        return '文件';
+    return LocalizationHelper.of(context).file;
     }
   }
 
@@ -4905,7 +4905,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       final success = await _messageActionsService.copyMessageText(text);
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已复制到剪贴板')),
+          SnackBar(content: Text(LocalizationHelper.of(context).copiedToClipboard)),
         );
       }
     }
@@ -4918,7 +4918,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       await Clipboard.setData(ClipboardData(text: text));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('文字已复制到剪贴板')),
+          SnackBar(content: Text(LocalizationHelper.of(context).textCopiedToClipboard)),
         );
       }
     }
@@ -4972,7 +4972,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       if (mounted) {
         if (result['success']) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('消息已撤回')),
+            SnackBar(content: Text(LocalizationHelper.of(context).messageRecalled)),
           );
           // 更新本地消息状态
           _updateMessageAfterRevoke(messageId);
