@@ -1651,13 +1651,13 @@ abstract class AppLocalizations {
   /// No description provided for @joinGroupSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Successfully joined group'**
+  /// **'Successfully joined group!'**
   String get joinGroupSuccess;
 
   /// No description provided for @joinGroupFailed.
   ///
   /// In en, this message translates to:
-  /// **'Failed to join group, please check the join code'**
+  /// **'Failed to join group'**
   String get joinGroupFailed;
 
   /// No description provided for @joinFailed.
@@ -2223,6 +2223,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add from File'**
   String get addMemoryFromFile;
+
+  /// No description provided for @sectionjoingroup.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionjoingroup;
+
+  /// No description provided for @scanMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Mode'**
+  String get scanMode;
+
+  /// No description provided for @inputMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Input Mode'**
+  String get inputMode;
+
+  /// No description provided for @cameraInitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera initialization failed'**
+  String get cameraInitFailed;
+
+  /// No description provided for @cameraNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera not available, switched to manual input mode'**
+  String get cameraNotAvailable;
+
+  /// No description provided for @desktopCameraTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop mode recommends manual input, camera scanning may be unstable'**
+  String get desktopCameraTip;
+
+  /// No description provided for @enterGroupCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Group Code'**
+  String get enterGroupCode;
+
+  /// No description provided for @groupCodePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter 8-digit group code'**
+  String get groupCodePlaceholder;
+
+  /// No description provided for @invalidCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid code'**
+  String get invalidCode;
+
+  /// No description provided for @codeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Code is required'**
+  String get codeRequired;
+
+  /// No description provided for @processing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing...'**
+  String get processing;
+
+  /// No description provided for @switchToScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Scan Mode'**
+  String get switchToScan;
+
+  /// No description provided for @switchToInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Input Mode'**
+  String get switchToInput;
+
+  /// No description provided for @sectionnetworkdebug.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionnetworkdebug;
+
+  /// No description provided for @networkDiagnosticTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Network Diagnostic Tool'**
+  String get networkDiagnosticTool;
+
+  /// No description provided for @clearLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Logs'**
+  String get clearLogs;
+
+  /// No description provided for @copyLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Logs'**
+  String get copyLogs;
+
+  /// No description provided for @connectionStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Status'**
+  String get connectionStatus;
+
+  /// No description provided for @connectionDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Details'**
+  String get connectionDetails;
+
+  /// No description provided for @networkTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Network Test'**
+  String get networkTest;
+
+  /// No description provided for @testWebSocket.
+  ///
+  /// In en, this message translates to:
+  /// **'Test WebSocket'**
+  String get testWebSocket;
+
+  /// No description provided for @forceReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Force Reconnect'**
+  String get forceReconnect;
+
+  /// No description provided for @pingTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Ping Test'**
+  String get pingTest;
+
+  /// No description provided for @diagnosticLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostic Logs'**
+  String get diagnosticLogs;
+
+  /// No description provided for @recordsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} records'**
+  String recordsCount(int count);
+
+  /// No description provided for @startingNetworkDiagnostic.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting network diagnostic test...'**
+  String get startingNetworkDiagnostic;
+
+  /// No description provided for @testingBasicConnectivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing basic connectivity...'**
+  String get testingBasicConnectivity;
+
+  /// No description provided for @testingDnsResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing DNS resolution...'**
+  String get testingDnsResolution;
+
+  /// No description provided for @testingServerConnectivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing server connectivity...'**
+  String get testingServerConnectivity;
+
+  /// No description provided for @networkDiagnosticComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Network diagnostic test complete'**
+  String get networkDiagnosticComplete;
+
+  /// No description provided for @testingConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing connection'**
+  String get testingConnection;
+
+  /// No description provided for @connectionSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection successful'**
+  String get connectionSuccessful;
+
+  /// No description provided for @connectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed'**
+  String get connectionFailed;
+
+  /// No description provided for @connectionStatusChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection status changed'**
+  String get connectionStatusChanged;
+
+  /// No description provided for @networkStatusChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Network status changed'**
+  String get networkStatusChanged;
+
+  /// No description provided for @errorOccurred.
+  ///
+  /// In en, this message translates to:
+  /// **'Error occurred'**
+  String get errorOccurred;
+
+  /// No description provided for @messageReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Message received'**
+  String get messageReceived;
+
+  /// No description provided for @sectionsplash.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionsplash;
+
+  /// No description provided for @appSlogan.
+  ///
+  /// In en, this message translates to:
+  /// **'Cross-device file sharing and sync'**
+  String get appSlogan;
 }
 
 class _AppLocalizationsDelegate

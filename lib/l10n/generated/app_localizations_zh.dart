@@ -766,10 +766,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get joinCodeHint => '8位加入码';
 
   @override
-  String get joinGroupSuccess => '成功加入群组';
+  String get joinGroupSuccess => '成功加入群组！';
 
   @override
-  String get joinGroupFailed => '加入失败，请检查加入码';
+  String get joinGroupFailed => '加入群组失败';
 
   @override
   String get joinFailed => '加入失败';
@@ -1060,4 +1060,123 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get addMemoryFromFile => '从文件添加';
+
+  @override
+  String get sectionjoingroup => '';
+
+  @override
+  String get scanMode => '扫描模式';
+
+  @override
+  String get inputMode => '输入模式';
+
+  @override
+  String get cameraInitFailed => '摄像头初始化失败';
+
+  @override
+  String get cameraNotAvailable => '摄像头不可用，已切换到手动输入模式';
+
+  @override
+  String get desktopCameraTip => '桌面端建议使用手动输入模式，摄像头扫描可能不稳定';
+
+  @override
+  String get enterGroupCode => '输入群组代码';
+
+  @override
+  String get groupCodePlaceholder => '请输入8位群组代码';
+
+  @override
+  String get invalidCode => '无效代码';
+
+  @override
+  String get codeRequired => '请输入代码';
+
+  @override
+  String get processing => '处理中...';
+
+  @override
+  String get switchToScan => '切换到扫描模式';
+
+  @override
+  String get switchToInput => '切换到输入模式';
+
+  @override
+  String get sectionnetworkdebug => '';
+
+  @override
+  String get networkDiagnosticTool => '网络诊断工具';
+
+  @override
+  String get clearLogs => '清除日志';
+
+  @override
+  String get copyLogs => '复制日志';
+
+  @override
+  String get connectionStatus => '连接状态';
+
+  @override
+  String get connectionDetails => '连接详情';
+
+  @override
+  String get networkTest => '网络检测';
+
+  @override
+  String get testWebSocket => '测试WebSocket';
+
+  @override
+  String get forceReconnect => '强制重连';
+
+  @override
+  String get pingTest => 'Ping测试';
+
+  @override
+  String get diagnosticLogs => '诊断日志';
+
+  @override
+  String recordsCount(int count) {
+    return '$count 条记录';
+  }
+
+  @override
+  String get startingNetworkDiagnostic => '开始网络诊断测试...';
+
+  @override
+  String get testingBasicConnectivity => '测试基本网络连接...';
+
+  @override
+  String get testingDnsResolution => '测试DNS解析...';
+
+  @override
+  String get testingServerConnectivity => '测试服务器连通性...';
+
+  @override
+  String get networkDiagnosticComplete => '网络诊断测试完成';
+
+  @override
+  String get testingConnection => '测试连接';
+
+  @override
+  String get connectionSuccessful => '连接成功';
+
+  @override
+  String get connectionFailed => '连接失败';
+
+  @override
+  String get connectionStatusChanged => '连接状态变化';
+
+  @override
+  String get networkStatusChanged => '网络状态变化';
+
+  @override
+  String get errorOccurred => '错误';
+
+  @override
+  String get messageReceived => '收到消息';
+
+  @override
+  String get sectionsplash => '';
+
+  @override
+  String get appSlogan => '跨设备文件共享和同步';
 }

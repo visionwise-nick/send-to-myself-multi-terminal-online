@@ -5,6 +5,7 @@ import 'dart:io';
 import '../services/websocket_manager.dart' as ws;
 import '../widgets/connection_status_widget.dart';
 import '../config/app_config.dart';
+import '../utils/localization_helper.dart';
 
 class NetworkDebugScreen extends StatefulWidget {
   @override
@@ -36,20 +37,20 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
   void _startLogging() {
     // 监听WebSocket状态变化
     _wsManager.onConnectionStateChanged.listen((state) {
-      _addLog('🔄 连接状态变化: $state');
+      _addLog('🔄 ${LocalizationHelper.of(context).connectionStatusChanged}: $state');
       _updateConnectionInfo();
     });
 
     _wsManager.onNetworkStatusChanged.listen((status) {
-      _addLog('📶 网络状态变化: $status');
+      _addLog('📶 ${LocalizationHelper.of(context).networkStatusChanged}: $status');
     });
 
     _wsManager.onError.listen((error) {
-      _addLog('❌ 错误: $error');
+      _addLog('❌ ${LocalizationHelper.of(context).errorOccurred}: $error');
     });
 
     _wsManager.onMessageReceived.listen((message) {
-      _addLog('📩 收到消息: ${message['type'] ?? 'unknown'}');
+      _addLog('📩 ${LocalizationHelper.of(context).messageReceived}: ${message['type'] ?? 'unknown'}');
     });
   }
 
@@ -85,19 +86,19 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('网络诊断工具'),
+        title: Text(LocalizationHelper.of(context).networkDiagnosticTool),
         backgroundColor: Colors.blue[600],
         foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: Icon(Icons.clear_all),
             onPressed: _clearLogs,
-            tooltip: '清除日志',
+            tooltip: LocalizationHelper.of(context).clearLogs,
           ),
           IconButton(
             icon: Icon(Icons.copy),
             onPressed: _copyLogs,
-            tooltip: '复制日志',
+            tooltip: LocalizationHelper.of(context).copyLogs,
           ),
         ],
       ),
@@ -137,7 +138,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '连接状态',
+            LocalizationHelper.of(context).connectionStatus,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -166,7 +167,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '连接详情',
+          LocalizationHelper.of(context).connectionDetails,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -223,7 +224,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
           ElevatedButton.icon(
             onPressed: _isRunningTests ? null : _runNetworkTests,
             icon: Icon(Icons.network_check),
-            label: Text('网络检测'),
+            label: Text(LocalizationHelper.of(context).networkTest),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
@@ -233,7 +234,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
           ElevatedButton.icon(
             onPressed: _testWebSocketConnection,
             icon: Icon(Icons.wifi),
-            label: Text('测试WebSocket'),
+            label: Text(LocalizationHelper.of(context).testWebSocket),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
@@ -243,7 +244,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
           ElevatedButton.icon(
             onPressed: _forceReconnect,
             icon: Icon(Icons.refresh),
-            label: Text('强制重连'),
+            label: Text(LocalizationHelper.of(context).forceReconnect),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
@@ -253,7 +254,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
           ElevatedButton.icon(
             onPressed: _startPingTest,
             icon: Icon(Icons.timer),
-            label: Text('Ping测试'),
+            label: Text(LocalizationHelper.of(context).pingTest),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.purple,
               foregroundColor: Colors.white,
@@ -285,7 +286,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
                 Icon(Icons.terminal, color: Colors.green, size: 16),
                 SizedBox(width: 8),
                 Text(
-                  '诊断日志',
+                  LocalizationHelper.of(context).diagnosticLogs,
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -293,7 +294,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
                 ),
                 Spacer(),
                 Text(
-                  '${_logs.length} 条记录',
+                  LocalizationHelper.of(context).recordsCount(_logs.length),
                   style: TextStyle(
                     color: Colors.grey[400],
                     fontSize: 12,
@@ -344,25 +345,25 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
       _isRunningTests = true;
     });
 
-    _addLog('🚀 开始网络诊断测试...');
+    _addLog('🚀 ${LocalizationHelper.of(context).startingNetworkDiagnostic}');
 
     // 测试基本网络连接
-    _addLog('🔍 测试基本网络连接...');
+    _addLog('🔍 ${LocalizationHelper.of(context).testingBasicConnectivity}');
     await _testBasicConnectivity();
 
     // 测试DNS解析
-    _addLog('🔍 测试DNS解析...');
+    _addLog('🔍 ${LocalizationHelper.of(context).testingDnsResolution}');
     await _testDnsResolution();
 
     // 测试服务器连通性
-    _addLog('🔍 测试服务器连通性...');
+    _addLog('🔍 ${LocalizationHelper.of(context).testingServerConnectivity}');
     await _testServerConnectivity();
 
     setState(() {
       _isRunningTests = false;
     });
 
-    _addLog('✅ 网络诊断测试完成');
+    _addLog('✅ ${LocalizationHelper.of(context).networkDiagnosticComplete}');
   }
 
   Future<void> _testBasicConnectivity() async {
@@ -370,17 +371,17 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
 
     for (final domain in testDomains) {
       try {
-        _addLog('🌐 测试连接: $domain');
+        _addLog('🌐 ${LocalizationHelper.of(context).testingConnection}: $domain');
         final result = await InternetAddress.lookup(domain)
             .timeout(Duration(seconds: 5));
 
         if (result.isNotEmpty) {
-          _addLog('✅ $domain 连接成功: ${result.first.address}');
+          _addLog('✅ $domain ${LocalizationHelper.of(context).connectionSuccessful}: ${result.first.address}');
         } else {
-          _addLog('❌ $domain 连接失败: 无结果');
+          _addLog('❌ $domain ${LocalizationHelper.of(context).connectionFailed}: 无结果');
         }
       } catch (e) {
-        _addLog('❌ $domain 连接失败: $e');
+        _addLog('❌ $domain ${LocalizationHelper.of(context).connectionFailed}: $e');
       }
     }
   }

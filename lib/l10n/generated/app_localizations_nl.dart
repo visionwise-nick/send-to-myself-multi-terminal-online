@@ -770,11 +770,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get joinCodeHint => '8-digit join code';
 
   @override
-  String get joinGroupSuccess => 'Successfully joined group';
+  String get joinGroupSuccess => 'Successfully joined group!';
 
   @override
-  String get joinGroupFailed =>
-      'Failed to join group, please check the join code';
+  String get joinGroupFailed => 'Failed to join group';
 
   @override
   String get joinFailed => 'Join failed';
@@ -1067,4 +1066,125 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get addMemoryFromFile => 'Add from File';
+
+  @override
+  String get sectionjoingroup => '';
+
+  @override
+  String get scanMode => 'Scan Mode';
+
+  @override
+  String get inputMode => 'Input Mode';
+
+  @override
+  String get cameraInitFailed => 'Camera initialization failed';
+
+  @override
+  String get cameraNotAvailable =>
+      'Camera not available, switched to manual input mode';
+
+  @override
+  String get desktopCameraTip =>
+      'Desktop mode recommends manual input, camera scanning may be unstable';
+
+  @override
+  String get enterGroupCode => 'Enter Group Code';
+
+  @override
+  String get groupCodePlaceholder => 'Enter 8-digit group code';
+
+  @override
+  String get invalidCode => 'Invalid code';
+
+  @override
+  String get codeRequired => 'Code is required';
+
+  @override
+  String get processing => 'Processing...';
+
+  @override
+  String get switchToScan => 'Switch to Scan Mode';
+
+  @override
+  String get switchToInput => 'Switch to Input Mode';
+
+  @override
+  String get sectionnetworkdebug => '';
+
+  @override
+  String get networkDiagnosticTool => 'Network Diagnostic Tool';
+
+  @override
+  String get clearLogs => 'Clear Logs';
+
+  @override
+  String get copyLogs => 'Copy Logs';
+
+  @override
+  String get connectionStatus => 'Connection Status';
+
+  @override
+  String get connectionDetails => 'Connection Details';
+
+  @override
+  String get networkTest => 'Network Test';
+
+  @override
+  String get testWebSocket => 'Test WebSocket';
+
+  @override
+  String get forceReconnect => 'Force Reconnect';
+
+  @override
+  String get pingTest => 'Ping Test';
+
+  @override
+  String get diagnosticLogs => 'Diagnostic Logs';
+
+  @override
+  String recordsCount(int count) {
+    return '$count records';
+  }
+
+  @override
+  String get startingNetworkDiagnostic => 'Starting network diagnostic test...';
+
+  @override
+  String get testingBasicConnectivity => 'Testing basic connectivity...';
+
+  @override
+  String get testingDnsResolution => 'Testing DNS resolution...';
+
+  @override
+  String get testingServerConnectivity => 'Testing server connectivity...';
+
+  @override
+  String get networkDiagnosticComplete => 'Network diagnostic test complete';
+
+  @override
+  String get testingConnection => 'Testing connection';
+
+  @override
+  String get connectionSuccessful => 'Connection successful';
+
+  @override
+  String get connectionFailed => 'Connection failed';
+
+  @override
+  String get connectionStatusChanged => 'Connection status changed';
+
+  @override
+  String get networkStatusChanged => 'Network status changed';
+
+  @override
+  String get errorOccurred => 'Error occurred';
+
+  @override
+  String get messageReceived => 'Message received';
+
+  @override
+  String get sectionsplash => '';
+
+  @override
+  String get appSlogan => 'Cross-device file sharing and sync';
 }

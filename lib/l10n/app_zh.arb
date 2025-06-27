@@ -404,5 +404,40 @@
   "codeRequired": "请输入代码",
   "processing": "处理中...",
   "switchToScan": "切换到扫描模式",
-  "switchToInput": "切换到输入模式"
+  "switchToInput": "切换到输入模式",
+  
+  "sectionnetworkdebug": "",
+  "networkDiagnosticTool": "网络诊断工具",
+  "clearLogs": "清除日志",
+  "copyLogs": "复制日志",
+  "connectionStatus": "连接状态",
+  "connectionDetails": "连接详情",
+  "networkTest": "网络检测",
+  "testWebSocket": "测试WebSocket",
+  "forceReconnect": "强制重连",
+  "pingTest": "Ping测试",
+  "diagnosticLogs": "诊断日志",
+  "recordsCount": "{count} 条记录",
+  "@recordsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startingNetworkDiagnostic": "开始网络诊断测试...",
+  "testingBasicConnectivity": "测试基本网络连接...",
+  "testingDnsResolution": "测试DNS解析...",
+  "testingServerConnectivity": "测试服务器连通性...",
+  "networkDiagnosticComplete": "网络诊断测试完成",
+  "testingConnection": "测试连接",
+  "connectionSuccessful": "连接成功",
+  "connectionFailed": "连接失败",
+  "connectionStatusChanged": "连接状态变化",
+  "networkStatusChanged": "网络状态变化",
+  "errorOccurred": "错误",
+  "messageReceived": "收到消息",
+  
+  "sectionsplash": "",
+  "appSlogan": "跨设备文件共享和同步"
 } 

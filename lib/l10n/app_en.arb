@@ -459,5 +459,40 @@
   "codeRequired": "Code is required",
   "processing": "Processing...",
   "switchToScan": "Switch to Scan Mode",
-  "switchToInput": "Switch to Input Mode"
+  "switchToInput": "Switch to Input Mode",
+  
+  "sectionnetworkdebug": "",
+  "networkDiagnosticTool": "Network Diagnostic Tool",
+  "clearLogs": "Clear Logs",
+  "copyLogs": "Copy Logs",
+  "connectionStatus": "Connection Status",
+  "connectionDetails": "Connection Details",
+  "networkTest": "Network Test",
+  "testWebSocket": "Test WebSocket",
+  "forceReconnect": "Force Reconnect",
+  "pingTest": "Ping Test",
+  "diagnosticLogs": "Diagnostic Logs",
+  "recordsCount": "{count} records",
+  "@recordsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "startingNetworkDiagnostic": "Starting network diagnostic test...",
+  "testingBasicConnectivity": "Testing basic connectivity...",
+  "testingDnsResolution": "Testing DNS resolution...",
+  "testingServerConnectivity": "Testing server connectivity...",
+  "networkDiagnosticComplete": "Network diagnostic test complete",
+  "testingConnection": "Testing connection",
+  "connectionSuccessful": "Connection successful",
+  "connectionFailed": "Connection failed",
+  "connectionStatusChanged": "Connection status changed",
+  "networkStatusChanged": "Network status changed",
+  "errorOccurred": "Error occurred",
+  "messageReceived": "Message received",
+  
+  "sectionsplash": "",
+  "appSlogan": "Cross-device file sharing and sync"
 } 

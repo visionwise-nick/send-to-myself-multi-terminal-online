@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -63,11 +64,11 @@ class SplashScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             // 应用描述
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Text(
-                '跨设备文件共享和同步',
-                style: TextStyle(
+                LocalizationHelper.of(context).appSlogan,
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 16,
                 ),
