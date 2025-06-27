@@ -126,7 +126,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get about => '关于';
 
   @override
-  String get version => '版本';
+  String get version => '版本 1.0.0';
 
   @override
   String get update => '更新';
@@ -950,4 +950,43 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get openSettings => '打开设置';
+
+  @override
+  String get sectionsettings => '';
+
+  @override
+  String get deviceInfo => '设备信息';
+
+  @override
+  String get deviceId => '设备ID';
+
+  @override
+  String get platform => '平台';
+
+  @override
+  String get unknown => '未知';
+
+  @override
+  String get appTheme => '应用主题';
+
+  @override
+  String get defaultTheme => '默认';
+
+  @override
+  String get enabled => '开启';
+
+  @override
+  String get aboutApp => '关于应用';
+
+  @override
+  String get comingSoon => '敬请期待';
+
+  @override
+  String get featureComingSoon => '该功能即将上线，敬请期待！';
+
+  @override
+  String get logoutConfirmTitle => '退出登录';
+
+  @override
+  String get logoutConfirmMessage => '确定要退出当前设备的登录状态吗？';
 }

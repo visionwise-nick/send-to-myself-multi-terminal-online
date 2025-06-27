@@ -387,5 +387,21 @@
   "permissionNotification": "Notification permission is required",
   "permissionLocation": "Location permission is required",
   "grantPermission": "Grant Permission",
-  "openSettings": "Open Settings"
+  "openSettings": "Open Settings",
+  
+  "sectionsettings": "",
+  "deviceInfo": "Device Information",
+  "deviceId": "Device ID",
+  "platform": "Platform",
+  "unknown": "Unknown",
+  "appTheme": "App Theme",
+  "defaultTheme": "Default",
+  "notificationSettings": "Notification Settings",
+  "enabled": "Enabled",
+  "aboutApp": "About App",
+  "version": "Version 1.0.0",
+  "comingSoon": "Coming Soon",
+  "featureComingSoon": "This feature is coming soon, please stay tuned!",
+  "logoutConfirmTitle": "Logout",
+  "logoutConfirmMessage": "Are you sure you want to logout from this device?"
 } 

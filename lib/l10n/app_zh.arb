@@ -332,5 +332,21 @@
   "permissionNotification": "需要通知权限",
   "permissionLocation": "需要位置权限",
   "grantPermission": "授予权限",
-  "openSettings": "打开设置"
+  "openSettings": "打开设置",
+  
+  "sectionsettings": "",
+  "deviceInfo": "设备信息",
+  "deviceId": "设备ID",
+  "platform": "平台",
+  "unknown": "未知",
+  "appTheme": "应用主题",
+  "defaultTheme": "默认",
+  "notificationSettings": "通知设置",
+  "enabled": "开启",
+  "aboutApp": "关于应用",
+  "version": "版本 1.0.0",
+  "comingSoon": "敬请期待",
+  "featureComingSoon": "该功能即将上线，敬请期待！",
+  "logoutConfirmTitle": "退出登录",
+  "logoutConfirmMessage": "确定要退出当前设备的登录状态吗？"
 } 

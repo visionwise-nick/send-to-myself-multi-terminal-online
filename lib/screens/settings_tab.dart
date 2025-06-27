@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 class SettingsTab extends StatelessWidget {
   const SettingsTab({super.key});
@@ -11,6 +12,7 @@ class SettingsTab extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     final deviceInfo = authProvider.deviceInfo;
     final isSmallScreen = AppTheme.isSmallScreen(context);
+    final l10n = LocalizationHelper.of(context);
     
     return Padding(
       padding: EdgeInsets.all(AppTheme.getPadding(context)),
@@ -18,7 +20,7 @@ class SettingsTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '设置',
+            l10n.settings,
             style: TextStyle(
               fontSize: isSmallScreen ? 20 : 24,
               fontWeight: FontWeight.bold,
@@ -40,8 +42,8 @@ class SettingsTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 标题
-                    const Text(
-                      '设备信息',
+                    Text(
+                      l10n.deviceInfo,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -51,10 +53,10 @@ class SettingsTab extends StatelessWidget {
                     const SizedBox(height: 16),
                     
                     // 设备信息列表
-                    _buildInfoRow('设备名称', deviceInfo['name'] ?? '未知'),
-                    _buildInfoRow('设备类型', deviceInfo['type'] ?? '未知'),
-                    _buildInfoRow('平台', deviceInfo['platform'] ?? '未知'),
-                    _buildInfoRow('设备ID', deviceInfo['deviceId'] ?? '未知'),
+                    _buildInfoRow(l10n.deviceName, deviceInfo['name'] ?? l10n.unknown),
+                    _buildInfoRow(l10n.deviceType, deviceInfo['type'] ?? l10n.unknown),
+                    _buildInfoRow(l10n.platform, deviceInfo['platform'] ?? l10n.unknown),
+                    _buildInfoRow(l10n.deviceId, deviceInfo['deviceId'] ?? l10n.unknown),
                   ],
                 ),
               ),
@@ -70,8 +72,8 @@ class SettingsTab extends StatelessWidget {
                 _buildSettingItem(
                   context,
                   icon: Icons.color_lens,
-                  title: '应用主题',
-                  subtitle: '默认',
+                  title: l10n.appTheme,
+                  subtitle: l10n.defaultTheme,
                   onTap: () {
                     _showComingSoonDialog(context);
                   },
@@ -81,8 +83,8 @@ class SettingsTab extends StatelessWidget {
                 _buildSettingItem(
                   context,
                   icon: Icons.notifications,
-                  title: '通知设置',
-                  subtitle: '开启',
+                  title: l10n.notificationSettings,
+                  subtitle: l10n.enabled,
                   onTap: () {
                     _showComingSoonDialog(context);
                   },
@@ -92,8 +94,8 @@ class SettingsTab extends StatelessWidget {
                 _buildSettingItem(
                   context,
                   icon: Icons.info_outline,
-                  title: '关于应用',
-                  subtitle: '版本 1.0.0',
+                  title: l10n.aboutApp,
+                  subtitle: l10n.version,
                   onTap: () {
                     _showComingSoonDialog(context);
                   },
@@ -118,7 +120,7 @@ class SettingsTab extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text('退出登录'),
+                    child: Text(l10n.logout),
                   ),
                 ),
                 
@@ -214,17 +216,18 @@ class SettingsTab extends StatelessWidget {
   
   // 显示功能即将上线对话框
   void _showComingSoonDialog(BuildContext context) {
+    final l10n = LocalizationHelper.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('敬请期待'),
-        content: const Text('该功能即将上线，敬请期待！'),
+        title: Text(l10n.comingSoon),
+        content: Text(l10n.featureComingSoon),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('确定'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -233,17 +236,18 @@ class SettingsTab extends StatelessWidget {
   
   // 显示退出登录确认对话框
   void _showLogoutDialog(BuildContext context) {
+    final l10n = LocalizationHelper.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('退出登录'),
-        content: const Text('确定要退出当前设备的登录状态吗？'),
+        title: Text(l10n.logoutConfirmTitle),
+        content: Text(l10n.logoutConfirmMessage),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -253,7 +257,7 @@ class SettingsTab extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorColor,
             ),
-            child: const Text('确定'),
+            child: Text(l10n.ok),
           ),
         ],
       ),

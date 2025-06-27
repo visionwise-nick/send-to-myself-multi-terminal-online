@@ -954,4 +954,45 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get openSettings => 'Open Settings';
+
+  @override
+  String get sectionsettings => '';
+
+  @override
+  String get deviceInfo => 'Device Information';
+
+  @override
+  String get deviceId => 'Device ID';
+
+  @override
+  String get platform => 'Platform';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get appTheme => 'App Theme';
+
+  @override
+  String get defaultTheme => 'Default';
+
+  @override
+  String get enabled => 'Enabled';
+
+  @override
+  String get aboutApp => 'About App';
+
+  @override
+  String get comingSoon => 'Coming Soon';
+
+  @override
+  String get featureComingSoon =>
+      'This feature is coming soon, please stay tuned!';
+
+  @override
+  String get logoutConfirmTitle => 'Logout';
+
+  @override
+  String get logoutConfirmMessage =>
+      'Are you sure you want to logout from this device?';
 }
