@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../services/websocket_manager.dart' as ws;
 import '../providers/group_provider.dart';
+import '../utils/localization_helper.dart';
 import 'dart:async';
 
 class ConnectionStatusWidget extends StatefulWidget {
@@ -231,7 +232,7 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
                     ),
                     SizedBox(width: 4),
                     Text(
-                      '$onlineCount/$totalCount在线',
+                      LocalizationHelper.of(context).onlineStatus(onlineCount, totalCount),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -549,28 +550,28 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
   String _getStatusText() {
     switch (_connectionState) {
       case ws.ConnectionState.connected:
-        return '已连接';
+        return LocalizationHelper.of(context).connected;
       case ws.ConnectionState.connecting:
-        return '连接中';
+        return LocalizationHelper.of(context).connecting;
       case ws.ConnectionState.reconnecting:
-        return '重连中';
+        return LocalizationHelper.of(context).reconnecting;
       case ws.ConnectionState.failed:
-        return '连接失败';
+        return LocalizationHelper.of(context).connectionFailed;
       case ws.ConnectionState.disconnected:
-        return '未连接';
+        return LocalizationHelper.of(context).disconnected;
     }
   }
 
   String _getNetworkText() {
     switch (_networkStatus) {
       case ws.NetworkStatus.available:
-        return '网络正常';
+        return LocalizationHelper.of(context).networkNormal;
       case ws.NetworkStatus.limited:
-        return '网络受限';
+        return LocalizationHelper.of(context).networkLimited;
       case ws.NetworkStatus.unavailable:
-        return '网络不可用';
+        return LocalizationHelper.of(context).networkUnavailable;
       case ws.NetworkStatus.unknown:
-        return '检查中';
+        return LocalizationHelper.of(context).checking;
     }
   }
 

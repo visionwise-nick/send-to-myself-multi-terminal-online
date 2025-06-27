@@ -162,7 +162,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connected => '已连接';
 
   @override
-  String get disconnected => '已断开';
+  String get disconnected => '未连接';
 
   @override
   String get retry_connection => '重试连接';
@@ -275,7 +275,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get joinGroupToStartChat => '加入设备群组后即可开始聊天';
 
   @override
-  String get pleaseSelectGroup => '请选择群组';
+  String get pleaseSelectGroup => '请先选择一个群组';
 
   @override
   String get clickGroupSelectorHint => '点击顶部群组选择器来选择或创建群组';
@@ -406,7 +406,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadFailed => '下载失败';
 
   @override
-  String get fileTooLarge => '文件过大';
+  String get fileTooLarge => '文件太大无法发送';
 
   @override
   String get unsupportedFileType => '不支持的文件类型';
@@ -532,7 +532,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupNameHint => '请输入群组名称';
 
   @override
-  String get groupDescription => '群组描述';
+  String get groupDescription => '群组描述（可选）';
 
   @override
   String get groupDescriptionHint => '请输入群组描述';
@@ -829,7 +829,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get checkConnection => '检查连接';
 
   @override
-  String get reconnecting => '重新连接中...';
+  String get reconnecting => '重连中';
 
   @override
   String get reconnected => '已重新连接';
@@ -1101,6 +1101,271 @@ class AppLocalizationsZh extends AppLocalizations {
   String get switchToInput => '切换到输入模式';
 
   @override
+  String get cameraUnavailable => '摄像头不可用';
+
+  @override
+  String get checkCameraPermissions => '请检查摄像头权限设置';
+
+  @override
+  String get desktopInputModeRecommended => '桌面端建议使用下方的\"输入邀请码\"模式';
+
+  @override
+  String get cameraStartupFailed => '摄像头启动失败';
+
+  @override
+  String get startingCamera => '正在启动摄像头...';
+
+  @override
+  String get placeQRInScanFrame => '将二维码置于扫描框内';
+
+  @override
+  String get switchToInputModeOrCheckPermissions => '请切换到输入模式或检查摄像头权限';
+
+  @override
+  String get enterInviteCodeHint => '请输入群组邀请码（4-20位）';
+
+  @override
+  String get inviteCodePlaceholder => '邀请码';
+
+  @override
+  String get clickToJoinGroup => '点击加入群组';
+
+  @override
+  String get selectGroup => '选择群组';
+
+  @override
+  String get createGroupFailed => '创建群组失败';
+
+  @override
+  String get pleaseEnterGroupName => '请输入群组名称';
+
+  @override
+  String groupCreatedSuccessfully(Object name) {
+    return 'Group \"$name\" created successfully';
+  }
+
+  @override
+  String get title => '标题';
+
+  @override
+  String get content => '内容';
+
+  @override
+  String get writeYourThoughts => '写下你的想法...';
+
+  @override
+  String get enterNoteTitle => '输入笔记标题';
+
+  @override
+  String get websiteAppName => '网站/应用名称';
+
+  @override
+  String get websiteAppNameHint => '如：微信、淘宝';
+
+  @override
+  String get websiteAddress => '网站地址';
+
+  @override
+  String get websiteAddressHint => 'https://...';
+
+  @override
+  String get usernameEmail => '用户名/邮箱';
+
+  @override
+  String get loginAccount => '登录账号';
+
+  @override
+  String get password => '密码';
+
+  @override
+  String get loginPassword => '登录密码';
+
+  @override
+  String get sectionchat => '';
+
+  @override
+  String get sendFailed => '发送失败';
+
+  @override
+  String get maxAllowed => '最大允许';
+
+  @override
+  String get selectFileFailed => '选择文件失败';
+
+  @override
+  String get pasteFailed => '粘贴失败';
+
+  @override
+  String get fileProcessingFailed => '文件处理失败';
+
+  @override
+  String sharedTextMessages(Object count) {
+    return '已分享$count条文本消息';
+  }
+
+  @override
+  String sharedFiles(Object count) {
+    return '已分享$count个文件';
+  }
+
+  @override
+  String get batchShareFailed => '批量分享失败';
+
+  @override
+  String copiedMessages(Object count) {
+    return '已复制$count条消息到剪贴板';
+  }
+
+  @override
+  String messagesAddedToInput(Object count) {
+    return '$count条消息内容已添加到输入框';
+  }
+
+  @override
+  String favoriteMessages(Object count, Object total) {
+    return '已收藏$count/$total条消息';
+  }
+
+  @override
+  String recalledMessages(Object count) {
+    return '已撤回$count条消息';
+  }
+
+  @override
+  String get batchRecallFailed => '批量撤回失败';
+
+  @override
+  String deletedMessages(Object count) {
+    return '已删除$count条消息';
+  }
+
+  @override
+  String get batchDeleteFailed => '批量删除失败';
+
+  @override
+  String get debugInfo => '调试信息';
+
+  @override
+  String get permanentStorageDir => '永久存储目录';
+
+  @override
+  String get storageUsage => '存储使用情况';
+
+  @override
+  String get chatData => '聊天数据';
+
+  @override
+  String get memoryData => '记忆数据';
+
+  @override
+  String get userData => '用户数据';
+
+  @override
+  String get fileCache => '文件缓存';
+
+  @override
+  String get total => '总计';
+
+  @override
+  String get fileCacheStats => '文件缓存统计';
+
+  @override
+  String get totalFiles => '总文件数';
+
+  @override
+  String get validFiles => '有效文件';
+
+  @override
+  String get invalidFiles => '无效文件';
+
+  @override
+  String get deduplicationDiagnostics => '去重诊断';
+
+  @override
+  String get processedMessageIds => '已处理消息ID';
+
+  @override
+  String get timestampRecords => '时间戳记录';
+
+  @override
+  String get uiMessages => '界面消息数';
+
+  @override
+  String get websocketConnection => 'WebSocket连接';
+
+  @override
+  String get lastMessageReceived => '最后收到消息';
+
+  @override
+  String get forceClearDedupRecords => '已强制清理去重记录并重启WebSocket监听';
+
+  @override
+  String get clearDedupRecords => '清理去重记录';
+
+  @override
+  String get getDebugInfoFailed => '获取调试信息失败';
+
+  @override
+  String get copiedToClipboard => '已复制到剪贴板';
+
+  @override
+  String get textCopiedToClipboard => '文字已复制到剪贴板';
+
+  @override
+  String get canDragSelectText => '可以直接拖拽选择文字内容';
+
+  @override
+  String get allContentCopied => '全部内容已复制到剪贴板';
+
+  @override
+  String get messageRecalled => '消息已撤回';
+
+  @override
+  String get recallFailed => '撤回失败';
+
+  @override
+  String get messageDeleted => '消息已删除';
+
+  @override
+  String get deleteFailed => '删除失败';
+
+  @override
+  String get messageAddedToInput => '消息内容已添加到输入框';
+
+  @override
+  String get addedToFavorites => '已添加到收藏';
+
+  @override
+  String get favoriteFailed => '收藏失败';
+
+  @override
+  String get removedFromFavorites => '已从收藏中移除';
+
+  @override
+  String get unfavoriteFailed => '取消收藏失败';
+
+  @override
+  String get confirmDeleteMessage => '确定要删除这条消息吗？';
+
+  @override
+  String get jumpedToOriginalMessage => '已跳转到原消息';
+
+  @override
+  String get originalMessageNotExists => '原消息不存在或已被删除';
+
+  @override
+  String get fileInfoIncomplete => '文件信息不完整';
+
+  @override
+  String get featureOnlyMobile => '此功能仅在移动端可用';
+
+  @override
+  String get fileNotExistsDownloading => '文件不存在，正在下载...';
+
+  @override
+  String get fileDownloadFailedCannotSave => '文件下载失败，无法保存';
+
+  @override
   String get sectionnetworkdebug => '';
 
   @override
@@ -1142,13 +1407,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get startingNetworkDiagnostic => '开始网络诊断测试...';
 
   @override
-  String get testingBasicConnectivity => '测试基本网络连接...';
+  String get testingBasicConnectivity => '测试基本连接...';
 
   @override
   String get testingDnsResolution => '测试DNS解析...';
 
   @override
-  String get testingServerConnectivity => '测试服务器连通性...';
+  String get testingServerConnectivity => '测试服务器连接...';
 
   @override
   String get networkDiagnosticComplete => '网络诊断测试完成';
@@ -1163,13 +1428,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connectionFailed => '连接失败';
 
   @override
-  String get connectionStatusChanged => '连接状态变化';
+  String get connectionStatusChanged => '连接状态改变';
 
   @override
-  String get networkStatusChanged => '网络状态变化';
+  String get networkStatusChanged => '网络状态改变';
 
   @override
-  String get errorOccurred => '错误';
+  String get errorOccurred => '发生错误';
 
   @override
   String get messageReceived => '收到消息';
@@ -1184,7 +1449,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get myFiles => '我的文件';
 
   @override
-  String get filesFeatureComingSoon => '文件功能即将上线';
+  String get filesFeatureComingSoon => '文件功能即将推出';
 
   @override
   String get stayTuned => '敬请期待';
@@ -1193,7 +1458,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sectiondevicegroups => '';
 
   @override
-  String get noDeviceGroups => '还没有设备群组';
+  String get noDeviceGroups => '暂无设备群组';
 
   @override
   String get scanQRToJoin => '使用其他设备扫描二维码加入';
@@ -1210,7 +1475,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get youAreOwner => '您是群主';
+  String get youAreOwner => '你是群主';
 
   @override
   String get member => '成员';
@@ -1220,4 +1485,231 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get unknownDate => '未知';
+
+  @override
+  String get sectiondebug => '';
+
+  @override
+  String get batchDelete => '批量删除';
+
+  @override
+  String confirmBatchDelete(int count) {
+    return '确定要删除选中的$count条消息吗？删除后无法恢复。';
+  }
+
+  @override
+  String batchDeleteSuccess(int count) {
+    return '已删除$count条消息';
+  }
+
+  @override
+  String batchDeleteFailedWithError(String error) {
+    return '批量删除失败: $error';
+  }
+
+  @override
+  String get deleteMessageTitle => '删除消息';
+
+  @override
+  String get confirmDeleteSingleMessage => '确定要删除这条消息吗？删除后无法恢复。';
+
+  @override
+  String deleteFailedWithError(String error) {
+    return '删除失败: $error';
+  }
+
+  @override
+  String recallFailedWithError(String error) {
+    return '撤回失败: $error';
+  }
+
+  @override
+  String get startConversation => '开始对话';
+
+  @override
+  String get sendMessageOrFileToStart => '发送消息或文件来开始聊天';
+
+  @override
+  String get debugInfoTitle => '调试信息';
+
+  @override
+  String get permanentStorageDirectory => '永久存储目录:';
+
+  @override
+  String get memoryDeleteTitle => '删除记忆';
+
+  @override
+  String confirmDeleteMemory(String title) {
+    return '确定要删除\"$title\"吗？删除后无法恢复。';
+  }
+
+  @override
+  String get deleteMemorySuccess => '删除成功';
+
+  @override
+  String get deleteMemoryFailed => '删除失败';
+
+  @override
+  String memorySavedWithAI(int count) {
+    return '记忆已保存，AI生成了标题和$count个标签';
+  }
+
+  @override
+  String saveFailedWithError(String error) {
+    return '保存失败: $error';
+  }
+
+  @override
+  String get deleteTooltip => '删除';
+
+  @override
+  String get sectionsnackbar => '';
+
+  @override
+  String sharedTextMessagesCount(int count) {
+    return '已分享$count条文本消息';
+  }
+
+  @override
+  String sharedFilesAndText(int fileCount, String textPart) {
+    return '已分享$fileCount个文件$textPart';
+  }
+
+  @override
+  String andTextMessages(int count) {
+    return '和$count条文本';
+  }
+
+  @override
+  String batchShareFailedWithError(String error) {
+    return '批量分享失败: $error';
+  }
+
+  @override
+  String copiedMessagesToClipboard(int count) {
+    return '已复制$count条消息到剪贴板';
+  }
+
+  @override
+  String messagesAddedToInputBox(int count) {
+    return '$count条消息内容已添加到输入框';
+  }
+
+  @override
+  String favoritedMessagesCount(int successCount, int totalCount) {
+    return '已收藏$successCount/$totalCount条消息';
+  }
+
+  @override
+  String recalledMessagesCount(int count) {
+    return '已撤回$count条消息';
+  }
+
+  @override
+  String batchRecallFailedWithError(String error) {
+    return '批量撤回失败: $error';
+  }
+
+  @override
+  String get forceClearedDedupRecords => '已强制清理去重记录并重启WebSocket监听';
+
+  @override
+  String getDebugInfoFailedWithError(String error) {
+    return '获取调试信息失败: $error';
+  }
+
+  @override
+  String get textCanBeDragSelected => '可以直接拖拽选择文字内容';
+
+  @override
+  String get allContentCopiedToClipboard => '全部内容已复制到剪贴板';
+
+  @override
+  String get messageContentAddedToInput => '消息内容已添加到输入框';
+
+  @override
+  String get featureOnlyAvailableOnMobile => '此功能仅在移动端可用';
+
+  @override
+  String fileDownloadFailedWithError(String error) {
+    return '文件下载失败: $error';
+  }
+
+  @override
+  String get fileUrlNotExistsCannotDownload => '文件URL不存在，无法下载';
+
+  @override
+  String get fileLocationOpened => '已打开文件位置';
+
+  @override
+  String get filePathCopiedToClipboard => '文件路径已复制到剪贴板';
+
+  @override
+  String get fileLinkCopiedToClipboard => '文件链接已复制到剪贴板';
+
+  @override
+  String get sectionmisc => '';
+
+  @override
+  String get sectionauth => '';
+
+  @override
+  String get loggingOut => '正在退出登录...';
+
+  @override
+  String get logoutSuccessMessage => '已成功退出登录';
+
+  @override
+  String get logoutError => '退出登录时发生错误';
+
+  @override
+  String logoutFailedWithError(String error) {
+    return '退出登录失败: $error';
+  }
+
+  @override
+  String get loginStatusInvalid => '登录状态已失效';
+
+  @override
+  String get logoutFailedTitle => '退出登录失败';
+
+  @override
+  String get logoutFailedContent => '退出登录失败，您可以选择强制退出或重试。';
+
+  @override
+  String get forceLogout => '强制退出';
+
+  @override
+  String get sectiongroup => '';
+
+  @override
+  String get createNewGroup => '创建新群组';
+
+  @override
+  String groupCreatedSuccess(String name) {
+    return '群组\"$name\"创建成功';
+  }
+
+  @override
+  String get create => '创建';
+
+  @override
+  String get sectionconnection => '';
+
+  @override
+  String onlineStatus(int online, int total) {
+    return '$online/$total在线';
+  }
+
+  @override
+  String get networkNormal => '网络正常';
+
+  @override
+  String get networkLimited => '网络受限';
+
+  @override
+  String get networkUnavailable => '网络不可用';
+
+  @override
+  String get checking => '检查中';
 }

@@ -711,15 +711,15 @@ class _MemoriesTabState extends State<MemoriesTab> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.backgroundColor,
-        title: Text('删除记忆', style: AppTheme.titleStyle),
+        title: Text(LocalizationHelper.of(context).memoryDeleteTitle, style: AppTheme.titleStyle),
         content: Text(
-          '确定要删除"${memory.title}"吗？删除后无法恢复。',
+          LocalizationHelper.of(context).confirmDeleteMemory(memory.title),
           style: AppTheme.bodyStyle,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('取消', style: AppTheme.bodyStyle),
+            child: Text(LocalizationHelper.of(context).cancel, style: AppTheme.bodyStyle),
           ),
           TextButton(
             onPressed: () async {
@@ -727,16 +727,16 @@ class _MemoriesTabState extends State<MemoriesTab> {
               final success = await context.read<MemoryProvider>().deleteMemory(memory.id);
               if (success) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('删除成功')),
+                  SnackBar(content: Text(LocalizationHelper.of(context).deleteMemorySuccess)),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('删除失败')),
+                  SnackBar(content: Text(LocalizationHelper.of(context).deleteMemoryFailed)),
                 );
               }
             },
             child: Text(
-              '删除', 
+              LocalizationHelper.of(context).delete, 
               style: AppTheme.bodyStyle.copyWith(color: AppTheme.errorColor),
             ),
           ),

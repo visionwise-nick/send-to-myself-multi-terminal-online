@@ -685,7 +685,7 @@ abstract class AppLocalizations {
   /// No description provided for @pleaseSelectGroup.
   ///
   /// In en, this message translates to:
-  /// **'Please select a group'**
+  /// **'Please select a group first'**
   String get pleaseSelectGroup;
 
   /// No description provided for @clickGroupSelectorHint.
@@ -847,7 +847,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileSize.
   ///
   /// In en, this message translates to:
-  /// **'File Size'**
+  /// **'File size'**
   String get fileSize;
 
   /// No description provided for @fileType.
@@ -931,7 +931,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileTooLarge.
   ///
   /// In en, this message translates to:
-  /// **'File is too large'**
+  /// **'File too large to send'**
   String get fileTooLarge;
 
   /// No description provided for @unsupportedFileType.
@@ -1177,19 +1177,19 @@ abstract class AppLocalizations {
   /// No description provided for @groupNameHint.
   ///
   /// In en, this message translates to:
-  /// **'Enter group name'**
+  /// **'Please enter group name'**
   String get groupNameHint;
 
   /// No description provided for @groupDescription.
   ///
   /// In en, this message translates to:
-  /// **'Group Description'**
+  /// **'Group Description (Optional)'**
   String get groupDescription;
 
   /// No description provided for @groupDescriptionHint.
   ///
   /// In en, this message translates to:
-  /// **'Enter group description'**
+  /// **'Please enter group description'**
   String get groupDescriptionHint;
 
   /// No description provided for @groupDescriptionOptional.
@@ -1777,7 +1777,7 @@ abstract class AppLocalizations {
   /// No description provided for @reconnecting.
   ///
   /// In en, this message translates to:
-  /// **'Reconnecting...'**
+  /// **'Reconnecting'**
   String get reconnecting;
 
   /// No description provided for @reconnected.
@@ -1909,7 +1909,7 @@ abstract class AppLocalizations {
   /// No description provided for @minutesAgo.
   ///
   /// In en, this message translates to:
-  /// **'{minutes}m ago'**
+  /// **'{minutes} minutes ago'**
   String minutesAgo(int minutes);
 
   /// No description provided for @hoursAgo.
@@ -2302,6 +2302,504 @@ abstract class AppLocalizations {
   /// **'Switch to Input Mode'**
   String get switchToInput;
 
+  /// No description provided for @cameraUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera unavailable'**
+  String get cameraUnavailable;
+
+  /// No description provided for @checkCameraPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check camera permission settings'**
+  String get checkCameraPermissions;
+
+  /// No description provided for @desktopInputModeRecommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop mode recommends using the \"Enter Invite Code\" mode below'**
+  String get desktopInputModeRecommended;
+
+  /// No description provided for @cameraStartupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera startup failed'**
+  String get cameraStartupFailed;
+
+  /// No description provided for @startingCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting camera...'**
+  String get startingCamera;
+
+  /// No description provided for @placeQRInScanFrame.
+  ///
+  /// In en, this message translates to:
+  /// **'Place QR code within the scan frame'**
+  String get placeQRInScanFrame;
+
+  /// No description provided for @switchToInputModeOrCheckPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Please switch to input mode or check camera permissions'**
+  String get switchToInputModeOrCheckPermissions;
+
+  /// No description provided for @enterInviteCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter group invite code (4-20 digits)'**
+  String get enterInviteCodeHint;
+
+  /// No description provided for @inviteCodePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code'**
+  String get inviteCodePlaceholder;
+
+  /// No description provided for @clickToJoinGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Click to join group'**
+  String get clickToJoinGroup;
+
+  /// No description provided for @selectGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Group'**
+  String get selectGroup;
+
+  /// No description provided for @createGroupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create group'**
+  String get createGroupFailed;
+
+  /// No description provided for @pleaseEnterGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter group name'**
+  String get pleaseEnterGroupName;
+
+  /// No description provided for @groupCreatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Group \"{name}\" created successfully'**
+  String groupCreatedSuccessfully(Object name);
+
+  /// No description provided for @title.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get title;
+
+  /// No description provided for @content.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get content;
+
+  /// No description provided for @writeYourThoughts.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your thoughts...'**
+  String get writeYourThoughts;
+
+  /// No description provided for @enterNoteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter note title'**
+  String get enterNoteTitle;
+
+  /// No description provided for @websiteAppName.
+  ///
+  /// In en, this message translates to:
+  /// **'Website/App Name'**
+  String get websiteAppName;
+
+  /// No description provided for @websiteAppNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g.: WeChat, Taobao'**
+  String get websiteAppNameHint;
+
+  /// No description provided for @websiteAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Website Address'**
+  String get websiteAddress;
+
+  /// No description provided for @websiteAddressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'https://...'**
+  String get websiteAddressHint;
+
+  /// No description provided for @usernameEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Username/Email'**
+  String get usernameEmail;
+
+  /// No description provided for @loginAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Login account'**
+  String get loginAccount;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @loginPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Login password'**
+  String get loginPassword;
+
+  /// No description provided for @sectionchat.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionchat;
+
+  /// No description provided for @sendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Send failed'**
+  String get sendFailed;
+
+  /// No description provided for @maxAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum allowed'**
+  String get maxAllowed;
+
+  /// No description provided for @selectFileFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Select file failed'**
+  String get selectFileFailed;
+
+  /// No description provided for @pasteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste failed'**
+  String get pasteFailed;
+
+  /// No description provided for @fileProcessingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'File processing failed'**
+  String get fileProcessingFailed;
+
+  /// No description provided for @sharedTextMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared {count} text messages'**
+  String sharedTextMessages(Object count);
+
+  /// No description provided for @sharedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared {count} files'**
+  String sharedFiles(Object count);
+
+  /// No description provided for @batchShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch share failed'**
+  String get batchShareFailed;
+
+  /// No description provided for @copiedMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied {count} messages to clipboard'**
+  String copiedMessages(Object count);
+
+  /// No description provided for @messagesAddedToInput.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} message contents added to input box'**
+  String messagesAddedToInput(Object count);
+
+  /// No description provided for @favoriteMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorited {count}/{total} messages'**
+  String favoriteMessages(Object count, Object total);
+
+  /// No description provided for @recalledMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalled {count} messages'**
+  String recalledMessages(Object count);
+
+  /// No description provided for @batchRecallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch recall failed'**
+  String get batchRecallFailed;
+
+  /// No description provided for @deletedMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {count} messages'**
+  String deletedMessages(Object count);
+
+  /// No description provided for @batchDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch delete failed'**
+  String get batchDeleteFailed;
+
+  /// No description provided for @debugInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug Info'**
+  String get debugInfo;
+
+  /// No description provided for @permanentStorageDir.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanent Storage Directory'**
+  String get permanentStorageDir;
+
+  /// No description provided for @storageUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Usage'**
+  String get storageUsage;
+
+  /// No description provided for @chatData.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat Data'**
+  String get chatData;
+
+  /// No description provided for @memoryData.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory Data'**
+  String get memoryData;
+
+  /// No description provided for @userData.
+  ///
+  /// In en, this message translates to:
+  /// **'User Data'**
+  String get userData;
+
+  /// No description provided for @fileCache.
+  ///
+  /// In en, this message translates to:
+  /// **'File Cache'**
+  String get fileCache;
+
+  /// No description provided for @total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get total;
+
+  /// No description provided for @fileCacheStats.
+  ///
+  /// In en, this message translates to:
+  /// **'File Cache Stats'**
+  String get fileCacheStats;
+
+  /// No description provided for @totalFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Files'**
+  String get totalFiles;
+
+  /// No description provided for @validFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid Files'**
+  String get validFiles;
+
+  /// No description provided for @invalidFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Files'**
+  String get invalidFiles;
+
+  /// No description provided for @deduplicationDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Deduplication Diagnostics'**
+  String get deduplicationDiagnostics;
+
+  /// No description provided for @processedMessageIds.
+  ///
+  /// In en, this message translates to:
+  /// **'Processed Message IDs'**
+  String get processedMessageIds;
+
+  /// No description provided for @timestampRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Timestamp Records'**
+  String get timestampRecords;
+
+  /// No description provided for @uiMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'UI Messages'**
+  String get uiMessages;
+
+  /// No description provided for @websocketConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'WebSocket Connection'**
+  String get websocketConnection;
+
+  /// No description provided for @lastMessageReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Message Received'**
+  String get lastMessageReceived;
+
+  /// No description provided for @forceClearDedupRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Force clear dedup records and restart WebSocket listening'**
+  String get forceClearDedupRecords;
+
+  /// No description provided for @clearDedupRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Dedup Records'**
+  String get clearDedupRecords;
+
+  /// No description provided for @getDebugInfoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to get debug info'**
+  String get getDebugInfoFailed;
+
+  /// No description provided for @copiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copiedToClipboard;
+
+  /// No description provided for @textCopiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Text copied to clipboard'**
+  String get textCopiedToClipboard;
+
+  /// No description provided for @canDragSelectText.
+  ///
+  /// In en, this message translates to:
+  /// **'You can directly drag to select text content'**
+  String get canDragSelectText;
+
+  /// No description provided for @allContentCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'All content copied to clipboard'**
+  String get allContentCopied;
+
+  /// No description provided for @messageRecalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Message recalled'**
+  String get messageRecalled;
+
+  /// No description provided for @recallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Recall failed'**
+  String get recallFailed;
+
+  /// No description provided for @messageDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted'**
+  String get messageDeleted;
+
+  /// No description provided for @deleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed'**
+  String get deleteFailed;
+
+  /// No description provided for @messageAddedToInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Message content added to input box'**
+  String get messageAddedToInput;
+
+  /// No description provided for @addedToFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to favorites'**
+  String get addedToFavorites;
+
+  /// No description provided for @favoriteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite failed'**
+  String get favoriteFailed;
+
+  /// No description provided for @removedFromFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from favorites'**
+  String get removedFromFavorites;
+
+  /// No description provided for @unfavoriteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfavorite failed'**
+  String get unfavoriteFailed;
+
+  /// No description provided for @confirmDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this message?'**
+  String get confirmDeleteMessage;
+
+  /// No description provided for @jumpedToOriginalMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Jumped to original message'**
+  String get jumpedToOriginalMessage;
+
+  /// No description provided for @originalMessageNotExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Original message does not exist or has been deleted'**
+  String get originalMessageNotExists;
+
+  /// No description provided for @fileInfoIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'File info incomplete'**
+  String get fileInfoIncomplete;
+
+  /// No description provided for @featureOnlyMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'This feature is only available on mobile'**
+  String get featureOnlyMobile;
+
+  /// No description provided for @fileNotExistsDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'File does not exist, downloading...'**
+  String get fileNotExistsDownloading;
+
+  /// No description provided for @fileDownloadFailedCannotSave.
+  ///
+  /// In en, this message translates to:
+  /// **'File download failed, cannot save'**
+  String get fileDownloadFailedCannotSave;
+
   /// No description provided for @sectionnetworkdebug.
   ///
   /// In en, this message translates to:
@@ -2419,7 +2917,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionFailed.
   ///
   /// In en, this message translates to:
-  /// **'Connection failed'**
+  /// **'Connection Failed'**
   String get connectionFailed;
 
   /// No description provided for @connectionStatusChanged.
@@ -2535,6 +3033,372 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unknown'**
   String get unknownDate;
+
+  /// No description provided for @sectiondebug.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectiondebug;
+
+  /// No description provided for @batchDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch Delete'**
+  String get batchDelete;
+
+  /// No description provided for @confirmBatchDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete the selected {count} messages? This action cannot be undone.'**
+  String confirmBatchDelete(int count);
+
+  /// No description provided for @batchDeleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {count} messages'**
+  String batchDeleteSuccess(int count);
+
+  /// No description provided for @batchDeleteFailedWithError.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch delete failed: {error}'**
+  String batchDeleteFailedWithError(String error);
+
+  /// No description provided for @deleteMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Message'**
+  String get deleteMessageTitle;
+
+  /// No description provided for @confirmDeleteSingleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this message? This action cannot be undone.'**
+  String get confirmDeleteSingleMessage;
+
+  /// No description provided for @deleteFailedWithError.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed: {error}'**
+  String deleteFailedWithError(String error);
+
+  /// No description provided for @recallFailedWithError.
+  ///
+  /// In en, this message translates to:
+  /// **'Recall failed: {error}'**
+  String recallFailedWithError(String error);
+
+  /// No description provided for @startConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Start conversation'**
+  String get startConversation;
+
+  /// No description provided for @sendMessageOrFileToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a message or file to start chatting'**
+  String get sendMessageOrFileToStart;
+
+  /// No description provided for @debugInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug Info'**
+  String get debugInfoTitle;
+
+  /// No description provided for @permanentStorageDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanent Storage Directory:'**
+  String get permanentStorageDirectory;
+
+  /// No description provided for @memoryDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Memory'**
+  String get memoryDeleteTitle;
+
+  /// No description provided for @confirmDeleteMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{title}\"? This action cannot be undone.'**
+  String confirmDeleteMemory(String title);
+
+  /// No description provided for @deleteMemorySuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete successful'**
+  String get deleteMemorySuccess;
+
+  /// No description provided for @deleteMemoryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed'**
+  String get deleteMemoryFailed;
+
+  /// No description provided for @memorySavedWithAI.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory saved, AI generated title and {count} tags'**
+  String memorySavedWithAI(int count);
+
+  /// No description provided for @saveFailedWithError.
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed: {error}'**
+  String saveFailedWithError(String error);
+
+  /// No description provided for @deleteTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get deleteTooltip;
+
+  /// No description provided for @sectionsnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionsnackbar;
+
+  /// No description provided for @sharedTextMessagesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared {count} text messages'**
+  String sharedTextMessagesCount(int count);
+
+  /// No description provided for @sharedFilesAndText.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared {fileCount} files{textPart}'**
+  String sharedFilesAndText(int fileCount, String textPart);
+
+  /// No description provided for @andTextMessages.
+  ///
+  /// In en, this message translates to:
+  /// **' and {count} text messages'**
+  String andTextMessages(int count);
+
+  /// No description provided for @batchShareFailedWithError.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch share failed: {error}'**
+  String batchShareFailedWithError(String error);
+
+  /// No description provided for @copiedMessagesToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied {count} messages to clipboard'**
+  String copiedMessagesToClipboard(int count);
+
+  /// No description provided for @messagesAddedToInputBox.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} message contents added to input box'**
+  String messagesAddedToInputBox(int count);
+
+  /// No description provided for @favoritedMessagesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorited {successCount}/{totalCount} messages'**
+  String favoritedMessagesCount(int successCount, int totalCount);
+
+  /// No description provided for @recalledMessagesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalled {count} messages'**
+  String recalledMessagesCount(int count);
+
+  /// No description provided for @batchRecallFailedWithError.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch recall failed: {error}'**
+  String batchRecallFailedWithError(String error);
+
+  /// No description provided for @forceClearedDedupRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Force cleared dedup records and restarted WebSocket listening'**
+  String get forceClearedDedupRecords;
+
+  /// No description provided for @getDebugInfoFailedWithError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to get debug info: {error}'**
+  String getDebugInfoFailedWithError(String error);
+
+  /// No description provided for @textCanBeDragSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'You can directly drag to select text content'**
+  String get textCanBeDragSelected;
+
+  /// No description provided for @allContentCopiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'All content copied to clipboard'**
+  String get allContentCopiedToClipboard;
+
+  /// No description provided for @messageContentAddedToInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Message content added to input box'**
+  String get messageContentAddedToInput;
+
+  /// No description provided for @featureOnlyAvailableOnMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'This feature is only available on mobile'**
+  String get featureOnlyAvailableOnMobile;
+
+  /// No description provided for @fileDownloadFailedWithError.
+  ///
+  /// In en, this message translates to:
+  /// **'File download failed: {error}'**
+  String fileDownloadFailedWithError(String error);
+
+  /// No description provided for @fileUrlNotExistsCannotDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'File URL does not exist, cannot download'**
+  String get fileUrlNotExistsCannotDownload;
+
+  /// No description provided for @fileLocationOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'File location opened'**
+  String get fileLocationOpened;
+
+  /// No description provided for @filePathCopiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'File path copied to clipboard'**
+  String get filePathCopiedToClipboard;
+
+  /// No description provided for @fileLinkCopiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'File link copied to clipboard'**
+  String get fileLinkCopiedToClipboard;
+
+  /// No description provided for @sectionmisc.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionmisc;
+
+  /// No description provided for @sectionauth.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionauth;
+
+  /// No description provided for @loggingOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Logging out...'**
+  String get loggingOut;
+
+  /// No description provided for @logoutSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully logged out'**
+  String get logoutSuccessMessage;
+
+  /// No description provided for @logoutError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error occurred during logout'**
+  String get logoutError;
+
+  /// No description provided for @logoutFailedWithError.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout failed: {error}'**
+  String logoutFailedWithError(String error);
+
+  /// No description provided for @loginStatusInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Login status has expired'**
+  String get loginStatusInvalid;
+
+  /// No description provided for @logoutFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout Failed'**
+  String get logoutFailedTitle;
+
+  /// No description provided for @logoutFailedContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout failed, you can choose to force logout or retry.'**
+  String get logoutFailedContent;
+
+  /// No description provided for @forceLogout.
+  ///
+  /// In en, this message translates to:
+  /// **'Force Logout'**
+  String get forceLogout;
+
+  /// No description provided for @sectiongroup.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectiongroup;
+
+  /// No description provided for @createNewGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create New Group'**
+  String get createNewGroup;
+
+  /// No description provided for @groupCreatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Group \"{name}\" created successfully'**
+  String groupCreatedSuccess(String name);
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
+
+  /// No description provided for @sectionconnection.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionconnection;
+
+  /// No description provided for @onlineStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'{online}/{total} online'**
+  String onlineStatus(int online, int total);
+
+  /// No description provided for @networkNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Network Normal'**
+  String get networkNormal;
+
+  /// No description provided for @networkLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Network Limited'**
+  String get networkLimited;
+
+  /// No description provided for @networkUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Network Unavailable'**
+  String get networkUnavailable;
+
+  /// No description provided for @checking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get checking;
 }
 
 class _AppLocalizationsDelegate

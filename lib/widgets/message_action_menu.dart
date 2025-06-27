@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 enum MessageAction {
   copy,
@@ -88,7 +89,7 @@ class MessageActionMenu extends StatelessWidget {
     if (message['text'] != null && message['text'].toString().isNotEmpty) {
       actions.add(_buildActionItem(
         icon: Icons.copy_rounded,
-        label: '复制',
+        label: LocalizationHelper.of(context).copy,
         onTap: () => onAction(MessageAction.copy),
       ));
     }
@@ -97,7 +98,7 @@ class MessageActionMenu extends StatelessWidget {
     if (isMobile && hasFile) {
       actions.add(_buildActionItem(
         icon: Icons.download_rounded,
-        label: '保存到本地',
+        label: LocalizationHelper.of(context).saveToLocal,
         onTap: () => onAction(MessageAction.saveToLocal),
         textColor: Colors.blue[600],
       ));
@@ -107,7 +108,7 @@ class MessageActionMenu extends StatelessWidget {
     if (hasFile || (message['text'] != null && message['text'].toString().isNotEmpty)) {
       actions.add(_buildActionItem(
         icon: Icons.ios_share_rounded,
-        label: '分享',
+        label: LocalizationHelper.of(context).share,
         onTap: () => onAction(MessageAction.shareToSystem),
         textColor: Colors.green[600],
       ));
@@ -120,7 +121,7 @@ class MessageActionMenu extends StatelessWidget {
       if (hasFile) {
         actions.add(_buildActionItem(
           icon: Icons.folder_open_rounded,
-          label: '打开文件位置',
+          label: LocalizationHelper.of(context).openFileLocation,
           onTap: () => onAction(MessageAction.openFileLocation),
           textColor: Colors.blue[600],
         ));
@@ -131,7 +132,7 @@ class MessageActionMenu extends StatelessWidget {
       // 桌面端删除
       actions.add(_buildActionItem(
         icon: Icons.delete_rounded,
-        label: '删除',
+        label: LocalizationHelper.of(context).delete,
         textColor: Colors.red[600],
         onTap: () => onAction(MessageAction.delete),
       ));
@@ -140,7 +141,7 @@ class MessageActionMenu extends StatelessWidget {
       
       actions.add(_buildActionItem(
         icon: Icons.checklist_rounded,
-        label: '多选',
+        label: LocalizationHelper.of(context).selectMessages,
         onTap: () => onAction(MessageAction.select),
       ));
       
@@ -154,7 +155,7 @@ class MessageActionMenu extends StatelessWidget {
         
         actions.add(_buildActionItem(
           icon: Icons.delete_rounded,
-          label: '删除',
+          label: LocalizationHelper.of(context).delete,
           textColor: Colors.red[600],
           onTap: () => onAction(MessageAction.delete),
         ));

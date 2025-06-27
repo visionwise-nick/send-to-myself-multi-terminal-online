@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/memory_model.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
+import '../utils/localization_helper.dart';
 
 class MemoryCard extends StatelessWidget {
   final Memory memory;
@@ -85,7 +86,7 @@ class MemoryCard extends StatelessWidget {
                           children: [
                             Icon(Icons.edit, size: 16, color: AppTheme.textSecondaryColor),
                             SizedBox(width: 8),
-                            Text('编辑', style: AppTheme.bodyStyle),
+                            Text(LocalizationHelper.of(context).edit, style: AppTheme.bodyStyle),
                           ],
                         ),
                       ),
@@ -95,7 +96,7 @@ class MemoryCard extends StatelessWidget {
                           children: [
                             Icon(Icons.delete, size: 16, color: AppTheme.errorColor),
                             SizedBox(width: 8),
-                            Text('删除', style: AppTheme.bodyStyle.copyWith(color: AppTheme.errorColor)),
+                            Text(LocalizationHelper.of(context).delete, style: AppTheme.bodyStyle.copyWith(color: AppTheme.errorColor)),
                           ],
                         ),
                       ),

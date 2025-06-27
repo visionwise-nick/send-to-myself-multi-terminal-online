@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 class MultiSelectMode extends StatelessWidget {
   final int selectedCount;
@@ -55,7 +56,7 @@ class MultiSelectMode extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '已选 $selectedCount',
+                        LocalizationHelper.of(context).selectedMessages(selectedCount),
                         style: TextStyle(
                           color: Colors.grey[700],
                           fontSize: 16,
@@ -78,7 +79,7 @@ class MultiSelectMode extends StatelessWidget {
                     _buildActionButton(
                       icon: Icons.ios_share_rounded,
                       onPressed: onShareToSystem!,
-                      tooltip: '分享',
+                      tooltip: LocalizationHelper.of(context).share,
                       color: Colors.green[600],
                     ),
                   
@@ -87,7 +88,7 @@ class MultiSelectMode extends StatelessWidget {
                     _buildActionButton(
                       icon: Icons.delete_rounded,
                       onPressed: onDelete!,
-                      tooltip: '删除',
+                      tooltip: LocalizationHelper.of(context).deleteTooltip,
                       color: Colors.red[600],
                     ),
                 ],

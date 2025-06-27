@@ -72,6 +72,21 @@
   "loginFailed": "登录失败",
   "logoutSuccess": "退出成功",
   "logoutConfirm": "确定要退出吗？",
+  "loggingOut": "正在退出登录...",
+  "logoutSuccessMessage": "已成功退出登录",
+  "logoutError": "退出登录时发生错误",
+  "logoutFailedWithError": "退出登录失败: {error}",
+  "@logoutFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loginStatusInvalid": "登录状态已失效",
+  "logoutFailedTitle": "退出登录失败",
+  "logoutFailedContent": "退出登录失败，您可以选择强制退出或重试。",
+  "forceLogout": "强制退出",
   
   "sectionnavigation": "",
   "home": "首页",
@@ -99,7 +114,7 @@
   "myself": "我",
   "noConversations": "暂无对话",
   "joinGroupToStartChat": "加入设备群组后即可开始聊天",
-  "pleaseSelectGroup": "请选择群组",
+  "pleaseSelectGroup": "请先选择一个群组",
   "clickGroupSelectorHint": "点击顶部群组选择器来选择或创建群组",
   "sendMessage": "发送消息",
   "messageHint": "输入您的消息...",
@@ -185,7 +200,7 @@
   "deleteGroup": "删除群组",
   "groupName": "群组名称",
   "groupNameHint": "请输入群组名称",
-  "groupDescription": "群组描述",
+  "groupDescription": "群组描述（可选）",
   "groupDescriptionHint": "请输入群组描述",
   "groupDescriptionOptional": "群组描述（可选）",
   "groupMembers": "成员",
@@ -291,7 +306,7 @@
   "clientError": "客户端错误",
   "networkDebug": "网络调试",
   "checkConnection": "检查连接",
-  "reconnecting": "重新连接中...",
+  "reconnecting": "重连中",
   "reconnected": "已重新连接",
   "connectionLost": "连接丢失",
   
@@ -405,6 +420,108 @@
   "processing": "处理中...",
   "switchToScan": "切换到扫描模式",
   "switchToInput": "切换到输入模式",
+  "cameraUnavailable": "摄像头不可用",
+  "checkCameraPermissions": "请检查摄像头权限设置",
+  "desktopInputModeRecommended": "桌面端建议使用下方的\"输入邀请码\"模式",
+  "cameraStartupFailed": "摄像头启动失败",
+  "startingCamera": "正在启动摄像头...",
+  "placeQRInScanFrame": "将二维码置于扫描框内",
+  "switchToInputModeOrCheckPermissions": "请切换到输入模式或检查摄像头权限",
+  "enterInviteCodeHint": "请输入群组邀请码（4-20位）",
+  "inviteCodePlaceholder": "邀请码",
+  "clickToJoinGroup": "点击加入群组",
+  "selectGroup": "选择群组",
+  "createGroupFailed": "创建群组失败",
+  "pleaseEnterGroupName": "请输入群组名称",
+  "groupCreatedSuccess": "群组\"{name}\"创建成功",
+  "@groupCreatedSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseSelectGroup": "请先选择一个群组",
+  
+  "sectionmemory": "",
+  "save": "保存",
+  "title": "标题",
+  "content": "内容",
+  "writeYourThoughts": "写下你的想法...",
+  "enterNoteTitle": "输入笔记标题",
+  "websiteAppName": "网站/应用名称",
+  "websiteAppNameHint": "如：微信、淘宝",
+  "websiteAddress": "网站地址",
+  "websiteAddressHint": "https://...",
+  "usernameEmail": "用户名/邮箱",
+  "loginAccount": "登录账号",
+  "password": "密码",
+  "loginPassword": "登录密码",
+  
+  "sectionchat": "",
+  "sendFailed": "发送失败",
+  "fileTooLarge": "文件太大无法发送",
+  "fileSize": "文件大小",
+  "maxAllowed": "最大允许",
+  "selectFileFailed": "选择文件失败",
+  "pasteFailed": "粘贴失败",
+  "fileProcessingFailed": "文件处理失败",
+  "sharedTextMessages": "已分享{count}条文本消息",
+  "sharedFiles": "已分享{count}个文件",
+  "batchShareFailed": "批量分享失败",
+  "copiedMessages": "已复制{count}条消息到剪贴板",
+  "messagesAddedToInput": "{count}条消息内容已添加到输入框",
+  "favoriteMessages": "已收藏{count}/{total}条消息",
+  "recalledMessages": "已撤回{count}条消息",
+  "batchRecallFailed": "批量撤回失败",
+  "deletedMessages": "已删除{count}条消息",
+  "batchDeleteFailed": "批量删除失败",
+  "debugInfo": "调试信息",
+  "permanentStorageDir": "永久存储目录",
+  "storageUsage": "存储使用情况",
+  "chatData": "聊天数据",
+  "memoryData": "记忆数据",
+  "userData": "用户数据",
+  "fileCache": "文件缓存",
+  "total": "总计",
+  "fileCacheStats": "文件缓存统计",
+  "totalFiles": "总文件数",
+  "validFiles": "有效文件",
+  "invalidFiles": "无效文件",
+  "deduplicationDiagnostics": "去重诊断",
+  "processedMessageIds": "已处理消息ID",
+  "timestampRecords": "时间戳记录",
+  "uiMessages": "界面消息数",
+  "websocketConnection": "WebSocket连接",
+  "connected": "已连接",
+  "disconnected": "未连接",
+  "lastMessageReceived": "最后收到消息",
+  "minutesAgo": "{minutes}分钟前",
+  "forceClearDedupRecords": "已强制清理去重记录并重启WebSocket监听",
+  "clearDedupRecords": "清理去重记录",
+  "close": "关闭",
+  "getDebugInfoFailed": "获取调试信息失败",
+  "copiedToClipboard": "已复制到剪贴板",
+  "textCopiedToClipboard": "文字已复制到剪贴板",
+  "canDragSelectText": "可以直接拖拽选择文字内容",
+  "allContentCopied": "全部内容已复制到剪贴板",
+  "messageRecalled": "消息已撤回",
+  "recallFailed": "撤回失败",
+  "messageDeleted": "消息已删除",
+  "deleteFailed": "删除失败",
+  "messageAddedToInput": "消息内容已添加到输入框",
+  "addedToFavorites": "已添加到收藏",
+  "favoriteFailed": "收藏失败",
+  "removedFromFavorites": "已从收藏中移除",
+  "unfavoriteFailed": "取消收藏失败",
+  "deleteMessage": "删除消息",
+  "confirmDeleteMessage": "确定要删除这条消息吗？",
+  "jumpedToOriginalMessage": "已跳转到原消息",
+  "originalMessageNotExists": "原消息不存在或已被删除",
+  "fileInfoIncomplete": "文件信息不完整",
+  "featureOnlyMobile": "此功能仅在移动端可用",
+  "fileNotExistsDownloading": "文件不存在，正在下载...",
+  "fileDownloadFailedCannotSave": "文件下载失败，无法保存",
   
   "sectionnetworkdebug": "",
   "networkDiagnosticTool": "网络诊断工具",
@@ -426,16 +543,16 @@
     }
   },
   "startingNetworkDiagnostic": "开始网络诊断测试...",
-  "testingBasicConnectivity": "测试基本网络连接...",
+  "testingBasicConnectivity": "测试基本连接...",
   "testingDnsResolution": "测试DNS解析...",
-  "testingServerConnectivity": "测试服务器连通性...",
+  "testingServerConnectivity": "测试服务器连接...",
   "networkDiagnosticComplete": "网络诊断测试完成",
   "testingConnection": "测试连接",
   "connectionSuccessful": "连接成功",
   "connectionFailed": "连接失败",
-  "connectionStatusChanged": "连接状态变化",
-  "networkStatusChanged": "网络状态变化",
-  "errorOccurred": "错误",
+  "connectionStatusChanged": "连接状态改变",
+  "networkStatusChanged": "网络状态改变",
+  "errorOccurred": "发生错误",
   "messageReceived": "收到消息",
   
   "sectionsplash": "",
@@ -443,14 +560,219 @@
   
   "sectionfiles": "",
   "myFiles": "我的文件",
-  "filesFeatureComingSoon": "文件功能即将上线", 
+  "filesFeatureComingSoon": "文件功能即将推出",
   "stayTuned": "敬请期待",
   
   "sectiondevicegroups": "",
-  "noDeviceGroups": "还没有设备群组",
+  "noDeviceGroups": "暂无设备群组",
   "scanQRToJoin": "使用其他设备扫描二维码加入",
   "myDeviceGroups": "我的设备群组",
   "unnamedGroup": "未命名群组",
+  "deviceCount": "{count}台设备",
+  "@deviceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "youAreOwner": "你是群主",
+  "member": "成员",
+  "createdOn": "创建于",
+  "unknownDate": "未知",
+  
+  "sectiondebug": "",
+  "batchDelete": "批量删除",
+  "confirmBatchDelete": "确定要删除选中的{count}条消息吗？删除后无法恢复。",
+  "@confirmBatchDelete": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batchDeleteSuccess": "已删除{count}条消息",
+  "@batchDeleteSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batchDeleteFailedWithError": "批量删除失败: {error}",
+  "@batchDeleteFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteMessageTitle": "删除消息",
+  "confirmDeleteSingleMessage": "确定要删除这条消息吗？删除后无法恢复。",
+  "deleteFailedWithError": "删除失败: {error}",
+  "@deleteFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "recallFailedWithError": "撤回失败: {error}",
+  "@recallFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "startConversation": "开始对话",
+  "sendMessageOrFileToStart": "发送消息或文件来开始聊天",
+  "debugInfoTitle": "调试信息",
+  "permanentStorageDirectory": "永久存储目录:",
+  "memoryDeleteTitle": "删除记忆",
+  "confirmDeleteMemory": "确定要删除\"{title}\"吗？删除后无法恢复。",
+  "@confirmDeleteMemory": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteMemorySuccess": "删除成功",
+  "deleteMemoryFailed": "删除失败",
+  "memorySavedWithAI": "记忆已保存，AI生成了标题和{count}个标签",
+  "@memorySavedWithAI": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "saveFailedWithError": "保存失败: {error}",
+  "@saveFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteTooltip": "删除",
+  
+  "sectionsnackbar": "",
+  "sharedTextMessagesCount": "已分享{count}条文本消息",
+  "@sharedTextMessagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharedFilesAndText": "已分享{fileCount}个文件{textPart}",
+  "@sharedFilesAndText": {
+    "placeholders": {
+      "fileCount": {
+        "type": "int"
+      },
+      "textPart": {
+        "type": "String"
+      }
+    }
+  },
+  "andTextMessages": "和{count}条文本",
+  "@andTextMessages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batchShareFailedWithError": "批量分享失败: {error}",
+  "@batchShareFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "copiedMessagesToClipboard": "已复制{count}条消息到剪贴板",
+  "@copiedMessagesToClipboard": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messagesAddedToInputBox": "{count}条消息内容已添加到输入框",
+  "@messagesAddedToInputBox": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "favoritedMessagesCount": "已收藏{successCount}/{totalCount}条消息",
+  "@favoritedMessagesCount": {
+    "placeholders": {
+      "successCount": {
+        "type": "int"
+      },
+      "totalCount": {
+        "type": "int"
+      }
+    }
+  },
+  "recalledMessagesCount": "已撤回{count}条消息",
+  "@recalledMessagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batchRecallFailedWithError": "批量撤回失败: {error}",
+  "@batchRecallFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "forceClearedDedupRecords": "已强制清理去重记录并重启WebSocket监听",
+  "getDebugInfoFailedWithError": "获取调试信息失败: {error}",
+  "@getDebugInfoFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "textCanBeDragSelected": "可以直接拖拽选择文字内容",
+  "allContentCopiedToClipboard": "全部内容已复制到剪贴板",
+  "messageContentAddedToInput": "消息内容已添加到输入框",
+  "addedToFavorites": "已添加到收藏",
+  "favoriteFailed": "收藏失败",
+  "removedFromFavorites": "已从收藏中移除",
+  "unfavoriteFailed": "取消收藏失败",
+  "fileInfoIncomplete": "文件信息不完整",
+  "featureOnlyAvailableOnMobile": "此功能仅在移动端可用",
+  "fileNotExistsDownloading": "文件不存在，正在下载...",
+  "fileDownloadFailedCannotSave": "文件下载失败，无法保存",
+  "fileDownloadFailedWithError": "文件下载失败: {error}",
+  "@fileDownloadFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileUrlNotExistsCannotDownload": "文件URL不存在，无法下载",
+  "fileLocationOpened": "已打开文件位置",
+  "filePathCopiedToClipboard": "文件路径已复制到剪贴板",
+  "fileLinkCopiedToClipboard": "文件链接已复制到剪贴板",
+  
+  "sectiongroup": "",
+  "createNewGroup": "创建新群组",
+  "groupManagement": "群组管理",
   "deviceCount": "{count} 台设备",
   "@deviceCount": {
     "placeholders": {
@@ -459,8 +781,29 @@
       }
     }
   },
-  "youAreOwner": "您是群主",
-  "member": "成员",
-  "createdOn": "创建于",
-  "unknownDate": "未知"
+  "create": "创建",
+  
+  "sectionconnection": "",
+  "connected": "已连接",
+  "connecting": "连接中",
+  "disconnected": "未连接",
+  "onlineStatus": "{online}/{total}在线",
+  "@onlineStatus": {
+    "placeholders": {
+      "online": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "connectionStatus": "连接状态",
+  "networkStatus": "网络状态",
+  "reconnecting": "重连中",
+  "connectionFailed": "连接失败",
+  "networkNormal": "网络正常",
+  "networkLimited": "网络受限",
+  "networkUnavailable": "网络不可用",
+  "checking": "检查中"
 } 

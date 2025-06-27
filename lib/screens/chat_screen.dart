@@ -37,6 +37,7 @@ import 'package:share_plus/share_plus.dart'; // 🔥 新增：系统分享功能
 import 'package:context_menus/context_menus.dart';
 
 import '../services/websocket_manager.dart' as ws_manager; // 🔥 修复：使用别名避免命名冲突
+import '../utils/localization_helper.dart';
 
 // 文件下载处理器类
 class FileDownloadHandler {
@@ -2669,9 +2670,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 批量删除消息
   Future<void> _batchDeleteMessages(List<String> messageIds) async {
     final confirmed = await _showConfirmDialog(
-      title: '批量删除',
-      content: '确定要删除选中的${messageIds.length}条消息吗？删除后无法恢复。',
-      confirmText: '删除',
+      title: LocalizationHelper.of(context).batchDelete,
+      content: LocalizationHelper.of(context).confirmBatchDelete(messageIds.length),
+      confirmText: LocalizationHelper.of(context).delete,
       isDestructive: true,
     );
     
@@ -2686,7 +2687,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       if (mounted) {
         if (result['success']) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('已删除${messageIds.length}条消息')),
+            SnackBar(content: Text(LocalizationHelper.of(context).batchDeleteSuccess(messageIds.length))),
           );
           // 从本地移除消息
           setState(() {
@@ -2695,7 +2696,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           _saveMessages();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('批量删除失败: ${result['error']}')),
+            SnackBar(content: Text(LocalizationHelper.of(context).batchDeleteFailedWithError(result['error']))),
           );
         }
       }
@@ -2715,13 +2716,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('调试信息'),
+          title: Text(LocalizationHelper.of(context).debugInfoTitle),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('永久存储目录:'),
+                Text(LocalizationHelper.of(context).permanentStorageDirectory),
                 const SizedBox(height: 4),
                 Text(permanentPath, style: const TextStyle(fontSize: 12, fontFamily: 'monospace')),
                 const SizedBox(height: 16),
@@ -2811,12 +2812,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 12), // 减少间距
           Text(
-            '开始对话',
+            LocalizationHelper.of(context).startConversation,
             style: AppTheme.bodyStyle, // 使用更小的字体
             ),
           const SizedBox(height: 4), // 减少间距
           Text(
-            '发送消息或文件来开始聊天',
+            LocalizationHelper.of(context).sendMessageOrFileToStart,
             style: AppTheme.captionStyle.copyWith(
               fontSize: 10, // 进一步减小说明文字
             ),
@@ -4987,9 +4988,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 删除消息
   Future<void> _deleteMessage(String messageId) async {
     final confirmed = await _showConfirmDialog(
-      title: '删除消息',
-      content: '确定要删除这条消息吗？删除后无法恢复。',
-      confirmText: '删除',
+      title: LocalizationHelper.of(context).deleteMessageTitle,
+      content: LocalizationHelper.of(context).confirmDeleteSingleMessage,
+      confirmText: LocalizationHelper.of(context).delete,
       isDestructive: true,
     );
     
@@ -4998,13 +4999,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       if (mounted) {
         if (result['success']) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('消息已删除')),
+            SnackBar(content: Text(LocalizationHelper.of(context).messageDeleted)),
           );
           // 从本地消息列表中移除
           _removeMessageFromLocal(messageId);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('删除失败: ${result['error']}')),
+            SnackBar(content: Text(LocalizationHelper.of(context).deleteFailedWithError(result['error']))),
           );
         }
       }
@@ -5060,13 +5061,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   void _deleteSingleMessage(Map<String, dynamic> message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('删除消息'),
-        content: const Text('确定要删除这条消息吗？'),
+              builder: (context) => AlertDialog(
+        title: Text(LocalizationHelper.of(context).deleteMessageTitle),
+        content: Text(LocalizationHelper.of(context).confirmDeleteMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -5081,7 +5082,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('消息已删除'),
+                    content: Text(LocalizationHelper.of(context).messageDeleted),
                     duration: const Duration(seconds: 2),
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(
@@ -5091,7 +5092,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 );
               }
             },
-            child: const Text('删除'),
+            child: Text(LocalizationHelper.of(context).delete),
           ),
         ],
       ),

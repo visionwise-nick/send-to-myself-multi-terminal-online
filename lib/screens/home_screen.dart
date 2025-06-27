@@ -1463,11 +1463,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       items: [
         BottomNavigationBarItem(
           icon: Icon(Icons.chat), // 简化图标
-          label: '聊天',
+          label: LocalizationHelper.of(context).chat,
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.notes), // 简化图标
-          label: '记忆',
+          label: LocalizationHelper.of(context).memories,
         ),
       ],
     );
@@ -1588,7 +1588,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
               final name = nameController.text.trim();
               if (name.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('请输入群组名称')),
+                  SnackBar(content: Text(LocalizationHelper.of(context).pleaseEnterGroupName)),
                 );
                 return;
               }
@@ -1603,11 +1603,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
               
               if (success) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('群组"$name"创建成功')),
+                  SnackBar(content: Text(LocalizationHelper.of(context).groupCreatedSuccessfully(name))),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(groupProvider.error ?? '创建群组失败')),
+                  SnackBar(content: Text(groupProvider.error ?? LocalizationHelper.of(context).createGroupFailed)),
                 );
               }
             },

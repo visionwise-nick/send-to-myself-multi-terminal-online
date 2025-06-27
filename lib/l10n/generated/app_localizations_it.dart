@@ -276,7 +276,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get joinGroupToStartChat => 'Join a device group to start chatting';
 
   @override
-  String get pleaseSelectGroup => 'Please select a group';
+  String get pleaseSelectGroup => 'Please select a group first';
 
   @override
   String get clickGroupSelectorHint =>
@@ -532,13 +532,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get groupName => 'Group Name';
 
   @override
-  String get groupNameHint => 'Enter group name';
+  String get groupNameHint => 'Please enter group name';
 
   @override
   String get groupDescription => 'Group Description';
 
   @override
-  String get groupDescriptionHint => 'Enter group description';
+  String get groupDescriptionHint => 'Please enter group description';
 
   @override
   String get groupDescriptionOptional => 'Group Description (Optional)';
@@ -1109,6 +1109,280 @@ class AppLocalizationsIt extends AppLocalizations {
   String get switchToInput => 'Switch to Input Mode';
 
   @override
+  String get cameraUnavailable => 'Camera unavailable';
+
+  @override
+  String get checkCameraPermissions =>
+      'Please check camera permission settings';
+
+  @override
+  String get desktopInputModeRecommended =>
+      'Desktop mode recommends using the \"Enter Invite Code\" mode below';
+
+  @override
+  String get cameraStartupFailed => 'Camera startup failed';
+
+  @override
+  String get startingCamera => 'Starting camera...';
+
+  @override
+  String get placeQRInScanFrame => 'Place QR code within the scan frame';
+
+  @override
+  String get switchToInputModeOrCheckPermissions =>
+      'Please switch to input mode or check camera permissions';
+
+  @override
+  String get enterInviteCodeHint =>
+      'Please enter group invite code (4-20 digits)';
+
+  @override
+  String get inviteCodePlaceholder => 'Invite code';
+
+  @override
+  String get clickToJoinGroup => 'Click to join group';
+
+  @override
+  String get selectGroup => 'Select Group';
+
+  @override
+  String get createGroupFailed => 'Failed to create group';
+
+  @override
+  String get pleaseEnterGroupName => 'Please enter group name';
+
+  @override
+  String groupCreatedSuccessfully(Object name) {
+    return 'Group \"$name\" created successfully';
+  }
+
+  @override
+  String get title => 'Title';
+
+  @override
+  String get content => 'Content';
+
+  @override
+  String get writeYourThoughts => 'Write your thoughts...';
+
+  @override
+  String get enterNoteTitle => 'Enter note title';
+
+  @override
+  String get websiteAppName => 'Website/App Name';
+
+  @override
+  String get websiteAppNameHint => 'e.g.: WeChat, Taobao';
+
+  @override
+  String get websiteAddress => 'Website Address';
+
+  @override
+  String get websiteAddressHint => 'https://...';
+
+  @override
+  String get usernameEmail => 'Username/Email';
+
+  @override
+  String get loginAccount => 'Login account';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get loginPassword => 'Login password';
+
+  @override
+  String get sectionchat => '';
+
+  @override
+  String get sendFailed => 'Send failed';
+
+  @override
+  String get maxAllowed => 'Maximum allowed';
+
+  @override
+  String get selectFileFailed => 'Select file failed';
+
+  @override
+  String get pasteFailed => 'Paste failed';
+
+  @override
+  String get fileProcessingFailed => 'File processing failed';
+
+  @override
+  String sharedTextMessages(Object count) {
+    return 'Shared $count text messages';
+  }
+
+  @override
+  String sharedFiles(Object count) {
+    return 'Shared $count files';
+  }
+
+  @override
+  String get batchShareFailed => 'Batch share failed';
+
+  @override
+  String copiedMessages(Object count) {
+    return 'Copied $count messages to clipboard';
+  }
+
+  @override
+  String messagesAddedToInput(Object count) {
+    return '$count message contents added to input box';
+  }
+
+  @override
+  String favoriteMessages(Object count, Object total) {
+    return 'Favorited $count/$total messages';
+  }
+
+  @override
+  String recalledMessages(Object count) {
+    return 'Recalled $count messages';
+  }
+
+  @override
+  String get batchRecallFailed => 'Batch recall failed';
+
+  @override
+  String deletedMessages(Object count) {
+    return 'Deleted $count messages';
+  }
+
+  @override
+  String get batchDeleteFailed => 'Batch delete failed';
+
+  @override
+  String get debugInfo => 'Debug Info';
+
+  @override
+  String get permanentStorageDir => 'Permanent Storage Directory';
+
+  @override
+  String get storageUsage => 'Storage Usage';
+
+  @override
+  String get chatData => 'Chat Data';
+
+  @override
+  String get memoryData => 'Memory Data';
+
+  @override
+  String get userData => 'User Data';
+
+  @override
+  String get fileCache => 'File Cache';
+
+  @override
+  String get total => 'Total';
+
+  @override
+  String get fileCacheStats => 'File Cache Stats';
+
+  @override
+  String get totalFiles => 'Total Files';
+
+  @override
+  String get validFiles => 'Valid Files';
+
+  @override
+  String get invalidFiles => 'Invalid Files';
+
+  @override
+  String get deduplicationDiagnostics => 'Deduplication Diagnostics';
+
+  @override
+  String get processedMessageIds => 'Processed Message IDs';
+
+  @override
+  String get timestampRecords => 'Timestamp Records';
+
+  @override
+  String get uiMessages => 'UI Messages';
+
+  @override
+  String get websocketConnection => 'WebSocket Connection';
+
+  @override
+  String get lastMessageReceived => 'Last Message Received';
+
+  @override
+  String get forceClearDedupRecords =>
+      'Force clear dedup records and restart WebSocket listening';
+
+  @override
+  String get clearDedupRecords => 'Clear Dedup Records';
+
+  @override
+  String get getDebugInfoFailed => 'Failed to get debug info';
+
+  @override
+  String get copiedToClipboard => 'Copied to clipboard';
+
+  @override
+  String get textCopiedToClipboard => 'Text copied to clipboard';
+
+  @override
+  String get canDragSelectText =>
+      'You can directly drag to select text content';
+
+  @override
+  String get allContentCopied => 'All content copied to clipboard';
+
+  @override
+  String get messageRecalled => 'Message recalled';
+
+  @override
+  String get recallFailed => 'Recall failed';
+
+  @override
+  String get messageDeleted => 'Message deleted';
+
+  @override
+  String get deleteFailed => 'Delete failed';
+
+  @override
+  String get messageAddedToInput => 'Message content added to input box';
+
+  @override
+  String get addedToFavorites => 'Added to favorites';
+
+  @override
+  String get favoriteFailed => 'Favorite failed';
+
+  @override
+  String get removedFromFavorites => 'Removed from favorites';
+
+  @override
+  String get unfavoriteFailed => 'Unfavorite failed';
+
+  @override
+  String get confirmDeleteMessage =>
+      'Are you sure you want to delete this message?';
+
+  @override
+  String get jumpedToOriginalMessage => 'Jumped to original message';
+
+  @override
+  String get originalMessageNotExists =>
+      'Original message does not exist or has been deleted';
+
+  @override
+  String get fileInfoIncomplete => 'File info incomplete';
+
+  @override
+  String get featureOnlyMobile => 'This feature is only available on mobile';
+
+  @override
+  String get fileNotExistsDownloading => 'File does not exist, downloading...';
+
+  @override
+  String get fileDownloadFailedCannotSave =>
+      'File download failed, cannot save';
+
+  @override
   String get sectionnetworkdebug => '';
 
   @override
@@ -1168,7 +1442,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get connectionSuccessful => 'Connection successful';
 
   @override
-  String get connectionFailed => 'Connection failed';
+  String get connectionFailed => 'Connection Failed';
 
   @override
   String get connectionStatusChanged => 'Connection status changed';
@@ -1228,4 +1502,238 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get unknownDate => 'Unknown';
+
+  @override
+  String get sectiondebug => '';
+
+  @override
+  String get batchDelete => 'Batch Delete';
+
+  @override
+  String confirmBatchDelete(int count) {
+    return 'Are you sure you want to delete the selected $count messages? This action cannot be undone.';
+  }
+
+  @override
+  String batchDeleteSuccess(int count) {
+    return 'Deleted $count messages';
+  }
+
+  @override
+  String batchDeleteFailedWithError(String error) {
+    return 'Batch delete failed: $error';
+  }
+
+  @override
+  String get deleteMessageTitle => 'Delete Message';
+
+  @override
+  String get confirmDeleteSingleMessage =>
+      'Are you sure you want to delete this message? This action cannot be undone.';
+
+  @override
+  String deleteFailedWithError(String error) {
+    return 'Delete failed: $error';
+  }
+
+  @override
+  String recallFailedWithError(String error) {
+    return 'Recall failed: $error';
+  }
+
+  @override
+  String get startConversation => 'Start conversation';
+
+  @override
+  String get sendMessageOrFileToStart =>
+      'Send a message or file to start chatting';
+
+  @override
+  String get debugInfoTitle => 'Debug Info';
+
+  @override
+  String get permanentStorageDirectory => 'Permanent Storage Directory:';
+
+  @override
+  String get memoryDeleteTitle => 'Delete Memory';
+
+  @override
+  String confirmDeleteMemory(String title) {
+    return 'Are you sure you want to delete \"$title\"? This action cannot be undone.';
+  }
+
+  @override
+  String get deleteMemorySuccess => 'Delete successful';
+
+  @override
+  String get deleteMemoryFailed => 'Delete failed';
+
+  @override
+  String memorySavedWithAI(int count) {
+    return 'Memory saved, AI generated title and $count tags';
+  }
+
+  @override
+  String saveFailedWithError(String error) {
+    return 'Save failed: $error';
+  }
+
+  @override
+  String get deleteTooltip => 'Delete';
+
+  @override
+  String get sectionsnackbar => '';
+
+  @override
+  String sharedTextMessagesCount(int count) {
+    return 'Shared $count text messages';
+  }
+
+  @override
+  String sharedFilesAndText(int fileCount, String textPart) {
+    return 'Shared $fileCount files$textPart';
+  }
+
+  @override
+  String andTextMessages(int count) {
+    return ' and $count text messages';
+  }
+
+  @override
+  String batchShareFailedWithError(String error) {
+    return 'Batch share failed: $error';
+  }
+
+  @override
+  String copiedMessagesToClipboard(int count) {
+    return 'Copied $count messages to clipboard';
+  }
+
+  @override
+  String messagesAddedToInputBox(int count) {
+    return '$count message contents added to input box';
+  }
+
+  @override
+  String favoritedMessagesCount(int successCount, int totalCount) {
+    return 'Favorited $successCount/$totalCount messages';
+  }
+
+  @override
+  String recalledMessagesCount(int count) {
+    return 'Recalled $count messages';
+  }
+
+  @override
+  String batchRecallFailedWithError(String error) {
+    return 'Batch recall failed: $error';
+  }
+
+  @override
+  String get forceClearedDedupRecords =>
+      'Force cleared dedup records and restarted WebSocket listening';
+
+  @override
+  String getDebugInfoFailedWithError(String error) {
+    return 'Failed to get debug info: $error';
+  }
+
+  @override
+  String get textCanBeDragSelected =>
+      'You can directly drag to select text content';
+
+  @override
+  String get allContentCopiedToClipboard => 'All content copied to clipboard';
+
+  @override
+  String get messageContentAddedToInput => 'Message content added to input box';
+
+  @override
+  String get featureOnlyAvailableOnMobile =>
+      'This feature is only available on mobile';
+
+  @override
+  String fileDownloadFailedWithError(String error) {
+    return 'File download failed: $error';
+  }
+
+  @override
+  String get fileUrlNotExistsCannotDownload =>
+      'File URL does not exist, cannot download';
+
+  @override
+  String get fileLocationOpened => 'File location opened';
+
+  @override
+  String get filePathCopiedToClipboard => 'File path copied to clipboard';
+
+  @override
+  String get fileLinkCopiedToClipboard => 'File link copied to clipboard';
+
+  @override
+  String get sectionmisc => '';
+
+  @override
+  String get sectionauth => '';
+
+  @override
+  String get loggingOut => 'Logging out...';
+
+  @override
+  String get logoutSuccessMessage => 'Successfully logged out';
+
+  @override
+  String get logoutError => 'Error occurred during logout';
+
+  @override
+  String logoutFailedWithError(String error) {
+    return 'Logout failed: $error';
+  }
+
+  @override
+  String get loginStatusInvalid => 'Login status has expired';
+
+  @override
+  String get logoutFailedTitle => 'Logout Failed';
+
+  @override
+  String get logoutFailedContent =>
+      'Logout failed, you can choose to force logout or retry.';
+
+  @override
+  String get forceLogout => 'Force Logout';
+
+  @override
+  String get sectiongroup => '';
+
+  @override
+  String get createNewGroup => 'Create New Group';
+
+  @override
+  String groupCreatedSuccess(String name) {
+    return 'Group \"$name\" created successfully';
+  }
+
+  @override
+  String get create => 'Create';
+
+  @override
+  String get sectionconnection => '';
+
+  @override
+  String onlineStatus(int online, int total) {
+    return '$online/$total online';
+  }
+
+  @override
+  String get networkNormal => 'Network Normal';
+
+  @override
+  String get networkLimited => 'Network Limited';
+
+  @override
+  String get networkUnavailable => 'Network Unavailable';
+
+  @override
+  String get checking => 'Checking';
 }

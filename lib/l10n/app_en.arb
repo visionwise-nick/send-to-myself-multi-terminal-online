@@ -325,7 +325,7 @@
   "clientError": "Client error",
   "networkDebug": "Network Debug",
   "checkConnection": "Check Connection",
-  "reconnecting": "Reconnecting...",
+  "reconnecting": "Reconnecting",
   "reconnected": "Reconnected",
   "connectionLost": "Connection lost",
   
@@ -460,6 +460,100 @@
   "processing": "Processing...",
   "switchToScan": "Switch to Scan Mode",
   "switchToInput": "Switch to Input Mode",
+  "cameraUnavailable": "Camera unavailable",
+  "checkCameraPermissions": "Please check camera permission settings",
+  "desktopInputModeRecommended": "Desktop mode recommends using the \"Enter Invite Code\" mode below",
+  "cameraStartupFailed": "Camera startup failed",
+  "startingCamera": "Starting camera...",
+  "placeQRInScanFrame": "Place QR code within the scan frame",
+  "switchToInputModeOrCheckPermissions": "Please switch to input mode or check camera permissions",
+  "enterInviteCodeHint": "Please enter group invite code (4-20 digits)",
+  "inviteCodePlaceholder": "Invite code",
+  "clickToJoinGroup": "Click to join group",
+  "selectGroup": "Select Group",
+  "createGroupFailed": "Failed to create group",
+  "pleaseEnterGroupName": "Please enter group name",
+  "groupCreatedSuccessfully": "Group \"{name}\" created successfully",
+  
+  "sectionmemory": "",
+  "save": "Save",
+  "title": "Title",
+  "content": "Content",
+  "writeYourThoughts": "Write your thoughts...",
+  "enterNoteTitle": "Enter note title",
+  "websiteAppName": "Website/App Name",
+  "websiteAppNameHint": "e.g.: WeChat, Taobao",
+  "websiteAddress": "Website Address",
+  "websiteAddressHint": "https://...",
+  "usernameEmail": "Username/Email",
+  "loginAccount": "Login account",
+  "password": "Password",
+  "loginPassword": "Login password",
+  
+  "sectionchat": "",
+  "sendFailed": "Send failed",
+  "fileTooLarge": "File too large to send",
+  "fileSize": "File size",
+  "maxAllowed": "Maximum allowed",
+  "selectFileFailed": "Select file failed",
+  "pasteFailed": "Paste failed",
+  "fileProcessingFailed": "File processing failed",
+  "sharedTextMessages": "Shared {count} text messages",
+  "sharedFiles": "Shared {count} files",
+  "batchShareFailed": "Batch share failed",
+  "copiedMessages": "Copied {count} messages to clipboard",
+  "messagesAddedToInput": "{count} message contents added to input box",
+  "favoriteMessages": "Favorited {count}/{total} messages",
+  "recalledMessages": "Recalled {count} messages",
+  "batchRecallFailed": "Batch recall failed",
+  "deletedMessages": "Deleted {count} messages",
+  "batchDeleteFailed": "Batch delete failed",
+  "debugInfo": "Debug Info",
+  "permanentStorageDir": "Permanent Storage Directory",
+  "storageUsage": "Storage Usage",
+  "chatData": "Chat Data",
+  "memoryData": "Memory Data",
+  "userData": "User Data",
+  "fileCache": "File Cache",
+  "total": "Total",
+  "fileCacheStats": "File Cache Stats",
+  "totalFiles": "Total Files",
+  "validFiles": "Valid Files",
+  "invalidFiles": "Invalid Files",
+  "deduplicationDiagnostics": "Deduplication Diagnostics",
+  "processedMessageIds": "Processed Message IDs",
+  "timestampRecords": "Timestamp Records",
+  "uiMessages": "UI Messages",
+  "websocketConnection": "WebSocket Connection",
+  "connected": "Connected",
+  "disconnected": "Disconnected",
+  "lastMessageReceived": "Last Message Received",
+  "minutesAgo": "{minutes} minutes ago",
+  "forceClearDedupRecords": "Force clear dedup records and restart WebSocket listening",
+  "clearDedupRecords": "Clear Dedup Records",
+  "close": "Close",
+  "getDebugInfoFailed": "Failed to get debug info",
+  "copiedToClipboard": "Copied to clipboard",
+  "textCopiedToClipboard": "Text copied to clipboard",
+  "canDragSelectText": "You can directly drag to select text content",
+  "allContentCopied": "All content copied to clipboard",
+  "messageRecalled": "Message recalled",
+  "recallFailed": "Recall failed",
+  "messageDeleted": "Message deleted",
+  "deleteFailed": "Delete failed",
+  "messageAddedToInput": "Message content added to input box",
+  "addedToFavorites": "Added to favorites",
+  "favoriteFailed": "Favorite failed",
+  "removedFromFavorites": "Removed from favorites",
+  "unfavoriteFailed": "Unfavorite failed",
+  "deleteMessage": "Delete Message",
+  "confirmDeleteMessage": "Are you sure you want to delete this message?",
+  "jumpedToOriginalMessage": "Jumped to original message",
+  "originalMessageNotExists": "Original message does not exist or has been deleted",
+  "fileInfoIncomplete": "File info incomplete",
+  "featureOnlyMobile": "This feature is only available on mobile",
+  "fileNotExistsDownloading": "File does not exist, downloading...",
+  "fileDownloadFailedCannotSave": "File download failed, cannot save",
   
   "sectionnetworkdebug": "",
   "networkDiagnosticTool": "Network Diagnostic Tool",
@@ -487,7 +581,7 @@
   "networkDiagnosticComplete": "Network diagnostic test complete",
   "testingConnection": "Testing connection",
   "connectionSuccessful": "Connection successful",
-  "connectionFailed": "Connection failed",
+  "connectionFailed": "Connection Failed",
   "connectionStatusChanged": "Connection status changed",
   "networkStatusChanged": "Network status changed",
   "errorOccurred": "Error occurred",
@@ -517,5 +611,264 @@
   "youAreOwner": "You are the owner",
   "member": "Member",
   "createdOn": "Created on",
-  "unknownDate": "Unknown"
+  "unknownDate": "Unknown",
+  
+  "sectiondebug": "",
+  "batchDelete": "Batch Delete",
+  "confirmBatchDelete": "Are you sure you want to delete the selected {count} messages? This action cannot be undone.",
+  "@confirmBatchDelete": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batchDeleteSuccess": "Deleted {count} messages",
+  "@batchDeleteSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batchDeleteFailedWithError": "Batch delete failed: {error}",
+  "@batchDeleteFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteMessageTitle": "Delete Message",
+  "confirmDeleteSingleMessage": "Are you sure you want to delete this message? This action cannot be undone.",
+  "deleteFailedWithError": "Delete failed: {error}",
+  "@deleteFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "recallFailedWithError": "Recall failed: {error}",
+  "@recallFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "startConversation": "Start conversation",
+  "sendMessageOrFileToStart": "Send a message or file to start chatting",
+  "debugInfoTitle": "Debug Info",
+  "permanentStorageDirectory": "Permanent Storage Directory:",
+  "memoryDeleteTitle": "Delete Memory",
+  "confirmDeleteMemory": "Are you sure you want to delete \"{title}\"? This action cannot be undone.",
+  "@confirmDeleteMemory": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteMemorySuccess": "Delete successful",
+  "deleteMemoryFailed": "Delete failed",
+  "memorySavedWithAI": "Memory saved, AI generated title and {count} tags",
+  "@memorySavedWithAI": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "saveFailedWithError": "Save failed: {error}",
+  "@saveFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteTooltip": "Delete",
+  
+  "sectionsnackbar": "",
+  "sharedTextMessagesCount": "Shared {count} text messages",
+  "@sharedTextMessagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharedFilesAndText": "Shared {fileCount} files{textPart}",
+  "@sharedFilesAndText": {
+    "placeholders": {
+      "fileCount": {
+        "type": "int"
+      },
+      "textPart": {
+        "type": "String"
+      }
+    }
+  },
+  "andTextMessages": " and {count} text messages",
+  "@andTextMessages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batchShareFailedWithError": "Batch share failed: {error}",
+  "@batchShareFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "copiedMessagesToClipboard": "Copied {count} messages to clipboard",
+  "@copiedMessagesToClipboard": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "messagesAddedToInputBox": "{count} message contents added to input box",
+  "@messagesAddedToInputBox": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "favoritedMessagesCount": "Favorited {successCount}/{totalCount} messages",
+  "@favoritedMessagesCount": {
+    "placeholders": {
+      "successCount": {
+        "type": "int"
+      },
+      "totalCount": {
+        "type": "int"
+      }
+    }
+  },
+  "recalledMessagesCount": "Recalled {count} messages",
+  "@recalledMessagesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batchRecallFailedWithError": "Batch recall failed: {error}",
+  "@batchRecallFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "forceClearedDedupRecords": "Force cleared dedup records and restarted WebSocket listening",
+  "getDebugInfoFailedWithError": "Failed to get debug info: {error}",
+  "@getDebugInfoFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "textCanBeDragSelected": "You can directly drag to select text content",
+  "allContentCopiedToClipboard": "All content copied to clipboard",
+  "messageContentAddedToInput": "Message content added to input box",
+  "addedToFavorites": "Added to favorites",
+  "favoriteFailed": "Favorite failed",
+  "removedFromFavorites": "Removed from favorites",
+  "unfavoriteFailed": "Unfavorite failed",
+  "fileInfoIncomplete": "File info incomplete",
+  "featureOnlyAvailableOnMobile": "This feature is only available on mobile",
+  "fileNotExistsDownloading": "File does not exist, downloading...",
+  "fileDownloadFailedCannotSave": "File download failed, cannot save",
+  "fileDownloadFailedWithError": "File download failed: {error}",
+  "@fileDownloadFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileUrlNotExistsCannotDownload": "File URL does not exist, cannot download",
+  "fileLocationOpened": "File location opened",
+  "filePathCopiedToClipboard": "File path copied to clipboard",
+  "fileLinkCopiedToClipboard": "File link copied to clipboard",
+  
+  "sectionmisc": "",
+  
+  "sectionauth": "",
+  "loggingOut": "Logging out...",
+  "logoutSuccessMessage": "Successfully logged out",
+  "logoutError": "Error occurred during logout",
+  "logoutFailedWithError": "Logout failed: {error}",
+  "@logoutFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "loginStatusInvalid": "Login status has expired",
+  "logoutFailedTitle": "Logout Failed",
+  "logoutFailedContent": "Logout failed, you can choose to force logout or retry.",
+  "forceLogout": "Force Logout",
+  
+  "sectiongroup": "",
+  "groupManagement": "Group Management",
+  "deviceCount": "{count} devices",
+  "@deviceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createNewGroup": "Create New Group",
+  "groupName": "Group Name",
+  "groupNameHint": "Please enter group name",
+  "groupDescription": "Group Description (Optional)",
+  "groupDescriptionHint": "Please enter group description",
+  "pleaseEnterGroupName": "Please enter group name",
+  "groupCreatedSuccess": "Group \"{name}\" created successfully",
+  "@groupCreatedSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseSelectGroup": "Please select a group first",
+  "create": "Create",
+  
+  "sectionconnection": "",
+  "connected": "Connected",
+  "connecting": "Connecting",
+  "disconnected": "Disconnected",
+  "onlineStatus": "{online}/{total} online",
+  "@onlineStatus": {
+    "placeholders": {
+      "online": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "connectionStatus": "Connection Status",
+  "networkStatus": "Network Status",
+  "reconnecting": "Reconnecting",
+  "connectionFailed": "Connection Failed",
+  "networkNormal": "Network Normal",
+  "networkLimited": "Network Limited",
+  "networkUnavailable": "Network Unavailable",
+  "checking": "Checking"
 } 

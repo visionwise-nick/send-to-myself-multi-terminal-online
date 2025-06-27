@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter/foundation.dart';
 import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 class JoinGroupScreen extends StatefulWidget {
   const JoinGroupScreen({super.key});
@@ -267,9 +268,9 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
           builder: (context, child) {
             return Opacity(
               opacity: _fadeAnimation.value,
-              child: const Text(
-                '加入群组',
-                style: TextStyle(
+              child: Text(
+                LocalizationHelper.of(context).joinGroup,
+                style: const TextStyle(
                   color: Color(0xFF111827),
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
@@ -346,7 +347,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '扫描二维码',
+                      LocalizationHelper.of(context).scanQRCode,
                       style: TextStyle(
                         color: _isScanMode ? Colors.white : const Color(0xFF64748B),
                         fontWeight: FontWeight.w600,
@@ -387,7 +388,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '输入邀请码',
+                      LocalizationHelper.of(context).enterGroupCode,
                       style: TextStyle(
                         color: !_isScanMode ? Colors.white : const Color(0xFF64748B),
                         fontWeight: FontWeight.w600,
@@ -441,21 +442,21 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
                               color: Colors.grey[400],
                             ),
                             const SizedBox(height: 16),
-                            Text(
-                              '摄像头不可用',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[700],
-                              ),
-                            ),
+                                        Text(
+              LocalizationHelper.of(context).cameraUnavailable,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
                             const SizedBox(height: 8),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 32),
                               child: Text(
                                 _isDesktop() 
-                                  ? '桌面端建议使用下方的"输入邀请码"模式'
-                                  : '请检查摄像头权限设置',
+                                  ? LocalizationHelper.of(context).desktopInputModeRecommended
+                                  : LocalizationHelper.of(context).checkCameraPermissions,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,
@@ -471,7 +472,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
                                 });
                               },
                               icon: const Icon(Icons.keyboard_rounded),
-                              label: const Text('切换到输入模式'),
+                              label: Text(LocalizationHelper.of(context).switchToInput),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryColor,
                                 foregroundColor: Colors.white,
@@ -526,9 +527,9 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
                                   size: 48,
                                 ),
                                 const SizedBox(height: 16),
-                                const Text(
-                                  '摄像头启动失败',
-                                  style: TextStyle(
+                                Text(
+                                  LocalizationHelper.of(context).cameraStartupFailed,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
@@ -544,15 +545,15 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
                     // 显示加载状态
                     Container(
                       color: Colors.black,
-                      child: const Center(
+                      child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            CircularProgressIndicator(color: Colors.white),
-                            SizedBox(height: 16),
+                            const CircularProgressIndicator(color: Colors.white),
+                            const SizedBox(height: 16),
                             Text(
-                              '正在启动摄像头...',
-                              style: TextStyle(
+                              LocalizationHelper.of(context).startingCamera,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -610,15 +611,15 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
                   if (_isProcessing)
                     Container(
                       color: Colors.black.withOpacity(0.5),
-                      child: const Center(
+                      child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            CircularProgressIndicator(color: Colors.white),
-                            SizedBox(height: 16),
+                            const CircularProgressIndicator(color: Colors.white),
+                            const SizedBox(height: 16),
                             Text(
-                              '正在加入群组...',
-                              style: TextStyle(
+                              LocalizationHelper.of(context).joiningGroup,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -637,8 +638,8 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
               padding: const EdgeInsets.all(20),
               child: Text(
                 _scannerError != null 
-                  ? '请切换到输入模式或检查摄像头权限'
-                  : '将二维码置于扫描框内',
+                  ? LocalizationHelper.of(context).switchToInputModeOrCheckPermissions
+                  : LocalizationHelper.of(context).placeQRInScanFrame,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -701,9 +702,9 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
           
           const SizedBox(height: 24),
           
-          const Text(
-            '输入邀请码',
-            style: TextStyle(
+          Text(
+            LocalizationHelper.of(context).enterGroupCode,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Color(0xFF111827),
@@ -712,9 +713,9 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
           
           const SizedBox(height: 8),
           
-          const Text(
-            '请输入群组邀请码（4-20位）',
-            style: TextStyle(
+          Text(
+            LocalizationHelper.of(context).enterInviteCodeHint,
+            style: const TextStyle(
               fontSize: 14,
               color: Color(0xFF64748B),
             ),
@@ -732,7 +733,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
               letterSpacing: 2,
             ),
             decoration: InputDecoration(
-              hintText: '邀请码',
+              hintText: LocalizationHelper.of(context).inviteCodePlaceholder,
               hintStyle: TextStyle(
                 color: Colors.grey.shade400,
                 fontWeight: FontWeight.normal,
@@ -786,9 +787,9 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      '加入群组',
-                      style: TextStyle(
+                  : Text(
+                      LocalizationHelper.of(context).joinGroup,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 class LogoutDialog {
   // 显示登出确认对话框
@@ -11,22 +12,22 @@ class LogoutDialog {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text(
-          '退出登录',
-          style: TextStyle(
+        title: Text(
+          LocalizationHelper.of(context).logout,
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
-        content: const Text(
-          '确定要退出登录吗？',
-          style: TextStyle(fontSize: 16),
+        content: Text(
+          LocalizationHelper.of(context).logoutConfirm,
+          style: const TextStyle(fontSize: 16),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
-              '取消',
+              LocalizationHelper.of(context).cancel,
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 16,
@@ -39,9 +40,9 @@ class LogoutDialog {
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
             ),
-            child: const Text(
-              '确定',
-              style: TextStyle(fontSize: 16),
+            child: Text(
+              LocalizationHelper.of(context).confirm,
+              style: const TextStyle(fontSize: 16),
             ),
           ),
         ],
@@ -66,9 +67,9 @@ class LogoutDialog {
               color: AppTheme.primaryColor,
             ),
             const SizedBox(width: 16),
-            const Text(
-              '正在退出登录...',
-              style: TextStyle(fontSize: 16),
+            Text(
+              LocalizationHelper.of(context).loggingOut,
+              style: const TextStyle(fontSize: 16),
             ),
           ],
         ),

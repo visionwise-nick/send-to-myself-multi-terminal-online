@@ -6,6 +6,7 @@ import '../screens/group_management_screen.dart';
 import '../screens/qr_scan_screen.dart';
 import '../screens/qr_generate_screen.dart';
 import '../screens/join_group_screen.dart';
+import '../utils/localization_helper.dart';
 
 class GroupSelector extends StatelessWidget {
   const GroupSelector({super.key});
@@ -55,7 +56,7 @@ class GroupSelector extends StatelessWidget {
                                 // 群组名称
                                 Flexible(
                                   child: Text(
-                                    currentGroup['name'] ?? '未命名群组',
+                                    currentGroup['name'] ?? LocalizationHelper.of(context).unnamedGroup,
                                     style: AppTheme.titleStyle.copyWith(
                                       color: AppTheme.primaryColor,
                                     ),
@@ -145,9 +146,9 @@ class GroupSelector extends StatelessWidget {
                     size: 16,
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    '点击加入群组',
-                    style: TextStyle(
+                  Text(
+                    LocalizationHelper.of(context).clickToJoinGroup,
+                    style: const TextStyle(
                       fontSize: AppTheme.fontSizeTitle,
                       fontWeight: AppTheme.fontWeightMedium,
                       color: Colors.orange,
@@ -196,8 +197,8 @@ class GroupSelector extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  const Text(
-                    '选择群组',
+                  Text(
+                    LocalizationHelper.of(context).selectGroup,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -207,7 +208,7 @@ class GroupSelector extends StatelessWidget {
                   IconButton(
                     onPressed: () => _showGroupManagement(context, groupProvider.currentGroup),
                     icon: const Icon(Icons.settings),
-                    tooltip: '群组管理',
+                    tooltip: LocalizationHelper.of(context).groupManagement,
                   ),
                 ],
               ),
@@ -239,13 +240,13 @@ class GroupSelector extends StatelessWidget {
                       ),
                     ),
                     title: Text(
-                      group['name'] ?? '未命名群组',
+                                                  group['name'] ?? LocalizationHelper.of(context).unnamedGroup,
                       style: TextStyle(
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                     subtitle: Text(
-                      '${group['deviceCount'] ?? 0} 台设备',
+                      LocalizationHelper.of(context).deviceCount(group['deviceCount'] ?? 0),
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 12,
@@ -280,7 +281,7 @@ class GroupSelector extends StatelessWidget {
                         _showCreateGroupDialog(context);
                       },
                       icon: const Icon(Icons.add),
-                      label: const Text('创建群组'),
+                      label: Text(LocalizationHelper.of(context).createGroup),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -291,7 +292,7 @@ class GroupSelector extends StatelessWidget {
                         _showJoinGroupOptions(context);
                       },
                       icon: const Icon(Icons.group_add),
-                      label: const Text('加入群组'),
+                      label: Text(LocalizationHelper.of(context).joinGroup),
                     ),
                   ),
                 ],
@@ -309,7 +310,7 @@ class GroupSelector extends StatelessWidget {
   void _showGroupManagement(BuildContext context, Map<String, dynamic>? currentGroup) {
     if (currentGroup == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先选择一个群组')),
+        SnackBar(content: Text(LocalizationHelper.of(context).pleaseSelectGroup)),
       );
       return;
     }
@@ -329,24 +330,24 @@ class GroupSelector extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('创建新群组'),
+        title: Text(LocalizationHelper.of(context).createNewGroup),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: '群组名称',
-                hintText: '请输入群组名称',
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).groupName,
+                hintText: LocalizationHelper.of(context).groupNameHint,
               ),
               autofocus: true,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: descriptionController,
-              decoration: const InputDecoration(
-                labelText: '群组描述（可选）',
-                hintText: '请输入群组描述',
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).groupDescription,
+                hintText: LocalizationHelper.of(context).groupDescriptionHint,
               ),
               maxLines: 2,
             ),
@@ -355,14 +356,14 @@ class GroupSelector extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () async {
               final name = nameController.text.trim();
               if (name.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('请输入群组名称')),
+                  SnackBar(content: Text(LocalizationHelper.of(context).pleaseEnterGroupName)),
                 );
                 return;
               }
@@ -377,15 +378,15 @@ class GroupSelector extends StatelessWidget {
               
               if (success) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('群组"$name"创建成功')),
+                  SnackBar(content: Text(LocalizationHelper.of(context).groupCreatedSuccess(name))),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(groupProvider.error ?? '创建群组失败')),
+                  SnackBar(content: Text(groupProvider.error ?? LocalizationHelper.of(context).createGroupFailed)),
                 );
               }
             },
-            child: const Text('创建'),
+            child: Text(LocalizationHelper.of(context).create),
           ),
         ],
       ),
