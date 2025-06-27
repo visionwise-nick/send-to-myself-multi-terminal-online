@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -56,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('注册失败: $e'),
+            content: Text('${LocalizationHelper.of(context).deviceRegistrationFailed}: $e'),
             backgroundColor: AppTheme.errorColor,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -122,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     
                     // 应用名称
                     Text(
-                      'Send To Myself',
+                      LocalizationHelper.of(context).appTitle,
                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
                         color: AppTheme.textPrimaryColor,
                         fontSize: 32,
@@ -135,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     
                     // 描述
                     Text(
-                      '跨设备文件共享和同步',
+                      LocalizationHelper.of(context).appDescription,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: AppTheme.textSecondaryColor,
                         fontSize: 18,
@@ -178,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    '注册中...',
+                                    LocalizationHelper.of(context).registering,
                                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                       color: AppTheme.primaryColor,
                                       fontWeight: FontWeight.w600,
@@ -187,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                 ],
                               )
                             : Text(
-                                '开始使用',
+                                LocalizationHelper.of(context).registerDevice,
                                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   color: AppTheme.primaryColor,
                                   fontWeight: FontWeight.w600,
@@ -218,7 +219,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            '我们将为此设备创建唯一标识，用于在设备间建立安全连接',
+                            LocalizationHelper.of(context).deviceRegistration,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: AppTheme.textSecondaryColor,
                               height: 1.5,

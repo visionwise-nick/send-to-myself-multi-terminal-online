@@ -101,7 +101,9 @@ dependencies:
   flutter_local_notifications: ^17.0.0
   
   # 新增：国际化支持
-  intl: ^0.18.1
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
   flutter_secure_storage: ^9.0.0
   
   # 🔥 新增：保存图片和视频到相册
@@ -137,6 +139,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  
+  # 国际化配置
+  generate: true
 
   # To add assets to your application, add an assets section, like this:
   # assets:

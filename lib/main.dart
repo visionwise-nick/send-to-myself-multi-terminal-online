@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'router/app_router.dart';
 import 'providers/auth_provider.dart';
 import 'providers/group_provider.dart';
@@ -8,6 +9,7 @@ import 'providers/memory_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'services/websocket_service.dart';
 import 'services/websocket_manager.dart';
 import 'services/device_auth_service.dart';
@@ -40,6 +42,14 @@ void main() async {
       runApp(MaterialApp(
         home: const ShareStatusScreen(),
         debugShowCheckedModeBanner: false,
+        // 🌍 分享界面也需要国际化支持
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
       ));
       return;
     }
@@ -296,6 +306,27 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         theme: AppTheme.lightTheme,
         routerConfig: AppRouter.createRouter(context),
         debugShowCheckedModeBanner: false,
+        // 🌍 国际化配置
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        // 根据系统语言自动选择语言
+        localeResolutionCallback: (locale, supportedLocales) {
+          if (locale != null) {
+            // 检查系统语言是否在支持列表中
+            for (final supportedLocale in supportedLocales) {
+              if (supportedLocale.languageCode == locale.languageCode) {
+                return supportedLocale;
+              }
+            }
+          }
+          // 如果系统语言不支持，默认使用英语
+          return const Locale('en');
+        },
       ),
     );
   }
