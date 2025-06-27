@@ -12,7 +12,8 @@ class AppLocalizationsRo extends AppLocalizations {
   String get appTitle => 'Send To Myself';
 
   @override
-  String get appDescription => 'Cross-device file sharing and message memory assistant';
+  String get appDescription =>
+      'Cross-device file sharing and message memory assistant';
 
   @override
   String get commonSection => '';
@@ -243,6 +244,45 @@ class AppLocalizationsRo extends AppLocalizations {
   String get newMessage => 'New Message';
 
   @override
+  String get onlyMyself => 'Only myself';
+
+  @override
+  String devicesCount(int count) {
+    return '$count devices';
+  }
+
+  @override
+  String get clickToStartGroupChat => 'Click to start group chat';
+
+  @override
+  String get sendToMyself => 'Send to myself';
+
+  @override
+  String get clickToStartChat => 'Click to start chat';
+
+  @override
+  String get unknownDevice => 'Unknown device';
+
+  @override
+  String get unknownType => 'Unknown type';
+
+  @override
+  String get myself => 'Me';
+
+  @override
+  String get noConversations => 'No conversations';
+
+  @override
+  String get joinGroupToStartChat => 'Join a device group to start chatting';
+
+  @override
+  String get pleaseSelectGroup => 'Please select a group';
+
+  @override
+  String get clickGroupSelectorHint =>
+      'Click the group selector at the top to select or create a group';
+
+  @override
   String get sendMessage => 'Send Message';
 
   @override
@@ -290,7 +330,8 @@ class AppLocalizationsRo extends AppLocalizations {
   String get deleteSelectedMessages => 'Delete Selected Messages';
 
   @override
-  String get deleteMessageConfirm => 'Are you sure you want to delete this message?';
+  String get deleteMessageConfirm =>
+      'Are you sure you want to delete this message?';
 
   @override
   String deleteMessagesConfirm(int count) {
@@ -542,7 +583,8 @@ class AppLocalizationsRo extends AppLocalizations {
   String get groupLeaveConfirm => 'Are you sure you want to leave this group?';
 
   @override
-  String get groupDeleteConfirm => 'Are you sure you want to delete this group?';
+  String get groupDeleteConfirm =>
+      'Are you sure you want to delete this group?';
 
   @override
   String get groupCreated => 'Group created successfully';
@@ -561,6 +603,39 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get groupFull => 'Group is full';
+
+  @override
+  String get renameGroup => 'Rename Group';
+
+  @override
+  String get newGroupName => 'New Group Name';
+
+  @override
+  String get enterNewGroupName => 'Enter new group name';
+
+  @override
+  String get renamingGroup => 'Renaming group...';
+
+  @override
+  String get groupRenameSuccess => 'Group renamed successfully';
+
+  @override
+  String get groupRenameFailed => 'Failed to rename group';
+
+  @override
+  String get renameFailed => 'Rename failed';
+
+  @override
+  String get loadGroupInfoFailed => 'Failed to load group information';
+
+  @override
+  String get groupManagement => 'Group Management';
+
+  @override
+  String get membersList => 'Members List';
+
+  @override
+  String get groupInfo => 'Group Information';
 
   @override
   String get sectiondevices => '';

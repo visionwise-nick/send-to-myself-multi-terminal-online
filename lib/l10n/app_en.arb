@@ -88,6 +88,25 @@
   
   "sectionmessages": "",
   "newMessage": "New Message",
+  "onlyMyself": "Only myself",
+  "devicesCount": "{count} devices",
+  "@devicesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clickToStartGroupChat": "Click to start group chat",
+  "sendToMyself": "Send to myself",
+  "clickToStartChat": "Click to start chat",
+  "unknownDevice": "Unknown device",
+  "unknownType": "Unknown type",
+  "myself": "Me",
+  "noConversations": "No conversations",
+  "joinGroupToStartChat": "Join a device group to start chatting",
+  "pleaseSelectGroup": "Please select a group",
+  "clickGroupSelectorHint": "Click the group selector at the top to select or create a group",
   "sendMessage": "Send Message",
   "messageHint": "Type your message...",
   "noMessages": "No messages yet",
@@ -223,6 +242,18 @@
   "groupNotFound": "Group not found",
   "alreadyInGroup": "Already in this group",
   "groupFull": "Group is full",
+  "renameGroup": "Rename Group",
+  "newGroupName": "New Group Name",
+  "enterNewGroupName": "Enter new group name",
+  "renamingGroup": "Renaming group...",
+  "groupRenameSuccess": "Group renamed successfully",
+  "groupRenameFailed": "Failed to rename group",
+  "renameFailed": "Rename failed",
+  "loadGroupInfoFailed": "Failed to load group information",
+  "groupManagement": "Group Management",
+  "groupSettings": "Group Settings",
+  "membersList": "Members List",
+  "groupInfo": "Group Information",
   
   "sectiondevices": "",
   "deviceName": "Device Name",

@@ -82,6 +82,25 @@
   
   "sectionmessages": "",
   "newMessage": "新消息",
+  "onlyMyself": "仅有自己",
+  "devicesCount": "{count}台设备",
+  "@devicesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clickToStartGroupChat": "点击开始群聊",
+  "sendToMyself": "给自己发消息",
+  "clickToStartChat": "点击开始聊天",
+  "unknownDevice": "未知设备",
+  "unknownType": "未知类型",
+  "myself": "我",
+  "noConversations": "暂无对话",
+  "joinGroupToStartChat": "加入设备群组后即可开始聊天",
+  "pleaseSelectGroup": "请选择群组",
+  "clickGroupSelectorHint": "点击顶部群组选择器来选择或创建群组",
   "sendMessage": "发送消息",
   "messageHint": "输入您的消息...",
   "noMessages": "暂无消息",
@@ -189,6 +208,18 @@
   "groupNotFound": "未找到群组",
   "alreadyInGroup": "已在此群组中",
   "groupFull": "群组已满",
+  "renameGroup": "重命名群组",
+  "newGroupName": "新群组名称",
+  "enterNewGroupName": "请输入新的群组名称",
+  "renamingGroup": "正在重命名群组...",
+  "groupRenameSuccess": "群组重命名成功",
+  "groupRenameFailed": "群组重命名失败",
+  "renameFailed": "重命名失败",
+  "loadGroupInfoFailed": "加载群组信息失败",
+  "groupManagement": "群组管理",
+  "groupSettings": "群组设置",
+  "membersList": "成员列表",
+  "groupInfo": "群组信息",
   
   "sectiondevices": "",
   "deviceName": "设备名称",

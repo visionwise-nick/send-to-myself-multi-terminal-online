@@ -243,6 +243,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newMessage => '新消息';
 
   @override
+  String get onlyMyself => '仅有自己';
+
+  @override
+  String devicesCount(int count) {
+    return '$count台设备';
+  }
+
+  @override
+  String get clickToStartGroupChat => '点击开始群聊';
+
+  @override
+  String get sendToMyself => '给自己发消息';
+
+  @override
+  String get clickToStartChat => '点击开始聊天';
+
+  @override
+  String get unknownDevice => '未知设备';
+
+  @override
+  String get unknownType => '未知类型';
+
+  @override
+  String get myself => '我';
+
+  @override
+  String get noConversations => '暂无对话';
+
+  @override
+  String get joinGroupToStartChat => '加入设备群组后即可开始聊天';
+
+  @override
+  String get pleaseSelectGroup => '请选择群组';
+
+  @override
+  String get clickGroupSelectorHint => '点击顶部群组选择器来选择或创建群组';
+
+  @override
   String get sendMessage => '发送消息';
 
   @override
@@ -561,6 +599,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupFull => '群组已满';
+
+  @override
+  String get renameGroup => '重命名群组';
+
+  @override
+  String get newGroupName => '新群组名称';
+
+  @override
+  String get enterNewGroupName => '请输入新的群组名称';
+
+  @override
+  String get renamingGroup => '正在重命名群组...';
+
+  @override
+  String get groupRenameSuccess => '群组重命名成功';
+
+  @override
+  String get groupRenameFailed => '群组重命名失败';
+
+  @override
+  String get renameFailed => '重命名失败';
+
+  @override
+  String get loadGroupInfoFailed => '加载群组信息失败';
+
+  @override
+  String get groupManagement => '群组管理';
+
+  @override
+  String get membersList => '成员列表';
+
+  @override
+  String get groupInfo => '群组信息';
 
   @override
   String get sectiondevices => '';

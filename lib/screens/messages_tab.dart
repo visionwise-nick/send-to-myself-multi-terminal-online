@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../services/websocket_service.dart';
 import '../services/chat_service.dart';
 import '../utils/time_utils.dart';
+import '../utils/localization_helper.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'chat_screen.dart';
 
@@ -116,6 +117,9 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
       List<Map<String, dynamic>> conversations = [];
       Set<String> processedDeviceIds = {}; // 用于避免重复添加设备
       
+      // 获取本地化文本
+      final l10n = LocalizationHelper.of(context);
+      
       // 只处理当前选中的群组
       if (currentGroup != null && currentDevice != null) {
         final devices = List<Map<String, dynamic>>.from(currentGroup['devices'] ?? []);
@@ -139,10 +143,10 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
           conversations.add({
             'id': 'group_$groupId',
             'type': 'group',
-            'title': currentGroup['name'] ?? '群组',
-            'subtitle': devices.length == 1 ? '仅有自己' : '${devices.length}台设备',
+            'title': currentGroup['name'] ?? l10n.groups,
+            'subtitle': devices.length == 1 ? l10n.onlyMyself : l10n.devicesCount(devices.length),
             'avatar': _getGroupAvatar(devices),
-            'lastMessage': lastGroupMessage?['content'] ?? (devices.length == 1 ? '发给自己的消息' : '点击开始群聊'),
+            'lastMessage': lastGroupMessage?['content'] ?? (devices.length == 1 ? l10n.sendToMyself : l10n.clickToStartGroupChat),
             'lastTime': lastGroupMessage?['createdAt'] ?? DateTime.now().toIso8601String(),
             'unreadCount': 0,
             'isOnline': devices.any((d) => d['isOnline'] == true),
@@ -176,10 +180,10 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
               conversations.add({
                 'id': 'private_$deviceId',
                 'type': 'private',
-              'title': isCurrentDevice ? '${device['name']} (我)' : (device['name'] ?? '未知设备'),
-              'subtitle': isCurrentDevice ? '给自己发消息' : (device['type'] ?? '未知类型'),
+                'title': isCurrentDevice ? '${device['name']} (${l10n.myself})' : (device['name'] ?? l10n.unknownDevice),
+                'subtitle': isCurrentDevice ? l10n.sendToMyself : (device['type'] ?? l10n.unknownType),
                 'avatar': _getDeviceAvatar(device['type']),
-              'lastMessage': lastPrivateMessage?['content'] ?? (isCurrentDevice ? '给自己发消息' : '点击开始聊天'),
+                'lastMessage': lastPrivateMessage?['content'] ?? (isCurrentDevice ? l10n.sendToMyself : l10n.clickToStartChat),
                 'lastTime': lastPrivateMessage?['createdAt'] ?? device['last_active_time'] ?? DateTime.now().toIso8601String(),
                 'unreadCount': 0,
                 'isOnline': device['isOnline'] == true,
@@ -275,13 +279,14 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
         if (currentGroup != null) {
           // 构建群组对话数据
           final devices = List<Map<String, dynamic>>.from(currentGroup['devices'] ?? []);
+          final l10n = LocalizationHelper.of(context);
           final groupConversation = {
             'id': 'group_${currentGroup['id']}',
             'type': 'group',
-            'title': currentGroup['name'] ?? '群组',
-            'subtitle': devices.length == 1 ? '仅有自己' : '${devices.length}台设备',
+            'title': currentGroup['name'] ?? l10n.groups,
+            'subtitle': devices.length == 1 ? l10n.onlyMyself : l10n.devicesCount(devices.length),
             'avatar': _getGroupAvatar(devices),
-            'lastMessage': devices.length == 1 ? '发给自己的消息' : '点击开始群聊',
+            'lastMessage': devices.length == 1 ? l10n.sendToMyself : l10n.clickToStartGroupChat,
             'lastTime': DateTime.now().toIso8601String(),
             'unreadCount': 0,
             'isOnline': devices.any((d) => d['isOnline'] == true),
@@ -308,6 +313,7 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
   }
   
   Widget _buildEmptyState() {
+    final l10n = LocalizationHelper.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -319,14 +325,14 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无对话',
+            l10n.noConversations,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: AppTheme.textSecondaryColor,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '加入设备群组后即可开始聊天',
+            l10n.joinGroupToStartChat,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: AppTheme.textTertiaryColor,
             ),
@@ -337,6 +343,7 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
   }
   
   Widget _buildNoGroupSelectedState() {
+    final l10n = LocalizationHelper.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -356,15 +363,15 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
           ),
           const SizedBox(height: 24),
           Text(
-            '请选择群组',
+            l10n.pleaseSelectGroup,
             style: AppTheme.displayStyle,
           ),
           const SizedBox(height: 8),
           Text(
-            '点击顶部群组选择器来选择或创建群组',
+            l10n.clickGroupSelectorHint,
             style: AppTheme.captionStyle,
           ),
-      ],
+        ],
       ),
     );
   }

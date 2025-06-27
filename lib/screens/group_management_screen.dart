@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/group_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
+import '../utils/localization_helper.dart';
 import 'qr_generate_screen.dart';
 
 class GroupManagementScreen extends StatefulWidget {
@@ -78,8 +79,9 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
         setState(() {
           _isLoading = false;
         });
+        final l10n = LocalizationHelper.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('加载群组信息失败: $e')),
+          SnackBar(content: Text('${l10n.loadGroupInfoFailed}: $e')),
         );
       }
     }
@@ -87,30 +89,32 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
   
   void _showRenameGroupDialog() {
     final controller = TextEditingController(text: _currentGroupData['name']);
+    final l10n = LocalizationHelper.of(context);
     
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('重命名群组'),
+        title: Text(l10n.renameGroup),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: '群组名称',
-            hintText: '请输入新的群组名称',
+          decoration: InputDecoration(
+            labelText: l10n.groupName,
+            hintText: l10n.enterNewGroupName,
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
               final newName = controller.text.trim();
               if (newName.isEmpty) {
+                final l10n = LocalizationHelper.of(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('请输入群组名称')),
+                  SnackBar(content: Text(l10n.groupNameHint)),
                 );
                 return;
               }
@@ -124,18 +128,19 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                 print('🔥 UI: 准备显示加载对话框...');
                 
                 // 显示加载提示并保存context
+                final l10n = LocalizationHelper.of(context);
                 showDialog(
                   context: context,
                   barrierDismissible: false,
                   builder: (context) {
                     dialogContext = context; // 保存对话框context
-                    return const AlertDialog(
+                    return AlertDialog(
                       content: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           CircularProgressIndicator(),
                           SizedBox(width: 16),
-                          Text('正在重命名群组...'),
+                          Text(l10n.renamingGroup),
                         ],
                       ),
                     );
@@ -162,16 +167,16 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                     print('🔥 UI: 本地群组名称已更新为: $newName');
                     
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('群组重命名成功'),
+                      SnackBar(
+                        content: Text(l10n.groupRenameSuccess),
                         backgroundColor: Colors.green,
                       ),
                     );
                   } else {
                     print('🔥 UI: 显示失败提示');
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('群组重命名失败'),
+                      SnackBar(
+                        content: Text(l10n.groupRenameFailed),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -191,9 +196,10 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                 }
                 
                 if (mounted) {
+                  final l10n = LocalizationHelper.of(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('重命名失败: $e'),
+                      content: Text('${l10n.renameFailed}: $e'),
                       backgroundColor: Colors.red,
                     ),
                   );

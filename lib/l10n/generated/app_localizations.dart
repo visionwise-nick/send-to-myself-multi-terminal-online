@@ -90,7 +90,8 @@ import 'app_localizations_zh.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -98,7 +99,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -110,12 +112,13 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
@@ -148,7 +151,7 @@ abstract class AppLocalizations {
     Locale('tr'),
     Locale('uk'),
     Locale('vi'),
-    Locale('zh')
+    Locale('zh'),
   ];
 
   /// Application title
@@ -618,6 +621,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Message'**
   String get newMessage;
+
+  /// No description provided for @onlyMyself.
+  ///
+  /// In en, this message translates to:
+  /// **'Only myself'**
+  String get onlyMyself;
+
+  /// No description provided for @devicesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} devices'**
+  String devicesCount(int count);
+
+  /// No description provided for @clickToStartGroupChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Click to start group chat'**
+  String get clickToStartGroupChat;
+
+  /// No description provided for @sendToMyself.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to myself'**
+  String get sendToMyself;
+
+  /// No description provided for @clickToStartChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Click to start chat'**
+  String get clickToStartChat;
+
+  /// No description provided for @unknownDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown device'**
+  String get unknownDevice;
+
+  /// No description provided for @unknownType.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown type'**
+  String get unknownType;
+
+  /// No description provided for @myself.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get myself;
+
+  /// No description provided for @noConversations.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations'**
+  String get noConversations;
+
+  /// No description provided for @joinGroupToStartChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a device group to start chatting'**
+  String get joinGroupToStartChat;
+
+  /// No description provided for @pleaseSelectGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a group'**
+  String get pleaseSelectGroup;
+
+  /// No description provided for @clickGroupSelectorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Click the group selector at the top to select or create a group'**
+  String get clickGroupSelectorHint;
 
   /// No description provided for @sendMessage.
   ///
@@ -1242,6 +1317,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Group is full'**
   String get groupFull;
+
+  /// No description provided for @renameGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Group'**
+  String get renameGroup;
+
+  /// No description provided for @newGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'New Group Name'**
+  String get newGroupName;
+
+  /// No description provided for @enterNewGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter new group name'**
+  String get enterNewGroupName;
+
+  /// No description provided for @renamingGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Renaming group...'**
+  String get renamingGroup;
+
+  /// No description provided for @groupRenameSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Group renamed successfully'**
+  String get groupRenameSuccess;
+
+  /// No description provided for @groupRenameFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to rename group'**
+  String get groupRenameFailed;
+
+  /// No description provided for @renameFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename failed'**
+  String get renameFailed;
+
+  /// No description provided for @loadGroupInfoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load group information'**
+  String get loadGroupInfoFailed;
+
+  /// No description provided for @groupManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Management'**
+  String get groupManagement;
+
+  /// No description provided for @membersList.
+  ///
+  /// In en, this message translates to:
+  /// **'Members List'**
+  String get membersList;
+
+  /// No description provided for @groupInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Information'**
+  String get groupInfo;
 
   /// No description provided for @sectiondevices.
   ///
@@ -1868,7 +2009,8 @@ abstract class AppLocalizations {
   String get openSettings;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -1877,53 +2019,112 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['ar', 'bn', 'cs', 'da', 'de', 'en', 'es', 'fi', 'fr', 'he', 'hi', 'hu', 'id', 'it', 'ja', 'ko', 'ms', 'nl', 'no', 'pl', 'pt', 'ro', 'ru', 'sk', 'sv', 'th', 'tr', 'uk', 'vi', 'zh'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+    'ar',
+    'bn',
+    'cs',
+    'da',
+    'de',
+    'en',
+    'es',
+    'fi',
+    'fr',
+    'he',
+    'hi',
+    'hu',
+    'id',
+    'it',
+    'ja',
+    'ko',
+    'ms',
+    'nl',
+    'no',
+    'pl',
+    'pt',
+    'ro',
+    'ru',
+    'sk',
+    'sv',
+    'th',
+    'tr',
+    'uk',
+    'vi',
+    'zh',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar': return AppLocalizationsAr();
-    case 'bn': return AppLocalizationsBn();
-    case 'cs': return AppLocalizationsCs();
-    case 'da': return AppLocalizationsDa();
-    case 'de': return AppLocalizationsDe();
-    case 'en': return AppLocalizationsEn();
-    case 'es': return AppLocalizationsEs();
-    case 'fi': return AppLocalizationsFi();
-    case 'fr': return AppLocalizationsFr();
-    case 'he': return AppLocalizationsHe();
-    case 'hi': return AppLocalizationsHi();
-    case 'hu': return AppLocalizationsHu();
-    case 'id': return AppLocalizationsId();
-    case 'it': return AppLocalizationsIt();
-    case 'ja': return AppLocalizationsJa();
-    case 'ko': return AppLocalizationsKo();
-    case 'ms': return AppLocalizationsMs();
-    case 'nl': return AppLocalizationsNl();
-    case 'no': return AppLocalizationsNo();
-    case 'pl': return AppLocalizationsPl();
-    case 'pt': return AppLocalizationsPt();
-    case 'ro': return AppLocalizationsRo();
-    case 'ru': return AppLocalizationsRu();
-    case 'sk': return AppLocalizationsSk();
-    case 'sv': return AppLocalizationsSv();
-    case 'th': return AppLocalizationsTh();
-    case 'tr': return AppLocalizationsTr();
-    case 'uk': return AppLocalizationsUk();
-    case 'vi': return AppLocalizationsVi();
-    case 'zh': return AppLocalizationsZh();
+    case 'ar':
+      return AppLocalizationsAr();
+    case 'bn':
+      return AppLocalizationsBn();
+    case 'cs':
+      return AppLocalizationsCs();
+    case 'da':
+      return AppLocalizationsDa();
+    case 'de':
+      return AppLocalizationsDe();
+    case 'en':
+      return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+    case 'fi':
+      return AppLocalizationsFi();
+    case 'fr':
+      return AppLocalizationsFr();
+    case 'he':
+      return AppLocalizationsHe();
+    case 'hi':
+      return AppLocalizationsHi();
+    case 'hu':
+      return AppLocalizationsHu();
+    case 'id':
+      return AppLocalizationsId();
+    case 'it':
+      return AppLocalizationsIt();
+    case 'ja':
+      return AppLocalizationsJa();
+    case 'ko':
+      return AppLocalizationsKo();
+    case 'ms':
+      return AppLocalizationsMs();
+    case 'nl':
+      return AppLocalizationsNl();
+    case 'no':
+      return AppLocalizationsNo();
+    case 'pl':
+      return AppLocalizationsPl();
+    case 'pt':
+      return AppLocalizationsPt();
+    case 'ro':
+      return AppLocalizationsRo();
+    case 'ru':
+      return AppLocalizationsRu();
+    case 'sk':
+      return AppLocalizationsSk();
+    case 'sv':
+      return AppLocalizationsSv();
+    case 'th':
+      return AppLocalizationsTh();
+    case 'tr':
+      return AppLocalizationsTr();
+    case 'uk':
+      return AppLocalizationsUk();
+    case 'vi':
+      return AppLocalizationsVi();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
+    'that was used.',
   );
 }
