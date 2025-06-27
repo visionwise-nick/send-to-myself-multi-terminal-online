@@ -198,9 +198,34 @@ class DeviceAuthService {
     }
   }
   
+  // 测试网络连接
+  Future<bool> testNetworkConnection() async {
+    try {
+      print('测试网络连接到: $_baseUrl');
+      final response = await http.get(
+        Uri.parse('$_baseUrl/health'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
+      
+      print('网络测试响应: ${response.statusCode}');
+      return response.statusCode == 200 || response.statusCode == 404; // 404也表示能连接到服务器
+    } catch (e) {
+      print('网络连接测试失败: $e');
+      return false;
+    }
+  }
+
   // 设备注册
   Future<Map<String, dynamic>> registerDevice() async {
     try {
+      // 首先测试网络连接
+      print('🌐 正在测试网络连接...');
+      final hasNetwork = await testNetworkConnection();
+      if (!hasNetwork) {
+        throw Exception('无法连接到服务器，请检查网络连接');
+      }
+      print('✅ 网络连接正常');
+      
       // 清除现有令牌但保持设备ID
       try {
         final prefs = await SharedPreferences.getInstance();
@@ -223,7 +248,7 @@ class DeviceAuthService {
         Uri.parse('$_baseUrl/device-auth/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(deviceInfo)
-      );
+      ).timeout(const Duration(seconds: 30));
       
       print('设备注册响应状态码: ${response.statusCode}');
       print('设备注册响应内容: ${response.body}');
@@ -250,8 +275,18 @@ class DeviceAuthService {
         throw Exception('设备注册失败: ${response.body}');
       }
     } catch (e) {
-      print('注册失败: $e');
-      rethrow;
+      print('注册失败详细信息: $e');
+      print('错误类型: ${e.runtimeType}');
+      
+      if (e.toString().contains('TimeoutException')) {
+        throw Exception('网络请求超时，请检查网络连接');
+      } else if (e.toString().contains('SocketException')) {
+        throw Exception('无法连接到服务器，请检查网络连接');
+      } else if (e.toString().contains('FormatException')) {
+        throw Exception('服务器响应格式错误');
+      } else {
+        throw Exception('注册失败: ${e.toString()}');
+      }
     }
   }
   

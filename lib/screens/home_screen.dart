@@ -1411,7 +1411,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                       color: AppTheme.primaryColor, // 🔥 玫红色
                     ),
                   ),
-              ),
+                ),
+                
+                // 🔥 新增：加入群组按钮 - 紧挨着二维码
+                const SizedBox(width: 8), // 二维码和加入群组按钮的间距
+                GestureDetector(
+                  onTap: () => _showJoinGroupOptions(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Icon(
+                      Icons.group_add,
+                      size: 16,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                ),
             ],
               
               // 🔥 右对齐区域

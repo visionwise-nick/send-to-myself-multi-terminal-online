@@ -21,6 +21,7 @@ import 'screens/share_status_screen.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:context_menus/context_menus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   // 确保Flutter绑定初始化
@@ -80,13 +81,24 @@ Future<void> _performBackgroundInitialization() async {
   try {
     print('🚀 开始后台初始化服务...');
     
+    // 🔥 新增：版本升级检测
+    final prefs = await SharedPreferences.getInstance();
+    final localStorage = LocalStorageService();
+    const currentAppVersion = '1.1.0'; // 与 pubspec.yaml 同步
+    final lastAppVersion = prefs.getString('last_app_version');
+
+    if (lastAppVersion != null && lastAppVersion != currentAppVersion) {
+      print('📱 检测到应用升级: $lastAppVersion -> $currentAppVersion');
+      // 可以添加数据迁移逻辑
+      // await localStorage.migrateOldFiles(); 
+    }
+    
     // 初始化设备认证服务和WebSocket服务
     final authService = DeviceAuthService();
     final wsService = WebSocketService();
     final wsManager = WebSocketManager();
     
     // 初始化本地存储服务和增强同步管理器
-    final localStorage = LocalStorageService();
     final enhancedSyncManager = EnhancedSyncManager();
     final groupSwitchService = GroupSwitchSyncService();
     final systemShareService = SystemShareService();
@@ -201,6 +213,13 @@ Future<void> _performBackgroundInitialization() async {
       } catch (e) {
         print('❌ 增强离线消息同步出错: $e');
       }
+
+      // 🔥 升级或首次安装后，保存当前版本号
+      if (lastAppVersion != currentAppVersion) {
+        await prefs.setString('last_app_version', currentAppVersion);
+        print('✅ 已保存当前应用版本: $currentAppVersion');
+      }
+
     } else {
       print('⚠️ 缺少认证信息，跳过WebSocket初始化和消息同步');
     }

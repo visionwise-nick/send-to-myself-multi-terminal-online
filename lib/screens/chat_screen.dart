@@ -276,45 +276,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     print('✅ WebSocket重连成功，开始完整的离线消息同步...');
     
     try {
-      // 显示重连成功提示
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.wifi, color: Colors.white, size: 16),
-                SizedBox(width: 8),
-                Text('网络已恢复，正在同步消息...'),
-              ],
-            ),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-      
       // 延迟1秒确保连接稳定后再同步
       await Future.delayed(Duration(seconds: 1));
       
       // 执行完整的消息同步流程
       await _performReconnectMessageSync();
-      
-      // 显示同步完成提示
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.sync, color: Colors.white, size: 16),
-                SizedBox(width: 8),
-                Text('✅ 消息同步完成'),
-              ],
-            ),
-            backgroundColor: Colors.blue,
-            duration: Duration(seconds: 1),
-          ),
-        );
-      }
       
     } catch (e) {
       print('❌ WebSocket重连后消息同步失败: $e');
@@ -339,22 +305,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 🔥 新增：处理WebSocket断线
   void _handleWebSocketDisconnected() {
     print('⚠️ WebSocket连接断开');
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.wifi_off, color: Colors.white, size: 16),
-              SizedBox(width: 8),
-              Text('网络连接中断，正在尝试重连...'),
-            ],
-          ),
-          backgroundColor: Colors.orange,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
   }
   
   // 🔥 新增：执行重连后的消息同步
@@ -2339,6 +2289,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       },
     );
   }
+
+
 
   // 🔥 新增：处理剪贴板粘贴（支持文本和文件）
   Future<void> _handleClipboardPaste() async {

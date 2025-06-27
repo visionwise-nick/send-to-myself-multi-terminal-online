@@ -79,6 +79,22 @@ class GroupSelector extends StatelessWidget {
                                     ),
                                   ),
                                 ),
+                                
+                                const SizedBox(width: 6), // 加入群组按钮和二维码的间距
+                                
+                                // 🔥 新增：加入群组按钮 - 紧挨着二维码
+                                GestureDetector(
+                                  onTap: () => _showJoinGroupOptions(context),
+                                  child: Container(
+                                    width: 20,
+                                    height: 20,
+                                    child: Icon(
+                                      Icons.group_add,
+                                      color: AppTheme.textSecondaryColor,
+                                      size: 14,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),

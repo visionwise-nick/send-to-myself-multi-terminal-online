@@ -67,6 +67,25 @@
 		</dict>
 	</array>
 	
+	<!-- 🔥 新增：网络安全传输设置 - 允许HTTP请求 -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>sendtomyself-api-adecumh2za-uc.a.run.app</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSExceptionMinimumTLSVersion</key>
+				<string>TLSv1.0</string>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+	
 	<!-- 🔥 新增：系统分享功能 - 支持的文档类型 -->
 	<key>CFBundleDocumentTypes</key>
 	<array>
