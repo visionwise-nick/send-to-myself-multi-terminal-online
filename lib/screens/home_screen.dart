@@ -12,6 +12,7 @@ import '../services/chat_service.dart';
 import '../widgets/connection_status_widget.dart';
 import '../theme/app_theme.dart';
 import '../widgets/logout_dialog.dart';
+import '../utils/localization_helper.dart';
 
 import 'messages_tab.dart';
 import 'memories_tab.dart';
@@ -946,7 +947,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           ),
           const SizedBox(height: 8),
           Text(
-            '暂无群组',
+            LocalizationHelper.of(context).noGroupsMessage,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -955,7 +956,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           ),
           const SizedBox(height: 4),
           Text(
-            '点击上方按钮创建或加入群组',
+            LocalizationHelper.of(context).noGroupsHint,
             style: TextStyle(
               fontSize: 10,
               color: AppTheme.textSecondaryColor.withOpacity(0.7),
@@ -976,7 +977,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         children: [
           // 模块标题
           Text(
-              '导航',
+              LocalizationHelper.of(context).navigation,
               style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -1001,13 +1002,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
               children: [
                 _buildNavigationItem(
             icon: Icons.chat_bubble_rounded,
-            label: '聊天',
+            label: LocalizationHelper.of(context).chat,
             index: 0,
           ),
                 const SizedBox(height: 4),
                 _buildNavigationItem(
             icon: Icons.psychology_rounded,
-            label: '记忆',
+            label: LocalizationHelper.of(context).memory,
             index: 1,
                 ),
               ],
@@ -1513,7 +1514,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                 color: Colors.red.shade600,
               ),
               label: Text(
-                '退出登录',
+                LocalizationHelper.of(context).logout,
                 style: TextStyle(
                   color: Colors.red.shade600,
                   fontSize: 12,
@@ -1554,24 +1555,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('创建新群组'),
+        title: Text(LocalizationHelper.of(context).createGroup),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: '群组名称',
-                hintText: '请输入群组名称',
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).groupName,
+                hintText: LocalizationHelper.of(context).groupNameHint,
               ),
               autofocus: true,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: descriptionController,
-              decoration: const InputDecoration(
-                labelText: '群组描述（可选）',
-                hintText: '请输入群组描述',
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).groupDescriptionOptional,
+                hintText: LocalizationHelper.of(context).groupDescriptionHint,
               ),
               maxLines: 2,
             ),
@@ -1580,7 +1581,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1610,7 +1611,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                 );
               }
             },
-            child: const Text('创建'),
+            child: Text(LocalizationHelper.of(context).createGroup),
           ),
         ],
       ),

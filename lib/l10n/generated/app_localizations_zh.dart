@@ -9,13 +9,28 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => '发送给自己';
+  String get appTitle => '发给我自己';
 
   @override
   String get appDescription => '跨设备文件共享和消息记忆助手';
 
   @override
   String get commonSection => '';
+
+  @override
+  String get navigation => '导航';
+
+  @override
+  String get chat => '聊天';
+
+  @override
+  String get memory => '记忆';
+
+  @override
+  String get noGroupsMessage => '暂无群组';
+
+  @override
+  String get noGroupsHint => '点击上方按钮创建或加入群组';
 
   @override
   String get confirm => '确认';
@@ -476,7 +491,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupName => '群组名称';
 
   @override
+  String get groupNameHint => '请输入群组名称';
+
+  @override
   String get groupDescription => '群组描述';
+
+  @override
+  String get groupDescriptionHint => '请输入群组描述';
+
+  @override
+  String get groupDescriptionOptional => '群组描述（可选）';
 
   @override
   String get groupMembers => '成员';

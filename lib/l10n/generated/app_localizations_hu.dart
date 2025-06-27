@@ -12,11 +12,25 @@ class AppLocalizationsHu extends AppLocalizations {
   String get appTitle => 'Send To Myself';
 
   @override
-  String get appDescription =>
-      'Cross-device file sharing and message memory assistant';
+  String get appDescription => 'Cross-device file sharing and message memory assistant';
 
   @override
   String get commonSection => '';
+
+  @override
+  String get navigation => 'Navigation';
+
+  @override
+  String get chat => 'Chat';
+
+  @override
+  String get memory => 'Memory';
+
+  @override
+  String get noGroupsMessage => 'No groups yet';
+
+  @override
+  String get noGroupsHint => 'Click the button above to create or join a group';
 
   @override
   String get confirm => 'Confirm';
@@ -276,8 +290,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get deleteSelectedMessages => 'Delete Selected Messages';
 
   @override
-  String get deleteMessageConfirm =>
-      'Are you sure you want to delete this message?';
+  String get deleteMessageConfirm => 'Are you sure you want to delete this message?';
 
   @override
   String deleteMessagesConfirm(int count) {
@@ -478,7 +491,16 @@ class AppLocalizationsHu extends AppLocalizations {
   String get groupName => 'Group Name';
 
   @override
+  String get groupNameHint => 'Enter group name';
+
+  @override
   String get groupDescription => 'Group Description';
+
+  @override
+  String get groupDescriptionHint => 'Enter group description';
+
+  @override
+  String get groupDescriptionOptional => 'Group Description (Optional)';
 
   @override
   String get groupMembers => 'Members';
@@ -520,8 +542,7 @@ class AppLocalizationsHu extends AppLocalizations {
   String get groupLeaveConfirm => 'Are you sure you want to leave this group?';
 
   @override
-  String get groupDeleteConfirm =>
-      'Are you sure you want to delete this group?';
+  String get groupDeleteConfirm => 'Are you sure you want to delete this group?';
 
   @override
   String get groupCreated => 'Group created successfully';
