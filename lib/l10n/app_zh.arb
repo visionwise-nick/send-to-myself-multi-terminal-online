@@ -439,5 +439,28 @@
   "messageReceived": "收到消息",
   
   "sectionsplash": "",
-  "appSlogan": "跨设备文件共享和同步"
+  "appSlogan": "跨设备文件共享和同步",
+  
+  "sectionfiles": "",
+  "myFiles": "我的文件",
+  "filesFeatureComingSoon": "文件功能即将上线", 
+  "stayTuned": "敬请期待",
+  
+  "sectiondevicegroups": "",
+  "noDeviceGroups": "还没有设备群组",
+  "scanQRToJoin": "使用其他设备扫描二维码加入",
+  "myDeviceGroups": "我的设备群组",
+  "unnamedGroup": "未命名群组",
+  "deviceCount": "{count} 台设备",
+  "@deviceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "youAreOwner": "您是群主",
+  "member": "成员",
+  "createdOn": "创建于",
+  "unknownDate": "未知"
 } 

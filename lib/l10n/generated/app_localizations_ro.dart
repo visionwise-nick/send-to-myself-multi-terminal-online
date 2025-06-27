@@ -1187,4 +1187,45 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get appSlogan => 'Cross-device file sharing and sync';
+
+  @override
+  String get myFiles => 'My Files';
+
+  @override
+  String get filesFeatureComingSoon => 'File feature coming soon';
+
+  @override
+  String get stayTuned => 'Stay tuned';
+
+  @override
+  String get sectiondevicegroups => '';
+
+  @override
+  String get noDeviceGroups => 'No device groups yet';
+
+  @override
+  String get scanQRToJoin => 'Use other devices to scan QR code to join';
+
+  @override
+  String get myDeviceGroups => 'My Device Groups';
+
+  @override
+  String get unnamedGroup => 'Unnamed Group';
+
+  @override
+  String deviceCount(int count) {
+    return '$count devices';
+  }
+
+  @override
+  String get youAreOwner => 'You are the owner';
+
+  @override
+  String get member => 'Member';
+
+  @override
+  String get createdOn => 'Created on';
+
+  @override
+  String get unknownDate => 'Unknown';
 }

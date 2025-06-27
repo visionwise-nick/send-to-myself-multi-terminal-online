@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 class FilesTab extends StatelessWidget {
   const FilesTab({super.key});
@@ -12,7 +13,7 @@ class FilesTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '我的文件',
+            LocalizationHelper.of(context).myFiles,
             style: TextStyle(
               fontSize: AppTheme.isSmallScreen(context) ? 20 : 24,
               fontWeight: FontWeight.bold,
@@ -33,18 +34,18 @@ class FilesTab extends StatelessWidget {
                     color: Colors.grey.shade300,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    '文件功能即将上线',
-                    style: TextStyle(
+                  Text(
+                    LocalizationHelper.of(context).filesFeatureComingSoon,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.black54,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    '敬请期待',
-                    style: TextStyle(
+                  Text(
+                    LocalizationHelper.of(context).stayTuned,
+                    style: const TextStyle(
                       fontSize: 14,
                       color: Colors.black45,
                     ),

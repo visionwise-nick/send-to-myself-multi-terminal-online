@@ -1179,4 +1179,45 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appSlogan => '跨设备文件共享和同步';
+
+  @override
+  String get myFiles => '我的文件';
+
+  @override
+  String get filesFeatureComingSoon => '文件功能即将上线';
+
+  @override
+  String get stayTuned => '敬请期待';
+
+  @override
+  String get sectiondevicegroups => '';
+
+  @override
+  String get noDeviceGroups => '还没有设备群组';
+
+  @override
+  String get scanQRToJoin => '使用其他设备扫描二维码加入';
+
+  @override
+  String get myDeviceGroups => '我的设备群组';
+
+  @override
+  String get unnamedGroup => '未命名群组';
+
+  @override
+  String deviceCount(int count) {
+    return '$count 台设备';
+  }
+
+  @override
+  String get youAreOwner => '您是群主';
+
+  @override
+  String get member => '成员';
+
+  @override
+  String get createdOn => '创建于';
+
+  @override
+  String get unknownDate => '未知';
 }

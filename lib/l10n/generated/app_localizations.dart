@@ -2457,6 +2457,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cross-device file sharing and sync'**
   String get appSlogan;
+
+  /// No description provided for @myFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'My Files'**
+  String get myFiles;
+
+  /// No description provided for @filesFeatureComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'File feature coming soon'**
+  String get filesFeatureComingSoon;
+
+  /// No description provided for @stayTuned.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay tuned'**
+  String get stayTuned;
+
+  /// No description provided for @sectiondevicegroups.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectiondevicegroups;
+
+  /// No description provided for @noDeviceGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'No device groups yet'**
+  String get noDeviceGroups;
+
+  /// No description provided for @scanQRToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Use other devices to scan QR code to join'**
+  String get scanQRToJoin;
+
+  /// No description provided for @myDeviceGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'My Device Groups'**
+  String get myDeviceGroups;
+
+  /// No description provided for @unnamedGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed Group'**
+  String get unnamedGroup;
+
+  /// No description provided for @deviceCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} devices'**
+  String deviceCount(int count);
+
+  /// No description provided for @youAreOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'You are the owner'**
+  String get youAreOwner;
+
+  /// No description provided for @member.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get member;
+
+  /// No description provided for @createdOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Created on'**
+  String get createdOn;
+
+  /// No description provided for @unknownDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknownDate;
 }
 
 class _AppLocalizationsDelegate

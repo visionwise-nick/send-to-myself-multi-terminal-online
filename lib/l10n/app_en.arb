@@ -494,5 +494,28 @@
   "messageReceived": "Message received",
   
   "sectionsplash": "",
-  "appSlogan": "Cross-device file sharing and sync"
+  "appSlogan": "Cross-device file sharing and sync",
+  
+  "sectionfiles": "",
+  "myFiles": "My Files",
+  "filesFeatureComingSoon": "File feature coming soon",
+  "stayTuned": "Stay tuned",
+  
+  "sectiondevicegroups": "",
+  "noDeviceGroups": "No device groups yet",
+  "scanQRToJoin": "Use other devices to scan QR code to join",
+  "myDeviceGroups": "My Device Groups",
+  "unnamedGroup": "Unnamed Group",
+  "deviceCount": "{count} devices",
+  "@deviceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "youAreOwner": "You are the owner",
+  "member": "Member",
+  "createdOn": "Created on",
+  "unknownDate": "Unknown"
 } 

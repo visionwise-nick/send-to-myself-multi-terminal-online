@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 class DeviceGroupsTab extends StatelessWidget {
   const DeviceGroupsTab({super.key});
@@ -31,18 +32,18 @@ class DeviceGroupsTab extends StatelessWidget {
                   color: Colors.grey.shade300,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  '还没有设备群组',
-                  style: TextStyle(
+                Text(
+                  LocalizationHelper.of(context).noDeviceGroups,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.black54,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  '使用其他设备扫描二维码加入',
-                  style: TextStyle(
+                Text(
+                  LocalizationHelper.of(context).scanQRToJoin,
+                  style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black45,
                   ),
@@ -63,7 +64,7 @@ class DeviceGroupsTab extends StatelessWidget {
                 child: Row(
                   children: [
                     Text(
-                      '我的设备群组',
+                      LocalizationHelper.of(context).myDeviceGroups,
                       style: TextStyle(
                         fontSize: isSmallScreen ? 20 : 24,
                         fontWeight: FontWeight.bold,
@@ -122,7 +123,7 @@ class DeviceGroupsTab extends StatelessWidget {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      group['name'] ?? '未命名群组',
+                                      group['name'] ?? LocalizationHelper.of(context).unnamedGroup,
                                       style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -139,7 +140,7 @@ class DeviceGroupsTab extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      '${group['deviceCount'] ?? '?'} 台设备',
+                                      LocalizationHelper.of(context).deviceCount(group['deviceCount'] ?? 0),
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade700,
@@ -183,7 +184,9 @@ class DeviceGroupsTab extends StatelessWidget {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          group['isOwner'] == true ? '您是群主' : '成员',
+                                          group['isOwner'] == true 
+                                              ? LocalizationHelper.of(context).youAreOwner
+                                              : LocalizationHelper.of(context).member,
                                           style: TextStyle(
                                             fontSize: 14,
                                             color: group['isOwner'] == true
@@ -193,7 +196,7 @@ class DeviceGroupsTab extends StatelessWidget {
                                           ),
                                         ),
                                         Text(
-                                          '创建于: ${_formatDate(group['createdAt'])}',
+                                          '${LocalizationHelper.of(context).createdOn}: ${_formatDate(group['createdAt'], LocalizationHelper.of(context).unknownDate)}',
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.grey.shade600,
@@ -231,8 +234,8 @@ class DeviceGroupsTab extends StatelessWidget {
   }
   
   // 格式化日期
-  String _formatDate(dynamic date) {
-    if (date == null) return '未知';
+  String _formatDate(dynamic date, String unknownText) {
+    if (date == null) return unknownText;
     
     try {
       if (date is String) {
@@ -247,9 +250,9 @@ class DeviceGroupsTab extends StatelessWidget {
       }
     } catch (e) {
       print('解析日期失败: $e, 原始日期: $date');
-      return '未知';
+      return unknownText;
     }
     
-    return '未知';
+    return unknownText;
   }
 } 
