@@ -2755,7 +2755,7 @@ abstract class AppLocalizations {
   /// No description provided for @unfavoriteFailed.
   ///
   /// In en, this message translates to:
-  /// **'Unfavorite failed'**
+  /// **'Failed to remove from favorites'**
   String get unfavoriteFailed;
 
   /// No description provided for @confirmDeleteMessage.
@@ -3457,7 +3457,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmCancel.
   ///
   /// In en, this message translates to:
-  /// **'Confirm Cancel'**
+  /// **'Confirm cancel'**
   String get confirmCancel;
 
   /// No description provided for @transferCancelled.
@@ -3475,7 +3475,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileNotExists.
   ///
   /// In en, this message translates to:
-  /// **'File does not exist'**
+  /// **'File not found'**
   String get fileNotExists;
 
   /// No description provided for @file.
@@ -3535,7 +3535,7 @@ abstract class AppLocalizations {
   /// No description provided for @selectFileTypeMultiple.
   ///
   /// In en, this message translates to:
-  /// **'Select file type (multiple selection will send directly)'**
+  /// **'Select file type (multiple files can be sent directly)'**
   String get selectFileTypeMultiple;
 
   /// No description provided for @image.
@@ -3571,7 +3571,7 @@ abstract class AppLocalizations {
   /// No description provided for @recallMessage.
   ///
   /// In en, this message translates to:
-  /// **'Recall Message'**
+  /// **'Recall message'**
   String get recallMessage;
 
   /// No description provided for @addToFavoritesFailed.
@@ -3657,6 +3657,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Desktop video'**
   String get desktopVideo;
+
+  /// No description provided for @sectionchatui.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionchatui;
+
+  /// No description provided for @continuedTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue transfer'**
+  String get continuedTransfer;
+
+  /// No description provided for @sectionchatmessages.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionchatmessages;
+
+  /// No description provided for @batchRecallReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch recall'**
+  String get batchRecallReason;
+
+  /// No description provided for @batchDeleteReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch delete'**
+  String get batchDeleteReason;
+
+  /// No description provided for @confirmCancelUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to cancel uploading this file?'**
+  String get confirmCancelUpload;
+
+  /// No description provided for @confirmCancelDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to cancel downloading this file?'**
+  String get confirmCancelDownload;
+
+  /// No description provided for @uploadCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload cancelled'**
+  String get uploadCancelled;
+
+  /// No description provided for @downloadCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Download cancelled'**
+  String get downloadCancelled;
+
+  /// No description provided for @favoritesFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add to favorites'**
+  String get favoritesFailed;
+
+  /// No description provided for @jumpedToOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Jumped to original message'**
+  String get jumpedToOriginal;
+
+  /// No description provided for @fileUnavailableNoText.
+  ///
+  /// In en, this message translates to:
+  /// **'File unavailable and no text content to share'**
+  String get fileUnavailableNoText;
+
+  /// No description provided for @filePathCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'File path copied to clipboard'**
+  String get filePathCopied;
+
+  /// No description provided for @fileLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'File link copied to clipboard'**
+  String get fileLinkCopied;
 }
 
 class _AppLocalizationsDelegate

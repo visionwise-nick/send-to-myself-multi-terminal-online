@@ -2644,7 +2644,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     if (confirmed) {
       final result = await _messageActionsService.batchRevokeMessages(
         messageIds: messageIds,
-        reason: '批量撤回',
+        reason: LocalizationHelper.of(context).batchRecallReason,
       );
       
       _multiSelectController.exitMultiSelectMode();
@@ -2679,7 +2679,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     if (confirmed) {
       final result = await _messageActionsService.batchDeleteMessages(
         messageIds: messageIds,
-        reason: '批量删除',
+        reason: LocalizationHelper.of(context).batchDeleteReason,
       );
       
       _multiSelectController.exitMultiSelectMode();
@@ -2762,11 +2762,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   const SnackBar(content: Text('已强制清理去重记录并重启WebSocket监听')),
                 );
               },
-              child: const Text('清理去重记录'),
+              child: Text(LocalizationHelper.of(context).clearDeduplicationRecords),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('关闭'),
+              child: Text(LocalizationHelper.of(context).close),
             ),
           ],
         ),
@@ -3067,7 +3067,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     required String messageId,
   }) {
     final progressPercent = (progress * 100).toInt();
-    final transferType = isUpload ? '上传' : '下载';
+          final transferType = isUpload ? LocalizationHelper.of(context).upload : LocalizationHelper.of(context).download;
     
     // 🔥 修复：改进颜色主题，确保文字可见性
     final primaryColor = isUpload 
@@ -3314,12 +3314,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isUpload ? '取消上传' : '取消下载'),
-        content: Text('确定要${isUpload ? '取消上传' : '取消下载'}这个文件吗？'),
+        title: Text(isUpload ? LocalizationHelper.of(context).cancelUpload : LocalizationHelper.of(context).cancelDownload),
+        content: Text(isUpload ? LocalizationHelper.of(context).confirmCancelUpload : LocalizationHelper.of(context).confirmCancelDownload),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('继续传输'),
+            child: Text(LocalizationHelper.of(context).continueTransfer),
           ),
           TextButton(
             onPressed: () {
@@ -3329,7 +3329,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,
             ),
-            child: const Text('确定取消'),
+            child: Text(LocalizationHelper.of(context).confirmCancel),
           ),
         ],
       ),
@@ -3356,7 +3356,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     // 显示取消提示
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${isUpload ? '上传' : '下载'}已取消'),
+                  content: Text(isUpload ? LocalizationHelper.of(context).uploadCancelled : LocalizationHelper.of(context).downloadCancelled),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -3501,7 +3501,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 4),
           Text(
-            '准备下载',
+            LocalizationHelper.of(context).preparingDownload,
             style: TextStyle(
               fontSize: 11,
               color: AppTheme.textSecondaryColor,
@@ -3552,7 +3552,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 4),
           Text(
-            '文件不存在',
+            LocalizationHelper.of(context).fileNotExists,
             style: TextStyle(
               fontSize: 10,
               color: const Color(0xFF9CA3AF),
@@ -3598,7 +3598,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   const SizedBox(width: 6), // 减少间距
                   Flexible(
                     child: Text(
-                      _getFileName(filePath, fileUrl) ?? '文件',
+                      _getFileName(filePath, fileUrl) ?? LocalizationHelper.of(context).file,
                       style: AppTheme.captionStyle.copyWith(
                         color: AppTheme.textPrimaryColor,
                         fontSize: 10, // 减小文字
@@ -4286,7 +4286,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         });
         
         // 🔥 优化：根据文件大小和错误类型提供更详细的错误提示
-        String errorMessage = '文件下载失败';
+        String errorMessage = LocalizationHelper.of(context).fileDownloadFailed;
         if (e.toString().contains('timeout')) {
           if (fileSize != null && fileSize > 50 * 1024 * 1024) {
             errorMessage = '大文件下载超时，请检查网络连接\n文件大小: ${_formatFileSize(fileSize)}\n建议在WiFi环境下重试';
@@ -4294,9 +4294,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             errorMessage = '文件下载超时，请检查网络连接';
           }
         } else if (e.toString().contains('404')) {
-          errorMessage = '文件不存在或已过期';
+                      errorMessage = LocalizationHelper.of(context).fileNotExistsOrExpired;
         } else if (e.toString().contains('403')) {
-          errorMessage = '没有权限下载此文件';
+                      errorMessage = LocalizationHelper.of(context).noPermissionToDownload;
         } else if (e.toString().contains('network')) {
           errorMessage = '网络连接错误，请检查网络设置';
         } else if (e.toString().contains('space') || e.toString().contains('storage')) {
@@ -4311,7 +4311,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             duration: const Duration(seconds: 5), // 增加显示时间
             backgroundColor: Colors.red,
             action: SnackBarAction(
-              label: '重试',
+              label: LocalizationHelper.of(context).retry,
               textColor: Colors.white,
               onPressed: () => _autoDownloadFile(message),
             ),
@@ -4459,7 +4459,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             const SizedBox(height: 12), // 减少间距
             
             Text(
-              _isDesktop() ? '选择文件类型' : '选择文件类型（多选直接发送）',
+              _isDesktop() ? LocalizationHelper.of(context).selectFileType : LocalizationHelper.of(context).selectFileTypeMultiple,
               style: AppTheme.bodyStyle.copyWith( // 使用更小的字体
                 fontWeight: AppTheme.fontWeightMedium,
               ),
@@ -4468,10 +4468,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             const SizedBox(height: 12), // 减少间距
             
             // 简洁的文件选项列表
-            _buildFileOption(Icons.image, '图片', () => _selectFile(FileType.image)),
-            _buildFileOption(Icons.videocam, '视频', () => _selectFile(FileType.video)),
-            _buildFileOption(Icons.description, '文档', () => _selectFile(FileType.any)),
-            _buildFileOption(Icons.audiotrack, '音频', () => _selectFile(FileType.audio)),
+                    _buildFileOption(Icons.image, LocalizationHelper.of(context).image, () => _selectFile(FileType.image)),
+        _buildFileOption(Icons.videocam, LocalizationHelper.of(context).video, () => _selectFile(FileType.video)),
+        _buildFileOption(Icons.description, LocalizationHelper.of(context).document, () => _selectFile(FileType.any)),
+        _buildFileOption(Icons.audiotrack, LocalizationHelper.of(context).audio, () => _selectFile(FileType.audio)),
             
             const SizedBox(height: 12), // 减少间距
           ],
@@ -4930,7 +4930,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     // 这里可以实现自动全选逻辑，或者显示提示
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('可以直接拖拽选择文字内容')),
+        SnackBar(content: Text(LocalizationHelper.of(context).canDragSelectText)),
       );
     }
   }
@@ -4953,7 +4953,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       await Clipboard.setData(ClipboardData(text: fullContent));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('全部内容已复制到剪贴板')),
+          SnackBar(content: Text(LocalizationHelper.of(context).allContentCopied)),
         );
       }
     }
@@ -4962,9 +4962,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 撤回消息
   Future<void> _revokeMessage(String messageId) async {
     final confirmed = await _showConfirmDialog(
-      title: '撤回消息',
+              title: LocalizationHelper.of(context).recallMessage,
       content: '确定要撤回这条消息吗？撤回后所有人都无法看到此消息。',
-      confirmText: '撤回',
+              confirmText: LocalizationHelper.of(context).recall,
     );
     
     if (confirmed) {
@@ -5302,7 +5302,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
        // 显示结果提示
        if (mounted) {
          if (success) {
-           final location = (fileType == 'image' || fileType == 'video') ? '相册' : '文档';
+           final location = (fileType == 'image' || fileType == 'video') ? LocalizationHelper.of(context).gallery : LocalizationHelper.of(context).documents;
            ScaffoldMessenger.of(context).showSnackBar(
              SnackBar(
                content: Row(
@@ -5318,16 +5318,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
            );
          } else {
            ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(
+             SnackBar(
                content: Row(
                  children: [
-                   Icon(Icons.error, color: Colors.white, size: 20),
-                   SizedBox(width: 8),
-                   Text('保存失败'),
+                   const Icon(Icons.error, color: Colors.white, size: 20),
+                   const SizedBox(width: 8),
+                   Text(LocalizationHelper.of(context).saveFailed),
                  ],
                ),
                backgroundColor: Colors.red,
-               duration: Duration(seconds: 2),
+               duration: const Duration(seconds: 2),
              ),
            );
          }
@@ -5365,16 +5365,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.white, size: 20),
-                  SizedBox(width: 8),
-                  Text('文字已分享'),
+                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Text(LocalizationHelper.of(context).textShared),
                 ],
               ),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
             ),
           );
         }
@@ -5523,7 +5523,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -5543,7 +5543,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     setState(() {
       final messageIndex = _messages.indexWhere((msg) => msg['id'].toString() == messageId);
       if (messageIndex != -1) {
-        _messages[messageIndex]['text'] = '[此消息已被撤回]';
+        _messages[messageIndex]['text'] = LocalizationHelper.of(context).messageRecalledText;
         _messages[messageIndex]['isRevoked'] = true;
       }
     });

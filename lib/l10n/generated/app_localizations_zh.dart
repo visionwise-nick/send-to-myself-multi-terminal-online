@@ -1845,4 +1845,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get desktopVideo => '桌面端视频';
+
+  @override
+  String get sectionchatui => '';
+
+  @override
+  String get continuedTransfer => '继续传输';
+
+  @override
+  String get sectionchatmessages => '';
+
+  @override
+  String get batchRecallReason => '批量撤回';
+
+  @override
+  String get batchDeleteReason => '批量删除';
+
+  @override
+  String get confirmCancelUpload => '确定要取消上传这个文件吗？';
+
+  @override
+  String get confirmCancelDownload => '确定要取消下载这个文件吗？';
+
+  @override
+  String get uploadCancelled => '上传已取消';
+
+  @override
+  String get downloadCancelled => '下载已取消';
+
+  @override
+  String get favoritesFailed => '收藏失败';
+
+  @override
+  String get jumpedToOriginal => '已跳转到原消息';
+
+  @override
+  String get fileUnavailableNoText => '文件不可用且无文字内容可分享';
+
+  @override
+  String get filePathCopied => '文件路径已复制到剪贴板';
+
+  @override
+  String get fileLinkCopied => '文件链接已复制到剪贴板';
 }

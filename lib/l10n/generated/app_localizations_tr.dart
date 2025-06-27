@@ -1356,7 +1356,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get removedFromFavorites => 'Removed from favorites';
 
   @override
-  String get unfavoriteFailed => 'Unfavorite failed';
+  String get unfavoriteFailed => 'Failed to remove from favorites';
 
   @override
   String get confirmDeleteMessage =>
@@ -1767,7 +1767,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get continueTransfer => 'Continue Transfer';
 
   @override
-  String get confirmCancel => 'Confirm Cancel';
+  String get confirmCancel => 'Confirm cancel';
 
   @override
   String transferCancelled(String action) {
@@ -1778,7 +1778,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get preparingDownload => 'Preparing download';
 
   @override
-  String get fileNotExists => 'File does not exist';
+  String get fileNotExists => 'File not found';
 
   @override
   String get file => 'File';
@@ -1809,7 +1809,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get selectFileTypeMultiple =>
-      'Select file type (multiple selection will send directly)';
+      'Select file type (multiple files can be sent directly)';
 
   @override
   String get image => 'Image';
@@ -1827,7 +1827,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get canDragToSelectText => 'You can drag to select text content';
 
   @override
-  String get recallMessage => 'Recall Message';
+  String get recallMessage => 'Recall message';
 
   @override
   String get addToFavoritesFailed => 'Failed to add to favorites';
@@ -1871,4 +1871,49 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get desktopVideo => 'Desktop video';
+
+  @override
+  String get sectionchatui => '';
+
+  @override
+  String get continuedTransfer => 'Continue transfer';
+
+  @override
+  String get sectionchatmessages => '';
+
+  @override
+  String get batchRecallReason => 'Batch recall';
+
+  @override
+  String get batchDeleteReason => 'Batch delete';
+
+  @override
+  String get confirmCancelUpload =>
+      'Are you sure you want to cancel uploading this file?';
+
+  @override
+  String get confirmCancelDownload =>
+      'Are you sure you want to cancel downloading this file?';
+
+  @override
+  String get uploadCancelled => 'Upload cancelled';
+
+  @override
+  String get downloadCancelled => 'Download cancelled';
+
+  @override
+  String get favoritesFailed => 'Failed to add to favorites';
+
+  @override
+  String get jumpedToOriginal => 'Jumped to original message';
+
+  @override
+  String get fileUnavailableNoText =>
+      'File unavailable and no text content to share';
+
+  @override
+  String get filePathCopied => 'File path copied to clipboard';
+
+  @override
+  String get fileLinkCopied => 'File link copied to clipboard';
 }
