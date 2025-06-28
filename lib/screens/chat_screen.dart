@@ -3849,9 +3849,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                             decoration: InputDecoration(
                               hintText: _isDesktop() 
                                 ? (_pendingFiles.isNotEmpty 
-                                  ? '添加说明文字...(Enter发送)' 
-                                  : '输入消息或拖拽文件...(Enter发送)')
-                                : '输入消息或拖拽文件...',
+                                  ? LocalizationHelper.of(context).addDescriptionText 
+                                  : LocalizationHelper.of(context).inputMessageHintDesktop)
+                                : LocalizationHelper.of(context).inputMessageHintMobile,
                               hintStyle: AppTheme.bodyStyle.copyWith(
                                 color: AppTheme.textTertiaryColor,
                                 fontSize: _isDesktop() ? 13 : 14,
@@ -5018,7 +5018,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _messageController.text = forwardText;
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('消息内容已添加到输入框')),
+                        SnackBar(content: Text(LocalizationHelper.of(context).messageContentAddedToInput)),
       );
     }
   }
@@ -5562,8 +5562,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   Widget _buildFileContextMenu(String? filePath, String? fileUrl, String? fileType) {
     return GenericContextMenu(
       buttonConfigs: [
-        // 🔥 桌面端文件右键菜单：只保留核心功能
+        // 🔥 桌面端文件右键菜单：添加复制功能
         if (filePath != null && File(filePath).existsSync()) ...[
+          ContextMenuButtonConfig(
+            "复制文件",
+            onPressed: () => _copyFileToClipboard(filePath),
+          ),
           ContextMenuButtonConfig(
             "打开文件位置",
             onPressed: () => _openFileLocation(filePath),
@@ -5638,7 +5642,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 🔥 新增：打开文件位置
   Future<void> _openFileLocation(String filePath) async {
     try {
-      if (_isDesktop()) {
+      // 判断是否为桌面端
+      final isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+      
+      if (isDesktop) {
         // 桌面端使用系统命令打开文件夹
         if (Platform.isMacOS) {
           await Process.run('open', ['-R', filePath]);
@@ -5667,18 +5674,60 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
+  // 🔥 新增：复制文件到剪贴板（桌面端）
+  Future<void> _copyFileToClipboard(String filePath) async {
+    try {
+      // 判断是否为桌面端
+      final isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+      
+      if (isDesktop) {
+        // 桌面端使用系统剪贴板复制文件
+        if (Platform.isMacOS) {
+          await Process.run('osascript', [
+            '-e',
+            'tell app "Finder" to set the clipboard to (POSIX file "$filePath")'
+          ]);
+        } else if (Platform.isWindows) {
+          // Windows使用PowerShell复制文件
+          await Process.run('powershell', [
+            '-Command',
+            'Set-Clipboard -Path "$filePath"'
+          ]);
+        } else if (Platform.isLinux) {
+          // Linux使用xclip复制文件路径（因为复制文件本身比较复杂）
+          await Process.run('echo', [filePath, '|', 'xclip', '-selection', 'clipboard']);
+        }
+        
+        print('文件已复制到剪贴板: $filePath');
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('文件已复制到剪贴板')),
+          );
+        }
+      }
+    } catch (e) {
+      print('复制文件失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('复制文件失败')),
+        );
+      }
+    }
+  }
+
   // 🔥 新增：复制文件路径
   Future<void> _copyFilePath(String filePath) async {
     try {
       await Clipboard.setData(ClipboardData(text: filePath));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('文件路径已复制到剪贴板')),
+          SnackBar(content: Text(LocalizationHelper.of(context).filePathCopied)),
         );
       }
     } catch (e) {
       print('复制文件路径失败: $e');
-      _showErrorMessage('复制文件路径失败');
+              _showErrorMessage(LocalizationHelper.of(context).copyFilePathFailed);
     }
   }
 

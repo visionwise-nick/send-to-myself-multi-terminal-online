@@ -1811,6 +1811,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get removeFromFavoritesFailed => '取消收藏失败';
 
   @override
+  String get jumpedToOriginal => '已跳转到原消息';
+
+  @override
   String get gallery => '相册';
 
   @override
@@ -1877,9 +1880,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get favoritesFailed => '收藏失败';
 
   @override
-  String get jumpedToOriginal => '已跳转到原消息';
-
-  @override
   String get fileUnavailableNoText => '文件不可用且无文字内容可分享';
 
   @override
@@ -1887,4 +1887,299 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fileLinkCopied => '文件链接已复制到剪贴板';
+
+  @override
+  String get saveButton => '保存';
+
+  @override
+  String get titleLabel => '标题';
+
+  @override
+  String get titleHint => '输入笔记标题';
+
+  @override
+  String get contentLabel => '内容';
+
+  @override
+  String get note => '备注';
+
+  @override
+  String get otherInfo => '其他信息';
+
+  @override
+  String get expenseItem => '消费项目';
+
+  @override
+  String get amount => '金额';
+
+  @override
+  String get type => '类型';
+
+  @override
+  String get expense => '支出';
+
+  @override
+  String get income => '收入';
+
+  @override
+  String get category => '分类';
+
+  @override
+  String get date => '日期';
+
+  @override
+  String get detailedDescription => '详细描述';
+
+  @override
+  String get scheduleTitle => '日程标题';
+
+  @override
+  String get startTime => '开始时间';
+
+  @override
+  String get location => '地点';
+
+  @override
+  String get details => '详情';
+
+  @override
+  String get advanceReminder => '提前提醒';
+
+  @override
+  String get noReminder => '不提醒';
+
+  @override
+  String get task => '任务';
+
+  @override
+  String get whatToDo => '要做什么';
+
+  @override
+  String get detailedTaskDescription => '详细描述';
+
+  @override
+  String get priority => '优先级';
+
+  @override
+  String get low => '低';
+
+  @override
+  String get medium => '中';
+
+  @override
+  String get high => '高';
+
+  @override
+  String get websiteOrLinkName => '网站或链接名称';
+
+  @override
+  String get linkPurpose => '这个链接的用途或内容';
+
+  @override
+  String get fileDescription => '文件描述';
+
+  @override
+  String get fileExplanation => '文件说明';
+
+  @override
+  String get selectDate => '选择日期';
+
+  @override
+  String get selectTime => '选择时间';
+
+  @override
+  String get clickToSelectFile => '点击选择文件';
+
+  @override
+  String get addAccountPassword => '添加账号密码';
+
+  @override
+  String get recordExpense => '记一笔账';
+
+  @override
+  String get createSchedule => '创建日程';
+
+  @override
+  String get addTodo => '添加待办';
+
+  @override
+  String get saveLink => '保存链接';
+
+  @override
+  String get saveImage => '保存图片';
+
+  @override
+  String get saveVideo => '保存视频';
+
+  @override
+  String get saveDocument => '保存文档';
+
+  @override
+  String get writeNote => '写笔记';
+
+  @override
+  String get pleaseSelectFile => '请选择文件';
+
+  @override
+  String get saveSuccess => '保存成功';
+
+  @override
+  String get sectioninput => '';
+
+  @override
+  String get inputMessageHintDesktop => '输入消息或拖拽文件...(Enter发送)';
+
+  @override
+  String get inputMessageHintMobile => '输入消息或拖拽文件...';
+
+  @override
+  String get addDescriptionText => '添加说明文字...(Enter发送)';
+
+  @override
+  String get sectionmenu => '';
+
+  @override
+  String get sideMenu => '侧边菜单';
+
+  @override
+  String get appSettings => '应用设置';
+
+  @override
+  String get networkDiagnostics => '网络诊断';
+
+  @override
+  String get currentDevice => '当前设备';
+
+  @override
+  String get systemInfo => '系统信息';
+
+  @override
+  String get noGroup => '无群组';
+
+  @override
+  String get sectionpriority => '';
+
+  @override
+  String get highPriority => '高优先级';
+
+  @override
+  String get mediumPriority => '中优先级';
+
+  @override
+  String get lowPriority => '低优先级';
+
+  @override
+  String get justNow => '刚刚';
+
+  @override
+  String get sectionaccount => '';
+
+  @override
+  String accountInfo(String username, String website) {
+    return '账号: $username • 网站: $website';
+  }
+
+  @override
+  String get sectionforms => '';
+
+  @override
+  String get loginAccountHint => '登录账号';
+
+  @override
+  String get passwordHint => '登录密码';
+
+  @override
+  String get notesLabel => '备注';
+
+  @override
+  String get otherInfoHint => '其他信息';
+
+  @override
+  String get expenseItemHint => '如：午餐、购物';
+
+  @override
+  String get amountHint => '0.00';
+
+  @override
+  String get typeLabel => '类型';
+
+  @override
+  String get categoryLabel => '分类';
+
+  @override
+  String get categoryHint => '如：餐饮、交通';
+
+  @override
+  String get dateLabel => '日期';
+
+  @override
+  String get detailsHint => '详细说明';
+
+  @override
+  String get scheduleTitleHint => '会议、约会等';
+
+  @override
+  String get startTimeLabel => '开始时间';
+
+  @override
+  String get endTimeOptional => '结束时间（可选）';
+
+  @override
+  String get locationLabel => '地点';
+
+  @override
+  String get locationHint => '会议室、餐厅等';
+
+  @override
+  String get detailsLabel => '详情';
+
+  @override
+  String get meetingDetailsHint => '会议内容、注意事项';
+
+  @override
+  String get minutes5Before => '5分钟前';
+
+  @override
+  String get minutes15Before => '15分钟前';
+
+  @override
+  String get minutes30Before => '30分钟前';
+
+  @override
+  String get hour1Before => '1小时前';
+
+  @override
+  String get taskLabel => '任务';
+
+  @override
+  String get taskRequirementsHint => '具体要求、注意事项';
+
+  @override
+  String get priorityLabel => '优先级';
+
+  @override
+  String get dueDateOptional => '截止日期（可选）';
+
+  @override
+  String get websiteLinkName => '网站或链接名称';
+
+  @override
+  String get urlLink => 'URL链接';
+
+  @override
+  String get sectionshare => '';
+
+  @override
+  String get confirmShare => '确认分享';
+
+  @override
+  String get textSent => '文本已发送';
+
+  @override
+  String get fileSent => '文件已发送';
+
+  @override
+  String filesSent(int count) {
+    return '$count个文件已发送';
+  }
 }

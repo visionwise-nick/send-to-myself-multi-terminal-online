@@ -96,7 +96,7 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
           TextButton(
             onPressed: _isCreating ? null : _createMemory,
             child: Text(
-              '保存',
+              LocalizationHelper.of(context).saveButton,
               style: AppTheme.bodyStyle.copyWith(
                 color: _isCreating ? AppTheme.textTertiaryColor : AppTheme.primaryColor,
                 fontWeight: AppTheme.fontWeightMedium,
@@ -153,15 +153,15 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
       children: [
         _buildTextField(
           controller: _titleController,
-          label: '标题',
-          hint: '输入笔记标题',
+          label: LocalizationHelper.of(context).titleLabel,
+          hint: LocalizationHelper.of(context).titleHint,
           required: true,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _contentController,
-          label: '内容',
-          hint: '写下你的想法...',
+          label: LocalizationHelper.of(context).contentLabel,
+          hint: LocalizationHelper.of(context).writeYourThoughts,
           maxLines: 8,
           required: true,
         ),
@@ -182,8 +182,8 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
         SizedBox(height: 16),
         _buildTextField(
           controller: _websiteController,
-          label: '网站地址',
-          hint: 'https://...',
+          label: LocalizationHelper.of(context).websiteAddress,
+          hint: LocalizationHelper.of(context).websiteAddressHint,
         ),
         SizedBox(height: 16),
         _buildTextField(

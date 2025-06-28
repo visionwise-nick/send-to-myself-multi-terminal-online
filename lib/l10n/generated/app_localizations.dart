@@ -2443,7 +2443,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginAccount.
   ///
   /// In en, this message translates to:
-  /// **'Login account'**
+  /// **'Login Account'**
   String get loginAccount;
 
   /// No description provided for @password.
@@ -2455,7 +2455,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginPassword.
   ///
   /// In en, this message translates to:
-  /// **'Login password'**
+  /// **'Login Password'**
   String get loginPassword;
 
   /// No description provided for @sectionchat.
@@ -3586,6 +3586,12 @@ abstract class AppLocalizations {
   /// **'Failed to remove from favorites'**
   String get removeFromFavoritesFailed;
 
+  /// No description provided for @jumpedToOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Jumped to original message'**
+  String get jumpedToOriginal;
+
   /// No description provided for @gallery.
   ///
   /// In en, this message translates to:
@@ -3718,12 +3724,6 @@ abstract class AppLocalizations {
   /// **'Failed to add to favorites'**
   String get favoritesFailed;
 
-  /// No description provided for @jumpedToOriginal.
-  ///
-  /// In en, this message translates to:
-  /// **'Jumped to original message'**
-  String get jumpedToOriginal;
-
   /// No description provided for @fileUnavailableNoText.
   ///
   /// In en, this message translates to:
@@ -3741,6 +3741,588 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'File link copied to clipboard'**
   String get fileLinkCopied;
+
+  /// No description provided for @saveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveButton;
+
+  /// No description provided for @titleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get titleLabel;
+
+  /// No description provided for @titleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter note title'**
+  String get titleHint;
+
+  /// No description provided for @contentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get contentLabel;
+
+  /// No description provided for @note.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get note;
+
+  /// No description provided for @otherInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Information'**
+  String get otherInfo;
+
+  /// No description provided for @expenseItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense Item'**
+  String get expenseItem;
+
+  /// No description provided for @amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get amount;
+
+  /// No description provided for @type.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get type;
+
+  /// No description provided for @expense.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense'**
+  String get expense;
+
+  /// No description provided for @income.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get income;
+
+  /// No description provided for @category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get category;
+
+  /// No description provided for @date.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get date;
+
+  /// No description provided for @detailedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed Description'**
+  String get detailedDescription;
+
+  /// No description provided for @scheduleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule Title'**
+  String get scheduleTitle;
+
+  /// No description provided for @startTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Time'**
+  String get startTime;
+
+  /// No description provided for @location.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get location;
+
+  /// No description provided for @details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get details;
+
+  /// No description provided for @advanceReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance Reminder'**
+  String get advanceReminder;
+
+  /// No description provided for @noReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'No reminder'**
+  String get noReminder;
+
+  /// No description provided for @task.
+  ///
+  /// In en, this message translates to:
+  /// **'Task'**
+  String get task;
+
+  /// No description provided for @whatToDo.
+  ///
+  /// In en, this message translates to:
+  /// **'What to do'**
+  String get whatToDo;
+
+  /// No description provided for @detailedTaskDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed Description'**
+  String get detailedTaskDescription;
+
+  /// No description provided for @priority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get priority;
+
+  /// No description provided for @low.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get low;
+
+  /// No description provided for @medium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get medium;
+
+  /// No description provided for @high.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get high;
+
+  /// No description provided for @websiteOrLinkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Website or link name'**
+  String get websiteOrLinkName;
+
+  /// No description provided for @linkPurpose.
+  ///
+  /// In en, this message translates to:
+  /// **'The purpose or content of this link'**
+  String get linkPurpose;
+
+  /// No description provided for @fileDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'File description'**
+  String get fileDescription;
+
+  /// No description provided for @fileExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'File explanation'**
+  String get fileExplanation;
+
+  /// No description provided for @selectDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Date'**
+  String get selectDate;
+
+  /// No description provided for @selectTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Time'**
+  String get selectTime;
+
+  /// No description provided for @clickToSelectFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Click to select file'**
+  String get clickToSelectFile;
+
+  /// No description provided for @addAccountPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Account Password'**
+  String get addAccountPassword;
+
+  /// No description provided for @recordExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Record Expense'**
+  String get recordExpense;
+
+  /// No description provided for @createSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Schedule'**
+  String get createSchedule;
+
+  /// No description provided for @addTodo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Todo'**
+  String get addTodo;
+
+  /// No description provided for @saveLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Link'**
+  String get saveLink;
+
+  /// No description provided for @saveImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Image'**
+  String get saveImage;
+
+  /// No description provided for @saveVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Video'**
+  String get saveVideo;
+
+  /// No description provided for @saveDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Document'**
+  String get saveDocument;
+
+  /// No description provided for @writeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Write Note'**
+  String get writeNote;
+
+  /// No description provided for @pleaseSelectFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select file'**
+  String get pleaseSelectFile;
+
+  /// No description provided for @saveSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Save successful'**
+  String get saveSuccess;
+
+  /// No description provided for @sectioninput.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectioninput;
+
+  /// No description provided for @inputMessageHintDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter message or drag files...(Enter to send)'**
+  String get inputMessageHintDesktop;
+
+  /// No description provided for @inputMessageHintMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter message or drag files...'**
+  String get inputMessageHintMobile;
+
+  /// No description provided for @addDescriptionText.
+  ///
+  /// In en, this message translates to:
+  /// **'Add description text...(Enter to send)'**
+  String get addDescriptionText;
+
+  /// No description provided for @sectionmenu.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionmenu;
+
+  /// No description provided for @sideMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Side Menu'**
+  String get sideMenu;
+
+  /// No description provided for @appSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'App Settings'**
+  String get appSettings;
+
+  /// No description provided for @networkDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'Network Diagnostics'**
+  String get networkDiagnostics;
+
+  /// No description provided for @currentDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Device'**
+  String get currentDevice;
+
+  /// No description provided for @systemInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'System Information'**
+  String get systemInfo;
+
+  /// No description provided for @noGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'No Group'**
+  String get noGroup;
+
+  /// No description provided for @sectionpriority.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionpriority;
+
+  /// No description provided for @highPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'High Priority'**
+  String get highPriority;
+
+  /// No description provided for @mediumPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium Priority'**
+  String get mediumPriority;
+
+  /// No description provided for @lowPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Priority'**
+  String get lowPriority;
+
+  /// No description provided for @justNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get justNow;
+
+  /// No description provided for @sectionaccount.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionaccount;
+
+  /// No description provided for @accountInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Account: {username} • Website: {website}'**
+  String accountInfo(String username, String website);
+
+  /// No description provided for @sectionforms.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionforms;
+
+  /// No description provided for @loginAccountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Login account'**
+  String get loginAccountHint;
+
+  /// No description provided for @passwordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Login password'**
+  String get passwordHint;
+
+  /// No description provided for @notesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notesLabel;
+
+  /// No description provided for @otherInfoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Other information'**
+  String get otherInfoHint;
+
+  /// No description provided for @expenseItemHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g.: Lunch, Shopping'**
+  String get expenseItemHint;
+
+  /// No description provided for @amountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'0.00'**
+  String get amountHint;
+
+  /// No description provided for @typeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get typeLabel;
+
+  /// No description provided for @categoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get categoryLabel;
+
+  /// No description provided for @categoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g.: Food, Transportation'**
+  String get categoryHint;
+
+  /// No description provided for @dateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get dateLabel;
+
+  /// No description provided for @detailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed description'**
+  String get detailsHint;
+
+  /// No description provided for @scheduleTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting, appointment, etc.'**
+  String get scheduleTitleHint;
+
+  /// No description provided for @startTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Time'**
+  String get startTimeLabel;
+
+  /// No description provided for @endTimeOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'End Time (Optional)'**
+  String get endTimeOptional;
+
+  /// No description provided for @locationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get locationLabel;
+
+  /// No description provided for @locationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting room, restaurant, etc.'**
+  String get locationHint;
+
+  /// No description provided for @detailsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get detailsLabel;
+
+  /// No description provided for @meetingDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting content, notes'**
+  String get meetingDetailsHint;
+
+  /// No description provided for @minutes5Before.
+  ///
+  /// In en, this message translates to:
+  /// **'5 minutes before'**
+  String get minutes5Before;
+
+  /// No description provided for @minutes15Before.
+  ///
+  /// In en, this message translates to:
+  /// **'15 minutes before'**
+  String get minutes15Before;
+
+  /// No description provided for @minutes30Before.
+  ///
+  /// In en, this message translates to:
+  /// **'30 minutes before'**
+  String get minutes30Before;
+
+  /// No description provided for @hour1Before.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour before'**
+  String get hour1Before;
+
+  /// No description provided for @taskLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Task'**
+  String get taskLabel;
+
+  /// No description provided for @taskRequirementsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Specific requirements, notes'**
+  String get taskRequirementsHint;
+
+  /// No description provided for @priorityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get priorityLabel;
+
+  /// No description provided for @dueDateOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Due Date (Optional)'**
+  String get dueDateOptional;
+
+  /// No description provided for @websiteLinkName.
+  ///
+  /// In en, this message translates to:
+  /// **'Website or link name'**
+  String get websiteLinkName;
+
+  /// No description provided for @urlLink.
+  ///
+  /// In en, this message translates to:
+  /// **'URL Link'**
+  String get urlLink;
+
+  /// No description provided for @sectionshare.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionshare;
+
+  /// No description provided for @confirmShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Share'**
+  String get confirmShare;
+
+  /// No description provided for @textSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Text sent'**
+  String get textSent;
+
+  /// No description provided for @fileSent.
+  ///
+  /// In en, this message translates to:
+  /// **'File sent'**
+  String get fileSent;
+
+  /// No description provided for @filesSent.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} files sent'**
+  String filesSent(int count);
 }
 
 class _AppLocalizationsDelegate

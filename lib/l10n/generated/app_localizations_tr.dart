@@ -1184,13 +1184,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get usernameEmail => 'Username/Email';
 
   @override
-  String get loginAccount => 'Login account';
+  String get loginAccount => 'Login Account';
 
   @override
   String get password => 'Password';
 
   @override
-  String get loginPassword => 'Login password';
+  String get loginPassword => 'Login Password';
 
   @override
   String get sectionchat => '';
@@ -1836,6 +1836,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get removeFromFavoritesFailed => 'Failed to remove from favorites';
 
   @override
+  String get jumpedToOriginal => 'Jumped to original message';
+
+  @override
   String get gallery => 'Gallery';
 
   @override
@@ -1905,9 +1908,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get favoritesFailed => 'Failed to add to favorites';
 
   @override
-  String get jumpedToOriginal => 'Jumped to original message';
-
-  @override
   String get fileUnavailableNoText =>
       'File unavailable and no text content to share';
 
@@ -1916,4 +1916,300 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get fileLinkCopied => 'File link copied to clipboard';
+
+  @override
+  String get saveButton => 'Save';
+
+  @override
+  String get titleLabel => 'Title';
+
+  @override
+  String get titleHint => 'Enter note title';
+
+  @override
+  String get contentLabel => 'Content';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get otherInfo => 'Other Information';
+
+  @override
+  String get expenseItem => 'Expense Item';
+
+  @override
+  String get amount => 'Amount';
+
+  @override
+  String get type => 'Type';
+
+  @override
+  String get expense => 'Expense';
+
+  @override
+  String get income => 'Income';
+
+  @override
+  String get category => 'Category';
+
+  @override
+  String get date => 'Date';
+
+  @override
+  String get detailedDescription => 'Detailed Description';
+
+  @override
+  String get scheduleTitle => 'Schedule Title';
+
+  @override
+  String get startTime => 'Start Time';
+
+  @override
+  String get location => 'Location';
+
+  @override
+  String get details => 'Details';
+
+  @override
+  String get advanceReminder => 'Advance Reminder';
+
+  @override
+  String get noReminder => 'No reminder';
+
+  @override
+  String get task => 'Task';
+
+  @override
+  String get whatToDo => 'What to do';
+
+  @override
+  String get detailedTaskDescription => 'Detailed Description';
+
+  @override
+  String get priority => 'Priority';
+
+  @override
+  String get low => 'Low';
+
+  @override
+  String get medium => 'Medium';
+
+  @override
+  String get high => 'High';
+
+  @override
+  String get websiteOrLinkName => 'Website or link name';
+
+  @override
+  String get linkPurpose => 'The purpose or content of this link';
+
+  @override
+  String get fileDescription => 'File description';
+
+  @override
+  String get fileExplanation => 'File explanation';
+
+  @override
+  String get selectDate => 'Select Date';
+
+  @override
+  String get selectTime => 'Select Time';
+
+  @override
+  String get clickToSelectFile => 'Click to select file';
+
+  @override
+  String get addAccountPassword => 'Add Account Password';
+
+  @override
+  String get recordExpense => 'Record Expense';
+
+  @override
+  String get createSchedule => 'Create Schedule';
+
+  @override
+  String get addTodo => 'Add Todo';
+
+  @override
+  String get saveLink => 'Save Link';
+
+  @override
+  String get saveImage => 'Save Image';
+
+  @override
+  String get saveVideo => 'Save Video';
+
+  @override
+  String get saveDocument => 'Save Document';
+
+  @override
+  String get writeNote => 'Write Note';
+
+  @override
+  String get pleaseSelectFile => 'Please select file';
+
+  @override
+  String get saveSuccess => 'Save successful';
+
+  @override
+  String get sectioninput => '';
+
+  @override
+  String get inputMessageHintDesktop =>
+      'Enter message or drag files...(Enter to send)';
+
+  @override
+  String get inputMessageHintMobile => 'Enter message or drag files...';
+
+  @override
+  String get addDescriptionText => 'Add description text...(Enter to send)';
+
+  @override
+  String get sectionmenu => '';
+
+  @override
+  String get sideMenu => 'Side Menu';
+
+  @override
+  String get appSettings => 'App Settings';
+
+  @override
+  String get networkDiagnostics => 'Network Diagnostics';
+
+  @override
+  String get currentDevice => 'Current Device';
+
+  @override
+  String get systemInfo => 'System Information';
+
+  @override
+  String get noGroup => 'No Group';
+
+  @override
+  String get sectionpriority => '';
+
+  @override
+  String get highPriority => 'High Priority';
+
+  @override
+  String get mediumPriority => 'Medium Priority';
+
+  @override
+  String get lowPriority => 'Low Priority';
+
+  @override
+  String get justNow => 'Just now';
+
+  @override
+  String get sectionaccount => '';
+
+  @override
+  String accountInfo(String username, String website) {
+    return 'Account: $username • Website: $website';
+  }
+
+  @override
+  String get sectionforms => '';
+
+  @override
+  String get loginAccountHint => 'Login account';
+
+  @override
+  String get passwordHint => 'Login password';
+
+  @override
+  String get notesLabel => 'Notes';
+
+  @override
+  String get otherInfoHint => 'Other information';
+
+  @override
+  String get expenseItemHint => 'e.g.: Lunch, Shopping';
+
+  @override
+  String get amountHint => '0.00';
+
+  @override
+  String get typeLabel => 'Type';
+
+  @override
+  String get categoryLabel => 'Category';
+
+  @override
+  String get categoryHint => 'e.g.: Food, Transportation';
+
+  @override
+  String get dateLabel => 'Date';
+
+  @override
+  String get detailsHint => 'Detailed description';
+
+  @override
+  String get scheduleTitleHint => 'Meeting, appointment, etc.';
+
+  @override
+  String get startTimeLabel => 'Start Time';
+
+  @override
+  String get endTimeOptional => 'End Time (Optional)';
+
+  @override
+  String get locationLabel => 'Location';
+
+  @override
+  String get locationHint => 'Meeting room, restaurant, etc.';
+
+  @override
+  String get detailsLabel => 'Details';
+
+  @override
+  String get meetingDetailsHint => 'Meeting content, notes';
+
+  @override
+  String get minutes5Before => '5 minutes before';
+
+  @override
+  String get minutes15Before => '15 minutes before';
+
+  @override
+  String get minutes30Before => '30 minutes before';
+
+  @override
+  String get hour1Before => '1 hour before';
+
+  @override
+  String get taskLabel => 'Task';
+
+  @override
+  String get taskRequirementsHint => 'Specific requirements, notes';
+
+  @override
+  String get priorityLabel => 'Priority';
+
+  @override
+  String get dueDateOptional => 'Due Date (Optional)';
+
+  @override
+  String get websiteLinkName => 'Website or link name';
+
+  @override
+  String get urlLink => 'URL Link';
+
+  @override
+  String get sectionshare => '';
+
+  @override
+  String get confirmShare => 'Confirm Share';
+
+  @override
+  String get textSent => 'Text sent';
+
+  @override
+  String get fileSent => 'File sent';
+
+  @override
+  String filesSent(int count) {
+    return '$count files sent';
+  }
 }

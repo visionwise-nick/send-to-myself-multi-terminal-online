@@ -269,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('确认分享'),
+                      title: Text(LocalizationHelper.of(context).confirmShare),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,11 +285,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('取消'),
+                              child: Text(LocalizationHelper.of(context).cancel),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('分享'),
+                              child: Text(LocalizationHelper.of(context).share),
             ),
           ],
         );
@@ -316,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             );
             // 静默模式下不显示提示消息
             if (!shareService.isSilentShareMode) {
-              _showMessage('文本已发送');
+              _showMessage(LocalizationHelper.of(context).textSent);
             }
           }
           break;
@@ -1084,27 +1084,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             // 🔥 简化的顶部栏（仅显示连接状态）
             _buildMobileAppBar(deviceName),
             
-            // 主要内容区域
+            // 主要内容区域 - 只显示聊天界面，屏蔽记忆功能
             Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(), // 禁用滑动
-                onPageChanged: (index) {
-                  setState(() {
-                    _selectedIndex = index;
-                  });
-                },
-                children: [
-                  MessagesTab(),
-                  MemoriesTab(),
-                ],
-              ),
+              child: MessagesTab(),
             ),
           ],
         ),
       ),
-      // 移动端底部导航
-      bottomNavigationBar: _buildMobileBottomNav(),
+      // 移动端底部导航 - 暂时屏蔽记忆功能
+      // bottomNavigationBar: _buildMobileBottomNav(),
     );
   }
 
@@ -1179,7 +1167,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
         children: [
                     // 群组模块
                     _buildDrawerSection(
-                      title: '群组',
+                      title: LocalizationHelper.of(context).groups,
                       child: Consumer<GroupProvider>(
                         builder: (context, groupProvider, child) {
                           final groups = groupProvider.groups;
@@ -1223,7 +1211,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                 color: Colors.red.shade600,
               ),
               label: Text(
-                '退出登录',
+                LocalizationHelper.of(context).logout,
                 style: TextStyle(
                   color: Colors.red.shade600,
                             fontSize: 14,
@@ -1348,7 +1336,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     return Consumer<GroupProvider>(
       builder: (context, groupProvider, child) {
         final currentGroup = groupProvider.currentGroup;
-        final groupName = currentGroup?['name'] ?? '无群组';
+        final groupName = currentGroup?['name'] ?? LocalizationHelper.of(context).noGroup;
         
     return Container(
           padding: const EdgeInsets.fromLTRB(4, 4, 8, 4), // 🔥 进一步压缩高度
@@ -1473,16 +1461,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     );
           }
 
-  // 🔥 优化：桌面端主内容区
+  // 🔥 优化：桌面端主内容区 - 屏蔽记忆功能，只显示聊天
   Widget _buildDesktopMainContent() {
-    switch (_selectedIndex) {
-      case 0:
-        return const MessagesTab();
-      case 1:
-        return const MemoriesTab();
-      default:
-        return const MessagesTab();
-        }
+    // 暂时屏蔽记忆功能，只显示聊天界面
+    return const MessagesTab();
   }
 
   // 🔥 桌面端底部操作区
