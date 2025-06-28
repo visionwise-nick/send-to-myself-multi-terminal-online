@@ -5724,7 +5724,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 新增：处理粘贴文件功能（桌面端）
+    // 🔥 新增：处理粘贴文件功能（桌面端）
   Future<void> _handlePasteFiles() async {
     try {
       // 判断是否为桌面端
@@ -5732,29 +5732,35 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       
       if (!isDesktop) return;
       
-      print('🔄 检测粘贴文件...');
+      print('🔄 检测粘贴内容...');
       
-      // 获取剪贴板数据
+      // 首先尝试获取图片数据
+      bool hasImageData = await _tryPasteImageData();
+      if (hasImageData) {
+        return;
+      }
+      
+      // 获取剪贴板文本数据
       final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
       
       // 尝试从剪贴板获取文件路径
       if (clipboardData?.text != null) {
         final clipboardText = clipboardData!.text!.trim();
         
-                 // 检查是否为文件路径
-         if (await _isValidFilePath(clipboardText)) {
-           final file = File(clipboardText);
-           final fileName = file.path.split('/').last;
-           final fileSize = await file.length();
-           await _addFileToPreview(file, fileName, fileSize);
-           
-           if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-               SnackBar(content: Text('已从剪贴板添加文件: $fileName')),
-             );
-           }
-           return;
-         }
+        // 检查是否为文件路径
+        if (await _isValidFilePath(clipboardText)) {
+          final file = File(clipboardText);
+          final fileName = file.path.split('/').last;
+          final fileSize = await file.length();
+          await _addFileToPreview(file, fileName, fileSize);
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('已从剪贴板添加文件: $fileName')),
+            );
+          }
+          return;
+        }
       }
       
       // 如果是macOS，尝试使用AppleScript获取剪贴板中的文件
@@ -5765,22 +5771,22 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             'tell application "Finder" to get POSIX path of (the clipboard as alias)'
           ]);
           
-                     if (result.exitCode == 0) {
-             final filePath = result.stdout.toString().trim();
-             if (await _isValidFilePath(filePath)) {
-               final file = File(filePath);
-               final fileName = file.path.split('/').last;
-               final fileSize = await file.length();
-               await _addFileToPreview(file, fileName, fileSize);
-               
-               if (mounted) {
-                 ScaffoldMessenger.of(context).showSnackBar(
-                   SnackBar(content: Text('已从剪贴板添加文件: $fileName')),
-                 );
-               }
-               return;
-             }
-           }
+          if (result.exitCode == 0) {
+            final filePath = result.stdout.toString().trim();
+            if (await _isValidFilePath(filePath)) {
+              final file = File(filePath);
+              final fileName = file.path.split('/').last;
+              final fileSize = await file.length();
+              await _addFileToPreview(file, fileName, fileSize);
+              
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('已从剪贴板添加文件: $fileName')),
+                );
+              }
+              return;
+            }
+          }
         } catch (e) {
           print('macOS剪贴板文件获取失败: $e');
         }
@@ -5789,7 +5795,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       // 如果没有找到文件，提示用户
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('剪贴板中没有找到文件')),
+          const SnackBar(content: Text('剪贴板中没有找到文件或图片')),
         );
       }
       
@@ -5800,6 +5806,154 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           const SnackBar(content: Text('粘贴文件失败')),
         );
       }
+    }
+  }
+
+  // 🔥 新增：尝试粘贴图片数据
+  Future<bool> _tryPasteImageData() async {
+    try {
+      if (Platform.isMacOS) {
+        // macOS: 使用AppleScript获取剪贴板中的图片数据
+        final result = await Process.run('osascript', [
+          '-e',
+          '''
+          try
+            set imageData to (the clipboard as «class PNGf»)
+            set tempFile to (path to temporary items as text) & "clipboard_image.png"
+            set fileRef to open for access file tempFile with write permission
+            write imageData to fileRef
+            close access fileRef
+            return POSIX path of tempFile
+          on error
+            try
+              set imageData to (the clipboard as «class TIFF»)
+              set tempFile to (path to temporary items as text) & "clipboard_image.tiff"
+              set fileRef to open for access file tempFile with write permission
+              write imageData to fileRef
+              close access fileRef
+              return POSIX path of tempFile
+            on error
+              return "NO_IMAGE"
+            end try
+          end try
+          '''
+        ]);
+        
+        if (result.exitCode == 0) {
+          final tempFilePath = result.stdout.toString().trim();
+          if (tempFilePath != "NO_IMAGE" && await File(tempFilePath).exists()) {
+            final tempFile = File(tempFilePath);
+            final fileName = 'clipboard_image_${DateTime.now().millisecondsSinceEpoch}.${tempFilePath.split('.').last}';
+            final fileSize = await tempFile.length();
+            
+            // 将临时文件复制到应用目录
+            final appDir = await getApplicationDocumentsDirectory();
+            final newFile = File('${appDir.path}/$fileName');
+            await tempFile.copy(newFile.path);
+            
+            // 删除临时文件
+            try {
+              await tempFile.delete();
+            } catch (e) {
+              print('删除临时文件失败: $e');
+            }
+            
+            await _addFileToPreview(newFile, fileName, fileSize);
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('已从剪贴板添加图片')),
+              );
+            }
+            return true;
+          }
+        }
+      } else if (Platform.isWindows) {
+        // Windows: 使用PowerShell获取剪贴板图片
+        final result = await Process.run('powershell', [
+          '-Command',
+          '''
+          Add-Type -AssemblyName System.Windows.Forms
+          if ([System.Windows.Forms.Clipboard]::ContainsImage()) {
+            \$image = [System.Windows.Forms.Clipboard]::GetImage()
+            \$tempPath = [System.IO.Path]::GetTempFileName() + ".png"
+            \$image.Save(\$tempPath, [System.Drawing.Imaging.ImageFormat]::Png)
+            Write-Output \$tempPath
+          } else {
+            Write-Output "NO_IMAGE"
+          }
+          '''
+        ]);
+        
+        if (result.exitCode == 0) {
+          final tempFilePath = result.stdout.toString().trim();
+          if (tempFilePath != "NO_IMAGE" && await File(tempFilePath).exists()) {
+            final tempFile = File(tempFilePath);
+            final fileName = 'clipboard_image_${DateTime.now().millisecondsSinceEpoch}.png';
+            final fileSize = await tempFile.length();
+            
+            // 将临时文件复制到应用目录
+            final appDir = await getApplicationDocumentsDirectory();
+            final newFile = File('${appDir.path}/$fileName');
+            await tempFile.copy(newFile.path);
+            
+            // 删除临时文件
+            try {
+              await tempFile.delete();
+            } catch (e) {
+              print('删除临时文件失败: $e');
+            }
+            
+            await _addFileToPreview(newFile, fileName, fileSize);
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('已从剪贴板添加图片')),
+              );
+            }
+            return true;
+          }
+        }
+      } else if (Platform.isLinux) {
+        // Linux: 使用xclip获取剪贴板图片
+        try {
+          final result = await Process.run('xclip', [
+            '-selection',
+            'clipboard',
+            '-t',
+            'image/png',
+            '-o'
+          ]);
+          
+          if (result.exitCode == 0 && result.stdout is List<int>) {
+            final imageBytes = result.stdout as List<int>;
+            if (imageBytes.isNotEmpty) {
+              final fileName = 'clipboard_image_${DateTime.now().millisecondsSinceEpoch}.png';
+              final appDir = await getApplicationDocumentsDirectory();
+              final newFile = File('${appDir.path}/$fileName');
+              
+              await newFile.writeAsBytes(imageBytes);
+              final fileSize = await newFile.length();
+              
+              await _addFileToPreview(newFile, fileName, fileSize);
+              
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('已从剪贴板添加图片')),
+                );
+              }
+              return true;
+            }
+          }
+        } catch (e) {
+          print('Linux剪贴板图片获取失败: $e');
+        }
+      }
+      
+      return false;
+    } catch (e) {
+      print('粘贴图片数据失败: $e');
+      return false;
     }
   }
 
