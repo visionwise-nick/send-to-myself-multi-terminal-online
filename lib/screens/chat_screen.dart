@@ -36,6 +36,8 @@ import 'package:share_plus/share_plus.dart'; // 🔥 新增：系统分享功能
 // 🔥 新增：桌面端右键菜单支持
 import 'package:context_menus/context_menus.dart';
 
+
+
 import '../services/websocket_manager.dart' as ws_manager; // 🔥 修复：使用别名避免命名冲突
 import '../utils/localization_helper.dart';
 
@@ -2316,10 +2318,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 桌面端剪贴板处理（简化版，只支持文本）
+  // 🔥 桌面端剪贴板处理（暂时只支持文本）
   Future<void> _handleDesktopClipboardPaste() async {
-    // 暂时使用传统的剪贴板API，直到重新实现文件剪贴板功能
-      await _handleMobileClipboardPaste();
+    // 暂时使用传统的剪贴板API处理文本
+    await _handleMobileClipboardPaste();
   }
 
   // 🔥 移动端剪贴板处理（传统API，只支持文本）
@@ -5762,11 +5764,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       
       print('🔄 检测粘贴内容...');
       
-      // 首先尝试获取文件数据（图片、视频、文档等）
-      bool hasFileData = await _tryPasteFileData();
-      if (hasFileData) {
-        return;
-      }
+      // 桌面端暂时只支持文本粘贴，文件请使用拖拽功能
+      print('桌面端粘贴：建议使用拖拽功能添加文件');
       
       // 获取剪贴板文本数据
       final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
@@ -5823,7 +5822,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       // 如果没有找到文件，提示用户
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('剪贴板中没有找到文件')),
+          const SnackBar(
+            content: Text('剪贴板中没有找到文本。如需添加文件，请直接拖拽到窗口中'),
+            duration: Duration(seconds: 3),
+          ),
         );
       }
       
@@ -5837,259 +5839,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 新增：尝试粘贴文件数据（支持图片、视频、文档等）
-  Future<bool> _tryPasteFileData() async {
-    try {
-      if (Platform.isMacOS) {
-        // macOS: 使用AppleScript获取剪贴板中的文件数据
-        final result = await Process.run('osascript', [
-          '-e',
-          '''
-          try
-            -- 尝试获取文件URL列表
-            set fileList to (the clipboard as «class furl»)
-            set filePaths to {}
-            repeat with fileItem in fileList
-              set end of filePaths to POSIX path of fileItem
-            end repeat
-            return item 1 of filePaths
-          on error
-            try
-              -- 尝试获取单个文件URL
-              set fileURL to (the clipboard as «class furl»)
-              return POSIX path of fileURL
-            on error
-              try
-                -- 尝试获取PNG图片数据
-                set imageData to (the clipboard as «class PNGf»)
-                set tempFile to (path to temporary items as text) & "clipboard_image_" & (current date) & ".png"
-                set fileRef to open for access file tempFile with write permission
-                write imageData to fileRef
-                close access fileRef
-                return POSIX path of tempFile
-              on error
-                try
-                  -- 尝试获取TIFF图片数据
-                  set imageData to (the clipboard as «class TIFF»)
-                  set tempFile to (path to temporary items as text) & "clipboard_image_" & (current date) & ".tiff"
-                  set fileRef to open for access file tempFile with write permission
-                  write imageData to fileRef
-                  close access fileRef
-                  return POSIX path of tempFile
-                on error
-                  try
-                    -- 尝试获取JPEG图片数据
-                    set imageData to (the clipboard as «class JPEG»)
-                    set tempFile to (path to temporary items as text) & "clipboard_image_" & (current date) & ".jpg"
-                    set fileRef to open for access file tempFile with write permission
-                    write imageData to fileRef
-                    close access fileRef
-                    return POSIX path of tempFile
-                  on error
-                    return "NO_FILE"
-                  end try
-                end try
-              end try
-            end try
-          end try
-          '''
-        ]);
-        
-        if (result.exitCode == 0) {
-          final tempFilePath = result.stdout.toString().trim();
-          if (tempFilePath != "NO_FILE" && await File(tempFilePath).exists()) {
-            final tempFile = File(tempFilePath);
-            final originalFileName = tempFile.path.split('/').last;
-            final extension = originalFileName.split('.').last;
-            final fileName = 'clipboard_file_${DateTime.now().millisecondsSinceEpoch}.$extension';
-            final fileSize = await tempFile.length();
-            
-            // 将临时文件复制到应用目录
-            final appDir = await getApplicationDocumentsDirectory();
-            final newFile = File('${appDir.path}/$fileName');
-            await tempFile.copy(newFile.path);
-            
-            // 如果是临时文件，删除它
-            if (tempFile.path.contains('temporary items') || tempFile.path.contains('/tmp/')) {
-              try {
-                await tempFile.delete();
-              } catch (e) {
-                print('删除临时文件失败: $e');
-              }
-            }
-            
-            await _addFileToPreview(newFile, fileName, fileSize);
-            
-            final fileType = _getFileTypeFromExtension(extension);
-            final fileTypeText = _getFileTypeDisplayName(fileType);
-            
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('已从剪贴板添加$fileTypeText: $fileName')),
-              );
-            }
-            return true;
-          }
-        }
-      } else if (Platform.isWindows) {
-        // Windows: 使用PowerShell获取剪贴板文件
-        final result = await Process.run('powershell', [
-          '-Command',
-          '''
-          Add-Type -AssemblyName System.Windows.Forms
-          
-          # 尝试获取文件列表
-          if ([System.Windows.Forms.Clipboard]::ContainsFileDropList()) {
-            \$files = [System.Windows.Forms.Clipboard]::GetFileDropList()
-            if (\$files.Count -gt 0) {
-              Write-Output \$files[0]
-              exit
-            }
-          }
-          
-          # 尝试获取图片
-          if ([System.Windows.Forms.Clipboard]::ContainsImage()) {
-            \$image = [System.Windows.Forms.Clipboard]::GetImage()
-            \$tempPath = [System.IO.Path]::GetTempFileName() + ".png"
-            \$image.Save(\$tempPath, [System.Drawing.Imaging.ImageFormat]::Png)
-            Write-Output \$tempPath
-            exit
-          }
-          
-          # 尝试获取文本（可能是文件路径）
-          if ([System.Windows.Forms.Clipboard]::ContainsText()) {
-            \$text = [System.Windows.Forms.Clipboard]::GetText()
-            if (Test-Path \$text) {
-              Write-Output \$text
-              exit
-            }
-          }
-          
-          Write-Output "NO_FILE"
-          '''
-        ]);
-        
-        if (result.exitCode == 0) {
-          final tempFilePath = result.stdout.toString().trim();
-          if (tempFilePath != "NO_FILE" && await File(tempFilePath).exists()) {
-            final tempFile = File(tempFilePath);
-            final originalFileName = tempFile.path.split('\\').last;
-            final extension = originalFileName.split('.').last;
-            final fileName = 'clipboard_file_${DateTime.now().millisecondsSinceEpoch}.$extension';
-            final fileSize = await tempFile.length();
-            
-            // 将临时文件复制到应用目录
-            final appDir = await getApplicationDocumentsDirectory();
-            final newFile = File('${appDir.path}/$fileName');
-            await tempFile.copy(newFile.path);
-            
-            // 如果是临时文件，删除它
-            if (tempFile.path.contains('Temp') || tempFile.path.contains('tmp')) {
-              try {
-                await tempFile.delete();
-              } catch (e) {
-                print('删除临时文件失败: $e');
-              }
-            }
-            
-            await _addFileToPreview(newFile, fileName, fileSize);
-            
-            final fileType = _getFileTypeFromExtension(extension);
-            final fileTypeText = _getFileTypeDisplayName(fileType);
-            
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('已从剪贴板添加$fileTypeText: $fileName')),
-              );
-            }
-            return true;
-          }
-        }
-      } else if (Platform.isLinux) {
-        // Linux: 使用xclip获取剪贴板文件
-        try {
-          // 首先尝试获取文件URI列表
-          final fileListResult = await Process.run('xclip', [
-            '-selection',
-            'clipboard',
-            '-t',
-            'text/uri-list',
-            '-o'
-          ]);
-          
-          if (fileListResult.exitCode == 0 && fileListResult.stdout.toString().trim().isNotEmpty) {
-            final uriList = fileListResult.stdout.toString().trim().split('\n');
-            for (final uri in uriList) {
-              if (uri.startsWith('file://')) {
-                final filePath = Uri.parse(uri).toFilePath();
-                if (await File(filePath).exists()) {
-                  final originalFile = File(filePath);
-                  final originalFileName = originalFile.path.split('/').last;
-                  final extension = originalFileName.split('.').last;
-                  final fileName = 'clipboard_file_${DateTime.now().millisecondsSinceEpoch}.$extension';
-                  final fileSize = await originalFile.length();
-                  
-                  // 将文件复制到应用目录
-                  final appDir = await getApplicationDocumentsDirectory();
-                  final newFile = File('${appDir.path}/$fileName');
-                  await originalFile.copy(newFile.path);
-                  
-                  await _addFileToPreview(newFile, fileName, fileSize);
-                  
-                  final fileType = _getFileTypeFromExtension(extension);
-                  final fileTypeText = _getFileTypeDisplayName(fileType);
-                  
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('已从剪贴板添加$fileTypeText: $fileName')),
-                    );
-                  }
-                  return true;
-                }
-              }
-            }
-          }
-          
-          // 如果没有文件URI，尝试获取图片数据
-          final imageResult = await Process.run('xclip', [
-            '-selection',
-            'clipboard',
-            '-t',
-            'image/png',
-            '-o'
-          ]);
-          
-          if (imageResult.exitCode == 0 && imageResult.stdout is List<int>) {
-            final imageBytes = imageResult.stdout as List<int>;
-            if (imageBytes.isNotEmpty) {
-              final fileName = 'clipboard_image_${DateTime.now().millisecondsSinceEpoch}.png';
-              final appDir = await getApplicationDocumentsDirectory();
-              final newFile = File('${appDir.path}/$fileName');
-              
-              await newFile.writeAsBytes(imageBytes);
-              final fileSize = await newFile.length();
-              
-              await _addFileToPreview(newFile, fileName, fileSize);
-              
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('已从剪贴板添加图片')),
-                );
-              }
-              return true;
-            }
-          }
-        } catch (e) {
-          print('Linux剪贴板文件获取失败: $e');
-        }
-      }
-      
-      return false;
-    } catch (e) {
-      print('粘贴图片数据失败: $e');
-      return false;
-    }
-  }
+
 
   // 🔥 新增：检查是否为有效文件路径
   Future<bool> _isValidFilePath(String path) async {
