@@ -3823,6 +3823,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                           if (event is RawKeyDownEvent) {
                             final isEnterPressed = event.logicalKey == LogicalKeyboardKey.enter;
                             final isShiftPressed = event.isShiftPressed;
+                            final isCtrlPressed = event.isControlPressed || event.isMetaPressed;
+                            final isVPressed = event.logicalKey == LogicalKeyboardKey.keyV;
+                            
+                            // 🔥 新增：Ctrl+V 粘贴文件功能
+                            if (isCtrlPressed && isVPressed) {
+                              _handlePasteFiles();
+                              return;
+                            }
                             
                             if (isEnterPressed && !isShiftPressed) {
                               // 🔥 修改：发送带文件的消息
@@ -5715,6 +5723,97 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       }
     }
   }
+
+  // 🔥 新增：处理粘贴文件功能（桌面端）
+  Future<void> _handlePasteFiles() async {
+    try {
+      // 判断是否为桌面端
+      final isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+      
+      if (!isDesktop) return;
+      
+      print('🔄 检测粘贴文件...');
+      
+      // 获取剪贴板数据
+      final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+      
+      // 尝试从剪贴板获取文件路径
+      if (clipboardData?.text != null) {
+        final clipboardText = clipboardData!.text!.trim();
+        
+                 // 检查是否为文件路径
+         if (await _isValidFilePath(clipboardText)) {
+           final file = File(clipboardText);
+           final fileName = file.path.split('/').last;
+           final fileSize = await file.length();
+           await _addFileToPreview(file, fileName, fileSize);
+           
+           if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(content: Text('已从剪贴板添加文件: $fileName')),
+             );
+           }
+           return;
+         }
+      }
+      
+      // 如果是macOS，尝试使用AppleScript获取剪贴板中的文件
+      if (Platform.isMacOS) {
+        try {
+          final result = await Process.run('osascript', [
+            '-e',
+            'tell application "Finder" to get POSIX path of (the clipboard as alias)'
+          ]);
+          
+                     if (result.exitCode == 0) {
+             final filePath = result.stdout.toString().trim();
+             if (await _isValidFilePath(filePath)) {
+               final file = File(filePath);
+               final fileName = file.path.split('/').last;
+               final fileSize = await file.length();
+               await _addFileToPreview(file, fileName, fileSize);
+               
+               if (mounted) {
+                 ScaffoldMessenger.of(context).showSnackBar(
+                   SnackBar(content: Text('已从剪贴板添加文件: $fileName')),
+                 );
+               }
+               return;
+             }
+           }
+        } catch (e) {
+          print('macOS剪贴板文件获取失败: $e');
+        }
+      }
+      
+      // 如果没有找到文件，提示用户
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('剪贴板中没有找到文件')),
+        );
+      }
+      
+    } catch (e) {
+      print('粘贴文件失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('粘贴文件失败')),
+        );
+      }
+    }
+  }
+
+  // 🔥 新增：检查是否为有效文件路径
+  Future<bool> _isValidFilePath(String path) async {
+    try {
+      final file = File(path);
+      return await file.exists();
+    } catch (e) {
+      return false;
+    }
+  }
+
+
 
   // 🔥 新增：复制文件路径
   Future<void> _copyFilePath(String filePath) async {

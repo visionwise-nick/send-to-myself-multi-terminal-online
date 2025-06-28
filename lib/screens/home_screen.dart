@@ -531,8 +531,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                         
               const SizedBox(height: 16),
               
-              // 🔥 重新设计：导航模块（与群组并列）
-              _buildNavigationSection(),
+              // 🔥 桌面端导航模块已屏蔽 - 只显示聊天功能
+              // _buildNavigationSection(),
               
               const Spacer(),
               
