@@ -5764,20 +5764,17 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       
       print('🔄 检测粘贴内容...');
       
-      // 桌面端暂时只支持文本粘贴，文件请使用拖拽功能
-      print('桌面端粘贴：建议使用拖拽功能添加文件');
-      
       // 获取剪贴板文本数据
       final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
       
-      // 尝试从剪贴板获取文件路径
       if (clipboardData?.text != null) {
         final clipboardText = clipboardData!.text!.trim();
         
-        // 检查是否为文件路径
+        // 首先检查是否为文件路径
         if (await _isValidFilePath(clipboardText)) {
+          print('🔥 检测到文件路径: $clipboardText');
           final file = File(clipboardText);
-          final fileName = file.path.split('/').last;
+          final fileName = file.path.split(Platform.isWindows ? '\\' : '/').last;
           final fileSize = await file.length();
           await _addFileToPreview(file, fileName, fileSize);
           
@@ -5788,19 +5785,92 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           }
           return;
         }
+        
+        // 如果不是文件路径，检查是否包含多个文件路径（换行分隔）
+        final lines = clipboardText.split('\n');
+        if (lines.length > 1) {
+          bool hasValidFiles = false;
+          for (final line in lines) {
+            final trimmedLine = line.trim();
+            if (trimmedLine.isNotEmpty && await _isValidFilePath(trimmedLine)) {
+              final file = File(trimmedLine);
+              final fileName = file.path.split(Platform.isWindows ? '\\' : '/').last;
+              final fileSize = await file.length();
+              await _addFileToPreview(file, fileName, fileSize);
+              hasValidFiles = true;
+            }
+          }
+          
+          if (hasValidFiles) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('已从剪贴板添加 ${lines.length} 个文件')),
+              );
+            }
+            return;
+          }
+        }
+        
+        // 如果不是文件路径，作为普通文本粘贴到输入框
+        _messageController.text = _messageController.text + clipboardText;
+        setState(() {
+          _isTyping = _messageController.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
+        });
+        print('✅ 粘贴文本到输入框: ${clipboardText.length} 个字符');
+        return;
       }
       
       // 如果是macOS，尝试使用AppleScript获取剪贴板中的文件
       if (Platform.isMacOS) {
         try {
-          final result = await Process.run('osascript', [
+          // 方法1：尝试获取文件URL
+          final result1 = await Process.run('osascript', [
             '-e',
-            'tell application "Finder" to get POSIX path of (the clipboard as alias)'
+            '''
+            try
+              set fileURL to (the clipboard as «class furl»)
+              return POSIX path of fileURL
+            on error
+              return "NO_FILE"
+            end try
+            '''
           ]);
           
-          if (result.exitCode == 0) {
-            final filePath = result.stdout.toString().trim();
-            if (await _isValidFilePath(filePath)) {
+          if (result1.exitCode == 0) {
+            final filePath = result1.stdout.toString().trim();
+            if (filePath != "NO_FILE" && await _isValidFilePath(filePath)) {
+              print('🔥 macOS检测到文件URL: $filePath');
+              final file = File(filePath);
+              final fileName = file.path.split('/').last;
+              final fileSize = await file.length();
+              await _addFileToPreview(file, fileName, fileSize);
+              
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('已从剪贴板添加文件: $fileName')),
+                );
+              }
+              return;
+            }
+          }
+          
+          // 方法2：尝试获取alias
+          final result2 = await Process.run('osascript', [
+            '-e',
+            '''
+            try
+              set fileAlias to (the clipboard as alias)
+              return POSIX path of fileAlias
+            on error
+              return "NO_FILE"
+            end try
+            '''
+          ]);
+          
+          if (result2.exitCode == 0) {
+            final filePath = result2.stdout.toString().trim();
+            if (filePath != "NO_FILE" && await _isValidFilePath(filePath)) {
+              print('🔥 macOS检测到文件alias: $filePath');
               final file = File(filePath);
               final fileName = file.path.split('/').last;
               final fileSize = await file.length();
@@ -5844,7 +5914,29 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 🔥 新增：检查是否为有效文件路径
   Future<bool> _isValidFilePath(String path) async {
     try {
-      final file = File(path);
+      if (path.isEmpty) return false;
+      
+      // 清理路径
+      String cleanPath = path.trim();
+      
+      // 移除可能的引号
+      if (cleanPath.startsWith('"') && cleanPath.endsWith('"')) {
+        cleanPath = cleanPath.substring(1, cleanPath.length - 1);
+      }
+      if (cleanPath.startsWith("'") && cleanPath.endsWith("'")) {
+        cleanPath = cleanPath.substring(1, cleanPath.length - 1);
+      }
+      
+      // 检查是否看起来像文件路径
+      final isWindowsPath = RegExp(r'^[A-Za-z]:\\').hasMatch(cleanPath);
+      final isUnixPath = cleanPath.startsWith('/');
+      final hasFileExtension = RegExp(r'\.[a-zA-Z0-9]{1,10}$').hasMatch(cleanPath);
+      
+      if (!isWindowsPath && !isUnixPath && !hasFileExtension) {
+        return false;
+      }
+      
+      final file = File(cleanPath);
       return await file.exists();
     } catch (e) {
       return false;
