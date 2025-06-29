@@ -4,6 +4,8 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../config/app_config.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import '../config/debug_config.dart';
+import '../config/sync_config.dart';
 
 enum ConnectionState {
   disconnected,
@@ -77,7 +79,7 @@ class WebSocketManager {
     required String token,
   }) async {
     try {
-      _log('🚀 初始化WebSocket连接...');
+      _log('初始化WebSocket连接...');
       _deviceId = deviceId;
       _token = token;
       
@@ -1054,9 +1056,7 @@ class WebSocketManager {
 
   /// 日志输出
   void _log(String message) {
-    if (AppConfig.DEBUG_WEBSOCKET) {
-      print('🔌 WebSocketManager: $message');
-    }
+    DebugConfig.debugPrint('WebSocketManager: $message', module: 'WEBSOCKET');
   }
 
   /// 发送消息
@@ -1126,7 +1126,7 @@ class WebSocketManager {
     _stopMessageReceiveTest();
     
     // 每2分钟测试一次消息接收能力
-    _messageReceiveTestTimer = Timer.periodic(Duration(minutes: 2), (_) {
+    _messageReceiveTestTimer = Timer.periodic(SyncConfig.messageReceiveTestInterval, (_) {
       _performMessageReceiveTest();
     });
   }
@@ -1171,7 +1171,7 @@ class WebSocketManager {
     _stopActiveSync();
     
     // 每5分钟主动同步一次消息和状态
-    _activeSyncTimer = Timer.periodic(Duration(minutes: 5), (_) {
+    _activeSyncTimer = Timer.periodic(SyncConfig.syncInterval, (_) {
       _performActiveSync();
     });
   }

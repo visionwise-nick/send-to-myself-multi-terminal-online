@@ -1464,7 +1464,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   // 🔥 优化：桌面端主内容区 - 屏蔽记忆功能，只显示聊天
   Widget _buildDesktopMainContent() {
     // 暂时屏蔽记忆功能，只显示聊天界面
-    return const MessagesTab();
+        return const MessagesTab();
   }
 
   // 🔥 桌面端底部操作区

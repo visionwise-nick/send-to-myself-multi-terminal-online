@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/debug_config.dart';
 
 class MessageActionsService {
   final Dio _dio = Dio();
@@ -233,7 +234,7 @@ class MessageActionsService {
       await Clipboard.setData(ClipboardData(text: text));
       return true;
     } catch (e) {
-      print('复制文本失败: $e');
+      DebugConfig.copyPasteDebug('复制文本失败: $e');
       return false;
     }
   }

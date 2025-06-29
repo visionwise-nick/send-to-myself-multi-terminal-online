@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path/path.dart' as path;
+import '../config/debug_config.dart';
 
 /// 本地存储服务
 /// 使用应用支持目录存储重要数据，确保应用更新后数据不丢失
@@ -70,10 +71,10 @@ class LocalStorageService {
         await _updateFileMapping(fileUrl, targetFile.path, fileName, fileSize);
       }
       
-      print('文件已复制到永久存储: $fileName -> ${targetFile.path}');
+              DebugConfig.debugPrint('文件已复制到永久存储: $fileName -> ${targetFile.path}', module: 'FILE');
       return targetFile.path;
     } catch (e) {
-      print('复制文件到永久存储失败: $e');
+      DebugConfig.errorPrint('复制文件到永久存储失败: $e', module: 'FILE');
       return null;
     }
   }

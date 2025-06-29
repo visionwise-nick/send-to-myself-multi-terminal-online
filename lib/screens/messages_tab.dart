@@ -371,7 +371,7 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
             l10n.clickGroupSelectorHint,
             style: AppTheme.captionStyle,
           ),
-        ],
+      ],
       ),
     );
   }

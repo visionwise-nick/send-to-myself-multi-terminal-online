@@ -442,14 +442,14 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
                               color: Colors.grey[400],
                             ),
                             const SizedBox(height: 16),
-                                        Text(
+                            Text(
               LocalizationHelper.of(context).cameraUnavailable,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
-            ),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[700],
+                              ),
+                            ),
                             const SizedBox(height: 8),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 32),

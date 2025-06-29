@@ -38,6 +38,7 @@ import 'package:context_menus/context_menus.dart';
 
 import '../services/websocket_manager.dart' as ws_manager; // 🔥 修复：使用别名避免命名冲突
 import '../utils/localization_helper.dart';
+import '../config/debug_config.dart';
 
 // 文件下载处理器类
 class FileDownloadHandler {
@@ -55,7 +56,7 @@ class FileDownloadHandler {
         try {
           return Uri.decodeComponent(match.group(1)!);
         } catch (e) {
-          print('RFC 5987 解码失败: $e');
+          DebugConfig.errorPrint('RFC 5987 解码失败: $e', module: 'FILE');
         }
       }
       
@@ -74,9 +75,9 @@ class FileDownloadHandler {
         String base64Filename = base64FilenameList.first;
         List<int> bytes = base64Decode(base64Filename);
         return utf8.decode(bytes);
-      } catch (e) {
-        print('Base64 解码失败: $e');
-      }
+              } catch (e) {
+          DebugConfig.errorPrint('Base64 解码失败: $e', module: 'FILE');
+        }
     }
     
     // 默认返回
@@ -111,7 +112,7 @@ class FileDownloadHandler {
       var digest = sha256.convert(bytes);
       return digest.toString();
     } catch (e) {
-      print('计算文件哈希失败: $e');
+      DebugConfig.errorPrint('计算文件哈希失败: $e', module: 'FILE');
       return '';
     }
   }
@@ -246,17 +247,17 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       
       final isConnected = state == ws_manager.ConnectionState.connected;
       
-      print('🔌 WebSocket连接状态变化: $state, 当前连接: $_isWebSocketConnected -> $isConnected');
+      DebugConfig.debugPrint('WebSocket连接状态变化: $state, 当前连接: $_isWebSocketConnected -> $isConnected', module: 'WEBSOCKET');
       
       // 检测从断线到重连的状态变化
       if (!_isWebSocketConnected && isConnected) {
         // 从断线状态恢复到连接状态
-        print('🔄 检测到WebSocket重连成功，开始执行离线消息同步...');
+                  DebugConfig.debugPrint('检测到WebSocket重连成功，开始执行离线消息同步...', module: 'WEBSOCKET');
         _wasOfflineBeforeReconnect = true;
         _handleWebSocketReconnected();
       } else if (_isWebSocketConnected && !isConnected) {
         // 从连接状态变为断线状态
-        print('⚠️ 检测到WebSocket断线，记录断线时间');
+                  DebugConfig.debugPrint('检测到WebSocket断线，记录断线时间', module: 'WEBSOCKET');
         _lastDisconnectTime = DateTime.now();
         _handleWebSocketDisconnected();
       }
@@ -1746,9 +1747,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         file.path, 
         fileName
       );
-      print('文件已复制到永久存储: $fileName -> $permanentFilePath');
+                  DebugConfig.debugPrint('文件已复制到永久存储: $fileName -> $permanentFilePath', module: 'FILE');
     } catch (e) {
-      print('复制文件到永久存储失败: $e');
+              DebugConfig.errorPrint('复制文件到永久存储失败: $e', module: 'FILE');
       // 如果复制失败，仍然继续发送，但使用原始路径
       permanentFilePath = file.path;
     }
@@ -2303,7 +2304,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         await _handleMobileClipboardPaste();
       }
     } catch (e) {
-      print('❌ 剪贴板粘贴失败: $e');
+      DebugConfig.copyPasteDebug('剪贴板粘贴失败: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -2332,7 +2333,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         setState(() {
           _isTyping = _messageController.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
         });
-        print('✅ 粘贴文本到输入框: ${data.text!.length} 个字符');
+        DebugConfig.copyPasteDebug('粘贴文本到输入框: ${data.text!.length} 个字符');
       }
     } catch (e) {
       print('❌ 移动端剪贴板处理失败: $e');
@@ -3824,7 +3825,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                             Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
                             LogicalKeyboardKey.keyV,
                           ): () {
-                            print('🎯 检测到粘贴快捷键，开始处理粘贴...');
+                            DebugConfig.copyPasteDebug('检测到粘贴快捷键，开始处理粘贴...');
                             _handlePasteFiles();
                           },
                         },
@@ -5677,7 +5678,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 🔥 新增：复制文件到剪贴板（桌面端）- 真正的文件复制
   Future<void> _copyFileToClipboard(String filePath) async {
     try {
-      print('🔄 开始复制文件: $filePath');
+      DebugConfig.copyPasteDebug('开始复制文件: $filePath');
       
       // 首先检查文件是否存在
       if (!File(filePath).existsSync()) {
@@ -5695,28 +5696,58 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       
       if (isDesktop) {
         if (Platform.isMacOS) {
-          // macOS: 使用最简单的AppleScript复制文件
-          final result = await Process.run('osascript', [
+          // macOS: 尝试多种方法复制文件到剪贴板
+          DebugConfig.copyPasteDebug('开始macOS文件复制: $filePath');
+          
+          // 方法1: 使用最直接的AppleScript
+          var result = await Process.run('osascript', [
             '-e',
-            'tell application "Finder" to set the clipboard to (POSIX file "$filePath" as alias)'
+            '''
+            tell application "Finder"
+              set theFile to POSIX file "$filePath" as alias
+              set the clipboard to theFile
+            end tell
+            '''
           ]);
           
-          print('🍎 macOS文件复制结果: ${result.exitCode}');
+          print('🔄 方法1结果: ${result.exitCode}');
           print('📤 输出: ${result.stdout}');
           print('❌ 错误: ${result.stderr}');
           
+          if (result.exitCode != 0) {
+            // 方法2: 使用更简单的语法
+            print('🔄 尝试方法2...');
+            result = await Process.run('osascript', [
+              '-e',
+              'set the clipboard to (POSIX file "$filePath" as alias)'
+            ]);
+            
+            print('🔄 方法2结果: ${result.exitCode}');
+            print('📤 输出: ${result.stdout}');
+            print('❌ 错误: ${result.stderr}');
+          }
+          
+          if (result.exitCode != 0) {
+            // 方法3: 使用pbcopy with file URL
+            print('🔄 尝试方法3...');
+            result = await Process.run('bash', [
+              '-c',
+              'echo "file://$filePath" | pbcopy'
+            ]);
+            
+            print('🔄 方法3结果: ${result.exitCode}');
+          }
+          
           if (result.exitCode == 0) {
-            // 成功复制文件对象到剪贴板
-            print('✅ 文件对象已成功复制到剪贴板');
+            DebugConfig.copyPasteDebug('macOS文件复制成功');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('文件已复制到剪贴板，可以粘贴到其他应用')),
+                const SnackBar(content: Text('文件已复制到剪贴板')),
               );
             }
-            return; // 立即返回，避免后续代码覆盖剪贴板
+            return; // 立即返回
           } else {
-            // 备选方案：复制文件路径
-            print('❌ AppleScript失败，使用备选方案复制文件路径');
+            DebugConfig.copyPasteDebug('所有macOS复制方法都失败');
             await Clipboard.setData(ClipboardData(text: filePath));
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -5738,9 +5769,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             '''
           ]);
           
-          print('Windows文件复制命令执行结果: ${result.exitCode}');
-          print('Windows文件复制输出: ${result.stdout}');
-          print('Windows文件复制错误: ${result.stderr}');
+          DebugConfig.copyPasteDebug('Windows文件复制命令执行结果: ${result.exitCode}');
+          DebugConfig.copyPasteDebug('Windows文件复制输出: ${result.stdout}');
+          DebugConfig.copyPasteDebug('Windows文件复制错误: ${result.stderr}');
           
           if (result.exitCode != 0) {
             print('Windows文件复制失败，尝试备选方案');
@@ -5772,9 +5803,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             'printf "$fileUri\\r\\n" | xclip -selection clipboard -t text/uri-list'
           ]);
           
-          print('Linux文件复制命令执行结果: ${result.exitCode}');
-          print('Linux文件复制输出: ${result.stdout}');
-          print('Linux文件复制错误: ${result.stderr}');
+          DebugConfig.copyPasteDebug('Linux文件复制命令执行结果: ${result.exitCode}');
+          DebugConfig.copyPasteDebug('Linux文件复制输出: ${result.stdout}');
+          DebugConfig.copyPasteDebug('Linux文件复制错误: ${result.stderr}');
           
           if (result.exitCode != 0) {
             print('Linux文件复制失败，尝试备选方案');
@@ -5801,7 +5832,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         }
         
         // 如果执行到这里，说明所有平台都成功了
-        print('✅ 文件已复制到剪贴板: $filePath');
+        DebugConfig.copyPasteDebug('文件已复制到剪贴板: $filePath');
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -5818,7 +5849,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         }
       }
     } catch (e) {
-      print('❌ 复制文件失败: $e');
+      DebugConfig.copyPasteDebug('复制文件失败: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('复制文件失败: $e')),
@@ -5830,12 +5861,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       // 🔥 新增：处理粘贴文件功能（桌面端）- 改进版本
   Future<void> _handlePasteFiles() async {
     try {
-      print('🔄 开始处理粘贴功能...');
+      DebugConfig.copyPasteDebug('开始处理粘贴功能...');
       
       // 判断是否为桌面端
       final isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
       if (!isDesktop) {
-        print('❌ 非桌面端，跳过粘贴处理');
+        DebugConfig.copyPasteDebug('非桌面端，跳过粘贴处理');
         return;
       }
       
@@ -5851,7 +5882,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       }
       
       if (pastedFiles.isNotEmpty) {
-        print('✅ 从剪贴板获取到 ${pastedFiles.length} 个文件');
+        DebugConfig.copyPasteDebug('从剪贴板获取到 ${pastedFiles.length} 个文件');
         await _handleDroppedFiles(pastedFiles);
         
         if (mounted) {
@@ -5909,7 +5940,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       }
       
     } catch (e) {
-      print('❌ 粘贴文件失败: $e');
+      DebugConfig.copyPasteDebug('粘贴文件失败: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('粘贴失败: $e')),
@@ -6072,7 +6103,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         );
       }
     } catch (e) {
-      print('复制文件路径失败: $e');
+      DebugConfig.copyPasteDebug('复制文件路径失败: $e');
               _showErrorMessage(LocalizationHelper.of(context).copyFilePathFailed);
     }
   }
@@ -6091,7 +6122,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         );
       }
     } catch (e) {
-      print('复制文件链接失败: $e');
+      DebugConfig.copyPasteDebug('复制文件链接失败: $e');
       _showErrorMessage('复制文件链接失败');
     }
   }

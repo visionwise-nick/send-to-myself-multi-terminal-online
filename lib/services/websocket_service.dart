@@ -6,6 +6,7 @@ import 'websocket_manager.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import '../config/debug_config.dart';
 
 class WebSocketService {
   static final WebSocketService _instance = WebSocketService._internal();
@@ -58,13 +59,13 @@ class WebSocketService {
   // 处理来自WebSocket管理器的消息并转发到相应的流
   void _handleWebSocketManagerMessage(Map<String, dynamic> data) {
     final type = data['type'];
-    print('🌉 WebSocketService桥接消息: $type');
+    DebugConfig.debugPrint('WebSocketService桥接消息: $type', module: 'WEBSOCKET');
     
     switch (type) {
       case 'new_private_message':
       case 'new_group_message':
         // 🔥 关键修复：确保群组消息正确转发
-        print('🔥 转发聊天消息到聊天流: $type, 原始数据: $data');
+        DebugConfig.debugPrint('转发聊天消息到聊天流: $type', module: 'MESSAGE');
         
         // 🔥 重要修复：正确解析消息数据结构
         final messageData = data['data'];

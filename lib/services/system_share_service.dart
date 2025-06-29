@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:app_links/app_links.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import '../config/debug_config.dart';
 
 class SystemShareService {
   static final SystemShareService _instance = SystemShareService._internal();
@@ -237,10 +238,10 @@ class SystemShareService {
       // 复制文件
       await sourceFile.copy(targetFile.path);
       
-      print('✅ 文件已复制: ${sourceFile.path} -> ${targetFile.path}');
+              DebugConfig.debugPrint('文件已复制: ${sourceFile.path} -> ${targetFile.path}', module: 'FILE');
       return targetFile.path;
     } catch (e) {
-      print('❌ 复制分享文件失败: $e');
+              DebugConfig.errorPrint('复制分享文件失败: $e', module: 'FILE');
       rethrow;
     }
   }
