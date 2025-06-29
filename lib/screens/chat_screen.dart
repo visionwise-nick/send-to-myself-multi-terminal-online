@@ -5675,10 +5675,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 新增：复制文件到剪贴板（桌面端）- 真正的文件复制
+  // 🔥 新增：复制文件到剪贴板（简单可靠版本）
   Future<void> _copyFileToClipboard(String filePath) async {
     try {
-      DebugConfig.copyPasteDebug('开始复制文件: $filePath');
+      DebugConfig.copyPasteDebug('🚀 开始复制文件到剪贴板: $filePath');
       
       // 首先检查文件是否存在
       if (!File(filePath).existsSync()) {
@@ -5695,11 +5695,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       final isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
       
       if (isDesktop) {
+        bool success = false;
+        
         if (Platform.isMacOS) {
-          // macOS: 使用简化的文件复制方法
+          // macOS: 使用多种方法确保成功
           DebugConfig.copyPasteDebug('🍎 开始macOS文件复制: $filePath');
           
-          // 使用验证成功的AppleScript方法
+          // 方法1: 使用Finder设置剪贴板
           var result = await Process.run('osascript', [
             '-e',
             '''
@@ -5707,104 +5709,38 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               try
                 set theFile to (POSIX file "$filePath") as alias
                 set the clipboard to {theFile}
-                return "成功"
+                return "SUCCESS"
               on error errMsg
-                return "错误: " & errMsg
+                return "ERROR: " & errMsg
               end try
             end tell
             '''
           ]);
           
-          DebugConfig.copyPasteDebug('📤 AppleScript结果: 退出码=${result.exitCode}');
-          if (result.stdout.toString().isNotEmpty) {
-            DebugConfig.copyPasteDebug('📤 输出: ${result.stdout}');
-          }
-          if (result.stderr.toString().isNotEmpty) {
-            DebugConfig.copyPasteDebug('❌ 错误: ${result.stderr}');
+          DebugConfig.copyPasteDebug('📤 Finder方法结果: ${result.exitCode}');
+          DebugConfig.copyPasteDebug('📤 输出: "${result.stdout}"');
+          
+          if (result.exitCode == 0 && result.stdout.toString().contains('SUCCESS')) {
+            success = true;
+            DebugConfig.copyPasteDebug('✅ Finder方法成功');
           }
           
-          if (result.exitCode == 0) {
-            // 检查AppleScript的返回结果
-            final scriptOutput = result.stdout.toString().trim();
-            DebugConfig.copyPasteDebug('📤 AppleScript输出: "$scriptOutput"');
+          // 如果Finder方法失败，尝试直接方法
+          if (!success) {
+            DebugConfig.copyPasteDebug('🔄 尝试直接AppleScript方法...');
+            result = await Process.run('osascript', [
+              '-e',
+              'set the clipboard to (POSIX file "$filePath" as alias)'
+            ]);
             
-            if (result.exitCode == 0 && (scriptOutput.contains('成功') || scriptOutput.isEmpty)) {
-              // 验证复制是否成功
-              DebugConfig.copyPasteDebug('✅ AppleScript执行成功，验证剪贴板内容...');
-              
-              final verifyResult = await Process.run('osascript', [
-                '-e',
-                '''
-                try
-                  set clipboardContents to the clipboard
-                  if clipboardContents is not {} then
-                    return "剪贴板有内容: " & (count of clipboardContents) & " 项"
-                  else
-                    return "剪贴板为空"
-                  end if
-                on error errMsg
-                  return "验证失败: " & errMsg
-                end try
-                '''
-              ]);
-              
-              final verifyOutput = verifyResult.stdout.toString().trim();
-              DebugConfig.copyPasteDebug('🔍 剪贴板验证: $verifyOutput');
-              
-              if (verifyOutput.contains('剪贴板有内容')) {
-                DebugConfig.copyPasteDebug('✅ 文件复制成功验证！');
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ 文件已复制到剪贴板，现在可以到Finder中按Cmd+V粘贴'),
-                      duration: Duration(seconds: 4),
-                    ),
-                  );
-                }
-                return;
-              } else {
-                DebugConfig.copyPasteDebug('⚠️ 剪贴板验证失败: $verifyOutput');
-              }
-            } else {
-              DebugConfig.copyPasteDebug('❌ AppleScript执行失败: $scriptOutput');
+            if (result.exitCode == 0) {
+              success = true;
+              DebugConfig.copyPasteDebug('✅ 直接方法成功');
             }
           }
-          
-          // 如果主方法失败，尝试简化的备用方法
-          DebugConfig.copyPasteDebug('🔄 主方法失败，尝试简化备用方法...');
-          result = await Process.run('osascript', [
-            '-e',
-            'set the clipboard to (POSIX file "$filePath" as alias)'
-          ]);
-          
-          if (result.exitCode == 0) {
-            DebugConfig.copyPasteDebug('✅ 备用方法成功');
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('✅ 文件已复制到剪贴板（备用方法）'),
-                  duration: Duration(seconds: 3),
-                ),
-              );
-            }
-            return;
-          }
-          
-          // 所有方法都失败，提供文件路径作为降级方案
-          DebugConfig.copyPasteDebug('❌ 所有文件复制方法都失败，降级为路径复制');
-          await Clipboard.setData(ClipboardData(text: filePath));
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('⚠️ 文件复制失败，已复制文件路径到剪贴板'),
-                duration: Duration(seconds: 3),
-              ),
-            );
-          }
-          return;
           
         } else if (Platform.isWindows) {
-          // Windows: 使用PowerShell复制文件对象到剪贴板
+          // Windows: 使用PowerShell
           DebugConfig.copyPasteDebug('💻 开始Windows文件复制: $filePath');
           final escapedPath = filePath.replaceAll('\\', '\\\\').replaceAll('"', '""');
           final result = await Process.run('powershell', [
@@ -5814,35 +5750,50 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             \$files = New-Object System.Collections.Specialized.StringCollection
             \$files.Add("$escapedPath")
             [System.Windows.Forms.Clipboard]::SetFileDropList(\$files)
+            Write-Output "SUCCESS"
             '''
           ]);
           
-          DebugConfig.copyPasteDebug('💻 Windows结果: 退出码=${result.exitCode}');
           if (result.exitCode == 0) {
-            DebugConfig.copyPasteDebug('✅ Windows文件复制成功');
+            success = true;
+            DebugConfig.copyPasteDebug('✅ Windows方法成功');
           }
           
         } else if (Platform.isLinux) {
-          // Linux: 使用xclip复制文件URI列表
+          // Linux: 使用xclip
           DebugConfig.copyPasteDebug('🐧 开始Linux文件复制: $filePath');
           final fileUri = 'file://$filePath';
           final result = await Process.run('bash', [
             '-c',
-            'printf "$fileUri\\r\\n" | xclip -selection clipboard -t text/uri-list'
+            'printf "$fileUri\\r\\n" | xclip -selection clipboard -t text/uri-list && echo "SUCCESS"'
           ]);
           
-          DebugConfig.copyPasteDebug('🐧 Linux结果: 退出码=${result.exitCode}');
           if (result.exitCode == 0) {
-            DebugConfig.copyPasteDebug('✅ Linux文件复制成功');
+            success = true;
+            DebugConfig.copyPasteDebug('✅ Linux方法成功');
           }
         }
         
-        // 通用成功消息（非macOS）
-        if (!Platform.isMacOS) {
-          DebugConfig.copyPasteDebug('✅ 文件复制完成');
+        if (success) {
+          DebugConfig.copyPasteDebug('🎉 文件复制成功！');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('文件已复制到剪贴板')),
+              const SnackBar(
+                content: Text('✅ 文件已复制到剪贴板，可以在Finder/文件管理器中粘贴'),
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+        } else {
+          // 所有方法都失败，降级到文件路径
+          DebugConfig.copyPasteDebug('⚠️ 文件复制失败，降级到路径复制');
+          await Clipboard.setData(ClipboardData(text: filePath));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('⚠️ 文件复制失败，已复制文件路径到剪贴板'),
+                duration: Duration(seconds: 3),
+              ),
             );
           }
         }
