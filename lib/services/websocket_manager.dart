@@ -735,7 +735,8 @@ class WebSocketManager {
   void _startHeartbeat() {
     _stopHeartbeat();
     
-    _heartbeatTimer = Timer.periodic(Duration(milliseconds: AppConfig.HEARTBEAT_INTERVAL), (_) {
+    // 临时禁用心跳定时器以提高性能
+    /* _heartbeatTimer = Timer.periodic(Duration(milliseconds: AppConfig.HEARTBEAT_INTERVAL), (_) {
       if (_socket?.connected == true) {
         _log('💓 发送心跳ping');
         _socket?.emit('ping', {
@@ -746,7 +747,7 @@ class WebSocketManager {
         // 🔥 关键修复：每次心跳时检查消息接收状态
         _checkMessageReceiveHealth();
       }
-    });
+    }); */
   }
 
   /// 检查消息接收健康状态
@@ -930,9 +931,10 @@ class WebSocketManager {
   void _startConnectionHealthCheck() {
     _stopConnectionHealthCheck();
     
-    _connectionHealthTimer = Timer.periodic(Duration(milliseconds: AppConfig.CONNECTION_HEALTH_CHECK), (_) {
+    // 临时禁用连接健康检查以提高性能
+    /* _connectionHealthTimer = Timer.periodic(Duration(milliseconds: AppConfig.CONNECTION_HEALTH_CHECK), (_) {
       _checkConnectionHealth();
-    });
+    }); */
   }
 
   /// 停止连接健康检查
@@ -961,9 +963,10 @@ class WebSocketManager {
   void _startNetworkMonitoring() {
     _stopNetworkMonitoring();
     
-    _networkMonitorTimer = Timer.periodic(Duration(milliseconds: AppConfig.NETWORK_MONITOR_INTERVAL), (_) {
+    // 临时禁用网络监控以提高性能
+    /* _networkMonitorTimer = Timer.periodic(Duration(milliseconds: AppConfig.NETWORK_MONITOR_INTERVAL), (_) {
       _monitorNetwork();
-    });
+    }); */
   }
 
   /// 停止网络监控
@@ -1408,9 +1411,10 @@ class WebSocketManager {
   void _startDeviceStatusRefresh() {
     _stopDeviceStatusRefresh();
     
-    _deviceStatusRefreshTimer = Timer.periodic(Duration(milliseconds: AppConfig.INSTANT_STATUS_UPDATE_INTERVAL), (_) {
+    // 临时禁用设备状态刷新以提高性能
+    /* _deviceStatusRefreshTimer = Timer.periodic(Duration(milliseconds: AppConfig.INSTANT_STATUS_UPDATE_INTERVAL), (_) {
       _performDeviceStatusRefresh();
-    });
+    }); */
   }
   
   /// 🔥 新增：停止设备状态实时刷新

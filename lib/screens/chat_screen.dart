@@ -4603,7 +4603,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   // 🔥 紧急诊断：实时WebSocket状态监控
   void _startEmergencyDiagnostics() {
-    Timer.periodic(Duration(minutes: 5), (_) {
+    // 临时禁用紧急诊断定时器以提高性能
+    /* Timer.periodic(Duration(minutes: 5), (_) {
       if (mounted) {
         print('🔍 WebSocket状态诊断: 连接=${_websocketService.isConnected}, 最后收到消息=${_lastMessageReceivedTime}');
         
@@ -4616,7 +4617,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         }
         }
       }
-    });
+    }); */
   }
 
   // 🔥 关键修复：监听EnhancedSyncManager的UI更新事件 - 增强版
@@ -5704,8 +5705,18 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           print('📤 输出: ${result.stdout}');
           print('❌ 错误: ${result.stderr}');
           
-          if (result.exitCode != 0) {
+          if (result.exitCode == 0) {
+            // 成功复制文件对象到剪贴板
+            print('✅ 文件对象已成功复制到剪贴板');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('文件已复制到剪贴板，可以粘贴到其他应用')),
+              );
+            }
+            return; // 立即返回，避免后续代码覆盖剪贴板
+          } else {
             // 备选方案：复制文件路径
+            print('❌ AppleScript失败，使用备选方案复制文件路径');
             await Clipboard.setData(ClipboardData(text: filePath));
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -5789,11 +5800,20 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           }
         }
         
+        // 如果执行到这里，说明所有平台都成功了
         print('✅ 文件已复制到剪贴板: $filePath');
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('文件已复制到剪贴板，可以粘贴到其他应用')),
+          );
+        }
+      } else {
+        // 非桌面端，复制文件路径
+        await Clipboard.setData(ClipboardData(text: filePath));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('文件路径已复制到剪贴板')),
           );
         }
       }
