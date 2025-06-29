@@ -5931,8 +5931,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         print('❌ 获取剪贴板文本失败: $e');
       }
       
-      // 如果什么都没找到，提示用户
-      print('❌ 剪贴板中没有找到可用内容');
+      // 如果什么都没找到，调试剪贴板内容并提示用户
+      await _debugClipboardContent(); // 调试剪贴板内容
+      DebugConfig.copyPasteDebug('❌ 剪贴板中没有找到可用内容');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('剪贴板中没有可粘贴的内容')),
@@ -5949,11 +5950,90 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 新增：macOS剪贴板文件获取
+  // 🔥 优化：macOS剪贴板文件获取 - 多策略检测
   Future<List<XFile>> _getMacOSClipboardFiles() async {
     try {
-      // 使用osascript获取剪贴板中的文件
+      // 策略1：使用pbpaste检测文本中的文件路径
+      final pbResult = await Process.run('pbpaste', []);
+      if (pbResult.exitCode == 0 && pbResult.stdout.toString().trim().isNotEmpty) {
+        String clipText = pbResult.stdout.toString().trim();
+        DebugConfig.copyPasteDebug('剪贴板文本内容: "$clipText"');
+        
+        // 检查是否是文件路径格式
+        if (clipText.startsWith('/') || clipText.startsWith('file://')) {
+          String path = clipText;
+          if (path.startsWith('file://')) {
+            path = path.substring(7);
+          }
+          if (await _isValidFilePath(path)) {
+            DebugConfig.copyPasteDebug('✅ pbpaste找到有效文件: $path');
+            return [XFile(path)];
+          }
+        }
+        
+        // 检查多行文件路径
+        final lines = clipText.split('\n');
+        List<XFile> files = [];
+        for (final line in lines) {
+          final trimmedLine = line.trim();
+          if (trimmedLine.startsWith('/') && await _isValidFilePath(trimmedLine)) {
+            files.add(XFile(trimmedLine));
+            DebugConfig.copyPasteDebug('✅ pbpaste找到有效文件: $trimmedLine');
+          }
+        }
+        if (files.isNotEmpty) return files;
+      }
+      
+      // 策略2：使用简化的AppleScript检测
       final result = await Process.run('osascript', [
+        '-e',
+        '''
+        try
+          set clipFiles to (the clipboard as list)
+          set fileList to {}
+          repeat with clipItem in clipFiles
+            try
+              set fileAlias to clipItem as alias
+              set filePath to POSIX path of fileAlias
+              set end of fileList to filePath
+            on error
+              -- 跳过非文件项
+            end try
+          end repeat
+          
+          set AppleScript's text item delimiters to linefeed
+          set pathsText to fileList as string
+          set AppleScript's text item delimiters to ""
+          return pathsText
+        on error
+          return ""
+        end try
+        '''
+      ]);
+      
+      DebugConfig.copyPasteDebug('策略2 AppleScript结果: ${result.exitCode}');
+      DebugConfig.copyPasteDebug('策略2 输出: "${result.stdout}"');
+      if (result.stderr.toString().isNotEmpty) {
+        DebugConfig.copyPasteDebug('策略2 错误: "${result.stderr}"');
+      }
+      
+      if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
+        final pathsString = result.stdout.toString().trim();
+        final paths = pathsString.split('\n').where((path) => path.trim().isNotEmpty).toList();
+        
+        List<XFile> files = [];
+        for (final path in paths) {
+          final trimmedPath = path.trim();
+          if (await _isValidFilePath(trimmedPath)) {
+            files.add(XFile(trimmedPath));
+            DebugConfig.copyPasteDebug('✅ 策略2找到有效文件: $trimmedPath');
+          }
+        }
+        if (files.isNotEmpty) return files;
+      }
+      
+      // 策略3：尝试原始Finder方式作为后备
+      final finderResult = await Process.run('osascript', [
         '-e',
         '''
         tell application "Finder"
@@ -5969,21 +6049,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               end try
             end repeat
             
-            -- 如果没有文件，尝试检查是否有文件引用
-            if (count of filePaths) is 0 then
-              try
-                set clipboardInfo to (clipboard info)
-                repeat with infoItem in clipboardInfo
-                  if (class of infoItem) is file then
-                    set filePath to POSIX path of infoItem
-                    set end of filePaths to filePath
-                  end if
-                end repeat
-              on error
-                -- 忽略错误
-              end try
-            end if
-            
             set AppleScript's text item delimiters to linefeed
             set pathsText to filePaths as string
             set AppleScript's text item delimiters to ""
@@ -5995,12 +6060,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         '''
       ]);
       
-      print('macOS剪贴板检查结果: ${result.exitCode}');
-      print('macOS剪贴板输出: ${result.stdout}');
-      print('macOS剪贴板错误: ${result.stderr}');
-      
-      if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
-        final pathsString = result.stdout.toString().trim();
+      DebugConfig.copyPasteDebug('策略3 Finder结果: ${finderResult.exitCode}');
+      if (finderResult.exitCode == 0 && finderResult.stdout.toString().trim().isNotEmpty) {
+        final pathsString = finderResult.stdout.toString().trim();
         final paths = pathsString.split('\n').where((path) => path.trim().isNotEmpty).toList();
         
         List<XFile> files = [];
@@ -6008,13 +6070,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           final trimmedPath = path.trim();
           if (await _isValidFilePath(trimmedPath)) {
             files.add(XFile(trimmedPath));
-            print('✅ 找到有效文件: $trimmedPath');
+            DebugConfig.copyPasteDebug('✅ 策略3找到有效文件: $trimmedPath');
           }
         }
         return files;
       }
+      
+      // 所有策略都失败
+      DebugConfig.copyPasteDebug('❌ 所有剪贴板检测策略都未找到文件');
     } catch (e) {
-      print('❌ macOS剪贴板文件获取失败: $e');
+      DebugConfig.copyPasteDebug('❌ macOS剪贴板文件获取失败: $e');
     }
     return [];
   }
@@ -6088,6 +6153,48 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       return await file.exists();
     } catch (e) {
       return false;
+    }
+  }
+  
+  // 🔥 新增：调试剪贴板内容
+  Future<void> _debugClipboardContent() async {
+    try {
+      DebugConfig.copyPasteDebug('🔍 开始调试剪贴板内容...');
+      
+      // 检查文本内容
+      final pbResult = await Process.run('pbpaste', []);
+      if (pbResult.exitCode == 0) {
+        final clipText = pbResult.stdout.toString();
+        DebugConfig.copyPasteDebug('剪贴板文本内容: "${clipText.isEmpty ? "(空)" : clipText}"');
+        DebugConfig.copyPasteDebug('文本长度: ${clipText.length}');
+      }
+      
+      // 检查剪贴板类型
+      final typeResult = await Process.run('osascript', [
+        '-e',
+        '''
+        try
+          set clipInfo to (clipboard info)
+          set typeList to {}
+          repeat with infoItem in clipInfo
+            set end of typeList to (class of infoItem as string)
+          end repeat
+          set AppleScript's text item delimiters to ", "
+          set typeString to typeList as string
+          set AppleScript's text item delimiters to ""
+          return typeString
+        on error errMsg
+          return "Error: " & errMsg
+        end try
+        '''
+      ]);
+      
+      if (typeResult.exitCode == 0) {
+        DebugConfig.copyPasteDebug('剪贴板数据类型: "${typeResult.stdout}"');
+      }
+      
+    } catch (e) {
+      DebugConfig.copyPasteDebug('调试剪贴板内容失败: $e');
     }
   }
 
