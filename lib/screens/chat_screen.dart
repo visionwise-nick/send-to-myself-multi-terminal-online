@@ -5695,66 +5695,122 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       if (isDesktop) {
         if (Platform.isMacOS) {
           // macOS: 使用osascript复制真正的文件到剪贴板
+          final escapedPath = filePath.replaceAll('"', '\\"').replaceAll('\\', '\\\\');
           final result = await Process.run('osascript', [
             '-e',
-            'tell application "Finder" to set the clipboard to (POSIX file "$filePath")'
+            '''
+            tell application "Finder"
+              try
+                set theFile to POSIX file "$escapedPath" as alias
+                set the clipboard to {theFile}
+              on error errMsg
+                error errMsg
+              end try
+            end tell
+            '''
           ]);
           
           print('macOS文件复制命令执行结果: ${result.exitCode}');
+          print('macOS文件复制输出: ${result.stdout}');
+          print('macOS文件复制错误: ${result.stderr}');
+          
           if (result.exitCode != 0) {
-            print('macOS文件复制失败: ${result.stderr}');
-            // 备选方案：复制文件路径
-            await Process.run('osascript', [
-              '-e',
-              'set the clipboard to "$filePath"'
+            print('macOS文件复制失败，尝试备选方案');
+            // 备选方案：使用pbcopy复制文件
+            final pbcopyResult = await Process.run('bash', [
+              '-c',
+              'echo "file://$filePath" | pbcopy'
             ]);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('文件路径已复制到剪贴板')),
-              );
+            
+            if (pbcopyResult.exitCode == 0) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('文件引用已复制到剪贴板')),
+                );
+              }
+            } else {
+              // 最后备选方案：复制文件路径
+              await Clipboard.setData(ClipboardData(text: filePath));
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('文件路径已复制到剪贴板')),
+                );
+              }
             }
             return;
           }
         } else if (Platform.isWindows) {
-          // Windows: 使用PowerShell复制文件到剪贴板
+          // Windows: 使用PowerShell复制文件对象到剪贴板
+          final escapedPath = filePath.replaceAll('\\', '\\\\').replaceAll('"', '""');
           final result = await Process.run('powershell', [
             '-Command',
-            'Get-Item "$filePath" | Set-Clipboard'
+            '''
+            Add-Type -AssemblyName System.Windows.Forms
+            \$files = New-Object System.Collections.Specialized.StringCollection
+            \$files.Add("$escapedPath")
+            [System.Windows.Forms.Clipboard]::SetFileDropList(\$files)
+            '''
           ]);
           
+          print('Windows文件复制命令执行结果: ${result.exitCode}');
+          print('Windows文件复制输出: ${result.stdout}');
+          print('Windows文件复制错误: ${result.stderr}');
+          
           if (result.exitCode != 0) {
-            // 备选方案：复制文件路径
-            await Process.run('powershell', [
+            print('Windows文件复制失败，尝试备选方案');
+            // 备选方案：使用简单的Get-Item方法
+            final simpleResult = await Process.run('powershell', [
               '-Command',
-              'Set-Clipboard -Value "$filePath"'
+              'Get-Item "$escapedPath" | Set-Clipboard'
             ]);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('文件路径已复制到剪贴板')),
-              );
+            
+            if (simpleResult.exitCode != 0) {
+              // 最后备选方案：复制文件路径
+              await Process.run('powershell', [
+                '-Command',
+                'Set-Clipboard -Value "$escapedPath"'
+              ]);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('文件路径已复制到剪贴板')),
+                );
+              }
+              return;
             }
-            return;
           }
         } else if (Platform.isLinux) {
-          // Linux: 使用xclip复制文件URI
+          // Linux: 使用xclip复制文件URI列表（真正的文件对象）
           final fileUri = 'file://$filePath';
           final result = await Process.run('bash', [
             '-c',
-            'echo "$fileUri" | xclip -selection clipboard -t text/uri-list'
+            'printf "$fileUri\\r\\n" | xclip -selection clipboard -t text/uri-list'
           ]);
           
+          print('Linux文件复制命令执行结果: ${result.exitCode}');
+          print('Linux文件复制输出: ${result.stdout}');
+          print('Linux文件复制错误: ${result.stderr}');
+          
           if (result.exitCode != 0) {
-            // 备选方案：复制文件路径
-            await Process.run('bash', [
+            print('Linux文件复制失败，尝试备选方案');
+            // 备选方案：尝试使用wl-copy（Wayland）
+            final wlResult = await Process.run('bash', [
               '-c',
-              'echo "$filePath" | xclip -selection clipboard'
+              'printf "$fileUri\\r\\n" | wl-copy --type text/uri-list'
             ]);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('文件路径已复制到剪贴板')),
-              );
+            
+            if (wlResult.exitCode != 0) {
+              // 最后备选方案：复制文件路径
+              await Process.run('bash', [
+                '-c',
+                'echo "$filePath" | xclip -selection clipboard || echo "$filePath" | wl-copy'
+              ]);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('文件路径已复制到剪贴板')),
+                );
+              }
+              return;
             }
-            return;
           }
         }
         
@@ -5876,18 +5932,46 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         '''
         tell application "Finder"
           try
-            set clipboardItems to (clipboard info for file)
+            set clipboardItems to the clipboard
             set filePaths to {}
             repeat with clipboardItem in clipboardItems
-              set end of filePaths to POSIX path of clipboardItem
+              try
+                set filePath to POSIX path of clipboardItem
+                set end of filePaths to filePath
+              on error
+                -- 忽略非文件项目
+              end try
             end repeat
-            return filePaths as string
-          on error
+            
+            -- 如果没有文件，尝试检查是否有文件引用
+            if (count of filePaths) is 0 then
+              try
+                set clipboardInfo to (clipboard info)
+                repeat with infoItem in clipboardInfo
+                  if (class of infoItem) is file then
+                    set filePath to POSIX path of infoItem
+                    set end of filePaths to filePath
+                  end if
+                end repeat
+              on error
+                -- 忽略错误
+              end try
+            end if
+            
+            set AppleScript's text item delimiters to linefeed
+            set pathsText to filePaths as string
+            set AppleScript's text item delimiters to ""
+            return pathsText
+          on error errMsg
             return ""
           end try
         end tell
         '''
       ]);
+      
+      print('macOS剪贴板检查结果: ${result.exitCode}');
+      print('macOS剪贴板输出: ${result.stdout}');
+      print('macOS剪贴板错误: ${result.stderr}');
       
       if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
         final pathsString = result.stdout.toString().trim();
@@ -5895,8 +5979,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         
         List<XFile> files = [];
         for (final path in paths) {
-          if (await _isValidFilePath(path.trim())) {
-            files.add(XFile(path.trim()));
+          final trimmedPath = path.trim();
+          if (await _isValidFilePath(trimmedPath)) {
+            files.add(XFile(trimmedPath));
+            print('✅ 找到有效文件: $trimmedPath');
           }
         }
         return files;
