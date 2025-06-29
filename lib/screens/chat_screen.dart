@@ -5675,10 +5675,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 新增：复制文件到剪贴板（简单可靠版本）
+  // 🔥 新增：复制文件到剪贴板（改进的精确方案）
   Future<void> _copyFileToClipboard(String filePath) async {
     try {
-      DebugConfig.copyPasteDebug('🚀 开始复制文件到剪贴板: $filePath');
+      DebugConfig.copyPasteDebug('🚀 开始精确文件复制: $filePath');
       
       // 首先检查文件是否存在
       if (!File(filePath).existsSync()) {
@@ -5698,95 +5698,153 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         bool success = false;
         
         if (Platform.isMacOS) {
-          // macOS: 使用多种方法确保成功
-          DebugConfig.copyPasteDebug('🍎 开始macOS文件复制: $filePath');
+          // macOS: 使用精确的AppleScript方案
+          DebugConfig.copyPasteDebug('🍎 尝试精确macOS文件复制...');
           
-          // 方法1: 使用Finder设置剪贴板
+          // 方法1: 清空剪贴板，然后仅设置文件
           var result = await Process.run('osascript', [
             '-e',
             '''
+            -- 先清空剪贴板
+            set the clipboard to ""
+            
+            -- 设置文件到剪贴板
             tell application "Finder"
               try
                 set theFile to (POSIX file "$filePath") as alias
                 set the clipboard to {theFile}
-                return "SUCCESS"
+                return "FILE_SUCCESS"
               on error errMsg
-                return "ERROR: " & errMsg
+                return "FILE_ERROR: " & errMsg
               end try
             end tell
             '''
           ]);
           
-          DebugConfig.copyPasteDebug('📤 Finder方法结果: ${result.exitCode}');
+          DebugConfig.copyPasteDebug('📤 精确方法1结果: ${result.exitCode}');
           DebugConfig.copyPasteDebug('📤 输出: "${result.stdout}"');
           
-          if (result.exitCode == 0 && result.stdout.toString().contains('SUCCESS')) {
+          if (result.exitCode == 0 && result.stdout.toString().contains('FILE_SUCCESS')) {
             success = true;
-            DebugConfig.copyPasteDebug('✅ Finder方法成功');
+            DebugConfig.copyPasteDebug('✅ 精确方法1成功');
           }
           
-          // 如果Finder方法失败，尝试直接方法
+          // 如果方法1失败，尝试方法2: 直接设置文件别名
           if (!success) {
-            DebugConfig.copyPasteDebug('🔄 尝试直接AppleScript方法...');
+            DebugConfig.copyPasteDebug('🔄 尝试精确方法2...');
             result = await Process.run('osascript', [
               '-e',
-              'set the clipboard to (POSIX file "$filePath" as alias)'
+              '''
+              try
+                set theFile to (POSIX file "$filePath") as alias
+                tell application "System Events"
+                  set the clipboard to theFile
+                end tell
+                return "ALIAS_SUCCESS"
+              on error errMsg
+                return "ALIAS_ERROR: " & errMsg
+              end try
+              '''
+            ]);
+            
+            if (result.exitCode == 0 && result.stdout.toString().contains('ALIAS_SUCCESS')) {
+              success = true;
+              DebugConfig.copyPasteDebug('✅ 精确方法2成功');
+            }
+          }
+          
+          // 如果还是失败，尝试方法3: 使用pbcopy设置文件URL
+          if (!success) {
+            DebugConfig.copyPasteDebug('🔄 尝试精确方法3 (pbcopy)...');
+            final fileUrl = 'file://$filePath';
+            result = await Process.run('bash', [
+              '-c',
+              'echo "$fileUrl" | pbcopy -pboard general'
             ]);
             
             if (result.exitCode == 0) {
-              success = true;
-              DebugConfig.copyPasteDebug('✅ 直接方法成功');
+              // 再用AppleScript设置正确的格式
+              final result2 = await Process.run('osascript', [
+                '-e',
+                '''
+                tell application "Finder"
+                  try
+                    set theFile to (POSIX file "$filePath") as alias
+                    set the clipboard to {theFile}
+                    return "PBCOPY_SUCCESS"
+                  on error
+                    return "PBCOPY_ERROR"
+                  end try
+                end tell
+                '''
+              ]);
+              
+              if (result2.exitCode == 0 && result2.stdout.toString().contains('PBCOPY_SUCCESS')) {
+                success = true;
+                DebugConfig.copyPasteDebug('✅ 精确方法3成功');
+              }
             }
           }
           
         } else if (Platform.isWindows) {
-          // Windows: 使用PowerShell
-          DebugConfig.copyPasteDebug('💻 开始Windows文件复制: $filePath');
+          // Windows: 精确的PowerShell方案
+          DebugConfig.copyPasteDebug('💻 尝试精确Windows文件复制...');
           final escapedPath = filePath.replaceAll('\\', '\\\\').replaceAll('"', '""');
           final result = await Process.run('powershell', [
             '-Command',
             '''
-            Add-Type -AssemblyName System.Windows.Forms
-            \$files = New-Object System.Collections.Specialized.StringCollection
-            \$files.Add("$escapedPath")
-            [System.Windows.Forms.Clipboard]::SetFileDropList(\$files)
-            Write-Output "SUCCESS"
+            try {
+              Add-Type -AssemblyName System.Windows.Forms
+              \$files = New-Object System.Collections.Specialized.StringCollection
+              \$files.Add("$escapedPath")
+              [System.Windows.Forms.Clipboard]::Clear()
+              [System.Windows.Forms.Clipboard]::SetFileDropList(\$files)
+              Write-Output "WIN_SUCCESS"
+            } catch {
+              Write-Output "WIN_ERROR: \$_"
+            }
             '''
           ]);
           
-          if (result.exitCode == 0) {
+          if (result.exitCode == 0 && result.stdout.toString().contains('WIN_SUCCESS')) {
             success = true;
-            DebugConfig.copyPasteDebug('✅ Windows方法成功');
+            DebugConfig.copyPasteDebug('✅ 精确Windows方法成功');
           }
           
         } else if (Platform.isLinux) {
-          // Linux: 使用xclip
-          DebugConfig.copyPasteDebug('🐧 开始Linux文件复制: $filePath');
+          // Linux: 精确的xclip方案
+          DebugConfig.copyPasteDebug('🐧 尝试精确Linux文件复制...');
           final fileUri = 'file://$filePath';
           final result = await Process.run('bash', [
             '-c',
-            'printf "$fileUri\\r\\n" | xclip -selection clipboard -t text/uri-list && echo "SUCCESS"'
+            '''
+            # 清空剪贴板
+            echo -n "" | xclip -selection clipboard
+            # 设置文件URI
+            printf "$fileUri" | xclip -selection clipboard -t text/uri-list
+            echo "LINUX_SUCCESS"
+            '''
           ]);
           
-          if (result.exitCode == 0) {
+          if (result.exitCode == 0 && result.stdout.toString().contains('LINUX_SUCCESS')) {
             success = true;
-            DebugConfig.copyPasteDebug('✅ Linux方法成功');
+            DebugConfig.copyPasteDebug('✅ 精确Linux方法成功');
           }
         }
         
         if (success) {
-          DebugConfig.copyPasteDebug('🎉 文件复制成功！');
+          DebugConfig.copyPasteDebug('🎉 精确文件复制成功！');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('✅ 文件已复制到剪贴板，可以在Finder/文件管理器中粘贴'),
+                content: Text('✅ 文件已复制到剪贴板，现在可以在Finder中粘贴'),
                 duration: Duration(seconds: 4),
               ),
             );
           }
         } else {
-          // 所有方法都失败，降级到文件路径
-          DebugConfig.copyPasteDebug('⚠️ 文件复制失败，降级到路径复制');
+          // 所有精确方法都失败，降级到文件路径
+          DebugConfig.copyPasteDebug('⚠️ 精确文件复制失败，降级到路径复制');
           await Clipboard.setData(ClipboardData(text: filePath));
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
