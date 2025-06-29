@@ -1039,7 +1039,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchMemories.
   ///
   /// In en, this message translates to:
-  /// **'Search memories, tags...'**
+  /// **'Search memories...'**
   String get searchMemories;
 
   /// No description provided for @filterByCategory.
@@ -1063,7 +1063,7 @@ abstract class AppLocalizations {
   /// No description provided for @memoryCategories.
   ///
   /// In en, this message translates to:
-  /// **'Categories'**
+  /// **'Memory Categories'**
   String get memoryCategories;
 
   /// No description provided for @personalMemory.
@@ -4719,6 +4719,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'no result'**
   String get noResult;
+
+  /// No description provided for @sectionwidgets.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionwidgets;
+
+  /// No description provided for @logoutErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error occurred during logout'**
+  String get logoutErrorMessage;
+
+  /// No description provided for @loginStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Login status has expired'**
+  String get loginStatusExpired;
+
+  /// No description provided for @logoutFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout failed, you can choose to force logout or retry.'**
+  String get logoutFailedMessage;
 }
 
 class _AppLocalizationsDelegate

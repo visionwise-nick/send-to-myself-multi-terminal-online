@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/memory_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 class MemorySearchBar extends StatefulWidget {
   const MemorySearchBar({super.key});
@@ -32,7 +33,7 @@ class _MemorySearchBarState extends State<MemorySearchBar> {
         controller: _searchController,
         style: AppTheme.bodyStyle,
         decoration: InputDecoration(
-          hintText: '搜索记忆...',
+          hintText: LocalizationHelper.of(context).searchMemories,
           hintStyle: AppTheme.bodyStyle.copyWith(
             color: AppTheme.textTertiaryColor,
           ),

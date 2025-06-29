@@ -460,7 +460,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noMemories => '暂无记忆';
 
   @override
-  String get searchMemories => '搜索记忆内容、标签...';
+  String get searchMemories => '搜索记忆...';
 
   @override
   String get filterByCategory => '按分类筛选';
@@ -472,7 +472,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sortByPriority => '按优先级排序';
 
   @override
-  String get memoryCategories => '分类';
+  String get memoryCategories => '记忆分类';
 
   @override
   String get personalMemory => '个人';
@@ -2406,4 +2406,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noResult => '无结果';
+
+  @override
+  String get sectionwidgets => '';
+
+  @override
+  String get logoutErrorMessage => '退出登录时发生错误';
+
+  @override
+  String get loginStatusExpired => '登录状态已失效';
+
+  @override
+  String get logoutFailedMessage => '退出登录失败，您可以选择强制退出或重试。';
 }

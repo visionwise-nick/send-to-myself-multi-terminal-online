@@ -2441,4 +2441,17 @@ class AppLocalizationsSk extends AppLocalizations {
 
   @override
   String get noResult => 'no result';
+
+  @override
+  String get sectionwidgets => '';
+
+  @override
+  String get logoutErrorMessage => 'Error occurred during logout';
+
+  @override
+  String get loginStatusExpired => 'Login status has expired';
+
+  @override
+  String get logoutFailedMessage =>
+      'Logout failed, you can choose to force logout or retry.';
 }

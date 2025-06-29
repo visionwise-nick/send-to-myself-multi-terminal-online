@@ -1317,5 +1317,39 @@
   "connectionDisconnectedPausePing": "⚠️ 连接断开，暂停ping测试",
   "logCleared": "🧹 日志已清除",
   "logCopiedToClipboard": "日志已复制到剪贴板",
-  "noResult": "无结果"
+  "noResult": "无结果",
+  
+  "sectionwidgets": "",
+  "searchMemories": "搜索记忆...",
+  "memoryCategories": "记忆分类",
+  "accountInfo": "账号: {username} • 网站: {website}",
+  "@accountInfo": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      },
+      "website": {
+        "type": "String"
+      }
+    }
+  },
+  "highPriority": "高优先级",
+  "mediumPriority": "中优先级",
+  "lowPriority": "低优先级",
+  "justNow": "刚刚",
+  "minutesAgo": "{minutes}分钟前",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "logoutSuccessMessage": "已成功退出登录",
+  "logoutErrorMessage": "退出登录时发生错误",
+  "loginStatusExpired": "登录状态已失效",
+  "logoutFailedTitle": "退出登录失败",
+  "logoutFailedMessage": "退出登录失败，您可以选择强制退出或重试。",
+  "retry": "重试",
+  "forceLogout": "强制退出"
 } 

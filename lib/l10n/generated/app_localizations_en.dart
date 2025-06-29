@@ -463,7 +463,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMemories => 'No memories yet';
 
   @override
-  String get searchMemories => 'Search memories, tags...';
+  String get searchMemories => 'Search memories...';
 
   @override
   String get filterByCategory => 'Filter by category';
@@ -475,7 +475,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortByPriority => 'Sort by priority';
 
   @override
-  String get memoryCategories => 'Categories';
+  String get memoryCategories => 'Memory Categories';
 
   @override
   String get personalMemory => 'Personal';
@@ -2441,4 +2441,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noResult => 'no result';
+
+  @override
+  String get sectionwidgets => '';
+
+  @override
+  String get logoutErrorMessage => 'Error occurred during logout';
+
+  @override
+  String get loginStatusExpired => 'Login status has expired';
+
+  @override
+  String get logoutFailedMessage =>
+      'Logout failed, you can choose to force logout or retry.';
 }

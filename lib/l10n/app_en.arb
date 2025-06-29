@@ -1381,5 +1381,39 @@
   "connectionDisconnectedPausePing": "⚠️ Connection disconnected, pausing ping test",
   "logCleared": "🧹 Log cleared",
   "logCopiedToClipboard": "Log copied to clipboard",
-  "noResult": "no result"
+  "noResult": "no result",
+  
+  "sectionwidgets": "",
+  "searchMemories": "Search memories...",
+  "memoryCategories": "Memory Categories",
+  "accountInfo": "Account: {username} • Website: {website}",
+  "@accountInfo": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      },
+      "website": {
+        "type": "String"
+      }
+    }
+  },
+  "highPriority": "High Priority",
+  "mediumPriority": "Medium Priority",
+  "lowPriority": "Low Priority",
+  "justNow": "Just now",
+  "minutesAgo": "{minutes} minutes ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "logoutSuccessMessage": "Successfully logged out",
+  "logoutErrorMessage": "Error occurred during logout",
+  "loginStatusExpired": "Login status has expired",
+  "logoutFailedTitle": "Logout Failed",
+  "logoutFailedMessage": "Logout failed, you can choose to force logout or retry.",
+  "retry": "Retry",
+  "forceLogout": "Force Logout"
 } 

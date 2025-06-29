@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/memory_model.dart';
 import '../providers/memory_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 class MemoryCategoryGrid extends StatelessWidget {
   final Function(String?)? onCategorySelected;
@@ -22,7 +23,7 @@ class MemoryCategoryGrid extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '记忆分类',
+              LocalizationHelper.of(context).memoryCategories,
               style: AppTheme.titleStyle.copyWith(
                 fontWeight: AppTheme.fontWeightMedium,
               ),
