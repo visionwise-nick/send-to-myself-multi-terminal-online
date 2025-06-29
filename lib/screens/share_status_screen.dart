@@ -14,7 +14,7 @@ class ShareStatusScreen extends StatefulWidget {
 class _ShareStatusScreenState extends State<ShareStatusScreen> 
     with SingleTickerProviderStateMixin {
   
-  String _status = '';
+  String _status = 'Processing shared content...';
   String _detail = '';
   bool _isSuccess = false;
   bool _isComplete = false;
@@ -28,15 +28,6 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
       duration: const Duration(seconds: 1),
       vsync: this,
     )..repeat();
-    
-    // 初始化状态文本
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {
-          _status = LocalizationHelper.of(context).processingShareContent;
-        });
-      }
-    });
     
     // 监听分享处理状态
     _listenToShareStatus();
@@ -66,14 +57,13 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
               
               // 只有在真正完成时才标记为完成（检查特定的完成信息）
               // 排除单个文件成功的状态（例如"第1个文件发送成功"），只有总体完成时才关闭
-              final loc = LocalizationHelper.of(context);
-              if ((status.contains(loc.allFilesSentComplete) || status.contains(loc.partialFilesSentComplete) || 
-                   status.contains(loc.allFilesSendFailed) || status.contains(loc.shareFailed) ||
-                   (status.contains(loc.fileSentSuccess) && !status.contains('第') && !status.contains('个文件发送成功'))) &&
+              if ((status.contains('所有文件发送完成') || status.contains('部分文件发送完成') || 
+                   status.contains('所有文件发送失败') || status.contains('分享失败') ||
+                   (status.contains('文件发送成功！') && !status.contains('第') && !status.contains('个文件发送成功'))) &&
                   !status.contains('等待服务器处理')) {
                 _isComplete = true;
-                _isSuccess = status.contains('✅') && (status.contains(loc.allFilesSentComplete) || 
-                             (status.contains(loc.fileSentSuccess) && !status.contains('第')));
+                _isSuccess = status.contains('✅') && (status.contains('所有文件发送完成') || 
+                             (status.contains('文件发送成功！') && !status.contains('第')));
                 _animationController.stop();
                 
                 // 分享完成后，给用户足够时间查看结果，延长到5秒
@@ -88,10 +78,9 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
       
       // 如果没有通过回调更新状态，手动更新最终状态
       if (mounted && !_isComplete) {
-        final loc = LocalizationHelper.of(context);
         setState(() {
-          _status = success ? loc.shareSuccess : loc.shareFailed;
-          _detail = success ? loc.allContentSentToGroup : loc.pleaseTryAgainLater;
+          _status = success ? '✅ Share successful!' : '❌ Share failed';
+          _detail = success ? 'All content has been sent to current group' : 'Please try again later';
           _isSuccess = success;
           _isComplete = true;
         });
@@ -103,10 +92,9 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
       }
     } catch (e) {
       if (mounted) {
-        final loc = LocalizationHelper.of(context);
         setState(() {
-          _status = loc.shareException;
-          _detail = loc.processingError(e.toString());
+          _status = '❌ Share exception';
+          _detail = 'Processing error: $e';
           _isSuccess = false;
           _isComplete = true;
         });

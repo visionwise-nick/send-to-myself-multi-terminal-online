@@ -5673,7 +5673,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 新增：复制文件到剪贴板（桌面端）
+  // 🔥 新增：复制文件到剪贴板（桌面端）- 真正的文件复制
   Future<void> _copyFileToClipboard(String filePath) async {
     try {
       print('🔄 开始复制文件: $filePath');
@@ -5694,44 +5694,75 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       
       if (isDesktop) {
         if (Platform.isMacOS) {
-          // macOS: 先复制文件路径到剪贴板，这样更可靠
+          // macOS: 使用osascript复制真正的文件到剪贴板
           final result = await Process.run('osascript', [
             '-e',
-            'set the clipboard to "$filePath"'
+            'tell application "Finder" to set the clipboard to (POSIX file "$filePath")'
           ]);
           
-          print('macOS复制命令执行结果: ${result.exitCode}');
+          print('macOS文件复制命令执行结果: ${result.exitCode}');
           if (result.exitCode != 0) {
-            print('macOS复制失败: ${result.stderr}');
-            throw Exception('macOS复制命令失败');
+            print('macOS文件复制失败: ${result.stderr}');
+            // 备选方案：复制文件路径
+            await Process.run('osascript', [
+              '-e',
+              'set the clipboard to "$filePath"'
+            ]);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('文件路径已复制到剪贴板')),
+              );
+            }
+            return;
           }
         } else if (Platform.isWindows) {
-          // Windows使用PowerShell复制文件路径
+          // Windows: 使用PowerShell复制文件到剪贴板
           final result = await Process.run('powershell', [
             '-Command',
-            'Set-Clipboard -Value "$filePath"'
+            'Get-Item "$filePath" | Set-Clipboard'
           ]);
           
           if (result.exitCode != 0) {
-            throw Exception('Windows复制命令失败');
+            // 备选方案：复制文件路径
+            await Process.run('powershell', [
+              '-Command',
+              'Set-Clipboard -Value "$filePath"'
+            ]);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('文件路径已复制到剪贴板')),
+              );
+            }
+            return;
           }
         } else if (Platform.isLinux) {
-          // Linux使用xclip复制文件路径
+          // Linux: 使用xclip复制文件URI
+          final fileUri = 'file://$filePath';
           final result = await Process.run('bash', [
             '-c',
-            'echo "$filePath" | xclip -selection clipboard'
+            'echo "$fileUri" | xclip -selection clipboard -t text/uri-list'
           ]);
           
           if (result.exitCode != 0) {
-            throw Exception('Linux复制命令失败');
+            // 备选方案：复制文件路径
+            await Process.run('bash', [
+              '-c',
+              'echo "$filePath" | xclip -selection clipboard'
+            ]);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('文件路径已复制到剪贴板')),
+              );
+            }
+            return;
           }
         }
         
-        print('✅ 文件路径已复制到剪贴板: $filePath');
+        print('✅ 文件已复制到剪贴板: $filePath');
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('文件路径已复制到剪贴板')),
+            const SnackBar(content: Text('文件已复制到剪贴板，可以粘贴到其他应用')),
           );
         }
       }
@@ -5745,7 +5776,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-      // 🔥 新增：处理粘贴文件功能（桌面端）- 简化版本
+      // 🔥 新增：处理粘贴文件功能（桌面端）- 改进版本
   Future<void> _handlePasteFiles() async {
     try {
       print('🔄 开始处理粘贴功能...');
@@ -5757,7 +5788,30 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         return;
       }
       
-      // 首先尝试简单的文本粘贴（检查是否为文件路径）
+      List<XFile> pastedFiles = [];
+      
+      // 尝试从剪贴板获取文件
+      if (Platform.isMacOS) {
+        pastedFiles = await _getMacOSClipboardFiles();
+      } else if (Platform.isWindows) {
+        pastedFiles = await _getWindowsClipboardFiles();
+      } else if (Platform.isLinux) {
+        pastedFiles = await _getLinuxClipboardFiles();
+      }
+      
+      if (pastedFiles.isNotEmpty) {
+        print('✅ 从剪贴板获取到 ${pastedFiles.length} 个文件');
+        await _handleDroppedFiles(pastedFiles);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('已从剪贴板添加 ${pastedFiles.length} 个文件')),
+          );
+        }
+        return;
+      }
+      
+      // 如果没有找到文件，尝试文本粘贴（检查是否为文件路径）
       try {
         final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
         if (clipboardData?.text != null) {
@@ -5777,17 +5831,29 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               );
             }
             return;
+          } else {
+            // 如果是普通文本，添加到输入框
+            _messageController.text = _messageController.text + clipboardText;
+            setState(() {
+              _isTyping = _messageController.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
+            });
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('文本已粘贴到输入框')),
+              );
+            }
+            return;
           }
         }
       } catch (e) {
         print('❌ 获取剪贴板文本失败: $e');
       }
       
-      // 如果不是文件路径，提示用户
-      print('❌ 剪贴板中没有找到可用的文件路径');
+      // 如果什么都没找到，提示用户
+      print('❌ 剪贴板中没有找到可用内容');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('请先复制文件，然后使用 Cmd+V 粘贴')),
+          const SnackBar(content: Text('剪贴板中没有可粘贴的内容')),
         );
       }
       
@@ -5795,10 +5861,112 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       print('❌ 粘贴文件失败: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('粘贴文件失败: $e')),
+          SnackBar(content: Text('粘贴失败: $e')),
         );
       }
     }
+  }
+
+  // 🔥 新增：macOS剪贴板文件获取
+  Future<List<XFile>> _getMacOSClipboardFiles() async {
+    try {
+      // 使用osascript获取剪贴板中的文件
+      final result = await Process.run('osascript', [
+        '-e',
+        '''
+        tell application "Finder"
+          try
+            set clipboardItems to (clipboard info for file)
+            set filePaths to {}
+            repeat with clipboardItem in clipboardItems
+              set end of filePaths to POSIX path of clipboardItem
+            end repeat
+            return filePaths as string
+          on error
+            return ""
+          end try
+        end tell
+        '''
+      ]);
+      
+      if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
+        final pathsString = result.stdout.toString().trim();
+        final paths = pathsString.split('\n').where((path) => path.trim().isNotEmpty).toList();
+        
+        List<XFile> files = [];
+        for (final path in paths) {
+          if (await _isValidFilePath(path.trim())) {
+            files.add(XFile(path.trim()));
+          }
+        }
+        return files;
+      }
+    } catch (e) {
+      print('❌ macOS剪贴板文件获取失败: $e');
+    }
+    return [];
+  }
+
+  // 🔥 新增：Windows剪贴板文件获取
+  Future<List<XFile>> _getWindowsClipboardFiles() async {
+    try {
+      // 使用PowerShell获取剪贴板中的文件
+      final result = await Process.run('powershell', [
+        '-Command',
+        '''
+        \$files = Get-Clipboard -Format FileDropList
+        if (\$files) {
+          \$files | ForEach-Object { Write-Output \$_.FullName }
+        }
+        '''
+      ]);
+      
+      if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
+        final pathsString = result.stdout.toString().trim();
+        final paths = pathsString.split('\n').where((path) => path.trim().isNotEmpty).toList();
+        
+        List<XFile> files = [];
+        for (final path in paths) {
+          if (await _isValidFilePath(path.trim())) {
+            files.add(XFile(path.trim()));
+          }
+        }
+        return files;
+      }
+    } catch (e) {
+      print('❌ Windows剪贴板文件获取失败: $e');
+    }
+    return [];
+  }
+
+  // 🔥 新增：Linux剪贴板文件获取
+  Future<List<XFile>> _getLinuxClipboardFiles() async {
+    try {
+      // 使用xclip获取剪贴板中的文件URI
+      final result = await Process.run('bash', [
+        '-c',
+        'xclip -selection clipboard -o -t text/uri-list 2>/dev/null || echo ""'
+      ]);
+      
+      if (result.exitCode == 0 && result.stdout.toString().trim().isNotEmpty) {
+        final uriString = result.stdout.toString().trim();
+        final uris = uriString.split('\n').where((uri) => uri.trim().isNotEmpty).toList();
+        
+        List<XFile> files = [];
+        for (final uri in uris) {
+          if (uri.startsWith('file://')) {
+            final path = uri.substring(7); // 移除 'file://' 前缀
+            if (await _isValidFilePath(path)) {
+              files.add(XFile(path));
+            }
+          }
+        }
+        return files;
+      }
+    } catch (e) {
+      print('❌ Linux剪贴板文件获取失败: $e');
+    }
+    return [];
   }
 
   // 🔥 新增：检查是否为有效文件路径
