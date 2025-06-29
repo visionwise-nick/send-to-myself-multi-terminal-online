@@ -1152,5 +1152,234 @@
         "type": "int"
       }
     }
-  }
+  },
+  
+  "sectionmissing": "",
+  "sendFileFailed": "Send file failed",
+  "noFilesToSend": "No files to send",
+  "batchRecall": "Batch Recall",
+  "recall": "Recall",
+  "batchRecallReason": "Batch recall",
+  "batchDeleteReason": "Batch delete",
+  "clearDeduplicationRecords": "Clear deduplication records",
+  "cancelUpload": "Cancel Upload",
+  "cancelDownload": "Cancel Download",
+  "confirmCancelUpload": "Are you sure you want to cancel uploading this file?",
+  "confirmCancelDownload": "Are you sure you want to cancel downloading this file?",
+  
+  "sectionmemoryforms": "",
+  "websiteAppName": "Website/App Name",
+  "websiteAppNameHint": "e.g.: WeChat, Taobao",
+  "usernameEmailLabel": "Username/Email",
+  "passwordLabel": "Password",
+  "notesLabel": "Notes",
+  "expenseItemLabel": "Expense Item",
+  "expenseItemHint": "e.g.: Lunch, Shopping",
+  "amountLabel": "Amount",
+  "typeLabel": "Type",
+  "expense": "Expense",
+  "income": "Income",
+  "categoryLabel": "Category",
+  "categoryHint": "e.g.: Food, Transportation",
+  "dateLabel": "Date",
+  "notesHint": "Detailed description",
+  "scheduleTitleLabel": "Schedule Title",
+  "scheduleTitleHint": "Meeting, appointment, etc.",
+  "startTimeLabel": "Start Time",
+  "endTimeOptionalLabel": "End Time (Optional)",
+  "locationLabel": "Location",
+  "locationHint": "Meeting room, restaurant, etc.",
+  "detailsLabel": "Details",
+  "meetingDetailsHint": "Meeting content, notes",
+  "advanceReminderLabel": "Advance Reminder",
+  "noReminder": "No reminder",
+  "minutes5Before": "5 minutes before",
+  "minutes15Before": "15 minutes before",
+  "minutes30Before": "30 minutes before",
+  "hour1Before": "1 hour before",
+  "taskLabel": "Task",
+  "whatToDoHint": "What to do",
+  "detailedDescriptionLabel": "Detailed Description",
+  "taskRequirementsHint": "Specific requirements, notes",
+  "priorityLabel": "Priority",
+  "dueDateOptionalLabel": "Due Date (Optional)",
+  "urlLinkLabel": "URL Link",
+  "linkDescriptionLabel": "Description",
+  "linkPurposeHint": "The purpose or content of this link",
+  "fileLabel": "File *",
+  "clickToSelectFile": "Click to select file",
+  "pleaseEnter": "Please enter {field}",
+  "@pleaseEnter": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "selectDate": "Select Date",
+  "selectTime": "Select Time",
+  "addAccountPassword": "Add Account Password",
+  "recordExpense": "Record Expense",
+  "createSchedule": "Create Schedule",
+  "addTodo": "Add Todo",
+  "saveLink": "Save Link",
+  "saveImage": "Save Image",
+  "saveVideo": "Save Video",
+  "saveDocument": "Save Document",
+  "completed": "Completed",
+  "addTag": "Add Tag",
+  "addTagLabel": "Add Tag",
+  "enterTagName": "Enter tag name",
+  "aiGenerate": "AI Generate",
+  "generating": "Generating...",
+  "aiGeneratedTags": "AI generated {count} new tags",
+  "@aiGeneratedTags": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "generateTagsFailed": "Generate tags failed: {error}",
+  "@generateTagsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "updateSuccess": "Update successful",
+  "updateFailed": "Update failed: {error}",
+  "@updateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editMemoryType": "Edit {type}",
+  "@editMemoryType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "enterTitle": "Enter title",
+  "enterContent": "Enter content",
+  "tagsLabel": "Tags",
+  "saveButton": "Save",
+  "titleLabel": "Title",
+  "titleHint": "Enter title",
+  "contentLabel": "Content",
+  "writeYourThoughts": "Write your thoughts...",
+  "otherInfoHint": "Other information",
+  "amountHint": "0.00",
+  
+  "sectionshare": "",
+  "processingShareContent": "Processing shared content...",
+  "shareSuccess": "✅ Share successful!",
+  "shareFailed": "❌ Share failed",
+  "shareException": "❌ Share exception",
+  "allContentSentToGroup": "All content has been sent to current group",
+  "pleaseTryAgainLater": "Please try again later",
+  "processingError": "Processing error: {error}",
+  "@processingError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "allFilesSentComplete": "All files sent successfully",
+  "partialFilesSentComplete": "Some files sent successfully",
+  "allFilesSendFailed": "All files failed to send",
+  "fileSentSuccess": "File sent successfully!",
+  "textSharedCount": "Shared {count} text messages",
+  "@textSharedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharedFilesAndText": "Shared {fileCount} files and {textCount} text messages",
+  "@sharedFilesAndText": {
+    "placeholders": {
+      "fileCount": {
+        "type": "int"
+      },
+      "textCount": {
+        "type": "int"
+      }
+    }
+  },
+  "batchShareFailed": "Batch share failed: {error}",
+  "@batchShareFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "messageShare": "Send To Myself - Message Share",
+  "fileShared": "File {fileName} has been shared",
+  "@fileShared": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "fileUnavailableSharedText": "File unavailable, shared text content instead",
+  "fileUnavailableNoText": "File unavailable and no text content to share",
+  
+  "sectionnetwork": "",
+  "resolvingServerDomain": "🔍 Resolving server domain...",
+  "serverDnsSuccess": "✅ Server DNS resolution successful: {address}",
+  "@serverDnsSuccess": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "serverDnsFailed": "❌ Server DNS resolution failed: no result",
+  "serverDnsError": "❌ Server DNS resolution failed: {error}",
+  "@serverDnsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "testingServerConnection": "🔍 Testing server connection...",
+  "serverConnectionSuccess": "✅ Server connection successful",
+  "serverConnectionFailed": "❌ Server connection failed: {error}",
+  "@serverConnectionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "startingWebSocketTest": "🧪 Starting WebSocket connection test...",
+  "currentConnectionStatus": "📊 Current connection status: {status}",
+  "@currentConnectionStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "sendingTestPing": "📡 Sending test ping...",
+  "webSocketNotConnected": "⚠️ WebSocket not connected, unable to send test message",
+  "executingForceReconnect": "🔄 Executing force reconnect...",
+  "stopPingTest": "⏹️ Stop Ping test",
+  "startPingTest": "🏓 Start Ping test (every 5 seconds)",
+  "sendingPing": "🏓 Sending test ping",
+  "connectionDisconnectedPausePing": "⚠️ Connection disconnected, pausing ping test",
+  "logCleared": "🧹 Log cleared",
+  "logCopiedToClipboard": "Log copied to clipboard",
+  "noResult": "no result"
 } 

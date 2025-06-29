@@ -1088,5 +1088,234 @@
         "type": "int"
       }
     }
-  }
+  },
+  
+  "sectionmissing": "",
+  "sendFileFailed": "发送文件失败",
+  "noFilesToSend": "没有文件可发送",
+  "batchRecall": "批量撤回",
+  "recall": "撤回",
+  "batchRecallReason": "批量撤回",
+  "batchDeleteReason": "批量删除",
+  "clearDeduplicationRecords": "清除去重记录",
+  "cancelUpload": "取消上传",
+  "cancelDownload": "取消下载",
+  "confirmCancelUpload": "确定要取消上传这个文件吗？",
+  "confirmCancelDownload": "确定要取消下载这个文件吗？",
+  
+  "sectionmemoryforms": "",
+  "websiteAppName": "网站/应用名称",
+  "websiteAppNameHint": "如：微信、淘宝",
+  "usernameEmailLabel": "用户名/邮箱",
+  "passwordLabel": "密码",
+  "notesLabel": "备注",
+  "expenseItemLabel": "消费项目",
+  "expenseItemHint": "如：午餐、购物",
+  "amountLabel": "金额",
+  "typeLabel": "类型",
+  "expense": "支出",
+  "income": "收入",
+  "categoryLabel": "分类",
+  "categoryHint": "如：餐饮、交通",
+  "dateLabel": "日期",
+  "notesHint": "详细说明",
+  "scheduleTitleLabel": "日程标题",
+  "scheduleTitleHint": "会议、约会等",
+  "startTimeLabel": "开始时间",
+  "endTimeOptionalLabel": "结束时间（可选）",
+  "locationLabel": "地点",
+  "locationHint": "会议室、餐厅等",
+  "detailsLabel": "详情",
+  "meetingDetailsHint": "会议内容、注意事项",
+  "advanceReminderLabel": "提前提醒",
+  "noReminder": "不提醒",
+  "minutes5Before": "5分钟前",
+  "minutes15Before": "15分钟前",
+  "minutes30Before": "30分钟前",
+  "hour1Before": "1小时前",
+  "taskLabel": "任务",
+  "whatToDoHint": "要做什么",
+  "detailedDescriptionLabel": "详细描述",
+  "taskRequirementsHint": "具体要求、注意事项",
+  "priorityLabel": "优先级",
+  "dueDateOptionalLabel": "截止日期（可选）",
+  "urlLinkLabel": "URL链接",
+  "linkDescriptionLabel": "描述",
+  "linkPurposeHint": "这个链接的用途或内容",
+  "fileLabel": "文件 *",
+  "clickToSelectFile": "点击选择文件",
+  "pleaseEnter": "请输入{field}",
+  "@pleaseEnter": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "selectDate": "选择日期",
+  "selectTime": "选择时间",
+  "addAccountPassword": "添加账号密码",
+  "recordExpense": "记一笔账",
+  "createSchedule": "创建日程",
+  "addTodo": "添加待办",
+  "saveLink": "保存链接",
+  "saveImage": "保存图片",
+  "saveVideo": "保存视频",
+  "saveDocument": "保存文档",
+  "completed": "已完成",
+  "addTag": "添加标签",
+  "addTagLabel": "添加标签",
+  "enterTagName": "输入标签名称",
+  "aiGenerate": "AI生成",
+  "generating": "生成中...",
+  "aiGeneratedTags": "AI生成了{count}个新标签",
+  "@aiGeneratedTags": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "generateTagsFailed": "生成标签失败: {error}",
+  "@generateTagsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "updateSuccess": "更新成功",
+  "updateFailed": "更新失败: {error}",
+  "@updateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editMemoryType": "编辑{type}",
+  "@editMemoryType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "enterTitle": "输入标题",
+  "enterContent": "输入内容",
+  "tagsLabel": "标签",
+  "saveButton": "保存",
+  "titleLabel": "标题",
+  "titleHint": "输入标题",
+  "contentLabel": "内容",
+  "writeYourThoughts": "写下你的想法...",
+  "otherInfoHint": "其他信息",
+  "amountHint": "0.00",
+  
+  "sectionshare": "",
+  "processingShareContent": "正在处理分享内容...",
+  "shareSuccess": "✅ 分享成功！",
+  "shareFailed": "❌ 分享失败",
+  "shareException": "❌ 分享异常",
+  "allContentSentToGroup": "所有内容已发送到当前群组",
+  "pleaseTryAgainLater": "请稍后重试",
+  "processingError": "处理出现错误: {error}",
+  "@processingError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "allFilesSentComplete": "所有文件发送完成",
+  "partialFilesSentComplete": "部分文件发送完成",
+  "allFilesSendFailed": "所有文件发送失败",
+  "fileSentSuccess": "文件发送成功！",
+  "textSharedCount": "已分享{count}条文本消息",
+  "@textSharedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharedFilesAndText": "已分享{fileCount}个文件和{textCount}条文本",
+  "@sharedFilesAndText": {
+    "placeholders": {
+      "fileCount": {
+        "type": "int"
+      },
+      "textCount": {
+        "type": "int"
+      }
+    }
+  },
+  "batchShareFailed": "批量分享失败: {error}",
+  "@batchShareFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "messageShare": "Send To Myself - 消息分享",
+  "fileShared": "文件 {fileName} 已分享",
+  "@fileShared": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "fileUnavailableSharedText": "文件不可用，已分享文字内容",
+  "fileUnavailableNoText": "文件不可用且无文字内容可分享",
+  
+  "sectionnetwork": "",
+  "resolvingServerDomain": "🔍 解析服务器域名...",
+  "serverDnsSuccess": "✅ 服务器DNS解析成功: {address}",
+  "@serverDnsSuccess": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "serverDnsFailed": "❌ 服务器DNS解析失败: 无结果",
+  "serverDnsError": "❌ 服务器DNS解析失败: {error}",
+  "@serverDnsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "testingServerConnection": "🔍 测试服务器连接...",
+  "serverConnectionSuccess": "✅ 服务器连接成功",
+  "serverConnectionFailed": "❌ 服务器连接失败: {error}",
+  "@serverConnectionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "startingWebSocketTest": "🧪 开始WebSocket连接测试...",
+  "currentConnectionStatus": "📊 当前连接状态: {status}",
+  "@currentConnectionStatus": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "sendingTestPing": "📡 发送测试ping...",
+  "webSocketNotConnected": "⚠️ WebSocket未连接，无法发送测试消息",
+  "executingForceReconnect": "🔄 执行强制重连...",
+  "stopPingTest": "⏹️ 停止Ping测试",
+  "startPingTest": "🏓 开始Ping测试 (每5秒)",
+  "sendingPing": "🏓 发送测试ping",
+  "connectionDisconnectedPausePing": "⚠️ 连接断开，暂停ping测试",
+  "logCleared": "🧹 日志已清除",
+  "logCopiedToClipboard": "日志已复制到剪贴板",
+  "noResult": "无结果"
 } 

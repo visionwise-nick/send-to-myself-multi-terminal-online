@@ -378,7 +378,7 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
         if (result.isNotEmpty) {
           _addLog('✅ $domain ${LocalizationHelper.of(context).connectionSuccessful}: ${result.first.address}');
         } else {
-          _addLog('❌ $domain ${LocalizationHelper.of(context).connectionFailed}: 无结果');
+          _addLog('❌ $domain ${LocalizationHelper.of(context).connectionFailed}: ${LocalizationHelper.of(context).noResult}');
         }
       } catch (e) {
         _addLog('❌ $domain ${LocalizationHelper.of(context).connectionFailed}: $e');
@@ -388,33 +388,33 @@ class _NetworkDebugScreenState extends State<NetworkDebugScreen> {
 
   Future<void> _testDnsResolution() async {
     try {
-      _addLog('🔍 解析服务器域名...');
+      _addLog(LocalizationHelper.of(context).resolvingServerDomain);
       final result = await InternetAddress.lookup(
         'sendtomyself-api-adecumh2za-uc.a.run.app'
       ).timeout(Duration(seconds: 10));
 
       if (result.isNotEmpty) {
-        _addLog('✅ 服务器DNS解析成功: ${result.first.address}');
+        _addLog(LocalizationHelper.of(context).serverDnsSuccess(result.first.address));
       } else {
-        _addLog('❌ 服务器DNS解析失败: 无结果');
+        _addLog(LocalizationHelper.of(context).serverDnsFailed);
       }
     } catch (e) {
-      _addLog('❌ 服务器DNS解析失败: $e');
+      _addLog(LocalizationHelper.of(context).serverDnsError(e.toString()));
     }
   }
 
   Future<void> _testServerConnectivity() async {
     try {
-      _addLog('🔍 测试服务器连接...');
+      _addLog(LocalizationHelper.of(context).testingServerConnection);
       final socket = await Socket.connect(
         'sendtomyself-api-adecumh2za-uc.a.run.app',
         443,
       ).timeout(Duration(seconds: 10));
 
-      _addLog('✅ 服务器连接成功');
+      _addLog(LocalizationHelper.of(context).serverConnectionSuccess);
       socket.destroy();
     } catch (e) {
-      _addLog('❌ 服务器连接失败: $e');
+      _addLog(LocalizationHelper.of(context).serverConnectionFailed(e.toString()));
     }
   }
 

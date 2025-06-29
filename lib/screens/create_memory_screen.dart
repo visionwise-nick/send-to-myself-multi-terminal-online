@@ -175,8 +175,8 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
       children: [
         _buildTextField(
           controller: _titleController,
-          label: '网站/应用名称',
-          hint: '如：微信、淘宝',
+          label: LocalizationHelper.of(context).websiteAppName,
+          hint: LocalizationHelper.of(context).websiteAppNameHint,
           required: true,
         ),
         SizedBox(height: 16),
@@ -188,23 +188,23 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
         SizedBox(height: 16),
         _buildTextField(
           controller: _usernameController,
-          label: '用户名/邮箱',
-          hint: '登录账号',
+          label: LocalizationHelper.of(context).usernameEmailLabel,
+          hint: LocalizationHelper.of(context).loginAccountHint,
           required: true,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _passwordController,
-          label: '密码',
-          hint: '登录密码',
+          label: LocalizationHelper.of(context).passwordLabel,
+          hint: LocalizationHelper.of(context).passwordHint,
           obscureText: true,
           required: true,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _notesController,
-          label: '备注',
-          hint: '其他信息',
+          label: LocalizationHelper.of(context).notesLabel,
+          hint: LocalizationHelper.of(context).otherInfoHint,
           maxLines: 3,
         ),
       ],
@@ -217,8 +217,8 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
       children: [
         _buildTextField(
           controller: _titleController,
-          label: '消费项目',
-          hint: '如：午餐、购物',
+          label: LocalizationHelper.of(context).expenseItemLabel,
+          hint: LocalizationHelper.of(context).expenseItemHint,
           required: true,
         ),
         SizedBox(height: 16),
@@ -227,8 +227,8 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
             Expanded(
               child: _buildTextField(
                 controller: _amountController,
-                label: '金额',
-                hint: '0.00',
+                label: LocalizationHelper.of(context).amountLabel,
+                hint: LocalizationHelper.of(context).amountHint,
                 keyboardType: TextInputType.number,
                 required: true,
               ),
@@ -236,11 +236,11 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
             SizedBox(width: 16),
             Expanded(
               child: _buildDropdown(
-                label: '类型',
+                label: LocalizationHelper.of(context).typeLabel,
                 value: _transactionType,
                 items: [
-                  DropdownMenuItem(value: 'expense', child: Text('支出')),
-                  DropdownMenuItem(value: 'income', child: Text('收入')),
+                  DropdownMenuItem(value: 'expense', child: Text(LocalizationHelper.of(context).expense)),
+                  DropdownMenuItem(value: 'income', child: Text(LocalizationHelper.of(context).income)),
                 ],
                 onChanged: (value) => setState(() => _transactionType = value!),
               ),
@@ -250,21 +250,21 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
         SizedBox(height: 16),
         _buildTextField(
           controller: TextEditingController(text: _category),
-          label: '分类',
-          hint: '如：餐饮、交通',
+          label: LocalizationHelper.of(context).categoryLabel,
+          hint: LocalizationHelper.of(context).categoryHint,
           onChanged: (value) => _category = value,
         ),
         SizedBox(height: 16),
         _buildDatePicker(
-          label: '日期',
+          label: LocalizationHelper.of(context).dateLabel,
           date: _selectedDate,
           onChanged: (date) => setState(() => _selectedDate = date),
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _contentController,
-          label: '备注',
-          hint: '详细说明',
+          label: LocalizationHelper.of(context).notesLabel,
+          hint: LocalizationHelper.of(context).notesHint,
           maxLines: 3,
         ),
       ],
@@ -277,19 +277,19 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
       children: [
         _buildTextField(
           controller: _titleController,
-          label: '日程标题',
-          hint: '会议、约会等',
+          label: LocalizationHelper.of(context).scheduleTitleLabel,
+          hint: LocalizationHelper.of(context).scheduleTitleHint,
           required: true,
         ),
         SizedBox(height: 16),
         _buildDateTimePicker(
-          label: '开始时间',
+          label: LocalizationHelper.of(context).startTimeLabel,
           dateTime: _startTime,
           onChanged: (dateTime) => setState(() => _startTime = dateTime),
         ),
         SizedBox(height: 16),
         _buildDateTimePicker(
-          label: '结束时间（可选）',
+          label: LocalizationHelper.of(context).endTimeOptionalLabel,
           dateTime: _endTime,
           onChanged: (dateTime) => setState(() => _endTime = dateTime),
           allowNull: true,
@@ -297,26 +297,26 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
         SizedBox(height: 16),
         _buildTextField(
           controller: _locationController,
-          label: '地点',
-          hint: '会议室、餐厅等',
+          label: LocalizationHelper.of(context).locationLabel,
+          hint: LocalizationHelper.of(context).locationHint,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _descriptionController,
-          label: '详情',
-          hint: '会议内容、注意事项',
+          label: LocalizationHelper.of(context).detailsLabel,
+          hint: LocalizationHelper.of(context).meetingDetailsHint,
           maxLines: 3,
         ),
         SizedBox(height: 16),
         _buildDropdown(
-          label: '提前提醒',
+          label: LocalizationHelper.of(context).advanceReminderLabel,
           value: _reminderMinutes,
           items: [
-            DropdownMenuItem(value: 0, child: Text('不提醒')),
-            DropdownMenuItem(value: 5, child: Text('5分钟前')),
-            DropdownMenuItem(value: 15, child: Text('15分钟前')),
-            DropdownMenuItem(value: 30, child: Text('30分钟前')),
-            DropdownMenuItem(value: 60, child: Text('1小时前')),
+            DropdownMenuItem(value: 0, child: Text(LocalizationHelper.of(context).noReminder)),
+            DropdownMenuItem(value: 5, child: Text(LocalizationHelper.of(context).minutes5Before)),
+            DropdownMenuItem(value: 15, child: Text(LocalizationHelper.of(context).minutes15Before)),
+            DropdownMenuItem(value: 30, child: Text(LocalizationHelper.of(context).minutes30Before)),
+            DropdownMenuItem(value: 60, child: Text(LocalizationHelper.of(context).hour1Before)),
           ],
           onChanged: (value) => setState(() => _reminderMinutes = value!),
         ),
@@ -330,31 +330,31 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
       children: [
         _buildTextField(
           controller: _titleController,
-          label: '任务',
-          hint: '要做什么',
+          label: LocalizationHelper.of(context).taskLabel,
+          hint: LocalizationHelper.of(context).whatToDoHint,
           required: true,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _contentController,
-          label: '详细描述',
-          hint: '具体要求、注意事项',
+          label: LocalizationHelper.of(context).detailedDescriptionLabel,
+          hint: LocalizationHelper.of(context).taskRequirementsHint,
           maxLines: 4,
         ),
         SizedBox(height: 16),
         _buildDropdown(
-          label: '优先级',
+          label: LocalizationHelper.of(context).priorityLabel,
           value: _priority,
           items: [
-            DropdownMenuItem(value: 'low', child: Text('低')),
-            DropdownMenuItem(value: 'medium', child: Text('中')),
-            DropdownMenuItem(value: 'high', child: Text('高')),
+            DropdownMenuItem(value: 'low', child: Text(LocalizationHelper.of(context).low)),
+            DropdownMenuItem(value: 'medium', child: Text(LocalizationHelper.of(context).medium)),
+            DropdownMenuItem(value: 'high', child: Text(LocalizationHelper.of(context).high)),
           ],
           onChanged: (value) => setState(() => _priority = value!),
         ),
         SizedBox(height: 16),
         _buildDatePicker(
-          label: '截止日期（可选）',
+          label: LocalizationHelper.of(context).dueDateOptionalLabel,
           date: _dueDate,
           onChanged: (date) => setState(() => _dueDate = date),
           allowNull: true,
@@ -369,22 +369,22 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
       children: [
         _buildTextField(
           controller: _titleController,
-          label: '标题',
-          hint: '网站或链接名称',
+          label: LocalizationHelper.of(context).titleLabel,
+          hint: LocalizationHelper.of(context).websiteLinkName,
           required: true,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _urlController,
-          label: 'URL链接',
-          hint: 'https://...',
+          label: LocalizationHelper.of(context).urlLinkLabel,
+          hint: LocalizationHelper.of(context).websiteAddressHint,
           required: true,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _urlDescriptionController,
-          label: '描述',
-          hint: '这个链接的用途或内容',
+          label: LocalizationHelper.of(context).linkDescriptionLabel,
+          hint: LocalizationHelper.of(context).linkPurposeHint,
           maxLines: 4,
         ),
       ],
@@ -397,8 +397,8 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
       children: [
         _buildTextField(
           controller: _titleController,
-          label: '标题',
-          hint: '文件描述',
+          label: LocalizationHelper.of(context).titleLabel,
+          hint: LocalizationHelper.of(context).fileDescription,
           required: true,
         ),
         SizedBox(height: 16),
@@ -406,8 +406,8 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
         SizedBox(height: 16),
         _buildTextField(
           controller: _contentController,
-          label: '描述',
-          hint: '文件说明',
+          label: LocalizationHelper.of(context).linkDescriptionLabel,
+          hint: LocalizationHelper.of(context).fileExplanation,
           maxLines: 4,
         ),
       ],
@@ -465,7 +465,7 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
           ),
           validator: required ? (value) {
             if (value == null || value.trim().isEmpty) {
-              return '请输入$label';
+              return LocalizationHelper.of(context).pleaseEnter(label);
             }
             return null;
           } : null,
@@ -560,7 +560,7 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
                 Text(
                   date != null 
                     ? '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}'
-                    : '选择日期',
+                    : LocalizationHelper.of(context).selectDate,
                   style: AppTheme.bodyStyle.copyWith(
                     color: date != null ? AppTheme.textPrimaryColor : AppTheme.textTertiaryColor,
                   ),
@@ -628,7 +628,7 @@ class _CreateMemoryScreenState extends State<CreateMemoryScreen> {
                 Text(
                   dateTime != null 
                     ? '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}'
-                    : '选择时间',
+                    : LocalizationHelper.of(context).selectTime,
                   style: AppTheme.bodyStyle.copyWith(
                     color: dateTime != null ? AppTheme.textPrimaryColor : AppTheme.textTertiaryColor,
                   ),

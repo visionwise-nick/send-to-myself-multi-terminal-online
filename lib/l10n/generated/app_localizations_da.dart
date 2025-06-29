@@ -1221,7 +1221,9 @@ class AppLocalizationsDa extends AppLocalizations {
   }
 
   @override
-  String get batchShareFailed => 'Batch share failed';
+  String batchShareFailed(String error) {
+    return 'Batch share failed: $error';
+  }
 
   @override
   String copiedMessages(Object count) {
@@ -1590,8 +1592,8 @@ class AppLocalizationsDa extends AppLocalizations {
   }
 
   @override
-  String sharedFilesAndText(int fileCount, String textPart) {
-    return 'Shared $fileCount files$textPart';
+  String sharedFilesAndText(int fileCount, int textCount) {
+    return 'Shared $fileCount files and $textCount text messages';
   }
 
   @override
@@ -1738,7 +1740,7 @@ class AppLocalizationsDa extends AppLocalizations {
   String get checking => 'Checking';
 
   @override
-  String get sendFileFailed => 'Failed to send file';
+  String get sendFileFailed => 'Send file failed';
 
   @override
   String get noFilesToSend => 'No files to send';
@@ -1750,7 +1752,7 @@ class AppLocalizationsDa extends AppLocalizations {
   String get recall => 'Recall';
 
   @override
-  String get clearDeduplicationRecords => 'Clear Deduplication Records';
+  String get clearDeduplicationRecords => 'Clear deduplication records';
 
   @override
   String get cancelUpload => 'Cancel Upload';
@@ -1924,7 +1926,7 @@ class AppLocalizationsDa extends AppLocalizations {
   String get titleLabel => 'Title';
 
   @override
-  String get titleHint => 'Enter note title';
+  String get titleHint => 'Enter title';
 
   @override
   String get contentLabel => 'Content';
@@ -2212,4 +2214,231 @@ class AppLocalizationsDa extends AppLocalizations {
   String filesSent(int count) {
     return '$count files sent';
   }
+
+  @override
+  String get sectionmissing => '';
+
+  @override
+  String get sectionmemoryforms => '';
+
+  @override
+  String get usernameEmailLabel => 'Username/Email';
+
+  @override
+  String get passwordLabel => 'Password';
+
+  @override
+  String get expenseItemLabel => 'Expense Item';
+
+  @override
+  String get amountLabel => 'Amount';
+
+  @override
+  String get notesHint => 'Detailed description';
+
+  @override
+  String get scheduleTitleLabel => 'Schedule Title';
+
+  @override
+  String get endTimeOptionalLabel => 'End Time (Optional)';
+
+  @override
+  String get advanceReminderLabel => 'Advance Reminder';
+
+  @override
+  String get whatToDoHint => 'What to do';
+
+  @override
+  String get detailedDescriptionLabel => 'Detailed Description';
+
+  @override
+  String get dueDateOptionalLabel => 'Due Date (Optional)';
+
+  @override
+  String get urlLinkLabel => 'URL Link';
+
+  @override
+  String get linkDescriptionLabel => 'Description';
+
+  @override
+  String get linkPurposeHint => 'The purpose or content of this link';
+
+  @override
+  String get fileLabel => 'File *';
+
+  @override
+  String pleaseEnter(String field) {
+    return 'Please enter $field';
+  }
+
+  @override
+  String get completed => 'Completed';
+
+  @override
+  String get addTag => 'Add Tag';
+
+  @override
+  String get addTagLabel => 'Add Tag';
+
+  @override
+  String get enterTagName => 'Enter tag name';
+
+  @override
+  String get aiGenerate => 'AI Generate';
+
+  @override
+  String get generating => 'Generating...';
+
+  @override
+  String aiGeneratedTags(int count) {
+    return 'AI generated $count new tags';
+  }
+
+  @override
+  String generateTagsFailed(String error) {
+    return 'Generate tags failed: $error';
+  }
+
+  @override
+  String get updateSuccess => 'Update successful';
+
+  @override
+  String updateFailed(String error) {
+    return 'Update failed: $error';
+  }
+
+  @override
+  String editMemoryType(String type) {
+    return 'Edit $type';
+  }
+
+  @override
+  String get enterTitle => 'Enter title';
+
+  @override
+  String get enterContent => 'Enter content';
+
+  @override
+  String get tagsLabel => 'Tags';
+
+  @override
+  String get processingShareContent => 'Processing shared content...';
+
+  @override
+  String get shareSuccess => '✅ Share successful!';
+
+  @override
+  String get shareFailed => '❌ Share failed';
+
+  @override
+  String get shareException => '❌ Share exception';
+
+  @override
+  String get allContentSentToGroup =>
+      'All content has been sent to current group';
+
+  @override
+  String get pleaseTryAgainLater => 'Please try again later';
+
+  @override
+  String processingError(String error) {
+    return 'Processing error: $error';
+  }
+
+  @override
+  String get allFilesSentComplete => 'All files sent successfully';
+
+  @override
+  String get partialFilesSentComplete => 'Some files sent successfully';
+
+  @override
+  String get allFilesSendFailed => 'All files failed to send';
+
+  @override
+  String get fileSentSuccess => 'File sent successfully!';
+
+  @override
+  String textSharedCount(int count) {
+    return 'Shared $count text messages';
+  }
+
+  @override
+  String get messageShare => 'Send To Myself - Message Share';
+
+  @override
+  String fileShared(String fileName) {
+    return 'File $fileName has been shared';
+  }
+
+  @override
+  String get fileUnavailableSharedText =>
+      'File unavailable, shared text content instead';
+
+  @override
+  String get resolvingServerDomain => '🔍 Resolving server domain...';
+
+  @override
+  String serverDnsSuccess(String address) {
+    return '✅ Server DNS resolution successful: $address';
+  }
+
+  @override
+  String get serverDnsFailed => '❌ Server DNS resolution failed: no result';
+
+  @override
+  String serverDnsError(String error) {
+    return '❌ Server DNS resolution failed: $error';
+  }
+
+  @override
+  String get testingServerConnection => '🔍 Testing server connection...';
+
+  @override
+  String get serverConnectionSuccess => '✅ Server connection successful';
+
+  @override
+  String serverConnectionFailed(String error) {
+    return '❌ Server connection failed: $error';
+  }
+
+  @override
+  String get startingWebSocketTest =>
+      '🧪 Starting WebSocket connection test...';
+
+  @override
+  String currentConnectionStatus(String status) {
+    return '📊 Current connection status: $status';
+  }
+
+  @override
+  String get sendingTestPing => '📡 Sending test ping...';
+
+  @override
+  String get webSocketNotConnected =>
+      '⚠️ WebSocket not connected, unable to send test message';
+
+  @override
+  String get executingForceReconnect => '🔄 Executing force reconnect...';
+
+  @override
+  String get stopPingTest => '⏹️ Stop Ping test';
+
+  @override
+  String get startPingTest => '🏓 Start Ping test (every 5 seconds)';
+
+  @override
+  String get sendingPing => '🏓 Sending test ping';
+
+  @override
+  String get connectionDisconnectedPausePing =>
+      '⚠️ Connection disconnected, pausing ping test';
+
+  @override
+  String get logCleared => '🧹 Log cleared';
+
+  @override
+  String get logCopiedToClipboard => 'Log copied to clipboard';
+
+  @override
+  String get noResult => 'no result';
 }

@@ -1209,7 +1209,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get batchShareFailed => '批量分享失败';
+  String batchShareFailed(String error) {
+    return '批量分享失败: $error';
+  }
 
   @override
   String copiedMessages(Object count) {
@@ -1571,8 +1573,8 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String sharedFilesAndText(int fileCount, String textPart) {
-    return '已分享$fileCount个文件$textPart';
+  String sharedFilesAndText(int fileCount, int textCount) {
+    return '已分享$fileCount个文件和$textCount条文本';
   }
 
   @override
@@ -1717,7 +1719,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendFileFailed => '发送文件失败';
 
   @override
-  String get noFilesToSend => '没有文件可以发送';
+  String get noFilesToSend => '没有文件可发送';
 
   @override
   String get batchRecall => '批量撤回';
@@ -1726,7 +1728,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recall => '撤回';
 
   @override
-  String get clearDeduplicationRecords => '清理去重记录';
+  String get clearDeduplicationRecords => '清除去重记录';
 
   @override
   String get cancelUpload => '取消上传';
@@ -1895,7 +1897,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get titleLabel => '标题';
 
   @override
-  String get titleHint => '输入笔记标题';
+  String get titleHint => '输入标题';
 
   @override
   String get contentLabel => '内容';
@@ -2182,4 +2184,226 @@ class AppLocalizationsZh extends AppLocalizations {
   String filesSent(int count) {
     return '$count个文件已发送';
   }
+
+  @override
+  String get sectionmissing => '';
+
+  @override
+  String get sectionmemoryforms => '';
+
+  @override
+  String get usernameEmailLabel => '用户名/邮箱';
+
+  @override
+  String get passwordLabel => '密码';
+
+  @override
+  String get expenseItemLabel => '消费项目';
+
+  @override
+  String get amountLabel => '金额';
+
+  @override
+  String get notesHint => '详细说明';
+
+  @override
+  String get scheduleTitleLabel => '日程标题';
+
+  @override
+  String get endTimeOptionalLabel => '结束时间（可选）';
+
+  @override
+  String get advanceReminderLabel => '提前提醒';
+
+  @override
+  String get whatToDoHint => '要做什么';
+
+  @override
+  String get detailedDescriptionLabel => '详细描述';
+
+  @override
+  String get dueDateOptionalLabel => '截止日期（可选）';
+
+  @override
+  String get urlLinkLabel => 'URL链接';
+
+  @override
+  String get linkDescriptionLabel => '描述';
+
+  @override
+  String get linkPurposeHint => '这个链接的用途或内容';
+
+  @override
+  String get fileLabel => '文件 *';
+
+  @override
+  String pleaseEnter(String field) {
+    return '请输入$field';
+  }
+
+  @override
+  String get completed => '已完成';
+
+  @override
+  String get addTag => '添加标签';
+
+  @override
+  String get addTagLabel => '添加标签';
+
+  @override
+  String get enterTagName => '输入标签名称';
+
+  @override
+  String get aiGenerate => 'AI生成';
+
+  @override
+  String get generating => '生成中...';
+
+  @override
+  String aiGeneratedTags(int count) {
+    return 'AI生成了$count个新标签';
+  }
+
+  @override
+  String generateTagsFailed(String error) {
+    return '生成标签失败: $error';
+  }
+
+  @override
+  String get updateSuccess => '更新成功';
+
+  @override
+  String updateFailed(String error) {
+    return '更新失败: $error';
+  }
+
+  @override
+  String editMemoryType(String type) {
+    return '编辑$type';
+  }
+
+  @override
+  String get enterTitle => '输入标题';
+
+  @override
+  String get enterContent => '输入内容';
+
+  @override
+  String get tagsLabel => '标签';
+
+  @override
+  String get processingShareContent => '正在处理分享内容...';
+
+  @override
+  String get shareSuccess => '✅ 分享成功！';
+
+  @override
+  String get shareFailed => '❌ 分享失败';
+
+  @override
+  String get shareException => '❌ 分享异常';
+
+  @override
+  String get allContentSentToGroup => '所有内容已发送到当前群组';
+
+  @override
+  String get pleaseTryAgainLater => '请稍后重试';
+
+  @override
+  String processingError(String error) {
+    return '处理出现错误: $error';
+  }
+
+  @override
+  String get allFilesSentComplete => '所有文件发送完成';
+
+  @override
+  String get partialFilesSentComplete => '部分文件发送完成';
+
+  @override
+  String get allFilesSendFailed => '所有文件发送失败';
+
+  @override
+  String get fileSentSuccess => '文件发送成功！';
+
+  @override
+  String textSharedCount(int count) {
+    return '已分享$count条文本消息';
+  }
+
+  @override
+  String get messageShare => 'Send To Myself - 消息分享';
+
+  @override
+  String fileShared(String fileName) {
+    return '文件 $fileName 已分享';
+  }
+
+  @override
+  String get fileUnavailableSharedText => '文件不可用，已分享文字内容';
+
+  @override
+  String get resolvingServerDomain => '🔍 解析服务器域名...';
+
+  @override
+  String serverDnsSuccess(String address) {
+    return '✅ 服务器DNS解析成功: $address';
+  }
+
+  @override
+  String get serverDnsFailed => '❌ 服务器DNS解析失败: 无结果';
+
+  @override
+  String serverDnsError(String error) {
+    return '❌ 服务器DNS解析失败: $error';
+  }
+
+  @override
+  String get testingServerConnection => '🔍 测试服务器连接...';
+
+  @override
+  String get serverConnectionSuccess => '✅ 服务器连接成功';
+
+  @override
+  String serverConnectionFailed(String error) {
+    return '❌ 服务器连接失败: $error';
+  }
+
+  @override
+  String get startingWebSocketTest => '🧪 开始WebSocket连接测试...';
+
+  @override
+  String currentConnectionStatus(String status) {
+    return '📊 当前连接状态: $status';
+  }
+
+  @override
+  String get sendingTestPing => '📡 发送测试ping...';
+
+  @override
+  String get webSocketNotConnected => '⚠️ WebSocket未连接，无法发送测试消息';
+
+  @override
+  String get executingForceReconnect => '🔄 执行强制重连...';
+
+  @override
+  String get stopPingTest => '⏹️ 停止Ping测试';
+
+  @override
+  String get startPingTest => '🏓 开始Ping测试 (每5秒)';
+
+  @override
+  String get sendingPing => '🏓 发送测试ping';
+
+  @override
+  String get connectionDisconnectedPausePing => '⚠️ 连接断开，暂停ping测试';
+
+  @override
+  String get logCleared => '🧹 日志已清除';
+
+  @override
+  String get logCopiedToClipboard => '日志已复制到剪贴板';
+
+  @override
+  String get noResult => '无结果';
 }

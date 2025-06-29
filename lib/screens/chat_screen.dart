@@ -36,8 +36,6 @@ import 'package:share_plus/share_plus.dart'; // 🔥 新增：系统分享功能
 // 🔥 新增：桌面端右键菜单支持
 import 'package:context_menus/context_menus.dart';
 
-
-
 import '../services/websocket_manager.dart' as ws_manager; // 🔥 修复：使用别名避免命名冲突
 import '../utils/localization_helper.dart';
 
@@ -2318,10 +2316,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 桌面端剪贴板处理（暂时只支持文本）
+  // 🔥 桌面端剪贴板处理（简化版，只支持文本）
   Future<void> _handleDesktopClipboardPaste() async {
-    // 暂时使用传统的剪贴板API处理文本
-    await _handleMobileClipboardPaste();
+    // 暂时使用传统的剪贴板API，直到重新实现文件剪贴板功能
+      await _handleMobileClipboardPaste();
   }
 
   // 🔥 移动端剪贴板处理（传统API，只支持文本）
@@ -2532,7 +2530,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
          _multiSelectController.exitMultiSelectMode();
          if (mounted) {
            ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text('已分享${textMessages.length}条文本消息')),
+             SnackBar(content: Text(LocalizationHelper.of(context).textSharedCount(textMessages.length))),
            );
          }
          return;
@@ -2568,7 +2566,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         _multiSelectController.exitMultiSelectMode();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('已分享${successCount}个文件${textMessages.isNotEmpty ? '和${textMessages.length}条文本' : ''}')),
+            SnackBar(content: Text(textMessages.isNotEmpty 
+          ? LocalizationHelper.of(context).sharedFilesAndText(successCount, textMessages.length)
+          : LocalizationHelper.of(context).fileShared(successCount.toString()))),
           );
         }
       }
@@ -2577,7 +2577,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       _multiSelectController.exitMultiSelectMode();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('批量分享失败: $e')),
+          SnackBar(content: Text(LocalizationHelper.of(context).batchShareFailed(e.toString()))),
         );
       }
     }
@@ -3817,37 +3817,26 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                         color: const Color(0xFFF9FAFB),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: RawKeyboardListener(
-                        focusNode: FocusNode(),
-                        onKey: (RawKeyEvent event) {
-                          if (!_isDesktop()) return;
-                          
-                          if (event is RawKeyDownEvent) {
-                            final isEnterPressed = event.logicalKey == LogicalKeyboardKey.enter;
-                            final isShiftPressed = event.isShiftPressed;
-                            final isCtrlPressed = event.isControlPressed || event.isMetaPressed;
-                            final isVPressed = event.logicalKey == LogicalKeyboardKey.keyV;
-                            
-                            // 🔥 新增：Ctrl+V 粘贴文件功能
-                            if (isCtrlPressed && isVPressed) {
-                              _handlePasteFiles();
-                              return;
-                            }
-                            
-                            if (isEnterPressed && !isShiftPressed) {
-                              // 🔥 修改：发送带文件的消息
-                              _sendMessageWithFiles();
-                              return;
-                            }
-                          }
+                      child: CallbackShortcuts(
+                        bindings: {
+                          // macOS 使用 Cmd+V，其他平台使用 Ctrl+V
+                          LogicalKeySet(
+                            Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control,
+                            LogicalKeyboardKey.keyV,
+                          ): () {
+                            print('🎯 检测到粘贴快捷键，开始处理粘贴...');
+                            _handlePasteFiles();
+                          },
                         },
                         child: Focus(
-                          onKey: (FocusNode node, RawKeyEvent event) {
-                            if (_isDesktop() && event is RawKeyDownEvent) {
+                          // 移除 autofocus，避免焦点冲突
+                          onKeyEvent: (FocusNode node, KeyEvent event) {
+                            if (_isDesktop() && event is KeyDownEvent) {
                               final isEnterPressed = event.logicalKey == LogicalKeyboardKey.enter;
-                              final isShiftPressed = event.isShiftPressed;
+                              final isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
                               
                               if (isEnterPressed && !isShiftPressed) {
+                                _sendMessageWithFiles();
                                 return KeyEventResult.handled;
                               }
                             }
@@ -4409,34 +4398,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       default:
         return const Color(0xFF6B7280);
     }
-  }
-
-  // 根据文件扩展名获取文件类型
-  String _getFileTypeFromExtension(String extension) {
-    final ext = extension.toLowerCase();
-    
-    // 图片类型
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'tiff', 'tif', 'ico'].contains(ext)) {
-      return 'image';
-    }
-    
-    // 视频类型
-    if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', '3gp', 'mpeg', 'mpg', 'm4v'].contains(ext)) {
-      return 'video';
-    }
-    
-    // 音频类型
-    if (['mp3', 'wav', 'flac', 'aac', 'ogg', 'wma', 'm4a', 'opus'].contains(ext)) {
-      return 'audio';
-    }
-    
-    // 文档类型
-    if (['pdf', 'doc', 'docx', 'txt', 'rtf', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp'].contains(ext)) {
-      return 'document';
-    }
-    
-    // 默认为普通文件
-    return 'file';
   }
 
   // 获取文件类型显示名称
@@ -5398,7 +5359,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         // 分享文字
         await Share.share(
           text,
-          subject: 'Send To Myself - 消息分享',
+          subject: LocalizationHelper.of(context).messageShare,
         );
         
         if (mounted) {
@@ -5715,228 +5676,135 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 🔥 新增：复制文件到剪贴板（桌面端）
   Future<void> _copyFileToClipboard(String filePath) async {
     try {
+      print('🔄 开始复制文件: $filePath');
+      
+      // 首先检查文件是否存在
+      if (!File(filePath).existsSync()) {
+        print('❌ 文件不存在: $filePath');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('文件不存在，无法复制')),
+          );
+        }
+        return;
+      }
+      
       // 判断是否为桌面端
       final isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
       
       if (isDesktop) {
-        // 桌面端使用系统剪贴板复制文件
         if (Platform.isMacOS) {
-          await Process.run('osascript', [
+          // macOS: 先复制文件路径到剪贴板，这样更可靠
+          final result = await Process.run('osascript', [
             '-e',
-            'tell app "Finder" to set the clipboard to (POSIX file "$filePath")'
+            'set the clipboard to "$filePath"'
           ]);
+          
+          print('macOS复制命令执行结果: ${result.exitCode}');
+          if (result.exitCode != 0) {
+            print('macOS复制失败: ${result.stderr}');
+            throw Exception('macOS复制命令失败');
+          }
         } else if (Platform.isWindows) {
-          // Windows使用PowerShell复制文件
-          await Process.run('powershell', [
+          // Windows使用PowerShell复制文件路径
+          final result = await Process.run('powershell', [
             '-Command',
-            'Set-Clipboard -Path "$filePath"'
+            'Set-Clipboard -Value "$filePath"'
           ]);
+          
+          if (result.exitCode != 0) {
+            throw Exception('Windows复制命令失败');
+          }
         } else if (Platform.isLinux) {
-          // Linux使用xclip复制文件路径（因为复制文件本身比较复杂）
-          await Process.run('echo', [filePath, '|', 'xclip', '-selection', 'clipboard']);
+          // Linux使用xclip复制文件路径
+          final result = await Process.run('bash', [
+            '-c',
+            'echo "$filePath" | xclip -selection clipboard'
+          ]);
+          
+          if (result.exitCode != 0) {
+            throw Exception('Linux复制命令失败');
+          }
         }
         
-        print('文件已复制到剪贴板: $filePath');
+        print('✅ 文件路径已复制到剪贴板: $filePath');
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('文件已复制到剪贴板')),
+            const SnackBar(content: Text('文件路径已复制到剪贴板')),
           );
         }
       }
     } catch (e) {
-      print('复制文件失败: $e');
+      print('❌ 复制文件失败: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('复制文件失败')),
+          SnackBar(content: Text('复制文件失败: $e')),
         );
       }
     }
   }
 
-    // 🔥 新增：处理粘贴文件功能（桌面端）
+      // 🔥 新增：处理粘贴文件功能（桌面端）- 简化版本
   Future<void> _handlePasteFiles() async {
     try {
+      print('🔄 开始处理粘贴功能...');
+      
       // 判断是否为桌面端
       final isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+      if (!isDesktop) {
+        print('❌ 非桌面端，跳过粘贴处理');
+        return;
+      }
       
-      if (!isDesktop) return;
-      
-      print('🔄 检测粘贴内容...');
-      
-      // 获取剪贴板文本数据
-      final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-      
-      if (clipboardData?.text != null) {
-        final clipboardText = clipboardData!.text!.trim();
-        
-        // 首先检查是否为文件路径
-        if (await _isValidFilePath(clipboardText)) {
-          print('🔥 检测到文件路径: $clipboardText');
-          final file = File(clipboardText);
-          final fileName = file.path.split(Platform.isWindows ? '\\' : '/').last;
-          final fileSize = await file.length();
-          await _addFileToPreview(file, fileName, fileSize);
+      // 首先尝试简单的文本粘贴（检查是否为文件路径）
+      try {
+        final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+        if (clipboardData?.text != null) {
+          final clipboardText = clipboardData!.text!.trim();
+          print('📋 剪贴板文本内容: $clipboardText');
           
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('已从剪贴板添加文件: $fileName')),
-            );
-          }
-          return;
-        }
-        
-        // 如果不是文件路径，检查是否包含多个文件路径（换行分隔）
-        final lines = clipboardText.split('\n');
-        if (lines.length > 1) {
-          bool hasValidFiles = false;
-          for (final line in lines) {
-            final trimmedLine = line.trim();
-            if (trimmedLine.isNotEmpty && await _isValidFilePath(trimmedLine)) {
-              final file = File(trimmedLine);
-              final fileName = file.path.split(Platform.isWindows ? '\\' : '/').last;
-              final fileSize = await file.length();
-              await _addFileToPreview(file, fileName, fileSize);
-              hasValidFiles = true;
-            }
-          }
-          
-          if (hasValidFiles) {
+          // 检查是否为文件路径
+          if (await _isValidFilePath(clipboardText)) {
+            print('✅ 检测到文件路径，创建XFile');
+            final fileName = clipboardText.split(Platform.isWindows ? '\\' : '/').last;
+            final xFile = XFile(clipboardText, name: fileName);
+            await _handleDroppedFiles([xFile]);
+            
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('已从剪贴板添加 ${lines.length} 个文件')),
+                SnackBar(content: Text('已从剪贴板添加文件: $fileName')),
               );
             }
             return;
           }
         }
-        
-        // 如果不是文件路径，作为普通文本粘贴到输入框
-        _messageController.text = _messageController.text + clipboardText;
-        setState(() {
-          _isTyping = _messageController.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
-        });
-        print('✅ 粘贴文本到输入框: ${clipboardText.length} 个字符');
-        return;
+      } catch (e) {
+        print('❌ 获取剪贴板文本失败: $e');
       }
       
-      // 如果是macOS，尝试使用AppleScript获取剪贴板中的文件
-      if (Platform.isMacOS) {
-        try {
-          // 方法1：尝试获取文件URL
-          final result1 = await Process.run('osascript', [
-            '-e',
-            '''
-            try
-              set fileURL to (the clipboard as «class furl»)
-              return POSIX path of fileURL
-            on error
-              return "NO_FILE"
-            end try
-            '''
-          ]);
-          
-          if (result1.exitCode == 0) {
-            final filePath = result1.stdout.toString().trim();
-            if (filePath != "NO_FILE" && await _isValidFilePath(filePath)) {
-              print('🔥 macOS检测到文件URL: $filePath');
-              final file = File(filePath);
-              final fileName = file.path.split('/').last;
-              final fileSize = await file.length();
-              await _addFileToPreview(file, fileName, fileSize);
-              
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('已从剪贴板添加文件: $fileName')),
-                );
-              }
-              return;
-            }
-          }
-          
-          // 方法2：尝试获取alias
-          final result2 = await Process.run('osascript', [
-            '-e',
-            '''
-            try
-              set fileAlias to (the clipboard as alias)
-              return POSIX path of fileAlias
-            on error
-              return "NO_FILE"
-            end try
-            '''
-          ]);
-          
-          if (result2.exitCode == 0) {
-            final filePath = result2.stdout.toString().trim();
-            if (filePath != "NO_FILE" && await _isValidFilePath(filePath)) {
-              print('🔥 macOS检测到文件alias: $filePath');
-              final file = File(filePath);
-              final fileName = file.path.split('/').last;
-              final fileSize = await file.length();
-              await _addFileToPreview(file, fileName, fileSize);
-              
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('已从剪贴板添加文件: $fileName')),
-                );
-              }
-              return;
-            }
-          }
-        } catch (e) {
-          print('macOS剪贴板文件获取失败: $e');
-        }
-      }
-      
-      // 如果没有找到文件，提示用户
+      // 如果不是文件路径，提示用户
+      print('❌ 剪贴板中没有找到可用的文件路径');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('剪贴板中没有找到文本。如需添加文件，请直接拖拽到窗口中'),
-            duration: Duration(seconds: 3),
-          ),
+          const SnackBar(content: Text('请先复制文件，然后使用 Cmd+V 粘贴')),
         );
       }
       
     } catch (e) {
-      print('粘贴文件失败: $e');
+      print('❌ 粘贴文件失败: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('粘贴文件失败')),
+          SnackBar(content: Text('粘贴文件失败: $e')),
         );
       }
     }
   }
 
-
-
   // 🔥 新增：检查是否为有效文件路径
   Future<bool> _isValidFilePath(String path) async {
     try {
-      if (path.isEmpty) return false;
-      
-      // 清理路径
-      String cleanPath = path.trim();
-      
-      // 移除可能的引号
-      if (cleanPath.startsWith('"') && cleanPath.endsWith('"')) {
-        cleanPath = cleanPath.substring(1, cleanPath.length - 1);
-      }
-      if (cleanPath.startsWith("'") && cleanPath.endsWith("'")) {
-        cleanPath = cleanPath.substring(1, cleanPath.length - 1);
-      }
-      
-      // 检查是否看起来像文件路径
-      final isWindowsPath = RegExp(r'^[A-Za-z]:\\').hasMatch(cleanPath);
-      final isUnixPath = cleanPath.startsWith('/');
-      final hasFileExtension = RegExp(r'\.[a-zA-Z0-9]{1,10}$').hasMatch(cleanPath);
-      
-      if (!isWindowsPath && !isUnixPath && !hasFileExtension) {
-        return false;
-      }
-      
-      final file = File(cleanPath);
+      final file = File(path);
       return await file.exists();
     } catch (e) {
       return false;

@@ -2509,8 +2509,8 @@ abstract class AppLocalizations {
   /// No description provided for @batchShareFailed.
   ///
   /// In en, this message translates to:
-  /// **'Batch share failed'**
-  String get batchShareFailed;
+  /// **'Batch share failed: {error}'**
+  String batchShareFailed(String error);
 
   /// No description provided for @copiedMessages.
   ///
@@ -3169,8 +3169,8 @@ abstract class AppLocalizations {
   /// No description provided for @sharedFilesAndText.
   ///
   /// In en, this message translates to:
-  /// **'Shared {fileCount} files{textPart}'**
-  String sharedFilesAndText(int fileCount, String textPart);
+  /// **'Shared {fileCount} files and {textCount} text messages'**
+  String sharedFilesAndText(int fileCount, int textCount);
 
   /// No description provided for @andTextMessages.
   ///
@@ -3403,7 +3403,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendFileFailed.
   ///
   /// In en, this message translates to:
-  /// **'Failed to send file'**
+  /// **'Send file failed'**
   String get sendFileFailed;
 
   /// No description provided for @noFilesToSend.
@@ -3427,7 +3427,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearDeduplicationRecords.
   ///
   /// In en, this message translates to:
-  /// **'Clear Deduplication Records'**
+  /// **'Clear deduplication records'**
   String get clearDeduplicationRecords;
 
   /// No description provided for @cancelUpload.
@@ -3757,7 +3757,7 @@ abstract class AppLocalizations {
   /// No description provided for @titleHint.
   ///
   /// In en, this message translates to:
-  /// **'Enter note title'**
+  /// **'Enter title'**
   String get titleHint;
 
   /// No description provided for @contentLabel.
@@ -4323,6 +4323,402 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} files sent'**
   String filesSent(int count);
+
+  /// No description provided for @sectionmissing.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionmissing;
+
+  /// No description provided for @sectionmemoryforms.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionmemoryforms;
+
+  /// No description provided for @usernameEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Username/Email'**
+  String get usernameEmailLabel;
+
+  /// No description provided for @passwordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get passwordLabel;
+
+  /// No description provided for @expenseItemLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense Item'**
+  String get expenseItemLabel;
+
+  /// No description provided for @amountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get amountLabel;
+
+  /// No description provided for @notesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed description'**
+  String get notesHint;
+
+  /// No description provided for @scheduleTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule Title'**
+  String get scheduleTitleLabel;
+
+  /// No description provided for @endTimeOptionalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'End Time (Optional)'**
+  String get endTimeOptionalLabel;
+
+  /// No description provided for @advanceReminderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance Reminder'**
+  String get advanceReminderLabel;
+
+  /// No description provided for @whatToDoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What to do'**
+  String get whatToDoHint;
+
+  /// No description provided for @detailedDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed Description'**
+  String get detailedDescriptionLabel;
+
+  /// No description provided for @dueDateOptionalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due Date (Optional)'**
+  String get dueDateOptionalLabel;
+
+  /// No description provided for @urlLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'URL Link'**
+  String get urlLinkLabel;
+
+  /// No description provided for @linkDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get linkDescriptionLabel;
+
+  /// No description provided for @linkPurposeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The purpose or content of this link'**
+  String get linkPurposeHint;
+
+  /// No description provided for @fileLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'File *'**
+  String get fileLabel;
+
+  /// No description provided for @pleaseEnter.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter {field}'**
+  String pleaseEnter(String field);
+
+  /// No description provided for @completed.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completed;
+
+  /// No description provided for @addTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Tag'**
+  String get addTag;
+
+  /// No description provided for @addTagLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Tag'**
+  String get addTagLabel;
+
+  /// No description provided for @enterTagName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter tag name'**
+  String get enterTagName;
+
+  /// No description provided for @aiGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Generate'**
+  String get aiGenerate;
+
+  /// No description provided for @generating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating...'**
+  String get generating;
+
+  /// No description provided for @aiGeneratedTags.
+  ///
+  /// In en, this message translates to:
+  /// **'AI generated {count} new tags'**
+  String aiGeneratedTags(int count);
+
+  /// No description provided for @generateTagsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate tags failed: {error}'**
+  String generateTagsFailed(String error);
+
+  /// No description provided for @updateSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Update successful'**
+  String get updateSuccess;
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed: {error}'**
+  String updateFailed(String error);
+
+  /// No description provided for @editMemoryType.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {type}'**
+  String editMemoryType(String type);
+
+  /// No description provided for @enterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter title'**
+  String get enterTitle;
+
+  /// No description provided for @enterContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter content'**
+  String get enterContent;
+
+  /// No description provided for @tagsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get tagsLabel;
+
+  /// No description provided for @processingShareContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing shared content...'**
+  String get processingShareContent;
+
+  /// No description provided for @shareSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Share successful!'**
+  String get shareSuccess;
+
+  /// No description provided for @shareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Share failed'**
+  String get shareFailed;
+
+  /// No description provided for @shareException.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Share exception'**
+  String get shareException;
+
+  /// No description provided for @allContentSentToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'All content has been sent to current group'**
+  String get allContentSentToGroup;
+
+  /// No description provided for @pleaseTryAgainLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again later'**
+  String get pleaseTryAgainLater;
+
+  /// No description provided for @processingError.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing error: {error}'**
+  String processingError(String error);
+
+  /// No description provided for @allFilesSentComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'All files sent successfully'**
+  String get allFilesSentComplete;
+
+  /// No description provided for @partialFilesSentComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Some files sent successfully'**
+  String get partialFilesSentComplete;
+
+  /// No description provided for @allFilesSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'All files failed to send'**
+  String get allFilesSendFailed;
+
+  /// No description provided for @fileSentSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'File sent successfully!'**
+  String get fileSentSuccess;
+
+  /// No description provided for @textSharedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared {count} text messages'**
+  String textSharedCount(int count);
+
+  /// No description provided for @messageShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Send To Myself - Message Share'**
+  String get messageShare;
+
+  /// No description provided for @fileShared.
+  ///
+  /// In en, this message translates to:
+  /// **'File {fileName} has been shared'**
+  String fileShared(String fileName);
+
+  /// No description provided for @fileUnavailableSharedText.
+  ///
+  /// In en, this message translates to:
+  /// **'File unavailable, shared text content instead'**
+  String get fileUnavailableSharedText;
+
+  /// No description provided for @resolvingServerDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'🔍 Resolving server domain...'**
+  String get resolvingServerDomain;
+
+  /// No description provided for @serverDnsSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Server DNS resolution successful: {address}'**
+  String serverDnsSuccess(String address);
+
+  /// No description provided for @serverDnsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Server DNS resolution failed: no result'**
+  String get serverDnsFailed;
+
+  /// No description provided for @serverDnsError.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Server DNS resolution failed: {error}'**
+  String serverDnsError(String error);
+
+  /// No description provided for @testingServerConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'🔍 Testing server connection...'**
+  String get testingServerConnection;
+
+  /// No description provided for @serverConnectionSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Server connection successful'**
+  String get serverConnectionSuccess;
+
+  /// No description provided for @serverConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Server connection failed: {error}'**
+  String serverConnectionFailed(String error);
+
+  /// No description provided for @startingWebSocketTest.
+  ///
+  /// In en, this message translates to:
+  /// **'🧪 Starting WebSocket connection test...'**
+  String get startingWebSocketTest;
+
+  /// No description provided for @currentConnectionStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'📊 Current connection status: {status}'**
+  String currentConnectionStatus(String status);
+
+  /// No description provided for @sendingTestPing.
+  ///
+  /// In en, this message translates to:
+  /// **'📡 Sending test ping...'**
+  String get sendingTestPing;
+
+  /// No description provided for @webSocketNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ WebSocket not connected, unable to send test message'**
+  String get webSocketNotConnected;
+
+  /// No description provided for @executingForceReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'🔄 Executing force reconnect...'**
+  String get executingForceReconnect;
+
+  /// No description provided for @stopPingTest.
+  ///
+  /// In en, this message translates to:
+  /// **'⏹️ Stop Ping test'**
+  String get stopPingTest;
+
+  /// No description provided for @startPingTest.
+  ///
+  /// In en, this message translates to:
+  /// **'🏓 Start Ping test (every 5 seconds)'**
+  String get startPingTest;
+
+  /// No description provided for @sendingPing.
+  ///
+  /// In en, this message translates to:
+  /// **'🏓 Sending test ping'**
+  String get sendingPing;
+
+  /// No description provided for @connectionDisconnectedPausePing.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Connection disconnected, pausing ping test'**
+  String get connectionDisconnectedPausePing;
+
+  /// No description provided for @logCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'🧹 Log cleared'**
+  String get logCleared;
+
+  /// No description provided for @logCopiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Log copied to clipboard'**
+  String get logCopiedToClipboard;
+
+  /// No description provided for @noResult.
+  ///
+  /// In en, this message translates to:
+  /// **'no result'**
+  String get noResult;
 }
 
 class _AppLocalizationsDelegate
