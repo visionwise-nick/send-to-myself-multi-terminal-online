@@ -5696,62 +5696,102 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       
       if (isDesktop) {
         if (Platform.isMacOS) {
-          // macOS: 尝试多种方法复制文件到剪贴板
+          // macOS: 使用更可靠的文件复制方法
           DebugConfig.copyPasteDebug('开始macOS文件复制: $filePath');
           
-          // 方法1: 使用最直接的AppleScript
+          // 方法1: 直接使用AppleScript，不依赖Finder应用
           var result = await Process.run('osascript', [
             '-e',
-            '''
-            tell application "Finder"
-              set theFile to POSIX file "$filePath" as alias
-              set the clipboard to theFile
-            end tell
-            '''
+            'set the clipboard to (POSIX file "$filePath" as alias)'
           ]);
           
-          print('🔄 方法1结果: ${result.exitCode}');
-          print('📤 输出: ${result.stdout}');
-          print('❌ 错误: ${result.stderr}');
-          
-          if (result.exitCode != 0) {
-            // 方法2: 使用更简单的语法
-            print('🔄 尝试方法2...');
-            result = await Process.run('osascript', [
-              '-e',
-              'set the clipboard to (POSIX file "$filePath" as alias)'
-            ]);
-            
-            print('🔄 方法2结果: ${result.exitCode}');
-            print('📤 输出: ${result.stdout}');
-            print('❌ 错误: ${result.stderr}');
+          DebugConfig.copyPasteDebug('🔄 方法1结果: ${result.exitCode}');
+          if (result.stdout.toString().isNotEmpty) {
+            DebugConfig.copyPasteDebug('📤 输出: ${result.stdout}');
+          }
+          if (result.stderr.toString().isNotEmpty) {
+            DebugConfig.copyPasteDebug('❌ 错误: ${result.stderr}');
           }
           
           if (result.exitCode != 0) {
-            // 方法3: 使用pbcopy with file URL
-            print('🔄 尝试方法3...');
+            // 方法2: 使用System Events而非Finder
+            DebugConfig.copyPasteDebug('🔄 尝试方法2 (System Events)...');
+            result = await Process.run('osascript', [
+              '-e',
+              '''
+              tell application "System Events"
+                set the clipboard to (POSIX file "$filePath" as alias)
+              end tell
+              '''
+            ]);
+            
+            DebugConfig.copyPasteDebug('🔄 方法2结果: ${result.exitCode}');
+            if (result.stderr.toString().isNotEmpty) {
+              DebugConfig.copyPasteDebug('❌ 方法2错误: ${result.stderr}');
+            }
+          }
+          
+          if (result.exitCode != 0) {
+            // 方法3: 使用低级别的文件复制命令
+            DebugConfig.copyPasteDebug('🔄 尝试方法3 (低级别复制)...');
+            result = await Process.run('bash', [
+              '-c',
+              '''
+              /usr/bin/python3 -c "
+import AppKit
+import Foundation
+import os
+
+file_path = '$filePath'
+if os.path.exists(file_path):
+    url = Foundation.NSURL.fileURLWithPath_(file_path)
+    pb = AppKit.NSPasteboard.generalPasteboard()
+    pb.clearContents()
+    pb.writeObjects_([url])
+    print('File copied to clipboard')
+else:
+    print('File not found')
+"
+              '''
+            ]);
+            
+            DebugConfig.copyPasteDebug('🔄 方法3结果: ${result.exitCode}');
+            if (result.stdout.toString().isNotEmpty) {
+              DebugConfig.copyPasteDebug('📤 方法3输出: ${result.stdout}');
+            }
+          }
+          
+          if (result.exitCode != 0) {
+            // 方法4: 使用pbcopy with file URL作为最后备选
+            DebugConfig.copyPasteDebug('🔄 尝试方法4 (文件URI)...');
             result = await Process.run('bash', [
               '-c',
               'echo "file://$filePath" | pbcopy'
             ]);
             
-            print('🔄 方法3结果: ${result.exitCode}');
+            DebugConfig.copyPasteDebug('🔄 方法4结果: ${result.exitCode}');
           }
           
           if (result.exitCode == 0) {
-            DebugConfig.copyPasteDebug('macOS文件复制成功');
+            DebugConfig.copyPasteDebug('✅ macOS文件复制成功');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('文件已复制到剪贴板')),
+                const SnackBar(
+                  content: Text('✅ 文件已复制到剪贴板，可以粘贴到Finder或其他应用'),
+                  duration: Duration(seconds: 3),
+                ),
               );
             }
             return; // 立即返回
           } else {
-            DebugConfig.copyPasteDebug('所有macOS复制方法都失败');
+            DebugConfig.copyPasteDebug('❌ 所有macOS文件复制方法都失败，降级为路径复制');
             await Clipboard.setData(ClipboardData(text: filePath));
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('文件路径已复制到剪贴板')),
+                const SnackBar(
+                  content: Text('⚠️ 文件复制失败，已复制文件路径到剪贴板'),
+                  duration: Duration(seconds: 3),
+                ),
               );
             }
             return;
