@@ -1719,7 +1719,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendFileFailed => '发送文件失败';
 
   @override
-  String get noFilesToSend => '没有文件可发送';
+  String get noFilesToSend => '没有要发送的文件';
 
   @override
   String get batchRecall => '批量撤回';

@@ -1351,5 +1351,12 @@
   "logoutFailedTitle": "退出登录失败",
   "logoutFailedMessage": "退出登录失败，您可以选择强制退出或重试。",
   "retry": "重试",
-  "forceLogout": "强制退出"
+  "forceLogout": "强制退出",
+  
+  "sendFileFailed": "发送文件失败",
+  "noFilesToSend": "没有要发送的文件",
+  "batchRecall": "批量撤回",
+  "recall": "撤回",
+  "batchRecallReason": "批量撤回",
+  "batchDeleteReason": "批量删除"
 } 

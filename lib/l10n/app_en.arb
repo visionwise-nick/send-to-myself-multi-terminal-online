@@ -1415,5 +1415,12 @@
   "logoutFailedTitle": "Logout Failed",
   "logoutFailedMessage": "Logout failed, you can choose to force logout or retry.",
   "retry": "Retry",
-  "forceLogout": "Force Logout"
+  "forceLogout": "Force Logout",
+  
+  "sendFileFailed": "Send file failed",
+  "noFilesToSend": "No files to send",
+  "batchRecall": "Batch Recall",
+  "recall": "Recall",
+  "batchRecallReason": "Batch recall",
+  "batchDeleteReason": "Batch delete"
 } 

@@ -2568,7 +2568,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(textMessages.isNotEmpty 
           ? LocalizationHelper.of(context).sharedFilesAndText(successCount, textMessages.length)
-          : LocalizationHelper.of(context).fileShared(successCount.toString()))),
+                                  : LocalizationHelper.of(context).fileShared('$successCount files'))),
           );
         }
       }
@@ -5694,48 +5694,23 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       
       if (isDesktop) {
         if (Platform.isMacOS) {
-          // macOS: 使用osascript复制真正的文件到剪贴板
-          final escapedPath = filePath.replaceAll('"', '\\"').replaceAll('\\', '\\\\');
+          // macOS: 使用最简单的AppleScript复制文件
           final result = await Process.run('osascript', [
             '-e',
-            '''
-            tell application "Finder"
-              try
-                set theFile to POSIX file "$escapedPath" as alias
-                set the clipboard to {theFile}
-              on error errMsg
-                error errMsg
-              end try
-            end tell
-            '''
+            'tell application "Finder" to set the clipboard to (POSIX file "$filePath" as alias)'
           ]);
           
-          print('macOS文件复制命令执行结果: ${result.exitCode}');
-          print('macOS文件复制输出: ${result.stdout}');
-          print('macOS文件复制错误: ${result.stderr}');
+          print('🍎 macOS文件复制结果: ${result.exitCode}');
+          print('📤 输出: ${result.stdout}');
+          print('❌ 错误: ${result.stderr}');
           
           if (result.exitCode != 0) {
-            print('macOS文件复制失败，尝试备选方案');
-            // 备选方案：使用pbcopy复制文件
-            final pbcopyResult = await Process.run('bash', [
-              '-c',
-              'echo "file://$filePath" | pbcopy'
-            ]);
-            
-            if (pbcopyResult.exitCode == 0) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('文件引用已复制到剪贴板')),
-                );
-              }
-            } else {
-              // 最后备选方案：复制文件路径
-              await Clipboard.setData(ClipboardData(text: filePath));
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('文件路径已复制到剪贴板')),
-                );
-              }
+            // 备选方案：复制文件路径
+            await Clipboard.setData(ClipboardData(text: filePath));
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('文件路径已复制到剪贴板')),
+              );
             }
             return;
           }
