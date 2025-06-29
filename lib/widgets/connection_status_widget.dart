@@ -5,6 +5,7 @@ import '../services/websocket_manager.dart' as ws;
 import '../providers/group_provider.dart';
 import '../utils/localization_helper.dart';
 import 'dart:async';
+import '../config/debug_config.dart';
 
 class ConnectionStatusWidget extends StatefulWidget {
   final bool showDetailed;
@@ -28,7 +29,14 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
   
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
-  Timer? _statusRefreshTimer; // 🔥 新增：状态刷新定时器
+  Timer? _statusRefreshTimer;
+  // 🔥 新增节流控制
+  DateTime? _lastRefreshTime;
+  bool _isRefreshing = false;
+  int _refreshRequestCount = 0;
+  static const Duration _throttleInterval = Duration(minutes: 2); // 节流间隔改为2分钟
+  static const Duration _refreshInterval = Duration(minutes: 5); // 刷新间隔改为5分钟
+  static const int _maxRefreshPerHour = 12; // 每小时最多12次刷新
 
   @override
   void initState() {
@@ -202,8 +210,8 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
                 final groupProvider = Provider.of<GroupProvider>(context, listen: false);
                 groupProvider.diagnosisDeviceStatus();
                 
-                // 2. 强制刷新设备状态
-                _forceRefreshDeviceStatus();
+                      // 2. 强制刷新设备状态
+      _manualRefreshDeviceStatus();
               },
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -651,40 +659,75 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
     }
   }
   
-  // 🔥 新增：强制刷新设备状态
+  // 🔥 优化：智能设备状态刷新 - 实现节流机制
   void _forceRefreshDeviceStatus() {
-    print('🔄 强制刷新设备状态...');
-    if (_wsManager.isConnected) {
-      print('🔍 调试：发送设备状态刷新请求');
-      
-      // 1. 请求群组设备状态
-      _wsManager.emit('request_group_devices_status', {
+    final now = DateTime.now();
+    
+    // 检查是否正在刷新
+    if (_isRefreshing) {
+      DebugConfig.debugPrint('设备状态刷新正在进行中，跳过重复请求', module: 'SYNC');
+      return;
+    }
+    
+    // 检查节流间隔
+    if (_lastRefreshTime != null) {
+      final timeSinceLastRefresh = now.difference(_lastRefreshTime!);
+      if (timeSinceLastRefresh < _throttleInterval) {
+        DebugConfig.debugPrint('设备状态刷新请求过于频繁，跳过 (距离上次 ${timeSinceLastRefresh.inSeconds}秒)', module: 'SYNC');
+        return;
+      }
+    }
+    
+    // 检查每小时限制
+    _refreshRequestCount++;
+    if (_refreshRequestCount > _maxRefreshPerHour) {
+      DebugConfig.debugPrint('已达到每小时刷新限制 ($_maxRefreshPerHour)，跳过请求', module: 'SYNC');
+      return;
+    }
+    
+    if (!_wsManager.isConnected) {
+      DebugConfig.debugPrint('WebSocket未连接，无法刷新设备状态', module: 'SYNC');
+      return;
+    }
+    
+    _isRefreshing = true;
+    _lastRefreshTime = now;
+    
+    DebugConfig.debugPrint('执行设备状态刷新 (节流保护)', module: 'SYNC');
+    
+    try {
+      // 🔥 优化：只发送一个合并的请求，而不是4个独立请求
+      _wsManager.emit('batch_device_status_request', {
+        'requests': [
+          'group_devices_status',
+          'online_devices',
+          'device_status',
+          'activity_update'
+        ],
         'timestamp': DateTime.now().toIso8601String(),
-        'reason': 'manual_refresh'
+        'reason': 'optimized_refresh',
+        'throttled': true
       });
       
-      // 2. 请求在线设备列表
-      _wsManager.emit('get_online_devices', {
-        'timestamp': DateTime.now().toIso8601String(),
-        'reason': 'manual_refresh'
+      DebugConfig.debugPrint('设备状态批量刷新请求已发送', module: 'SYNC');
+      
+      // 如果服务器不支持批量请求，降级为原有方式但加延迟
+      Future.delayed(Duration(milliseconds: 500), () {
+        if (_wsManager.isConnected) {
+          _wsManager.emit('request_group_devices_status', {
+            'timestamp': DateTime.now().toIso8601String(),
+            'reason': 'fallback_refresh'
+          });
+        }
       });
       
-      // 3. 🔥 新增：请求设备状态更新
-      _wsManager.emit('request_device_status', {
-        'timestamp': DateTime.now().toIso8601String(),
-        'reason': 'manual_refresh'
+    } catch (e) {
+      DebugConfig.errorPrint('设备状态刷新失败: $e');
+    } finally {
+      // 1秒后解除刷新锁定
+      Future.delayed(Duration(seconds: 1), () {
+        _isRefreshing = false;
       });
-      
-      // 4. 🔥 新增：通知当前设备活跃状态
-      _wsManager.emit('device_activity_update', {
-        'status': 'active',
-        'timestamp': DateTime.now().toIso8601String(),
-        'last_active': DateTime.now().toIso8601String(),
-      });
-      
-      print('✅ 设备状态刷新请求已发送（包含4个请求）');
-    } else {
-      print('❌ WebSocket未连接，无法刷新设备状态');
     }
   }
   
@@ -778,7 +821,7 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
       
       // 测试4：强制状态同步
       results.add('🔄 触发状态同步...');
-      _forceRefreshDeviceStatus();
+      _manualRefreshDeviceStatus();
       _forceSyncMessages();
       results.add('✅ 状态同步请求已发送');
       
@@ -822,16 +865,45 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
     );
   }
 
-  // 🔥 新增：启动状态刷新定时器
+  // 🔥 优化：大幅延长状态刷新间隔，减少服务器压力
   void _startStatusRefreshTimer() {
     _statusRefreshTimer?.cancel();
     
-    // 每3秒刷新一次状态
-    _statusRefreshTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+    // 🔥 优化：从3秒改为5分钟，减少99%的请求
+    _statusRefreshTimer = Timer.periodic(_refreshInterval, (timer) {
       if (_wsManager.isConnected) {
         _forceRefreshDeviceStatus();
       }
     });
+    
+    DebugConfig.debugPrint('状态刷新定时器已启动 (间隔: ${_refreshInterval.inMinutes}分钟)', module: 'SYNC');
+    
+    // 🔥 新增：重置每小时计数器
+    Timer.periodic(Duration(hours: 1), (timer) {
+      _refreshRequestCount = 0;
+      DebugConfig.debugPrint('重置每小时刷新计数器', module: 'SYNC');
+    });
+  }
+
+  // 🔥 新增：仅在必要时手动刷新
+  void _manualRefreshDeviceStatus() {
+    DebugConfig.debugPrint('用户手动触发设备状态刷新', module: 'SYNC');
+    
+    // 手动刷新可以绕过部分节流限制，但仍有基本保护
+    final now = DateTime.now();
+    if (_lastRefreshTime != null) {
+      final timeSinceLastRefresh = now.difference(_lastRefreshTime!);
+      if (timeSinceLastRefresh < Duration(seconds: 30)) {
+        DebugConfig.debugPrint('手动刷新过于频繁，请等待30秒', module: 'SYNC');
+        return;
+      }
+    }
+    
+    // 临时绕过节流限制进行手动刷新
+    final originalLastRefresh = _lastRefreshTime;
+    _lastRefreshTime = null;
+    _forceRefreshDeviceStatus();
+    _lastRefreshTime = originalLastRefresh; // 恢复原来的时间
   }
 
   // 判断是否为移动端

@@ -49,6 +49,10 @@ class WebSocketService {
   // 🔥 重要：通过WebSocketManager获取连接状态
   bool get isConnected => _wsManager.isConnected;
   
+  DateTime? _lastDeviceStatusRefresh;
+  bool _isRefreshingDeviceStatus = false;
+  static const Duration _deviceStatusThrottleInterval = Duration(minutes: 1); // 节流间隔1分钟
+  
   // 🔥 关键修复：设置WebSocket管理器桥接
   void _setupWebSocketManagerBridge() {
     _wsManagerSubscription = _wsManager.onMessageReceived.listen((data) {
@@ -79,18 +83,18 @@ class WebSocketService {
               'data': messageData,
               'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
             });
-            print('✅ 聊天消息已正确转发: ${message['id']}');
+            DebugConfig.debugPrint('聊天消息已正确转发: ${message['id']}', module: 'MESSAGE');
           } else {
-            print('❌ 消息对象为空，无法转发');
+            DebugConfig.errorPrint('消息对象为空，无法转发');
           }
         } else {
-          print('❌ 消息数据为空，无法转发');
+          DebugConfig.errorPrint('消息数据为空，无法转发');
         }
         break;
         
       case 'file_message_received':
         // 🔥 新增：处理文件消息
-        print('📎 转发文件消息到聊天流');
+        DebugConfig.debugPrint('转发文件消息到聊天流', module: 'MESSAGE');
         final messageData = data['data'];
         if (messageData != null && messageData['message'] != null) {
           _chatMessageController.add({
@@ -99,13 +103,13 @@ class WebSocketService {
             'data': messageData,
             'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
           });
-          print('✅ 文件消息已转发: ${messageData['message']['id']}');
+          DebugConfig.debugPrint('文件消息已转发: ${messageData['message']['id']}', module: 'MESSAGE');
         }
         break;
         
       case 'group_file_message':
         // 🔥 新增：处理群组文件消息
-        print('📎 转发群组文件消息到聊天流');
+        DebugConfig.debugPrint('转发群组文件消息到聊天流', module: 'MESSAGE');
         final messageData = data['data'];
         if (messageData != null && messageData['message'] != null) {
           _chatMessageController.add({
@@ -114,38 +118,62 @@ class WebSocketService {
             'data': messageData,
             'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
           });
-          print('✅ 群组文件消息已转发: ${messageData['message']['id']}');
+          DebugConfig.debugPrint('群组文件消息已转发: ${messageData['message']['id']}', module: 'MESSAGE');
         }
         break;
         
       case 'group_devices_status':
+        // 转发群组设备状态到设备状态控制器
+        DebugConfig.debugPrint('桥接群组设备状态到设备状态流: ${data['groupId']}', module: 'WEBSOCKET');
+        _deviceStatusController.add({
+          'type': 'group_devices_status',
+          'groupId': data['groupId'],
+          'devices': data['devices'],
+          'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
+        });
+        break;
+        
       case 'online_devices':
+        // 转发在线设备列表到设备状态控制器
+        DebugConfig.debugPrint('桥接在线设备列表到设备状态流', module: 'WEBSOCKET');
+        _deviceStatusController.add({
+          'type': 'online_devices',
+          'devices': data['devices'],
+          'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
+        });
+        break;
+        
       case 'device_status_update':
-        // 转发设备状态消息到设备状态流
-        _deviceStatusController.add(data);
+        // 转发设备状态更新到设备状态控制器
+        DebugConfig.debugPrint('桥接设备状态更新到设备状态流', module: 'WEBSOCKET');
+        _deviceStatusController.add({
+          'type': 'device_status_update',
+          'data': data,
+          'timestamp': data['timestamp'] ?? DateTime.now().toIso8601String(),
+        });
         break;
         
       case 'recent_messages': // 🔥 新增：处理最近消息
         // 转发最近消息到聊天消息流
-        print('📬 桥接最近消息到聊天流');
+        DebugConfig.debugPrint('桥接最近消息到聊天流', module: 'MESSAGE');
         _chatMessageController.add(data);
         break;
         
       case 'offline_messages': // 🔥 新增：处理离线消息
         // 转发离线消息到聊天消息流
-        print('📥 桥接离线消息到聊天流');
+        DebugConfig.debugPrint('桥接离线消息到聊天流', module: 'MESSAGE');
         _chatMessageController.add(data);
         break;
         
       case 'group_messages_synced': // 🔥 新增：处理群组消息同步
         // 转发群组消息同步到聊天消息流
-        print('📝 桥接群组消息同步到聊天流');
+        DebugConfig.debugPrint('桥接群组消息同步到聊天流', module: 'MESSAGE');
         _chatMessageController.add(data);
         break;
         
       case 'private_messages_synced': // 🔥 新增：处理私聊消息同步
         // 转发私聊消息同步到聊天消息流
-        print('📝 桥接私聊消息同步到聊天流');
+        DebugConfig.debugPrint('桥接私聊消息同步到聊天流', module: 'MESSAGE');
         _chatMessageController.add(data);
         break;
         
@@ -153,19 +181,19 @@ class WebSocketService {
       case 'group_message_sent_confirmation':
       case 'message_status_updated':
         // 🔥 新增：转发消息状态更新
-        print('📋 转发消息状态更新: $type');
+        DebugConfig.debugPrint('转发消息状态更新: $type', module: 'MESSAGE');
         _chatMessageController.add(data);
         break;
         
       case 'force_refresh_history': // 🔥 新增：处理强制刷新历史消息事件
         // 转发强制刷新历史消息事件到聊天消息流
-        print('🔄 桥接强制刷新历史消息事件到聊天流');
+        DebugConfig.debugPrint('桥接强制刷新历史消息事件到聊天流', module: 'MESSAGE');
         _chatMessageController.add(data);
         break;
         
       default:
         // 转发其他消息到通用消息流
-        print('📨 转发其他消息到通用流: $type');
+        DebugConfig.debugPrint('转发其他消息到通用流: $type', module: 'WEBSOCKET');
         _messageController.add(data);
         break;
     }
@@ -178,7 +206,7 @@ class WebSocketService {
     Map<String, dynamic>? metadata,
   }) {
     if (!isConnected) {
-      print('WebSocket未连接，无法发送消息');
+      DebugConfig.warningPrint('WebSocket未连接，无法发送消息');
       return;
     }
     
@@ -198,7 +226,7 @@ class WebSocketService {
     Map<String, dynamic>? metadata,
   }) {
     if (!isConnected) {
-      print('WebSocket未连接，无法发送群组消息');
+      DebugConfig.warningPrint('WebSocket未连接，无法发送群组消息');
       return;
     }
     
@@ -214,7 +242,7 @@ class WebSocketService {
   // 发送消息已接收回执 - 通过WebSocketManager
   void sendMessageReceived(String messageId) {
     if (!isConnected) {
-      print('WebSocket未连接，无法发送已接收回执');
+      DebugConfig.warningPrint('WebSocket未连接，无法发送已接收回执');
       return;
     }
     
@@ -227,14 +255,14 @@ class WebSocketService {
   
   // 手动重连
   Future<bool> reconnect() async {
-    print('🔄 手动重连WebSocket...');
+    DebugConfig.debugPrint('手动重连WebSocket...', module: 'WEBSOCKET');
     return await _wsManager.reconnect();
   }
   
   // 🔥 重要修复：初始化并连接WebSocket - 完全依赖WebSocketManager
   Future<void> connect() async {
     try {
-      print('🔄 通过WebSocketManager初始化连接...');
+      DebugConfig.debugPrint('通过WebSocketManager初始化连接...', module: 'WEBSOCKET');
       
       // 获取认证信息
       final token = await _authService.getAuthToken();
@@ -254,10 +282,10 @@ class WebSocketService {
         throw Exception('WebSocketManager连接失败');
       }
       
-      print('✅ WebSocketService通过WebSocketManager连接成功');
+      DebugConfig.debugPrint('WebSocketService通过WebSocketManager连接成功', module: 'WEBSOCKET');
       
     } catch (e) {
-      print('❌ WebSocketService连接失败: $e');
+      DebugConfig.errorPrint('WebSocketService连接失败: $e');
       rethrow;
     }
   }
@@ -265,35 +293,65 @@ class WebSocketService {
   // 发送消息
   void emit(String event, dynamic data) {
     if (_wsManager.isConnected) {
-      print('📤 发送WebSocket消息: event=$event');
+      DebugConfig.debugPrint('发送WebSocket消息: event=$event', module: 'WEBSOCKET');
       _wsManager.emit(event, data);
     } else {
-      print('❌ Socket未连接，无法发送消息 (event=$event)');
+      DebugConfig.warningPrint('Socket未连接，无法发送消息 (event=$event)');
     }
   }
   
-  // 手动刷新设备状态
+  // 🔥 优化：添加节流机制的设备状态刷新
   void refreshDeviceStatus() {
-    if (isConnected) {
-      _wsManager.emit('request_device_status', {
-        'timestamp': DateTime.now().toIso8601String()
+    final now = DateTime.now();
+    
+    // 检查是否正在刷新
+    if (_isRefreshingDeviceStatus) {
+      DebugConfig.debugPrint('设备状态刷新正在进行中，跳过重复请求', module: 'WEBSOCKET');
+      return;
+    }
+    
+    // 检查节流间隔
+    if (_lastDeviceStatusRefresh != null) {
+      final timeSinceLastRefresh = now.difference(_lastDeviceStatusRefresh!);
+      if (timeSinceLastRefresh < _deviceStatusThrottleInterval) {
+        DebugConfig.debugPrint('设备状态刷新请求过于频繁，跳过 (距离上次 ${timeSinceLastRefresh.inSeconds}秒)', module: 'WEBSOCKET');
+        return;
+      }
+    }
+    
+    if (!isConnected) {
+      DebugConfig.debugPrint('WebSocket未连接，无法刷新设备状态', module: 'WEBSOCKET');
+      return;
+    }
+    
+    _isRefreshingDeviceStatus = true;
+    _lastDeviceStatusRefresh = now;
+    
+    DebugConfig.debugPrint('执行WebSocket设备状态刷新 (节流保护)', module: 'WEBSOCKET');
+    
+    try {
+      // 🔥 优化：发送单一的设备状态刷新请求
+      emit('refresh_device_status', {
+        'timestamp': DateTime.now().toIso8601String(),
+        'reason': 'throttled_refresh'
       });
-      _wsManager.emit('request_group_devices_status', {
-        'timestamp': DateTime.now().toIso8601String()
+      
+      DebugConfig.debugPrint('WebSocket设备状态刷新请求已发送', module: 'WEBSOCKET');
+      
+    } catch (e) {
+      DebugConfig.errorPrint('WebSocket设备状态刷新失败: $e');
+    } finally {
+      // 3秒后解除刷新锁定
+      Future.delayed(Duration(seconds: 3), () {
+        _isRefreshingDeviceStatus = false;
       });
-      _wsManager.emit('get_online_devices', {
-        'timestamp': DateTime.now().toIso8601String()
-      });
-      print('🔄 手动刷新设备状态完成');
-    } else {
-      print('❌ WebSocket未连接，无法刷新设备状态');
     }
   }
   
   // 立即同步设备状态（用于重要状态变化）
   void forceSyncDeviceStatus() {
     if (_wsManager.isConnected) {
-      print('🚀 强制同步设备状态...');
+      DebugConfig.debugPrint('强制同步设备状态...', module: 'SYNC');
       
       // 立即发送状态更新请求
       _wsManager.emit('force_status_sync', {
@@ -317,7 +375,7 @@ class WebSocketService {
   // 当设备活跃状态发生变化时调用
   void notifyDeviceActivityChange() {
     if (_wsManager.isConnected) {
-      print('📱 通知设备活跃状态变化...');
+      DebugConfig.debugPrint('通知设备活跃状态变化...', module: 'SYNC');
       
       _wsManager.emit('device_activity_update', {
         'status': 'active',
@@ -341,14 +399,14 @@ class WebSocketService {
   
   // 断开连接
   void disconnect() {
-    print('🔌 断开WebSocket连接...');
+    DebugConfig.debugPrint('断开WebSocket连接...', module: 'WEBSOCKET');
     _wsManager.disconnect();
-    print('✅ WebSocket连接已断开');
+    DebugConfig.debugPrint('WebSocket连接已断开', module: 'WEBSOCKET');
   }
   
   // 资源释放
   void dispose() {
-    print('🧹 开始清理WebSocket资源...');
+    DebugConfig.debugPrint('开始清理WebSocket资源...', module: 'WEBSOCKET');
     
     // 通过WebSocketManager处理清理
     _wsManager.dispose();
@@ -371,7 +429,7 @@ class WebSocketService {
       _groupChangeController.close();
     }
     
-    print('✅ WebSocket资源已完全释放');
+    DebugConfig.debugPrint('WebSocket资源已完全释放', module: 'WEBSOCKET');
   }
   
   // 处理不同类型的消息
@@ -380,14 +438,14 @@ class WebSocketService {
       case 'system':
         // 处理系统消息
         if (data['content'] == 'device_logged_out') {
-          print('收到登出通知: ${data['message']}');
+          DebugConfig.warningPrint('收到登出通知: ${data['message']}');
           _logoutController.add({
             'type': 'logout_notification',
             'message': data['message'] ?? '设备已登出，连接即将断开',
             'timestamp': DateTime.now().toIso8601String()
           });
         } else if (data['content'] == 'device_status_update' && data.containsKey('device_statuses')) {
-          print('收到设备状态更新');
+          DebugConfig.debugPrint('收到设备状态更新', module: 'SYNC');
           _deviceStatusController.add({
             'type': 'device_status_update',
             'device_statuses': data['device_statuses'],
@@ -398,7 +456,7 @@ class WebSocketService {
       
       // 群组管理相关通知
       case 'device_joined_group':
-        print('设备加入群组通知');
+        DebugConfig.debugPrint('设备加入群组通知', module: 'SYNC');
         _groupChangeController.add({
           'type': 'device_joined_group',
           'device': data['device'],
@@ -409,7 +467,7 @@ class WebSocketService {
         break;
       
       case 'device_left_group':
-        print('设备离开群组通知');
+        DebugConfig.debugPrint('设备离开群组通知', module: 'SYNC');
         _groupChangeController.add({
           'type': 'device_left_group',
           'device': data['device'],
@@ -422,7 +480,7 @@ class WebSocketService {
         break;
       
       case 'group_created':
-        print('群组创建通知');
+        DebugConfig.debugPrint('群组创建通知', module: 'SYNC');
         _groupChangeController.add({
           'type': 'group_created',
           'group': data['group'],
@@ -433,7 +491,7 @@ class WebSocketService {
         break;
       
       case 'group_updated':
-        print('群组更新通知');
+        DebugConfig.debugPrint('群组更新通知', module: 'SYNC');
         _groupChangeController.add({
           'type': 'group_updated',
           'group': data['group'],
@@ -444,7 +502,7 @@ class WebSocketService {
         break;
       
       case 'group_deleted':
-        print('群组删除通知');
+        DebugConfig.warningPrint('群组删除通知');
         _groupChangeController.add({
           'type': 'group_deleted',
           'groupId': data['groupId'],
@@ -456,7 +514,7 @@ class WebSocketService {
         break;
         
       case 'device_status_changed':
-        print('设备状态变更通知');
+        DebugConfig.debugPrint('设备状态变更通知', module: 'SYNC');
         _deviceStatusController.add({
           'type': 'device_status',
           'action': 'status_changed',
@@ -468,7 +526,7 @@ class WebSocketService {
         break;
         
       case 'group_devices_status':
-        print('群组设备状态更新');
+        DebugConfig.debugPrint('群组设备状态更新', module: 'SYNC');
         // 直接转发到设备状态控制器
         _deviceStatusController.add({
           'type': 'group_devices_status',
@@ -478,7 +536,7 @@ class WebSocketService {
         break;
         
       case 'online_devices':
-        print('在线设备列表更新');
+        DebugConfig.debugPrint('在线设备列表更新', module: 'SYNC');
         // 直接转发到设备状态控制器
         _deviceStatusController.add({
           'type': 'online_devices',
@@ -489,7 +547,7 @@ class WebSocketService {
         
       case 'new_message':
         // 处理新的1v1消息
-        print('收到新的1v1消息');
+        DebugConfig.debugPrint('收到新的1v1消息', module: 'MESSAGE');
         _chatMessageController.add({
           'type': 'new_private_message',
           'message': data['message'],
@@ -501,7 +559,7 @@ class WebSocketService {
         
       case 'new_group_message':
         // 处理新的群组消息
-        print('收到新的群组消息');
+        DebugConfig.debugPrint('收到新的群组消息', module: 'MESSAGE');
         _chatMessageController.add({
           'type': 'new_group_message',
           'message': data['data']?['message'] ?? data['message'],
@@ -514,7 +572,7 @@ class WebSocketService {
       case 'file_message_received':
       case 'private_file_message':
         // 处理文件消息 - 确保实时处理
-        print('收到私聊文件消息');
+        DebugConfig.debugPrint('收到私聊文件消息', module: 'MESSAGE');
         _chatMessageController.add({
           'type': 'new_private_message',
           'message': data['message'] ?? data,
@@ -526,7 +584,7 @@ class WebSocketService {
         
       case 'group_file_message':
         // 处理群组文件消息 - 确保实时处理
-        print('收到群组文件消息');
+        DebugConfig.debugPrint('收到群组文件消息', module: 'MESSAGE');
         _chatMessageController.add({
           'type': 'new_group_message',
           'message': data['message'] ?? data,
@@ -537,7 +595,7 @@ class WebSocketService {
         break;
         
       default:
-        print('未知的消息类型: $messageType');
+        DebugConfig.debugPrint('未处理的消息类型: $messageType', module: 'WEBSOCKET');
         break;
     }
   }

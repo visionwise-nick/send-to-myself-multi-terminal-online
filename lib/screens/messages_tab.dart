@@ -10,6 +10,8 @@ import '../utils/time_utils.dart';
 import '../utils/localization_helper.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'chat_screen.dart';
+import '../config/debug_config.dart';
+import 'dart:math' as math;
 
 class MessagesTab extends StatefulWidget {
   const MessagesTab({super.key});
@@ -29,6 +31,14 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   final ChatService _chatService = ChatService();
+  
+  // 🔥 新增：缓存和节流机制
+  final Map<String, Map<String, dynamic>> _messageCache = {}; // 消息缓存
+  final Map<String, DateTime> _lastRequestTime = {}; // 最后请求时间
+  DateTime? _lastRefreshTime; // 最后刷新时间
+  static const Duration _cacheValidDuration = Duration(minutes: 5); // 缓存有效期5分钟
+  static const Duration _requestThrottleDuration = Duration(seconds: 30); // 请求节流30秒
+  static const Duration _refreshThrottleDuration = Duration(seconds: 10); // 刷新节流10秒
   
   @override
   void initState() {
@@ -95,23 +105,46 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
     });
   }
   
-  // 加载对话列表
+  // 🔥 优化：智能加载对话 - 减少服务器请求
   Future<void> _loadConversations() async {
-    if (_isRefreshing) return;
+    final now = DateTime.now();
     
+    // 检查刷新节流
+    if (_lastRefreshTime != null) {
+      final timeSinceLastRefresh = now.difference(_lastRefreshTime!);
+      if (timeSinceLastRefresh < _refreshThrottleDuration) {
+        DebugConfig.debugPrint('对话刷新过于频繁，跳过 (距离上次 ${timeSinceLastRefresh.inSeconds}秒)', module: 'MESSAGE');
+        return;
+      }
+    }
+    
+    _lastRefreshTime = now;
+    
+    if (!mounted) return;
     setState(() {
       _isRefreshing = true;
     });
-    
+
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final groupProvider = Provider.of<GroupProvider>(context, listen: false);
       final currentGroup = groupProvider.currentGroup;
       final currentDevice = authProvider.deviceInfo ?? authProvider.profile;
       
-      print('开始加载对话列表');
-      print('当前群组: ${currentGroup?['name']}');
-      print('当前设备: ${currentDevice?['id']} (${currentDevice?['name']})');
+      if (currentGroup == null) {
+        DebugConfig.debugPrint('当前没有选择群组，清空对话列表', module: 'MESSAGE');
+        if (mounted) {
+          setState(() {
+            _conversations = [];
+            _isRefreshing = false;
+          });
+        }
+        return;
+      }
+      
+      DebugConfig.debugPrint('开始加载对话列表');
+      DebugConfig.debugPrint('当前群组: ${currentGroup?['name']}');
+      DebugConfig.debugPrint('当前设备: ${currentDevice?['id']} (${currentDevice?['name']})');
       
       // 构建对话列表：群聊 + 私聊
       List<Map<String, dynamic>> conversations = [];
@@ -125,7 +158,7 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
         final devices = List<Map<String, dynamic>>.from(currentGroup['devices'] ?? []);
         final groupId = currentGroup['id'];
         
-        print('处理群组: ${currentGroup['name']}, 设备数量: ${devices.length}');
+        DebugConfig.debugPrint('处理群组: ${currentGroup['name']}, 设备数量: ${devices.length}');
         
         // 1. 添加群聊对话（包括只有自己一台设备的情况）
         if (devices.isNotEmpty) {
@@ -137,7 +170,7 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
               lastGroupMessage = (groupMessages['messages'] as List).first;
             }
           } catch (e) {
-            print('获取群组最新消息失败: $e');
+            DebugConfig.errorPrint('获取群组最新消息失败: $e');
           }
           
           conversations.add({
@@ -153,44 +186,44 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
             'groupData': currentGroup,
           });
           
-          print('添加群聊对话: ${currentGroup['name']} (${devices.length}台设备)');
+          DebugConfig.debugPrint('添加群聊对话: ${currentGroup['name']} (${devices.length}台设备)');
         }
         
         // 2. 添加设备间的私聊对话（包括当前群组中的所有设备，包含自己）
+        if (devices.isNotEmpty) {
+          DebugConfig.debugPrint('开始加载对话，设备数量: ${devices.length}', module: 'MESSAGE');
+          
+          // 🔥 优化：批处理消息获取，而不是逐个请求
+          final List<Future<void>> messageFutures = [];
+          
           for (var device in devices) {
             final deviceId = device['id'];
             
-          // 添加所有设备的私聊对话，包括自己
-          if (deviceId != null && !processedDeviceIds.contains(deviceId)) {
+            // 添加所有设备的私聊对话，包括自己
+            if (deviceId != null && !processedDeviceIds.contains(deviceId)) {
               processedDeviceIds.add(deviceId);
+              
+              final isCurrentDevice = deviceId == currentDevice['id'];
+              
+              // 🔥 创建异步任务，而不是立即执行
+              messageFutures.add(_loadDeviceConversation(
+                device, deviceId, isCurrentDevice, conversations, l10n));
+            }
+          }
+          
+          // 🔥 并发执行，但限制并发数量避免服务器过载
+          const batchSize = 3; // 每批最多3个请求
+          for (int i = 0; i < messageFutures.length; i += batchSize) {
+            final batch = messageFutures
+                .skip(i)
+                .take(math.min(batchSize, messageFutures.length - i))
+                .toList();
+            await Future.wait(batch);
             
-            final isCurrentDevice = deviceId == currentDevice['id'];
-              
-              // 尝试获取与该设备的最新消息
-              Map<String, dynamic>? lastPrivateMessage;
-              try {
-                final privateMessages = await _chatService.getPrivateMessages(targetDeviceId: deviceId, limit: 1);
-                if (privateMessages['messages'] != null && (privateMessages['messages'] as List).isNotEmpty) {
-                  lastPrivateMessage = (privateMessages['messages'] as List).first;
-                }
-              } catch (e) {
-                print('获取与设备${device['name']}的最新消息失败: $e');
-              }
-              
-              conversations.add({
-                'id': 'private_$deviceId',
-                'type': 'private',
-                'title': isCurrentDevice ? '${device['name']} (${l10n.myself})' : (device['name'] ?? l10n.unknownDevice),
-                'subtitle': isCurrentDevice ? l10n.sendToMyself : (device['type'] ?? l10n.unknownType),
-                'avatar': _getDeviceAvatar(device['type']),
-                'lastMessage': lastPrivateMessage?['content'] ?? (isCurrentDevice ? l10n.sendToMyself : l10n.clickToStartChat),
-                'lastTime': lastPrivateMessage?['createdAt'] ?? device['last_active_time'] ?? DateTime.now().toIso8601String(),
-                'unreadCount': 0,
-                'isOnline': device['isOnline'] == true,
-                'deviceData': device,
-              });
-              
-            print('添加私聊对话: ${device['name']} (${device['id']})${isCurrentDevice ? ' - 自己' : ''}');
+            // 批次间稍作延迟
+            if (i + batchSize < messageFutures.length) {
+              await Future.delayed(const Duration(milliseconds: 200));
+            }
           }
         }
       }
@@ -202,12 +235,12 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
           final timeB = DateTime.parse(b['lastTime'] ?? DateTime.now().toIso8601String());
         return timeB.compareTo(timeA);
         } catch (e) {
-          print('时间排序失败: $e');
+          DebugConfig.errorPrint('时间排序失败: $e');
           return 0;
         }
       });
       
-      print('总对话数量: ${conversations.length}');
+      DebugConfig.debugPrint('总对话数量: ${conversations.length}');
       
       if (mounted) {
         setState(() {
@@ -221,7 +254,7 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
         }
       }
     } catch (e) {
-      print('加载对话失败: $e');
+      DebugConfig.errorPrint('加载对话失败: $e');
       if (mounted) {
         setState(() {
           _isRefreshing = false;
@@ -374,5 +407,138 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
       ],
       ),
     );
+  }
+
+  // 🔥 新增：智能加载单个设备对话
+  Future<void> _loadDeviceConversation(
+    Map<String, dynamic> device,
+    String deviceId,
+    bool isCurrentDevice,
+    List<Map<String, dynamic>> conversations,
+    dynamic l10n,
+  ) async {
+    final now = DateTime.now();
+    
+    // 检查缓存是否有效
+    if (_messageCache.containsKey(deviceId)) {
+      final lastRequestTime = _lastRequestTime[deviceId];
+      if (lastRequestTime != null) {
+        final timeSinceLastRequest = now.difference(lastRequestTime);
+        if (timeSinceLastRequest < _cacheValidDuration) {
+          // 使用缓存数据
+          final cachedMessage = _messageCache[deviceId];
+          _addConversationFromCache(device, deviceId, isCurrentDevice, conversations, l10n, cachedMessage);
+          DebugConfig.debugPrint('使用缓存数据: ${device['name']} (缓存年龄: ${timeSinceLastRequest.inMinutes}分钟)', module: 'MESSAGE');
+          return;
+        }
+      }
+    }
+    
+    // 检查请求节流
+    final lastRequestTime = _lastRequestTime[deviceId];
+    if (lastRequestTime != null) {
+      final timeSinceLastRequest = now.difference(lastRequestTime);
+      if (timeSinceLastRequest < _requestThrottleDuration) {
+        // 使用默认数据，跳过网络请求
+        _addConversationDefault(device, deviceId, isCurrentDevice, conversations, l10n);
+        DebugConfig.debugPrint('请求过于频繁，使用默认数据: ${device['name']} (距离上次 ${timeSinceLastRequest.inSeconds}秒)', module: 'MESSAGE');
+        return;
+      }
+    }
+
+    // 获取与该设备的最新消息
+    Map<String, dynamic>? lastPrivateMessage;
+    try {
+      _lastRequestTime[deviceId] = now;
+      DebugConfig.debugPrint('获取设备消息: ${device['name']} ($deviceId)', module: 'MESSAGE');
+      
+      final privateMessages = await _chatService.getPrivateMessages(targetDeviceId: deviceId, limit: 1);
+      if (privateMessages['messages'] != null && (privateMessages['messages'] as List).isNotEmpty) {
+        lastPrivateMessage = (privateMessages['messages'] as List).first;
+        // 缓存结果
+        _messageCache[deviceId] = lastPrivateMessage!;
+      } else {
+        // 缓存空结果
+        _messageCache[deviceId] = {};
+      }
+    } catch (e) {
+      DebugConfig.errorPrint('获取与设备${device['name']}的最新消息失败: $e');
+      // 即使失败也要缓存，避免重复请求
+      _messageCache[deviceId] = {};
+    }
+
+    _addConversationFromMessage(device, deviceId, isCurrentDevice, conversations, l10n, lastPrivateMessage);
+  }
+
+  // 🔥 新增：从缓存数据添加对话
+  void _addConversationFromCache(
+    Map<String, dynamic> device,
+    String deviceId,
+    bool isCurrentDevice,
+    List<Map<String, dynamic>> conversations,
+    dynamic l10n,
+    Map<String, dynamic>? cachedMessage,
+  ) {
+    conversations.add({
+      'id': 'private_$deviceId',
+      'type': 'private',
+      'title': isCurrentDevice ? '${device['name']} (${l10n.myself})' : (device['name'] ?? l10n.unknownDevice),
+      'subtitle': isCurrentDevice ? l10n.sendToMyself : (device['type'] ?? l10n.unknownType),
+      'avatar': _getDeviceAvatar(device['type']),
+      'lastMessage': cachedMessage?['content'] ?? (isCurrentDevice ? l10n.sendToMyself : l10n.clickToStartChat),
+      'lastTime': cachedMessage?['createdAt'] ?? device['last_active_time'] ?? DateTime.now().toIso8601String(),
+      'unreadCount': 0,
+      'isOnline': device['isOnline'] == true,
+      'deviceData': device,
+    });
+  }
+
+  // 🔥 新增：从消息数据添加对话
+  void _addConversationFromMessage(
+    Map<String, dynamic> device,
+    String deviceId,
+    bool isCurrentDevice,
+    List<Map<String, dynamic>> conversations,
+    dynamic l10n,
+    Map<String, dynamic>? lastPrivateMessage,
+  ) {
+    conversations.add({
+      'id': 'private_$deviceId',
+      'type': 'private',
+      'title': isCurrentDevice ? '${device['name']} (${l10n.myself})' : (device['name'] ?? l10n.unknownDevice),
+      'subtitle': isCurrentDevice ? l10n.sendToMyself : (device['type'] ?? l10n.unknownType),
+      'avatar': _getDeviceAvatar(device['type']),
+      'lastMessage': lastPrivateMessage?['content'] ?? (isCurrentDevice ? l10n.sendToMyself : l10n.clickToStartChat),
+      'lastTime': lastPrivateMessage?['createdAt'] ?? device['last_active_time'] ?? DateTime.now().toIso8601String(),
+      'unreadCount': 0,
+      'isOnline': device['isOnline'] == true,
+      'deviceData': device,
+    });
+
+    DebugConfig.debugPrint('添加私聊对话: ${device['name']} (${device['id']})${isCurrentDevice ? ' - 自己' : ''}', module: 'MESSAGE');
+  }
+
+  // 🔥 新增：使用默认数据添加对话
+  void _addConversationDefault(
+    Map<String, dynamic> device,
+    String deviceId,
+    bool isCurrentDevice,
+    List<Map<String, dynamic>> conversations,
+    dynamic l10n,
+  ) {
+    conversations.add({
+      'id': 'private_$deviceId',
+      'type': 'private',
+      'title': isCurrentDevice ? '${device['name']} (${l10n.myself})' : (device['name'] ?? l10n.unknownDevice),
+      'subtitle': isCurrentDevice ? l10n.sendToMyself : (device['type'] ?? l10n.unknownType),
+      'avatar': _getDeviceAvatar(device['type']),
+      'lastMessage': isCurrentDevice ? l10n.sendToMyself : l10n.clickToStartChat,
+      'lastTime': device['last_active_time'] ?? DateTime.now().toIso8601String(),
+      'unreadCount': 0,
+      'isOnline': device['isOnline'] == true,
+      'deviceData': device,
+    });
+
+    DebugConfig.debugPrint('添加私聊对话(默认): ${device['name']} (${device['id']})${isCurrentDevice ? ' - 自己' : ''}', module: 'MESSAGE');
   }
 } 

@@ -5,6 +5,7 @@ import '../services/group_service.dart';
 import '../services/websocket_service.dart';
 import '../services/websocket_manager.dart';
 import '../services/device_auth_service.dart';
+import '../config/debug_config.dart';
 
 class GroupProvider extends ChangeNotifier {
   final GroupService _groupService = GroupService();
@@ -54,7 +55,7 @@ class GroupProvider extends ChangeNotifier {
   // 处理WebSocket管理器的消息
   void _handleWebSocketManagerMessage(Map<String, dynamic> data) {
     final type = data['type'];
-    print('📩 GroupProvider收到WebSocket管理器消息: $type');
+    DebugConfig.debugPrint('GroupProvider收到WebSocket管理器消息: $type', module: 'WEBSOCKET');
     
     switch (type) {
       case 'group_devices_status':
@@ -75,13 +76,13 @@ class GroupProvider extends ChangeNotifier {
       final groupId = data['groupId'];
       final devices = List<Map<String, dynamic>>.from(data['devices']);
       
-      print('📊 收到群组设备状态更新: 群组=$groupId, 设备数=${devices.length}');
+      DebugConfig.debugPrint('收到群组设备状态更新: 群组=$groupId, 设备数=${devices.length}', module: 'SYNC');
       
       // 更新当前群组的设备状态
       if (_currentGroup != null && _currentGroup!['id'] == groupId) {
         _currentGroup!['devices'] = devices;
         notifyListeners();
-        print('✅ 当前群组设备状态已更新');
+        DebugConfig.debugPrint('当前群组设备状态已更新', module: 'SYNC');
       }
       
       // 更新群组列表中对应群组的设备状态
@@ -100,7 +101,7 @@ class GroupProvider extends ChangeNotifier {
   void _handleOnlineDevicesFromManager(Map<String, dynamic> data) {
     if (data.containsKey('devices')) {
       final devices = List<Map<String, dynamic>>.from(data['devices']);
-      print('📱 收到在线设备列表更新: ${devices.length}台设备');
+      DebugConfig.debugPrint('收到在线设备列表更新: ${devices.length}台设备', module: 'SYNC');
       
       // 创建在线设备ID到状态的映射
       final Map<String, bool> onlineStatusMap = {};
@@ -121,14 +122,14 @@ class GroupProvider extends ChangeNotifier {
               device['isOnline'] = newStatus;
               device['is_online'] = newStatus;
               hasChanges = true;
-              print('🔄 设备${device['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}');
+              DebugConfig.debugPrint('设备${device['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}', module: 'SYNC');
             }
           }
         }
         
         if (hasChanges) {
           notifyListeners();
-          print('✅ 设备在线状态已更新');
+          DebugConfig.debugPrint('设备在线状态已更新', module: 'SYNC');
         }
       }
     }
@@ -136,14 +137,14 @@ class GroupProvider extends ChangeNotifier {
   
   // 处理来自WebSocket管理器的设备状态更新
   void _handleDeviceStatusUpdateFromManager(Map<String, dynamic> data) {
-    print('🔄 收到设备状态更新: $data');
+    DebugConfig.debugPrint('收到设备状态更新: $data', module: 'SYNC');
     // 可以根据需要处理特定的设备状态更新
   }
   
   // 处理群组变化通知
   void _handleGroupChangeNotification(Map<String, dynamic> data) {
     final type = data['type'];
-    print('收到群组变化通知: $type');
+    DebugConfig.debugPrint('收到群组变化通知: $type', module: 'SYNC');
     
     switch (type) {
       case 'device_joined_group':
@@ -172,14 +173,14 @@ class GroupProvider extends ChangeNotifier {
   
   // 处理设备加入群组通知
   void _handleDeviceJoinedGroup(Map<String, dynamic> data) {
-    print('处理设备加入群组通知');
+    DebugConfig.debugPrint('处理设备加入群组通知', module: 'SYNC');
     // 重新加载群组列表
     loadGroups();
   }
   
   // 处理设备离开群组通知
   void _handleDeviceLeftGroup(Map<String, dynamic> data) {
-    print('处理设备离开群组通知');
+    DebugConfig.debugPrint('处理设备离开群组通知', module: 'SYNC');
     // 重新加载群组列表
     loadGroups();
   }
@@ -187,7 +188,7 @@ class GroupProvider extends ChangeNotifier {
   // 处理被移除出群组通知
   void _handleRemovedFromGroup(Map<String, dynamic> data) {
     final group = data['group'];
-    print('被移除出群组: ${group?['name']}');
+    DebugConfig.warningPrint('被移除出群组: ${group?['name']}');
     
     // 如果被移除的是当前群组，切换到其他群组
     if (_currentGroup != null && _currentGroup!['id'] == group?['id']) {
@@ -206,7 +207,7 @@ class GroupProvider extends ChangeNotifier {
   void _handleGroupOwnershipChanged(Map<String, dynamic> data) {
     final group = data['group'];
     final newOwner = data['newOwner'];
-    print('群组所有权变更: ${group?['name']} -> ${newOwner?['name']}');
+    DebugConfig.debugPrint('群组所有权变更: ${group?['name']} -> ${newOwner?['name']}', module: 'SYNC');
     
     // 重新加载群组列表以获取最新状态
     loadGroups();
@@ -216,7 +217,7 @@ class GroupProvider extends ChangeNotifier {
   void _handleGroupRenamed(Map<String, dynamic> data) {
     final groupId = data['groupId'];
     final newName = data['newName'];
-    print('群组重命名: $groupId -> $newName');
+    DebugConfig.debugPrint('群组重命名: $groupId -> $newName', module: 'SYNC');
     
     // 更新本地群组名称
     if (_groups != null) {
@@ -238,7 +239,7 @@ class GroupProvider extends ChangeNotifier {
   
   // 处理设备重命名通知
   void _handleDeviceRenamed(Map<String, dynamic> data) {
-    print('设备重命名通知');
+    DebugConfig.debugPrint('设备重命名通知', module: 'SYNC');
     // 重新加载群组列表以获取最新的设备名称
     loadGroups();
   }
@@ -247,7 +248,7 @@ class GroupProvider extends ChangeNotifier {
   void _handleGroupDeleted(Map<String, dynamic> data) {
     final groupId = data['groupId'];
     final groupName = data['groupName'];
-    print('群组已删除: $groupName');
+    DebugConfig.warningPrint('群组已删除: $groupName');
     
     // 如果删除的是当前群组，清除当前群组
     if (_currentGroup != null && _currentGroup!['id'] == groupId) {
@@ -274,7 +275,7 @@ class GroupProvider extends ChangeNotifier {
       final response = await _groupService.getGroups();
       if (response['success'] == true) {
         _groups = List<Map<String, dynamic>>.from(response['groups'] ?? []);
-        print('加载了${_groups?.length ?? 0}个群组');
+        DebugConfig.debugPrint('加载了${_groups?.length ?? 0}个群组', module: 'SYNC');
         
         // 尝试恢复上次选择的群组，如果没有则设置第一个群组为当前群组
         if (_currentGroup == null && _groups != null && _groups!.isNotEmpty) {
@@ -401,7 +402,7 @@ class GroupProvider extends ChangeNotifier {
   Future<void> setCurrentGroup(Map<String, dynamic> group) async {
     _currentGroup = group;
     await _saveCurrentGroup();
-    print('切换到群组: ${group['name']} (${group['id']})');
+    DebugConfig.debugPrint('切换到群组: ${group['name']} (${group['id']})', module: 'SYNC');
     notifyListeners();
   }
   
@@ -451,7 +452,7 @@ class GroupProvider extends ChangeNotifier {
         
         if (group.isNotEmpty) {
           _currentGroup = group;
-          print('恢复当前群组: ${group['name']} (${group['id']})');
+          DebugConfig.debugPrint('恢复当前群组: ${group['name']} (${group['id']})', module: 'SYNC');
         }
       }
     } catch (e) {
@@ -491,50 +492,50 @@ class GroupProvider extends ChangeNotifier {
   
   // 群组重命名
   Future<bool> renameGroup(String groupId, String newName) async {
-    print('🔥 GroupProvider.renameGroup 开始: groupId=$groupId, newName=$newName');
+    DebugConfig.debugPrint('🔥 GroupProvider.renameGroup 开始: groupId=$groupId, newName=$newName', module: 'SYNC');
     
     _isLoading = true;
     _error = null;
     notifyListeners();
-    print('🔥 GroupProvider: 设置loading状态为true，已通知UI');
+    DebugConfig.debugPrint('🔥 GroupProvider: 设置loading状态为true，已通知UI', module: 'SYNC');
     
     try {
-      print('🔥 GroupProvider: 调用GroupService.renameGroup...');
+      DebugConfig.debugPrint('🔥 GroupProvider: 调用GroupService.renameGroup...', module: 'SYNC');
       final response = await _groupService.renameGroup(groupId, newName);
-      print('🔥 GroupProvider: GroupService.renameGroup返回: $response');
+      DebugConfig.debugPrint('🔥 GroupProvider: GroupService.renameGroup返回: $response', module: 'SYNC');
       
       if (response['success'] == true) {
-        print('🔥 GroupProvider: API调用成功，开始刷新群组列表...');
+        DebugConfig.debugPrint('🔥 GroupProvider: API调用成功，开始刷新群组列表...', module: 'SYNC');
         
         // 重新加载群组列表
         await loadGroups();
-        print('🔥 GroupProvider: 群组列表刷新完成');
+        DebugConfig.debugPrint('🔥 GroupProvider: 群组列表刷新完成', module: 'SYNC');
         
         // 如果重命名的是当前群组，更新当前群组信息
         if (_currentGroup != null && _currentGroup!['id'] == groupId) {
-          print('🔥 GroupProvider: 更新当前群组名称: ${_currentGroup!['name']} → $newName');
+          DebugConfig.debugPrint('🔥 GroupProvider: 更新当前群组名称: ${_currentGroup!['name']} → $newName', module: 'SYNC');
           _currentGroup!['name'] = newName;
         }
         
-        print('🔥 GroupProvider: 设置loading状态为false (成功)');
+        DebugConfig.debugPrint('🔥 GroupProvider: 设置loading状态为false (成功)', module: 'SYNC');
         _isLoading = false;
         notifyListeners();
-        print('🔥 GroupProvider: 重命名成功，返回true');
+        DebugConfig.debugPrint('🔥 GroupProvider: 重命名成功，返回true', module: 'SYNC');
         return true;
       } else {
-        print('🔥 GroupProvider: API返回success=false: ${response['message']}');
+        DebugConfig.debugPrint('🔥 GroupProvider: API返回success=false: ${response['message']}', module: 'SYNC');
         _error = response['message'] ?? '重命名群组失败';
       }
     } catch (e) {
-      print('🔥 GroupProvider: 捕获异常: $e');
+      DebugConfig.debugPrint('🔥 GroupProvider: 捕获异常: $e', module: 'SYNC');
       _error = '重命名群组失败: $e';
       print(_error);
     }
     
-    print('🔥 GroupProvider: 设置loading状态为false (失败)');
+    DebugConfig.debugPrint('🔥 GroupProvider: 设置loading状态为false (失败)', module: 'SYNC');
     _isLoading = false;
     notifyListeners();
-    print('🔥 GroupProvider: 重命名失败，返回false');
+    DebugConfig.debugPrint('🔥 GroupProvider: 重命名失败，返回false', module: 'SYNC');
     return false;
   }
   
@@ -651,7 +652,7 @@ class GroupProvider extends ChangeNotifier {
   // 处理设备状态更新
   void _handleDeviceStatusUpdate(Map<String, dynamic> data) {
     final type = data['type'];
-    print('收到设备状态更新: $type');
+    DebugConfig.debugPrint('收到设备状态更新: $type', module: 'SYNC');
     
     switch (type) {
       case 'group_devices_status':
@@ -661,7 +662,7 @@ class GroupProvider extends ChangeNotifier {
         _handleOnlineDevicesUpdate(data);
         break;
       default:
-        print('未知的设备状态更新类型: $type');
+        DebugConfig.warningPrint('未知的设备状态更新类型: $type');
         break;
     }
   }
@@ -673,7 +674,7 @@ class GroupProvider extends ChangeNotifier {
     
     if (groupId == null || devices == null) return;
     
-    print('更新群组设备状态: 群组ID=$groupId, ${devices.length}台设备');
+    DebugConfig.debugPrint('更新群组设备状态: 群组ID=$groupId, ${devices.length}台设备', module: 'SYNC');
     
     bool needsUpdate = false;
     
@@ -686,7 +687,7 @@ class GroupProvider extends ChangeNotifier {
           devices.map((device) => Map<String, dynamic>.from(device))
         );
         needsUpdate = true;
-        print('当前群组设备状态已更新');
+        DebugConfig.debugPrint('当前群组设备状态已更新', module: 'SYNC');
       }
     }
     
@@ -708,7 +709,7 @@ class GroupProvider extends ChangeNotifier {
     
     // 只有状态确实发生变化时才通知UI更新
     if (needsUpdate) {
-      print('群组设备状态发生变化，通知UI更新');
+      DebugConfig.debugPrint('群组设备状态发生变化，通知UI更新', module: 'SYNC');
       notifyListeners();
       
       // 设备状态更新后，通知WebSocket服务
@@ -735,7 +736,7 @@ class GroupProvider extends ChangeNotifier {
         final newStatus = device['isOnline'] == true;
         
         if (!currentStatusMap.containsKey(deviceId) || currentStatusMap[deviceId] != newStatus) {
-          print('设备状态变化检测: $deviceId 从 ${currentStatusMap[deviceId]} 变为 $newStatus');
+          DebugConfig.debugPrint('设备状态变化检测: $deviceId 从 ${currentStatusMap[deviceId]} 变为 $newStatus', module: 'SYNC');
           return true;
         }
       }
@@ -749,7 +750,7 @@ class GroupProvider extends ChangeNotifier {
     final devices = data['devices'] as List<dynamic>?;
     if (devices == null) return;
     
-    print('更新在线设备列表: ${devices.length}台设备');
+    DebugConfig.debugPrint('更新在线设备列表: ${devices.length}台设备', module: 'SYNC');
     
     bool needsUpdate = false;
     
@@ -777,7 +778,7 @@ class GroupProvider extends ChangeNotifier {
                 groupDevice['isOnline'] = newStatus;
                 groupDevice['is_online'] = newStatus;
                 needsUpdate = true;
-                print('设备${groupDevice['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}');
+                DebugConfig.debugPrint('设备${groupDevice['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}', module: 'SYNC');
               }
             }
           }
@@ -800,7 +801,7 @@ class GroupProvider extends ChangeNotifier {
               groupDevice['isOnline'] = newStatus;
               groupDevice['is_online'] = newStatus;
               needsUpdate = true;
-              print('当前群组设备${groupDevice['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}');
+              DebugConfig.debugPrint('当前群组设备${groupDevice['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}', module: 'SYNC');
             }
           }
         }
@@ -809,7 +810,7 @@ class GroupProvider extends ChangeNotifier {
     
     // 只有状态确实发生变化时才通知UI更新
     if (needsUpdate) {
-      print('在线设备状态发生变化，通知UI更新');
+      DebugConfig.debugPrint('在线设备状态发生变化，通知UI更新', module: 'SYNC');
       notifyListeners();
     }
   }
@@ -817,40 +818,40 @@ class GroupProvider extends ChangeNotifier {
   // 🔥 新增：获取在线设备数量
   int get onlineDevicesCount {
     if (_currentGroup == null) {
-      print('🔍 调试：当前群组为空，返回0');
+      DebugConfig.debugPrint('🔍 调试：当前群组为空，返回0', module: 'SYNC');
       return 0;
     }
     
     final devices = List<Map<String, dynamic>>.from(_currentGroup!['devices'] ?? []);
-    print('🔍 调试：当前群组有 ${devices.length} 台设备');
+    DebugConfig.debugPrint('🔍 调试：当前群组有 ${devices.length} 台设备', module: 'SYNC');
     
     int count = 0;
     
     for (var device in devices) {
       bool isOnline = false;
       
-      print('🔍 调试设备状态：');
-      print('  - 设备名称: ${device['name']}');
-      print('  - 设备ID: ${device['id']}');
-      print('  - is_logged_out: ${device['is_logged_out']}');
-      print('  - isLoggedOut: ${device['isLoggedOut']}');
-      print('  - isOnline: ${device['isOnline']}');
-      print('  - is_online: ${device['is_online']}');
-      print('  - isCurrentDevice: ${device['isCurrentDevice']}');
+      DebugConfig.debugPrint('🔍 调试设备状态：');
+      DebugConfig.debugPrint('  - 设备名称: ${device['name']}');
+      DebugConfig.debugPrint('  - 设备ID: ${device['id']}');
+      DebugConfig.debugPrint('  - is_logged_out: ${device['is_logged_out']}');
+      DebugConfig.debugPrint('  - isLoggedOut: ${device['isLoggedOut']}');
+      DebugConfig.debugPrint('  - isOnline: ${device['isOnline']}');
+      DebugConfig.debugPrint('  - is_online: ${device['is_online']}');
+      DebugConfig.debugPrint('  - isCurrentDevice: ${device['isCurrentDevice']}');
       
       // 🔥 新增：特殊处理当前设备，当前设备始终在线
       if (device['isCurrentDevice'] == true) {
         isOnline = true;
-        print('  - 判定结果: 在线 (当前设备)');
+        DebugConfig.debugPrint('  - 判定结果: 在线 (当前设备)');
       } else if (device['is_logged_out'] == true || device['isLoggedOut'] == true) {
         isOnline = false;
-        print('  - 判定结果: 离线 (已登出)');
+        DebugConfig.debugPrint('  - 判定结果: 离线 (已登出)');
       } else if (device['isOnline'] == true || device['is_online'] == true) {
         isOnline = true;
-        print('  - 判定结果: 在线');
+        DebugConfig.debugPrint('  - 判定结果: 在线');
       } else {
         isOnline = false;
-        print('  - 判定结果: 离线 (默认)');
+        DebugConfig.debugPrint('  - 判定结果: 离线 (默认)');
       }
       
       if (isOnline) {
@@ -858,7 +859,7 @@ class GroupProvider extends ChangeNotifier {
       }
     }
     
-    print('🔍 调试：最终统计 $count/${devices.length} 台设备在线');
+    DebugConfig.debugPrint('🔍 调试：最终统计 $count/${devices.length} 台设备在线', module: 'SYNC');
     return count;
   }
   
@@ -872,40 +873,40 @@ class GroupProvider extends ChangeNotifier {
   
   // 🔥 新增：诊断设备状态问题
   void diagnosisDeviceStatus() {
-    print('\n========== 🔍 设备状态诊断开始 ==========');
+    DebugConfig.debugPrint('\n========== 🔍 设备状态诊断开始 ==========', module: 'SYNC');
     
     if (_currentGroup == null) {
-      print('❌ 当前群组为空');
+      DebugConfig.debugPrint('❌ 当前群组为空', module: 'SYNC');
       return;
     }
     
-    print('📋 当前群组信息：');
-    print('  - 群组ID: ${_currentGroup!['id']}');
-    print('  - 群组名称: ${_currentGroup!['name']}');
-    print('  - 设备数量: ${_currentGroup!['devices']?.length ?? 0}');
+    DebugConfig.debugPrint('📋 当前群组信息：', module: 'SYNC');
+    DebugConfig.debugPrint('  - 群组ID: ${_currentGroup!['id']}', module: 'SYNC');
+    DebugConfig.debugPrint('  - 群组名称: ${_currentGroup!['name']}', module: 'SYNC');
+    DebugConfig.debugPrint('  - 设备数量: ${_currentGroup!['devices']?.length ?? 0}', module: 'SYNC');
     
     if (_currentGroup!['devices'] == null || _currentGroup!['devices'].isEmpty) {
-      print('❌ 群组中没有设备数据');
+      DebugConfig.debugPrint('❌ 群组中没有设备数据', module: 'SYNC');
       return;
     }
     
     final devices = List<Map<String, dynamic>>.from(_currentGroup!['devices']);
-    print('\n📱 设备详情：');
+    DebugConfig.debugPrint('\n📱 设备详情：', module: 'SYNC');
     
     for (int i = 0; i < devices.length; i++) {
       final device = devices[i];
-      print('设备 ${i + 1}:');
-      print('  - 名称: ${device['name'] ?? 'unknown'}');
-      print('  - ID: ${device['id'] ?? 'unknown'}');
-      print('  - 类型: ${device['type'] ?? 'unknown'}');
-      print('  - isOnline: ${device['isOnline']}');
-      print('  - is_online: ${device['is_online']}');
-      print('  - is_logged_out: ${device['is_logged_out']}');
-      print('  - isLoggedOut: ${device['isLoggedOut']}');
-      print('  - isCurrentDevice: ${device['isCurrentDevice']}');
-      print('  - lastActivity: ${device['lastActivity']}');
-      print('  - 原始数据: $device');
-      print('');
+      DebugConfig.debugPrint('设备 ${i + 1}:', module: 'SYNC');
+      DebugConfig.debugPrint('  - 名称: ${device['name'] ?? 'unknown'}', module: 'SYNC');
+      DebugConfig.debugPrint('  - ID: ${device['id'] ?? 'unknown'}', module: 'SYNC');
+      DebugConfig.debugPrint('  - 类型: ${device['type'] ?? 'unknown'}', module: 'SYNC');
+      DebugConfig.debugPrint('  - isOnline: ${device['isOnline']}', module: 'SYNC');
+      DebugConfig.debugPrint('  - is_online: ${device['is_online']}', module: 'SYNC');
+      DebugConfig.debugPrint('  - is_logged_out: ${device['is_logged_out']}', module: 'SYNC');
+      DebugConfig.debugPrint('  - isLoggedOut: ${device['isLoggedOut']}', module: 'SYNC');
+      DebugConfig.debugPrint('  - isCurrentDevice: ${device['isCurrentDevice']}', module: 'SYNC');
+      DebugConfig.debugPrint('  - lastActivity: ${device['lastActivity']}', module: 'SYNC');
+      DebugConfig.debugPrint('  - 原始数据: $device', module: 'SYNC');
+      DebugConfig.debugPrint('', module: 'SYNC');
     }
     
     // 重新计算在线数量
@@ -926,12 +927,12 @@ class GroupProvider extends ChangeNotifier {
       }
     }
     
-    print('📊 统计结果：');
-    print('  - 在线设备: $onlineCount');
-    print('  - 总设备数: $totalCount');
-    print('  - 在线率: ${totalCount > 0 ? (onlineCount / totalCount * 100).toStringAsFixed(1) : 0}%');
+    DebugConfig.debugPrint('📊 统计结果：', module: 'SYNC');
+    DebugConfig.debugPrint('  - 在线设备: $onlineCount', module: 'SYNC');
+    DebugConfig.debugPrint('  - 总设备数: $totalCount', module: 'SYNC');
+    DebugConfig.debugPrint('  - 在线率: ${totalCount > 0 ? (onlineCount / totalCount * 100).toStringAsFixed(1) : 0}%', module: 'SYNC');
     
-    print('========== 🔍 设备状态诊断结束 ==========\n');
+    DebugConfig.debugPrint('========== 🔍 设备状态诊断结束 ==========\n', module: 'SYNC');
   }
 
   @override

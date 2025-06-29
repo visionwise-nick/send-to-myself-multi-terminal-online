@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/debug_config.dart';
 
 class ChatService {
   final String _baseUrl = "https://sendtomyself-api-adecumh2za-uc.a.run.app/api";
@@ -187,15 +188,15 @@ class ChatService {
         url += '&before=$before';
       }
       
-      print('获取1v1消息历史: $targetDeviceId');
+      DebugConfig.debugPrint('获取1v1消息历史: $targetDeviceId', module: 'MESSAGE');
       
       final response = await http.get(
         Uri.parse(url),
         headers: headers,
       );
       
-      print('获取1v1消息历史响应状态码: ${response.statusCode}');
-      print('获取1v1消息历史响应内容: ${response.body}');
+      DebugConfig.debugPrint('获取1v1消息历史响应状态码: ${response.statusCode}', module: 'MESSAGE');
+      DebugConfig.debugPrint('获取1v1消息历史响应内容: ${response.body}', module: 'MESSAGE');
       
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
@@ -203,7 +204,7 @@ class ChatService {
         throw Exception('获取私聊消息历史失败: ${response.body}');
       }
     } catch (e) {
-      print('获取1v1消息历史失败: $e');
+      DebugConfig.errorPrint('获取1v1消息历史失败: $e');
       rethrow;
     }
   }

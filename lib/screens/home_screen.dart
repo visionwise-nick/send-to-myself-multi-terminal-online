@@ -13,6 +13,7 @@ import '../widgets/connection_status_widget.dart';
 import '../theme/app_theme.dart';
 import '../widgets/logout_dialog.dart';
 import '../utils/localization_helper.dart';
+import '../config/debug_config.dart';
 
 import 'messages_tab.dart';
 import 'memories_tab.dart';
@@ -66,11 +67,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   void _startStatusSyncTimer() {
     _statusSyncTimer?.cancel();
     
-    // 🔥 优化：每5秒检查一次设备状态同步（原来20秒）
-    _statusSyncTimer = Timer.periodic(Duration(seconds: 5), (timer) {
+    // 🔥 优化：从5秒改为30秒检查一次设备状态同步，减少服务器压力
+    _statusSyncTimer = Timer.periodic(Duration(seconds: 30), (timer) {
       final websocketService = WebSocketService();
       if (websocketService.isConnected) {
-        print('🔄 定期设备状态同步检查（5秒间隔）');
+        DebugConfig.debugPrint('定期设备状态同步检查（30秒间隔）', module: 'SYNC');
         websocketService.refreshDeviceStatus();
       }
     });

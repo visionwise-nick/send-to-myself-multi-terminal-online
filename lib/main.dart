@@ -24,11 +24,20 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:context_menus/context_menus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'config/debug_config.dart';
 
+// 🔥 全局print重写 - 在应用启动前进行
 void main() async {
   // 确保Flutter绑定初始化
   WidgetsFlutterBinding.ensureInitialized();
   
+  // 🔥 重写全局debugPrint函数以控制调试输出
+  debugPrint = (String? message, {int? wrapWidth}) {
+    if (message != null) {
+      DebugConfig.globalPrint(message);
+    }
+  };
+
   // 🔥 新增：检查是否为分享Intent
   bool isShareIntent = false;
   try {
@@ -62,7 +71,7 @@ void main() async {
     // 提供认证状态和群组状态
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (context) => AuthProvider()),
         ChangeNotifierProvider(
           create: (_) => GroupProvider()..initialize(),
         ),
@@ -246,6 +255,9 @@ Future<void> _performBackgroundInitialization() async {
     print('❌ 后台初始化失败: $e');
   }
 }
+
+// 原始print函数的引用
+void zone_print(Object? object) => Zone.current.print(object.toString());
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});

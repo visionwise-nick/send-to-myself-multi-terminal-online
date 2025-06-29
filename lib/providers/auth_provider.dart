@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/device_auth_service.dart';
 import '../services/websocket_service.dart';
+import '../config/debug_config.dart';
 
 class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
   final DeviceAuthService _authService = DeviceAuthService();
@@ -33,35 +34,35 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     
-    print('📱 应用生命周期变化: $state');
+    DebugConfig.debugPrint('应用生命周期变化: $state', module: 'APP');
     
     switch (state) {
       case AppLifecycleState.resumed:
         // 应用回到前台，立即同步设备状态
-        print('应用回到前台，触发设备状态同步');
+        DebugConfig.debugPrint('应用回到前台，触发设备状态同步', module: 'APP');
         _websocketService.notifyDeviceActivityChange();
         _websocketService.forceSyncDeviceStatus();
         break;
         
       case AppLifecycleState.paused:
         // 应用暂停，通知状态变化但不强制同步
-        print('应用暂停，通知设备状态变化');
+        DebugConfig.debugPrint('应用暂停，通知设备状态变化', module: 'APP');
         _websocketService.notifyDeviceActivityChange();
         break;
         
       case AppLifecycleState.inactive:
         // 应用非活跃状态
-        print('应用变为非活跃状态');
+        DebugConfig.debugPrint('应用变为非活跃状态', module: 'APP');
         break;
         
       case AppLifecycleState.detached:
         // 应用分离状态
-        print('应用分离');
+        DebugConfig.debugPrint('应用分离', module: 'APP');
         break;
         
       case AppLifecycleState.hidden:
         // 应用隐藏状态
-        print('应用隐藏');
+        DebugConfig.debugPrint('应用隐藏', module: 'APP');
         break;
     }
   }
@@ -98,48 +99,48 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
   Future<void> _initWebSocket() async {
     try {
       await _websocketService.connect();
-      print('WebSocket连接成功初始化');
+      DebugConfig.debugPrint('WebSocket连接成功初始化', module: 'WEBSOCKET');
     } catch (e) {
-      print('WebSocket初始化失败: $e');
+      DebugConfig.errorPrint('WebSocket初始化失败: $e');
     }
   }
   
   void _handleDeviceStatusChange(Map<String, dynamic> data) {
-    print('收到设备状态变化: $data');
+    DebugConfig.debugPrint('收到设备状态变化: $data', module: 'SYNC');
     
     if (data['type'] == 'device_status') {
       final action = data['action'];
       
       if (action == 'joined') {
         // 设备加入群组，立即刷新资料
-        print('设备加入群组，立即刷新资料');
+        DebugConfig.debugPrint('设备加入群组，立即刷新资料', module: 'SYNC');
         refreshProfile();
       } else if (action == 'left') {
         // 设备离开群组，立即刷新资料
-        print('设备离开群组，立即刷新资料');
+        DebugConfig.debugPrint('设备离开群组，立即刷新资料', module: 'SYNC');
         refreshProfile();
       } else if (action == 'status_changed') {
         // 设备在线状态变化，更新设备状态
-        print('设备在线状态变化');
+        DebugConfig.debugPrint('设备在线状态变化', module: 'SYNC');
         if (data.containsKey('device') && data.containsKey('online')) {
           _updateDeviceStatus(data['device'], data['online']);
         }
       }
     } else if (data['type'] == 'online_devices') {
       // 更新所有在线设备
-      print('收到在线设备列表');
+      DebugConfig.debugPrint('收到在线设备列表', module: 'SYNC');
       if (data.containsKey('devices') && data['devices'] is List) {
         _updateOnlineDevices(data['devices']);
       }
     } else if (data['type'] == 'device_status_update') {
       // 处理device_status_update消息中的设备状态列表
-      print('收到设备状态批量更新');
+      DebugConfig.debugPrint('收到设备状态批量更新', module: 'SYNC');
       if (data.containsKey('device_statuses') && data['device_statuses'] is List) {
         _updateDeviceStatuses(data['device_statuses']);
       }
     } else if (data['type'] == 'group_devices_status') {
       // 处理group_devices_status消息中的设备状态
-      print('收到群组设备状态更新');
+      DebugConfig.debugPrint('收到群组设备状态更新', module: 'SYNC');
       if (data.containsKey('devices') && data['devices'] is List) {
         _updateGroupDevices(data['groupId'], data['devices']);
       }
@@ -149,7 +150,7 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
   void _updateDeviceStatus(Map<String, dynamic> deviceData, bool isOnline) {
     if (_groups == null || deviceData == null || deviceData['id'] == null) return;
     
-    print('更新设备状态: id=${deviceData['id']}, 在线状态=$isOnline');
+    DebugConfig.debugPrint('更新设备状态: id=${deviceData['id']}, 在线状态=$isOnline', module: 'SYNC');
     bool updated = false;
     
     for (final group in _groups!) {
@@ -158,7 +159,7 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
           if (device['id'] == deviceData['id']) {
             // 使用传入的真实在线状态
             device['isOnline'] = isOnline;
-            print('设备${device['name']}(${device['id']})状态更新为${isOnline ? "在线" : "离线"}');
+            DebugConfig.debugPrint('设备${device['name']}(${device['id']})状态更新为${isOnline ? "在线" : "离线"}', module: 'SYNC');
             updated = true;
           }
         }
@@ -166,7 +167,7 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
     }
     
     if (updated) {
-      print('设备状态已更新，通知UI刷新');
+      DebugConfig.debugPrint('设备状态已更新，通知UI刷新', module: 'SYNC');
       notifyListeners();
     }
   }
@@ -174,14 +175,14 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
   void _updateOnlineDevices(List<dynamic> onlineDevices) {
     if (_groups == null) return;
     
-    print('收到在线设备列表: ${onlineDevices.length}个设备');
+    DebugConfig.debugPrint('收到在线设备列表: ${onlineDevices.length}个设备', module: 'SYNC');
     
     // 创建在线设备ID集合，方便查询
     final onlineDeviceIds = Set<String>.from(
       onlineDevices.map((device) => device['id']?.toString() ?? '')
     );
     
-    print('在线设备ID集合: $onlineDeviceIds');
+    DebugConfig.debugPrint('在线设备ID集合: $onlineDeviceIds', module: 'SYNC');
     
     bool updated = false;
     
@@ -195,7 +196,7 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
           // 只有当状态确实发生变化时才更新
           if (device['isOnline'] != shouldBeOnline) {
             device['isOnline'] = shouldBeOnline;
-            print('设备${device['name']}(${device['id']})状态更新为${shouldBeOnline ? "在线" : "离线"}');
+            DebugConfig.debugPrint('设备${device['name']}(${device['id']})状态更新为${shouldBeOnline ? "在线" : "离线"}', module: 'SYNC');
             updated = true;
           }
         }
@@ -203,7 +204,7 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
     }
     
     if (updated) {
-      print('批量设备状态已更新，通知UI刷新');
+      DebugConfig.debugPrint('批量设备状态已更新，通知UI刷新', module: 'SYNC');
       notifyListeners();
     }
   }
@@ -483,7 +484,7 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
   void _updateDeviceStatuses(List<dynamic> deviceStatuses) {
     if (_groups == null) return;
     
-    print('批量更新设备状态: ${deviceStatuses.length}个设备');
+    DebugConfig.debugPrint('批量更新设备状态: ${deviceStatuses.length}个设备', module: 'SYNC');
     bool updated = false;
     
     // 创建设备状态映射
@@ -516,7 +517,7 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
             final newStatus = deviceStatusMap[deviceId]!;
             if (device['isOnline'] != newStatus) {
               device['isOnline'] = newStatus;
-              print('设备${device['name']}(${device['id']})状态更新为${newStatus ? "在线" : "离线"}');
+              DebugConfig.debugPrint('设备${device['name']}(${device['id']})状态更新为${newStatus ? "在线" : "离线"}', module: 'SYNC');
               updated = true;
             }
           }
@@ -525,7 +526,7 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
     }
     
     if (updated) {
-      print('批量设备状态已更新，通知UI刷新');
+      DebugConfig.debugPrint('批量设备状态已更新，通知UI刷新', module: 'SYNC');
       notifyListeners();
     }
   }
@@ -534,7 +535,7 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
   void _updateGroupDevices(String groupId, List<dynamic> devices) {
     if (_groups == null) return;
     
-    print('更新群组设备状态: 群组ID=$groupId, ${devices.length}个设备');
+    DebugConfig.debugPrint('更新群组设备状态: 群组ID=$groupId, ${devices.length}个设备', module: 'SYNC');
     bool updated = false;
     
     // 找到对应的群组
@@ -563,7 +564,7 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
               // 只有状态变化时才更新
               if (groupDevice['isOnline'] != isOnline) {
                 groupDevice['isOnline'] = isOnline;
-                print('群组设备${groupDevice['name']}(${groupDevice['id']})状态更新为${isOnline ? "在线" : "离线"}');
+                DebugConfig.debugPrint('群组设备${groupDevice['name']}(${groupDevice['id']})状态更新为${isOnline ? "在线" : "离线"}', module: 'SYNC');
                 updated = true;
               }
               
@@ -572,13 +573,13 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
           }
         }
         
-        print('群组${group['name']}设备列表已更新，共${group['devices'].length}台设备');
+        DebugConfig.debugPrint('群组${group['name']}设备列表已更新，共${group['devices'].length}台设备', module: 'SYNC');
         break;
       }
     }
     
     if (updated) {
-      print('群组设备状态已更新，通知UI刷新');
+      DebugConfig.debugPrint('群组设备状态已更新，通知UI刷新', module: 'SYNC');
       notifyListeners();
     }
   }

@@ -74,7 +74,7 @@ class LocalStorageService {
               DebugConfig.debugPrint('文件已复制到永久存储: $fileName -> ${targetFile.path}', module: 'FILE');
       return targetFile.path;
     } catch (e) {
-      DebugConfig.errorPrint('复制文件到永久存储失败: $e', module: 'FILE');
+      DebugConfig.errorPrint('复制文件到永久存储失败: $e');
       return null;
     }
   }
