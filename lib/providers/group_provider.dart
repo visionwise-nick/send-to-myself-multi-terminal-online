@@ -78,6 +78,9 @@ class GroupProvider extends ChangeNotifier {
       
       DebugConfig.debugPrint('收到群组设备状态更新: 群组=$groupId, 设备数=${devices.length}', module: 'SYNC');
       
+      // 🔥 关键修复：在直接替换设备列表前，先保护当前设备的在线状态
+      _protectCurrentDeviceStatus(devices);
+      
       // 更新当前群组的设备状态
       if (_currentGroup != null && _currentGroup!['id'] == groupId) {
         _currentGroup!['devices'] = devices;
@@ -114,7 +117,16 @@ class GroupProvider extends ChangeNotifier {
         bool hasChanges = false;
         for (var device in _currentGroup!['devices']) {
           final deviceId = device['id'];
-          if (onlineStatusMap.containsKey(deviceId)) {
+          
+          // 🔥 关键修复：当前设备始终保持在线，不被服务器状态覆盖
+          if (device['isCurrentDevice'] == true) {
+            if (device['isOnline'] != true) {
+              device['isOnline'] = true;
+              device['is_online'] = true;
+              hasChanges = true;
+              DebugConfig.debugPrint('强制设置当前设备为在线: ${device['name']}(${deviceId})', module: 'SYNC');
+            }
+          } else if (onlineStatusMap.containsKey(deviceId)) {
             final newStatus = onlineStatusMap[deviceId]!;
             final currentStatus = device['isOnline'] == true || device['is_online'] == true;
             
@@ -678,14 +690,18 @@ class GroupProvider extends ChangeNotifier {
     
     bool needsUpdate = false;
     
+    // 🔥 关键修复：在直接替换设备列表前，先保护当前设备的在线状态
+    final protectedDevices = List<Map<String, dynamic>>.from(
+      devices.map((device) => Map<String, dynamic>.from(device))
+    );
+    _protectCurrentDeviceStatus(protectedDevices);
+
     // 更新当前群组的设备状态
     if (_currentGroup != null && _currentGroup!['id'] == groupId) {
       // 深度比较设备状态是否真的发生了变化
       final currentDevices = _currentGroup!['devices'] as List<dynamic>?;
-      if (currentDevices == null || _hasDeviceStatusChanged(currentDevices, devices)) {
-        _currentGroup!['devices'] = List<Map<String, dynamic>>.from(
-          devices.map((device) => Map<String, dynamic>.from(device))
-        );
+      if (currentDevices == null || _hasDeviceStatusChanged(currentDevices, protectedDevices)) {
+        _currentGroup!['devices'] = protectedDevices;
         needsUpdate = true;
         DebugConfig.debugPrint('当前群组设备状态已更新', module: 'SYNC');
       }
@@ -696,9 +712,9 @@ class GroupProvider extends ChangeNotifier {
       for (final group in _groups!) {
         if (group['id'] == groupId) {
           final currentDevices = group['devices'] as List<dynamic>?;
-          if (currentDevices == null || _hasDeviceStatusChanged(currentDevices, devices)) {
+          if (currentDevices == null || _hasDeviceStatusChanged(currentDevices, protectedDevices)) {
             group['devices'] = List<Map<String, dynamic>>.from(
-              devices.map((device) => Map<String, dynamic>.from(device))
+              protectedDevices.map((device) => Map<String, dynamic>.from(device))
             );
             needsUpdate = true;
           }
@@ -837,6 +853,18 @@ class GroupProvider extends ChangeNotifier {
     }
   }
   
+  // 🔥 新增：保护当前设备的在线状态
+  void _protectCurrentDeviceStatus(List<Map<String, dynamic>> devices) {
+    for (var device in devices) {
+      if (device['isCurrentDevice'] == true) {
+        // 强制设置当前设备为在线
+        device['isOnline'] = true;
+        device['is_online'] = true;
+        DebugConfig.debugPrint('保护当前设备在线状态: ${device['name']}(${device['id']})', module: 'SYNC');
+      }
+    }
+  }
+
   // 🔥 新增：获取在线设备数量
   int get onlineDevicesCount {
     if (_currentGroup == null) {

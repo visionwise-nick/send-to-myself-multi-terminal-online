@@ -206,13 +206,25 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
       if (group['devices'] != null && group['devices'] is List) {
         for (final device in group['devices']) {
           final deviceId = device['id']?.toString() ?? '';
-          final shouldBeOnline = onlineDeviceIds.contains(deviceId);
           
-          // 只有当状态确实发生变化时才更新
-          if (device['isOnline'] != shouldBeOnline) {
-            device['isOnline'] = shouldBeOnline;
-            DebugConfig.debugPrint('设备${device['name']}(${device['id']})状态更新为${shouldBeOnline ? "在线" : "离线"}', module: 'SYNC');
-            updated = true;
+          // 🔥 关键修复：当前设备始终保持在线，不被服务器状态覆盖
+          if (device['isCurrentDevice'] == true) {
+            if (device['isOnline'] != true) {
+              device['isOnline'] = true;
+              device['is_online'] = true;
+              DebugConfig.debugPrint('强制设置当前设备为在线: ${device['name']}(${deviceId})', module: 'SYNC');
+              updated = true;
+            }
+          } else {
+            final shouldBeOnline = onlineDeviceIds.contains(deviceId);
+            
+            // 只有当状态确实发生变化时才更新非当前设备
+            if (device['isOnline'] != shouldBeOnline) {
+              device['isOnline'] = shouldBeOnline;
+              device['is_online'] = shouldBeOnline;
+              DebugConfig.debugPrint('设备${device['name']}(${device['id']})状态更新为${shouldBeOnline ? "在线" : "离线"}', module: 'SYNC');
+              updated = true;
+            }
           }
         }
       }
@@ -549,10 +561,20 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
       if (group['devices'] != null && group['devices'] is List) {
         for (final device in group['devices']) {
           final deviceId = device['id'];
-          if (deviceId != null && deviceStatusMap.containsKey(deviceId)) {
+          
+          // 🔥 关键修复：当前设备始终保持在线，不被服务器状态覆盖
+          if (device['isCurrentDevice'] == true) {
+            if (device['isOnline'] != true) {
+              device['isOnline'] = true;
+              device['is_online'] = true;
+              DebugConfig.debugPrint('强制设置当前设备为在线: ${device['name']}(${deviceId})', module: 'SYNC');
+              updated = true;
+            }
+          } else if (deviceId != null && deviceStatusMap.containsKey(deviceId)) {
             final newStatus = deviceStatusMap[deviceId]!;
             if (device['isOnline'] != newStatus) {
               device['isOnline'] = newStatus;
+              device['is_online'] = newStatus;
               DebugConfig.debugPrint('设备${device['name']}(${device['id']})状态更新为${newStatus ? "在线" : "离线"}', module: 'SYNC');
               updated = true;
             }
@@ -579,32 +601,43 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
       if (group['id'] == groupId && group['devices'] != null) {
         // 为群组中的每个设备更新状态
         for (final groupDevice in group['devices']) {
-          // 在传入的设备列表中查找对应设备
-          for (final newDeviceData in devices) {
-            if (newDeviceData is Map && 
-                groupDevice['id'] == newDeviceData['id']) {
-              
-              // 根据新设备数据判断在线状态
-              bool isOnline = false;
-              
-              if (newDeviceData['is_logged_out'] == true) {
-                isOnline = false;
-              } else if (newDeviceData['is_online'] == true) {
-                // 服务器说在线，优先相信服务器状态
-                isOnline = true;
-              } else {
-                // 服务器明确说离线
-                isOnline = false;
+          // 🔥 关键修复：当前设备始终保持在线，不被服务器状态覆盖
+          if (groupDevice['isCurrentDevice'] == true) {
+            if (groupDevice['isOnline'] != true) {
+              groupDevice['isOnline'] = true;
+              groupDevice['is_online'] = true;
+              DebugConfig.debugPrint('强制设置当前设备为在线: ${groupDevice['name']}(${groupDevice['id']})', module: 'SYNC');
+              updated = true;
+            }
+          } else {
+            // 在传入的设备列表中查找对应设备
+            for (final newDeviceData in devices) {
+              if (newDeviceData is Map && 
+                  groupDevice['id'] == newDeviceData['id']) {
+                
+                // 根据新设备数据判断在线状态
+                bool isOnline = false;
+                
+                if (newDeviceData['is_logged_out'] == true) {
+                  isOnline = false;
+                } else if (newDeviceData['is_online'] == true) {
+                  // 服务器说在线，优先相信服务器状态
+                  isOnline = true;
+                } else {
+                  // 服务器明确说离线
+                  isOnline = false;
+                }
+                
+                // 只有状态变化时才更新
+                if (groupDevice['isOnline'] != isOnline) {
+                  groupDevice['isOnline'] = isOnline;
+                  groupDevice['is_online'] = isOnline;
+                  DebugConfig.debugPrint('群组设备${groupDevice['name']}(${groupDevice['id']})状态更新为${isOnline ? "在线" : "离线"}', module: 'SYNC');
+                  updated = true;
+                }
+                
+                break;
               }
-              
-              // 只有状态变化时才更新
-              if (groupDevice['isOnline'] != isOnline) {
-                groupDevice['isOnline'] = isOnline;
-                DebugConfig.debugPrint('群组设备${groupDevice['name']}(${groupDevice['id']})状态更新为${isOnline ? "在线" : "离线"}', module: 'SYNC');
-                updated = true;
-              }
-              
-              break;
             }
           }
         }
