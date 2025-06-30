@@ -124,7 +124,7 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
     setState(() {
       _isRefreshing = true;
     });
-
+    
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final groupProvider = Provider.of<GroupProvider>(context, listen: false);
@@ -199,16 +199,16 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
           for (var device in devices) {
             final deviceId = device['id'];
             
-            // 添加所有设备的私聊对话，包括自己
-            if (deviceId != null && !processedDeviceIds.contains(deviceId)) {
+          // 添加所有设备的私聊对话，包括自己
+          if (deviceId != null && !processedDeviceIds.contains(deviceId)) {
               processedDeviceIds.add(deviceId);
-              
-              final isCurrentDevice = deviceId == currentDevice['id'];
+            
+            final isCurrentDevice = deviceId == currentDevice['id'];
               
               // 🔥 创建异步任务，而不是立即执行
               messageFutures.add(_loadDeviceConversation(
                 device, deviceId, isCurrentDevice, conversations, l10n));
-            }
+                }
           }
           
           // 🔥 并发执行，但限制并发数量避免服务器过载

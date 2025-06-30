@@ -46,7 +46,7 @@ dependencies:
   shared_preferences: ^2.2.0
   
   # 设备信息和UUID
-  device_info_plus: ^9.0.2
+  device_info_plus: ^10.1.2
   uuid: ^4.5.1
   
   # 加密和哈希
@@ -85,8 +85,7 @@ dependencies:
   desktop_drop: ^0.4.4
   
   # 桌面端剪贴板文件支持
-  # super_clipboard: ^0.8.0
-  # 临时禁用 - 网络问题，使用改进的AppleScript方案
+  super_clipboard: ^0.8.12
   
   # 🔥 修复：更新视频缩略图插件版本以解决Android构建问题
   # fc_native_video_thumbnail: ^0.5.1

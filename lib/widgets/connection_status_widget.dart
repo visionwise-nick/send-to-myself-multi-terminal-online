@@ -210,7 +210,7 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
                 final groupProvider = Provider.of<GroupProvider>(context, listen: false);
                 groupProvider.diagnosisDeviceStatus();
                 
-                      // 2. 强制刷新设备状态
+                // 2. 强制刷新设备状态
       _manualRefreshDeviceStatus();
               },
               child: Container(
@@ -715,7 +715,7 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
       Future.delayed(Duration(milliseconds: 500), () {
         if (_wsManager.isConnected) {
           _wsManager.emit('request_group_devices_status', {
-            'timestamp': DateTime.now().toIso8601String(),
+        'timestamp': DateTime.now().toIso8601String(),
             'reason': 'fallback_refresh'
           });
         }

@@ -35,6 +35,8 @@ import 'package:share_plus/share_plus.dart'; // 🔥 新增：系统分享功能
 
 // 🔥 新增：桌面端右键菜单支持
 import 'package:context_menus/context_menus.dart';
+// 🔥 新增：超级剪贴板支持
+import 'package:super_clipboard/super_clipboard.dart';
 
 import '../services/websocket_manager.dart' as ws_manager; // 🔥 修复：使用别名避免命名冲突
 import '../utils/localization_helper.dart';
@@ -5675,10 +5677,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 新增：复制文件到剪贴板（改进的精确方案）
+  // 🔥 新增：使用super_clipboard复制文件到剪贴板
   Future<void> _copyFileToClipboard(String filePath) async {
     try {
-      DebugConfig.copyPasteDebug('🚀 开始精确文件复制: $filePath');
+      DebugConfig.copyPasteDebug('🚀 开始使用super_clipboard复制文件: $filePath');
       
       // 首先检查文件是否存在
       if (!File(filePath).existsSync()) {
@@ -5695,165 +5697,50 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       final isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
       
       if (isDesktop) {
-        bool success = false;
-        
-        if (Platform.isMacOS) {
-          // macOS: 使用精确的AppleScript方案
-          DebugConfig.copyPasteDebug('🍎 尝试精确macOS文件复制...');
-          
-          // 方法1: 清空剪贴板，然后仅设置文件
-          var result = await Process.run('osascript', [
-            '-e',
-            '''
-            -- 先清空剪贴板
-            set the clipboard to ""
+        try {
+          // 使用super_clipboard复制文件
+          final clipboard = SystemClipboard.instance;
+          if (clipboard != null) {
+            DebugConfig.copyPasteDebug('📎 使用super_clipboard复制文件');
             
-            -- 设置文件到剪贴板
-            tell application "Finder"
-              try
-                set theFile to (POSIX file "$filePath") as alias
-                set the clipboard to {theFile}
-                return "FILE_SUCCESS"
-              on error errMsg
-                return "FILE_ERROR: " & errMsg
-              end try
-            end tell
-            '''
-          ]);
-          
-          DebugConfig.copyPasteDebug('📤 精确方法1结果: ${result.exitCode}');
-          DebugConfig.copyPasteDebug('📤 输出: "${result.stdout}"');
-          
-          if (result.exitCode == 0 && result.stdout.toString().contains('FILE_SUCCESS')) {
-            success = true;
-            DebugConfig.copyPasteDebug('✅ 精确方法1成功');
-          }
-          
-          // 如果方法1失败，尝试方法2: 直接设置文件别名
-          if (!success) {
-            DebugConfig.copyPasteDebug('🔄 尝试精确方法2...');
-            result = await Process.run('osascript', [
-              '-e',
-              '''
-              try
-                set theFile to (POSIX file "$filePath") as alias
-                tell application "System Events"
-                  set the clipboard to theFile
-                end tell
-                return "ALIAS_SUCCESS"
-              on error errMsg
-                return "ALIAS_ERROR: " & errMsg
-              end try
-              '''
-            ]);
+            // 创建文件URI
+            final fileUri = Uri.file(filePath);
+            DebugConfig.copyPasteDebug('📁 文件URI: $fileUri');
             
-            if (result.exitCode == 0 && result.stdout.toString().contains('ALIAS_SUCCESS')) {
-              success = true;
-              DebugConfig.copyPasteDebug('✅ 精确方法2成功');
-            }
-          }
-          
-          // 如果还是失败，尝试方法3: 使用pbcopy设置文件URL
-          if (!success) {
-            DebugConfig.copyPasteDebug('🔄 尝试精确方法3 (pbcopy)...');
-            final fileUrl = 'file://$filePath';
-            result = await Process.run('bash', [
-              '-c',
-              'echo "$fileUrl" | pbcopy -pboard general'
-            ]);
+            // 创建剪贴板内容
+            final item = DataWriterItem();
+            item.add(Formats.fileUri([fileUri]));
             
-            if (result.exitCode == 0) {
-              // 再用AppleScript设置正确的格式
-              final result2 = await Process.run('osascript', [
-                '-e',
-                '''
-                tell application "Finder"
-                  try
-                    set theFile to (POSIX file "$filePath") as alias
-                    set the clipboard to {theFile}
-                    return "PBCOPY_SUCCESS"
-                  on error
-                    return "PBCOPY_ERROR"
-                  end try
-                end tell
-                '''
-              ]);
-              
-              if (result2.exitCode == 0 && result2.stdout.toString().contains('PBCOPY_SUCCESS')) {
-                success = true;
-                DebugConfig.copyPasteDebug('✅ 精确方法3成功');
-              }
+            // 写入剪贴板
+            await clipboard.write([item]);
+            
+            DebugConfig.copyPasteDebug('✅ super_clipboard文件复制成功！');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('✅ 文件已复制到剪贴板，现在可以在Finder中粘贴'),
+                  duration: Duration(seconds: 4),
+                ),
+              );
             }
+            return;
+          } else {
+            DebugConfig.copyPasteDebug('⚠️ super_clipboard不可用，使用降级方案');
           }
-          
-        } else if (Platform.isWindows) {
-          // Windows: 精确的PowerShell方案
-          DebugConfig.copyPasteDebug('💻 尝试精确Windows文件复制...');
-          final escapedPath = filePath.replaceAll('\\', '\\\\').replaceAll('"', '""');
-          final result = await Process.run('powershell', [
-            '-Command',
-            '''
-            try {
-              Add-Type -AssemblyName System.Windows.Forms
-              \$files = New-Object System.Collections.Specialized.StringCollection
-              \$files.Add("$escapedPath")
-              [System.Windows.Forms.Clipboard]::Clear()
-              [System.Windows.Forms.Clipboard]::SetFileDropList(\$files)
-              Write-Output "WIN_SUCCESS"
-            } catch {
-              Write-Output "WIN_ERROR: \$_"
-            }
-            '''
-          ]);
-          
-          if (result.exitCode == 0 && result.stdout.toString().contains('WIN_SUCCESS')) {
-            success = true;
-            DebugConfig.copyPasteDebug('✅ 精确Windows方法成功');
-          }
-          
-        } else if (Platform.isLinux) {
-          // Linux: 精确的xclip方案
-          DebugConfig.copyPasteDebug('🐧 尝试精确Linux文件复制...');
-          final fileUri = 'file://$filePath';
-          final result = await Process.run('bash', [
-            '-c',
-            '''
-            # 清空剪贴板
-            echo -n "" | xclip -selection clipboard
-            # 设置文件URI
-            printf "$fileUri" | xclip -selection clipboard -t text/uri-list
-            echo "LINUX_SUCCESS"
-            '''
-          ]);
-          
-          if (result.exitCode == 0 && result.stdout.toString().contains('LINUX_SUCCESS')) {
-            success = true;
-            DebugConfig.copyPasteDebug('✅ 精确Linux方法成功');
-          }
+        } catch (e) {
+          DebugConfig.copyPasteDebug('❌ super_clipboard复制失败: $e');
         }
         
-        if (success) {
-          DebugConfig.copyPasteDebug('🎉 精确文件复制成功！');
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('✅ 文件已复制到剪贴板，现在可以在Finder中粘贴'),
-                duration: Duration(seconds: 4),
-              ),
-            );
-          }
-        } else {
-          // 所有精确方法都失败，降级到文件路径
-          DebugConfig.copyPasteDebug('⚠️ 精确文件复制失败，降级到路径复制');
-          await Clipboard.setData(ClipboardData(text: filePath));
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('⚠️ 文件复制失败，已复制文件路径到剪贴板'),
-                duration: Duration(seconds: 3),
-              ),
-            );
-          }
+        // 如果super_clipboard失败，降级到文件路径复制
+        DebugConfig.copyPasteDebug('🔄 降级到文件路径复制');
+        await Clipboard.setData(ClipboardData(text: filePath));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('⚠️ 文件复制失败，已复制文件路径到剪贴板'),
+              duration: Duration(seconds: 3),
+            ),
+          );
         }
       } else {
         // 非桌面端，复制文件路径

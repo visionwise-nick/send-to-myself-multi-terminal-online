@@ -37,7 +37,7 @@ void main() async {
       DebugConfig.globalPrint(message);
     }
   };
-
+  
   // 🔥 新增：检查是否为分享Intent
   bool isShareIntent = false;
   try {
