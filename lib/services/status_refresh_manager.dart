@@ -131,7 +131,15 @@ class StatusRefreshManager {
       // 通过WebSocketService刷新设备状态
       if (wsService.isConnected) {
         wsService.refreshDeviceStatus();
-        DebugConfig.debugPrint('已发送设备状态请求(WebSocketService)', module: 'STATUS');
+        // 🔥 新增：同时强制同步设备状态，确保当前设备正确标记
+        wsService.forceSyncDeviceStatus();
+        DebugConfig.debugPrint('已发送设备状态请求和强制同步(WebSocketService)', module: 'STATUS');
+      }
+
+      // 🔥 新增：通知设备活跃状态变化
+      if (wsService.isConnected) {
+        wsService.notifyDeviceActivityChange();
+        DebugConfig.debugPrint('已通知设备活跃状态变化', module: 'STATUS');
       }
 
     } catch (e) {
@@ -157,6 +165,11 @@ class StatusRefreshManager {
   /// 用户登录时触发
   void onLogin() {
     triggerRefresh(TRIGGER_LOGIN, reason: '用户登录');
+    
+    // 🔥 新增：首次登录后延迟刷新，确保当前设备状态正确
+    Timer(Duration(seconds: 3), () {
+      triggerRefresh(TRIGGER_MANUAL_REFRESH, reason: '登录后延迟状态确认');
+    });
   }
 
   /// 用户登出时触发

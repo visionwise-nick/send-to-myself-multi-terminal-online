@@ -771,14 +771,25 @@ class GroupProvider extends ChangeNotifier {
             if (groupDevice is Map<String, dynamic> && groupDevice['id'] != null) {
               final deviceId = groupDevice['id'];
               final currentStatus = groupDevice['isOnline'] == true;
-              final newStatus = onlineStatusMap[deviceId] ?? false;
               
-              // 只有状态真的发生变化时才更新
-              if (currentStatus != newStatus) {
-                groupDevice['isOnline'] = newStatus;
-                groupDevice['is_online'] = newStatus;
-                needsUpdate = true;
-                DebugConfig.debugPrint('设备${groupDevice['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}', module: 'SYNC');
+              // 🔥 关键修复：当前设备始终保持在线，不被服务器状态覆盖
+              if (groupDevice['isCurrentDevice'] == true) {
+                if (!currentStatus) {
+                  groupDevice['isOnline'] = true;
+                  groupDevice['is_online'] = true;
+                  needsUpdate = true;
+                  DebugConfig.debugPrint('强制设置当前设备为在线: ${groupDevice['name']}(${deviceId})', module: 'SYNC');
+                }
+              } else {
+                final newStatus = onlineStatusMap[deviceId] ?? false;
+                
+                // 只有状态真的发生变化时才更新非当前设备
+                if (currentStatus != newStatus) {
+                  groupDevice['isOnline'] = newStatus;
+                  groupDevice['is_online'] = newStatus;
+                  needsUpdate = true;
+                  DebugConfig.debugPrint('设备${groupDevice['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}', module: 'SYNC');
+                }
               }
             }
           }
@@ -794,14 +805,25 @@ class GroupProvider extends ChangeNotifier {
           if (groupDevice is Map<String, dynamic> && groupDevice['id'] != null) {
             final deviceId = groupDevice['id'];
             final currentStatus = groupDevice['isOnline'] == true;
-            final newStatus = onlineStatusMap[deviceId] ?? false;
             
-            // 只有状态真的发生变化时才更新
-            if (currentStatus != newStatus) {
-              groupDevice['isOnline'] = newStatus;
-              groupDevice['is_online'] = newStatus;
-              needsUpdate = true;
-              DebugConfig.debugPrint('当前群组设备${groupDevice['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}', module: 'SYNC');
+            // 🔥 关键修复：当前设备始终保持在线，不被服务器状态覆盖
+            if (groupDevice['isCurrentDevice'] == true) {
+              if (!currentStatus) {
+                groupDevice['isOnline'] = true;
+                groupDevice['is_online'] = true;
+                needsUpdate = true;
+                DebugConfig.debugPrint('强制设置当前设备为在线: ${groupDevice['name']}(${deviceId})', module: 'SYNC');
+              }
+            } else {
+              final newStatus = onlineStatusMap[deviceId] ?? false;
+              
+              // 只有状态真的发生变化时才更新非当前设备
+              if (currentStatus != newStatus) {
+                groupDevice['isOnline'] = newStatus;
+                groupDevice['is_online'] = newStatus;
+                needsUpdate = true;
+                DebugConfig.debugPrint('当前群组设备${groupDevice['name']}(${deviceId})状态: ${currentStatus ? "在线" : "离线"} -> ${newStatus ? "在线" : "离线"}', module: 'SYNC');
+              }
             }
           }
         }

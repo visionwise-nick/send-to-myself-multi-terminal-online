@@ -35,8 +35,8 @@ import 'package:share_plus/share_plus.dart'; // 🔥 新增：系统分享功能
 
 // 🔥 新增：桌面端右键菜单支持
 import 'package:context_menus/context_menus.dart';
-// 🔥 新增：超级剪贴板支持
-import 'package:super_clipboard/super_clipboard.dart';
+// 🔥 新增：超级剪贴板支持（暂时移除）
+// import 'package:super_clipboard/super_clipboard.dart';
 
 import '../services/websocket_manager.dart' as ws_manager; // 🔥 修复：使用别名避免命名冲突
 import '../utils/localization_helper.dart';
@@ -77,9 +77,9 @@ class FileDownloadHandler {
         String base64Filename = base64FilenameList.first;
         List<int> bytes = base64Decode(base64Filename);
         return utf8.decode(bytes);
-              } catch (e) {
+      } catch (e) {
           DebugConfig.errorPrint('Base64 解码失败: $e');
-        }
+      }
     }
     
     // 默认返回
@@ -6028,7 +6028,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       return false;
     }
   }
-  
+
   // 🔥 新增：调试剪贴板内容
   Future<void> _debugClipboardContent() async {
     try {

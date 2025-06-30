@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/device_auth_service.dart';
@@ -91,6 +92,16 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
         
         // 连接WebSocket
         await _websocketService.connect();
+        
+        // 🔥 新增：应用启动后如果已登录，触发状态刷新
+        StatusRefreshManager().onAppStart();
+        
+        // 🔥 新增：延迟刷新确保设备状态正确加载
+        Timer(Duration(seconds: 3), () {
+          StatusRefreshManager().manualRefresh(reason: '应用启动后设备状态初始化');
+        });
+        
+        print('✅ 应用初始化完成，已触发状态刷新');
       }
     } catch (e) {
       print('初始化失败: $e');
@@ -228,6 +239,16 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
         
         // 连接WebSocket
         await _websocketService.connect();
+        
+        // 🔥 新增：首次登录后触发状态刷新
+        StatusRefreshManager().onLogin();
+        
+        // 🔥 新增：延迟刷新确保设备状态正确显示
+        Timer(Duration(seconds: 2), () {
+          StatusRefreshManager().manualRefresh(reason: '首次登录后延迟刷新');
+        });
+        
+        print('✅ 首次登录成功，已触发状态刷新');
       }
     } catch (e) {
       print('注册失败: $e');
@@ -365,6 +386,14 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
       
       // 通知设备活跃状态变化
       _websocketService.notifyDeviceActivityChange();
+      
+      // 🔥 新增：触发状态刷新管理器
+      StatusRefreshManager().manualRefresh(reason: '设备资料刷新完成');
+      
+      // 🔥 新增：延迟再次刷新，确保当前设备状态正确显示
+      Timer(Duration(seconds: 1), () {
+        StatusRefreshManager().manualRefresh(reason: '设备资料刷新后延迟确认');
+      });
       
       print('设备资料刷新成功，已触发设备状态强制同步');
       notifyListeners();
