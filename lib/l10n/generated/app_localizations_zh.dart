@@ -1756,7 +1756,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get preparingDownload => '准备下载';
 
   @override
-  String get fileNotExists => '文件不存在';
+  String fileNotExists(int index) {
+    return '第$index个文件不存在';
+  }
 
   @override
   String get file => '文件';
@@ -2418,4 +2420,123 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get logoutFailedMessage => '退出登录失败，您可以选择强制退出或重试。';
+
+  @override
+  String get preparingToSendFiles => '准备发送文件...';
+
+  @override
+  String sendingFileCount(int current) {
+    return '正在发送第$current个文件...';
+  }
+
+  @override
+  String sendingFileProgress(int current, String sizeMB) {
+    return '发送第$current个文件 (${sizeMB}MB)';
+  }
+
+  @override
+  String retryingSendFile(int current) {
+    return '重试发送第$current个文件';
+  }
+
+  @override
+  String fileSendSuccess(int current) {
+    return '✅ 第$current个文件发送成功';
+  }
+
+  @override
+  String filesCompleted(int success, int total) {
+    return '已完成 $success/$total 个文件';
+  }
+
+  @override
+  String get waitingForServerProcessing => '等待服务器处理...';
+
+  @override
+  String get ensureFileFullyUploaded => '确保文件完全上传';
+
+  @override
+  String fileSendFailed(int current) {
+    return '❌ 第$current个文件发送失败';
+  }
+
+  @override
+  String maxRetriesReached(String fileName, int maxRetries) {
+    return '$fileName 已重试$maxRetries次仍失败';
+  }
+
+  @override
+  String fileSendException(int current) {
+    return '❌ 第$current个文件发送异常';
+  }
+
+  @override
+  String sendErrorMessage(String fileName, String error) {
+    return '$fileName 发送时出现错误: $error';
+  }
+
+  @override
+  String fileDataIncomplete(int current) {
+    return '❌ 第$current个文件数据异常';
+  }
+
+  @override
+  String get fileInfoIncompleteMessage => '文件信息不完整';
+
+  @override
+  String allFilesSentToGroup(int count) {
+    return '共发送了$count个文件到当前群组';
+  }
+
+  @override
+  String successCountFiles(int success, int total) {
+    return '成功：$success/$total个文件';
+  }
+
+  @override
+  String get noFilesToSendError => '❌ 没有文件可发送';
+
+  @override
+  String get shareDataEmpty => '分享数据为空';
+
+  @override
+  String get sendingFile => '发送文件...';
+
+  @override
+  String fileUploadFailed(String fileName) {
+    return '$fileName 上传失败';
+  }
+
+  @override
+  String fileSentToGroup(String fileName) {
+    return '$fileName 已发送到群组';
+  }
+
+  @override
+  String get unsupportedShareType => '❌ 不支持的分享类型';
+
+  @override
+  String get cannotHandleContentType => '无法处理此类型的内容';
+
+  @override
+  String get textSendSuccess => '✅ 文本发送成功！';
+
+  @override
+  String get contentSentToGroup => '内容已发送到群组';
+
+  @override
+  String get textSendFailed => '❌ 文本发送失败';
+
+  @override
+  String get unknownFileName => '未知文件名';
+
+  @override
+  String filePathInvalid(String fileName) {
+    return '$fileName 文件路径无效';
+  }
+
+  @override
+  String retryAttempt(int retry, String fileName) {
+    return '第$retry次重试 - $fileName';
+  }
 }

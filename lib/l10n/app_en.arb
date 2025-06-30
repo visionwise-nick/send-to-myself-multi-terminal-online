@@ -1422,5 +1422,173 @@
   "batchRecall": "Batch Recall",
   "recall": "Recall",
   "batchRecallReason": "Batch recall",
-  "batchDeleteReason": "Batch delete"
+  "batchDeleteReason": "Batch delete",
+  "preparingToSendFiles": "Preparing to send files...",
+  "sendingFileCount": "Sending file {current}...",
+  "@sendingFileCount": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "fileNotExists": "File {index} does not exist",
+  "@fileNotExists": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "sendingFileProgress": "Sending file {current} ({sizeMB}MB)",
+  "@sendingFileProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "sizeMB": {
+        "type": "String"
+      }
+    }
+  },
+  "retryingSendFile": "Retrying to send file {current}",
+  "@retryingSendFile": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "fileSendSuccess": "✅ File {current} sent successfully",
+  "@fileSendSuccess": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "filesCompleted": "Completed {success}/{total} files",
+  "@filesCompleted": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "waitingForServerProcessing": "Waiting for server processing...",
+  "ensureFileFullyUploaded": "Ensuring file is fully uploaded",
+  "fileSendFailed": "❌ File {current} failed to send",
+  "@fileSendFailed": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "maxRetriesReached": "{fileName} failed after {maxRetries} retries",
+  "@maxRetriesReached": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      },
+      "maxRetries": {
+        "type": "int"
+      }
+    }
+  },
+  "fileSendException": "❌ File {current} send exception",
+  "@fileSendException": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "sendErrorMessage": "{fileName} error during send: {error}",
+  "@sendErrorMessage": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileDataIncomplete": "❌ File {current} data exception",
+  "@fileDataIncomplete": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "fileInfoIncompleteMessage": "File information incomplete",
+  "allFilesSentToGroup": "Sent {count} files to current group",
+  "@allFilesSentToGroup": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "successCountFiles": "Success: {success}/{total} files",
+  "@successCountFiles": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noFilesToSendError": "❌ No files to send",
+  "shareDataEmpty": "Share data is empty",
+  "sendingFile": "Sending file...",
+  "fileUploadFailed": "{fileName} upload failed",
+  "@fileUploadFailed": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSentToGroup": "{fileName} sent to group",
+  "@fileSentToGroup": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "unsupportedShareType": "❌ Unsupported share type",
+  "cannotHandleContentType": "Cannot handle this content type",
+  "textSendSuccess": "✅ Text sent successfully!",
+  "contentSentToGroup": "Content sent to group",
+  "textSendFailed": "❌ Text send failed",
+  "pleaseTryAgainLater": "Please try again later",
+  "unknownFileName": "Unknown file name",
+  "filePathInvalid": "{fileName} invalid file path",
+  "@filePathInvalid": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "retryAttempt": "Retry {retry} - {fileName}",
+  "@retryAttempt": {
+    "placeholders": {
+      "retry": {
+        "type": "int"
+      },
+      "fileName": {
+        "type": "String"
+      }
+    }
+  }
 } 

@@ -3475,8 +3475,8 @@ abstract class AppLocalizations {
   /// No description provided for @fileNotExists.
   ///
   /// In en, this message translates to:
-  /// **'File not found'**
-  String get fileNotExists;
+  /// **'File {index} does not exist'**
+  String fileNotExists(int index);
 
   /// No description provided for @file.
   ///
@@ -4743,6 +4743,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Logout failed, you can choose to force logout or retry.'**
   String get logoutFailedMessage;
+
+  /// No description provided for @preparingToSendFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing to send files...'**
+  String get preparingToSendFiles;
+
+  /// No description provided for @sendingFileCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending file {current}...'**
+  String sendingFileCount(int current);
+
+  /// No description provided for @sendingFileProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending file {current} ({sizeMB}MB)'**
+  String sendingFileProgress(int current, String sizeMB);
+
+  /// No description provided for @retryingSendFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Retrying to send file {current}'**
+  String retryingSendFile(int current);
+
+  /// No description provided for @fileSendSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ File {current} sent successfully'**
+  String fileSendSuccess(int current);
+
+  /// No description provided for @filesCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed {success}/{total} files'**
+  String filesCompleted(int success, int total);
+
+  /// No description provided for @waitingForServerProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for server processing...'**
+  String get waitingForServerProcessing;
+
+  /// No description provided for @ensureFileFullyUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Ensuring file is fully uploaded'**
+  String get ensureFileFullyUploaded;
+
+  /// No description provided for @fileSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ File {current} failed to send'**
+  String fileSendFailed(int current);
+
+  /// No description provided for @maxRetriesReached.
+  ///
+  /// In en, this message translates to:
+  /// **'{fileName} failed after {maxRetries} retries'**
+  String maxRetriesReached(String fileName, int maxRetries);
+
+  /// No description provided for @fileSendException.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ File {current} send exception'**
+  String fileSendException(int current);
+
+  /// No description provided for @sendErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{fileName} error during send: {error}'**
+  String sendErrorMessage(String fileName, String error);
+
+  /// No description provided for @fileDataIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ File {current} data exception'**
+  String fileDataIncomplete(int current);
+
+  /// No description provided for @fileInfoIncompleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'File information incomplete'**
+  String get fileInfoIncompleteMessage;
+
+  /// No description provided for @allFilesSentToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent {count} files to current group'**
+  String allFilesSentToGroup(int count);
+
+  /// No description provided for @successCountFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Success: {success}/{total} files'**
+  String successCountFiles(int success, int total);
+
+  /// No description provided for @noFilesToSendError.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ No files to send'**
+  String get noFilesToSendError;
+
+  /// No description provided for @shareDataEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Share data is empty'**
+  String get shareDataEmpty;
+
+  /// No description provided for @sendingFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending file...'**
+  String get sendingFile;
+
+  /// No description provided for @fileUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{fileName} upload failed'**
+  String fileUploadFailed(String fileName);
+
+  /// No description provided for @fileSentToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'{fileName} sent to group'**
+  String fileSentToGroup(String fileName);
+
+  /// No description provided for @unsupportedShareType.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Unsupported share type'**
+  String get unsupportedShareType;
+
+  /// No description provided for @cannotHandleContentType.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot handle this content type'**
+  String get cannotHandleContentType;
+
+  /// No description provided for @textSendSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Text sent successfully!'**
+  String get textSendSuccess;
+
+  /// No description provided for @contentSentToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Content sent to group'**
+  String get contentSentToGroup;
+
+  /// No description provided for @textSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Text send failed'**
+  String get textSendFailed;
+
+  /// No description provided for @unknownFileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown file name'**
+  String get unknownFileName;
+
+  /// No description provided for @filePathInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'{fileName} invalid file path'**
+  String filePathInvalid(String fileName);
+
+  /// No description provided for @retryAttempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry {retry} - {fileName}'**
+  String retryAttempt(int retry, String fileName);
 }
 
 class _AppLocalizationsDelegate

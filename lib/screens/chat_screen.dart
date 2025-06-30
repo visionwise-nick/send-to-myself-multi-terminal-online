@@ -3027,7 +3027,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           // 🔥 修复：移除显眼的成功指示器覆盖层，只显示文件预览
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: _buildFilePreview(fileType, filePath, fileUrl, isMe),
+            child: _buildFilePreview(fileType, filePath, fileUrl, isMe, message: message),
           ),
           
           // 🔥 新的上传进度UI
@@ -3391,7 +3391,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   // 构建文件预览 - 简化版本
-  Widget _buildFilePreview(String? fileType, String? filePath, String? fileUrl, bool isMe) {
+  Widget _buildFilePreview(String? fileType, String? filePath, String? fileUrl, bool isMe, {Map<String, dynamic>? message}) {
     // 🔥 简化：减少调试日志，保持代码简洁
     
     // 🔥 新增：检查是否正在下载
@@ -3442,7 +3442,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           }
           
           // 🔥 修复：显示准备下载状态而不是"文件不存在"
-          return _buildPrepareDownloadPreview(fileType);
+          if (message != null) {
+            return _buildPrepareDownloadPreview(fileType, message);
+          } else {
+            return _buildFileNotFoundPreview(fileType, fileUrl);
+          }
         },
       );
     }
@@ -3486,36 +3490,100 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  // 🔥 新增：准备下载预览
-  Widget _buildPrepareDownloadPreview(String? fileType) {
-    return Container(
-      height: 80,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            _getFileTypeIcon(fileType),
-            size: 24,
-            color: AppTheme.primaryColor,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            LocalizationHelper.of(context).preparingDownload,
-            style: TextStyle(
-              fontSize: 11,
-              color: AppTheme.textSecondaryColor,
-              fontWeight: FontWeight.w500,
+  // 🔥 新增：准备下载预览 - 修复为可点击的下载触发器
+  Widget _buildPrepareDownloadPreview(String? fileType, Map<String, dynamic> message) {
+    return GestureDetector(
+      onTap: () => _triggerFileDownload(message),
+      child: Container(
+        height: 80,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.cloud_download_outlined,
+              size: 24,
+              color: AppTheme.primaryColor,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              LocalizationHelper.of(context).downloadFile,
+              style: TextStyle(
+                fontSize: 11,
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  // 🔥 新增：触发文件下载
+  Future<void> _triggerFileDownload(Map<String, dynamic> message) async {
+    final String? fileUrl = message['fileUrl'];
+    final String? fileName = message['fileName'] ?? 'unknown_file';
+    
+    if (fileUrl == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('File does not exist'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      // 构建完整URL
+      String fullUrl = fileUrl;
+      if (fileUrl.startsWith('/api/')) {
+        fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+      }
+      
+      // 标记为下载中
+      setState(() {
+        _downloadingFiles.add(fullUrl);
+      });
+      
+      // 执行下载
+      await _downloadFileForSaving(fullUrl, fileName ?? 'unknown_file');
+      
+      // 下载完成后重新构建UI
+      if (mounted) {
+        setState(() {
+          // 强制刷新消息列表以显示下载完成后的状态
+        });
+      }
+      
+    } catch (e) {
+      print('触发下载失败: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${LocalizationHelper.of(context).downloadFailed}: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      // 移除下载中标记
+      if (mounted) {
+        setState(() {
+          _downloadingFiles.remove(fileUrl.startsWith('/api/') 
+            ? 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl' 
+            : fileUrl);
+        });
+      }
+    }
   }
 
   // 加载中预览
@@ -3557,7 +3625,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 4),
           Text(
-            LocalizationHelper.of(context).fileNotExists,
+            'File does not exist',
             style: TextStyle(
               fontSize: 10,
               color: const Color(0xFF9CA3AF),

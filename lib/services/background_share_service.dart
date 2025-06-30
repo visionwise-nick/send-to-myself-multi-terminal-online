@@ -2,21 +2,35 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'local_storage_service.dart';
+import '../utils/localization_helper.dart';
 
 /// 后台分享服务 - 专门处理分享Intent而不启动完整应用
 class BackgroundShareService {
   static final BackgroundShareService _instance = BackgroundShareService._internal();
   factory BackgroundShareService() => _instance;
   BackgroundShareService._internal();
+  
+  /// 安全获取本地化文本的辅助方法
+  static String _getLocalizedText(BuildContext? context, String Function(dynamic) getter, String fallback) {
+    if (context != null) {
+      try {
+        return getter(LocalizationHelper.of(context));
+      } catch (e) {
+        print('获取本地化文本失败: $e');
+      }
+    }
+    return fallback;
+  }
 
   static const MethodChannel _channel = MethodChannel('com.example.send_to_myself/share');
   
   /// 处理分享Intent（带进度回调）
-  static Future<bool> handleShareIntent({Function(String, String)? onProgressUpdate}) async {
+  static Future<bool> handleShareIntent({Function(String, String)? onProgressUpdate, BuildContext? context}) async {
     try {
       print('🔍 检查是否为分享Intent...');
       onProgressUpdate?.call('正在检测分享内容...', '检查是否为分享Intent');
@@ -155,13 +169,13 @@ class BackgroundShareService {
         // 处理文本分享
         final String? text = shareData['text'];
         if (text != null && text.isNotEmpty) {
-          onProgressUpdate?.call('发送文本消息...', '正在上传文本内容');
-          final success = await _sendTextMessage(currentGroupId, text, token);
-          if (success) {
-            onProgressUpdate?.call('✅ 文本发送成功！', '内容已发送到群组');
-          } else {
-            onProgressUpdate?.call('❌ 文本发送失败', '请稍后重试');
-          }
+          onProgressUpdate?.call('Sending message...', 'Uploading text content');
+                      final success = await _sendTextMessage(currentGroupId, text, token);
+                      if (success) {
+              onProgressUpdate?.call('✅ Text sent successfully!', 'Content sent to group');
+            } else {
+              onProgressUpdate?.call('❌ Text send failed', 'Please try again later');
+            }
           return success;
         }
       } else if (type == 'multiple') {

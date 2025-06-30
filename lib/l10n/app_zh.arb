@@ -1358,5 +1358,173 @@
   "batchRecall": "批量撤回",
   "recall": "撤回",
   "batchRecallReason": "批量撤回",
-  "batchDeleteReason": "批量删除"
+  "batchDeleteReason": "批量删除",
+  "preparingToSendFiles": "准备发送文件...",
+  "sendingFileCount": "正在发送第{current}个文件...",
+  "@sendingFileCount": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "fileNotExists": "第{index}个文件不存在",
+  "@fileNotExists": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "sendingFileProgress": "发送第{current}个文件 ({sizeMB}MB)",
+  "@sendingFileProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "sizeMB": {
+        "type": "String"
+      }
+    }
+  },
+  "retryingSendFile": "重试发送第{current}个文件",
+  "@retryingSendFile": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "fileSendSuccess": "✅ 第{current}个文件发送成功",
+  "@fileSendSuccess": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "filesCompleted": "已完成 {success}/{total} 个文件",
+  "@filesCompleted": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "waitingForServerProcessing": "等待服务器处理...",
+  "ensureFileFullyUploaded": "确保文件完全上传",
+  "fileSendFailed": "❌ 第{current}个文件发送失败",
+  "@fileSendFailed": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "maxRetriesReached": "{fileName} 已重试{maxRetries}次仍失败",
+  "@maxRetriesReached": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      },
+      "maxRetries": {
+        "type": "int"
+      }
+    }
+  },
+  "fileSendException": "❌ 第{current}个文件发送异常",
+  "@fileSendException": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "sendErrorMessage": "{fileName} 发送时出现错误: {error}",
+  "@sendErrorMessage": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileDataIncomplete": "❌ 第{current}个文件数据异常",
+  "@fileDataIncomplete": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      }
+    }
+  },
+  "fileInfoIncompleteMessage": "文件信息不完整",
+  "allFilesSentToGroup": "共发送了{count}个文件到当前群组",
+  "@allFilesSentToGroup": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "successCountFiles": "成功：{success}/{total}个文件",
+  "@successCountFiles": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noFilesToSendError": "❌ 没有文件可发送",
+  "shareDataEmpty": "分享数据为空",
+  "sendingFile": "发送文件...",
+  "fileUploadFailed": "{fileName} 上传失败",
+  "@fileUploadFailed": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSentToGroup": "{fileName} 已发送到群组",
+  "@fileSentToGroup": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "unsupportedShareType": "❌ 不支持的分享类型",
+  "cannotHandleContentType": "无法处理此类型的内容",
+  "textSendSuccess": "✅ 文本发送成功！",
+  "contentSentToGroup": "内容已发送到群组",
+  "textSendFailed": "❌ 文本发送失败",
+  "pleaseTryAgainLater": "请稍后重试",
+  "unknownFileName": "未知文件名",
+  "filePathInvalid": "{fileName} 文件路径无效",
+  "@filePathInvalid": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "retryAttempt": "第{retry}次重试 - {fileName}",
+  "@retryAttempt": {
+    "placeholders": {
+      "retry": {
+        "type": "int"
+      },
+      "fileName": {
+        "type": "String"
+      }
+    }
+  }
 } 

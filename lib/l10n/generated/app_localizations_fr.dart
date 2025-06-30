@@ -1780,7 +1780,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get preparingDownload => 'Preparing download';
 
   @override
-  String get fileNotExists => 'File not found';
+  String fileNotExists(int index) {
+    return 'File $index does not exist';
+  }
 
   @override
   String get file => 'File';
@@ -2454,4 +2456,123 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get logoutFailedMessage =>
       'Logout failed, you can choose to force logout or retry.';
+
+  @override
+  String get preparingToSendFiles => 'Preparing to send files...';
+
+  @override
+  String sendingFileCount(int current) {
+    return 'Sending file $current...';
+  }
+
+  @override
+  String sendingFileProgress(int current, String sizeMB) {
+    return 'Sending file $current (${sizeMB}MB)';
+  }
+
+  @override
+  String retryingSendFile(int current) {
+    return 'Retrying to send file $current';
+  }
+
+  @override
+  String fileSendSuccess(int current) {
+    return '✅ File $current sent successfully';
+  }
+
+  @override
+  String filesCompleted(int success, int total) {
+    return 'Completed $success/$total files';
+  }
+
+  @override
+  String get waitingForServerProcessing => 'Waiting for server processing...';
+
+  @override
+  String get ensureFileFullyUploaded => 'Ensuring file is fully uploaded';
+
+  @override
+  String fileSendFailed(int current) {
+    return '❌ File $current failed to send';
+  }
+
+  @override
+  String maxRetriesReached(String fileName, int maxRetries) {
+    return '$fileName failed after $maxRetries retries';
+  }
+
+  @override
+  String fileSendException(int current) {
+    return '❌ File $current send exception';
+  }
+
+  @override
+  String sendErrorMessage(String fileName, String error) {
+    return '$fileName error during send: $error';
+  }
+
+  @override
+  String fileDataIncomplete(int current) {
+    return '❌ File $current data exception';
+  }
+
+  @override
+  String get fileInfoIncompleteMessage => 'File information incomplete';
+
+  @override
+  String allFilesSentToGroup(int count) {
+    return 'Sent $count files to current group';
+  }
+
+  @override
+  String successCountFiles(int success, int total) {
+    return 'Success: $success/$total files';
+  }
+
+  @override
+  String get noFilesToSendError => '❌ No files to send';
+
+  @override
+  String get shareDataEmpty => 'Share data is empty';
+
+  @override
+  String get sendingFile => 'Sending file...';
+
+  @override
+  String fileUploadFailed(String fileName) {
+    return '$fileName upload failed';
+  }
+
+  @override
+  String fileSentToGroup(String fileName) {
+    return '$fileName sent to group';
+  }
+
+  @override
+  String get unsupportedShareType => '❌ Unsupported share type';
+
+  @override
+  String get cannotHandleContentType => 'Cannot handle this content type';
+
+  @override
+  String get textSendSuccess => '✅ Text sent successfully!';
+
+  @override
+  String get contentSentToGroup => 'Content sent to group';
+
+  @override
+  String get textSendFailed => '❌ Text send failed';
+
+  @override
+  String get unknownFileName => 'Unknown file name';
+
+  @override
+  String filePathInvalid(String fileName) {
+    return '$fileName invalid file path';
+  }
+
+  @override
+  String retryAttempt(int retry, String fileName) {
+    return 'Retry $retry - $fileName';
+  }
 }
