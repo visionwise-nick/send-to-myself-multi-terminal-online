@@ -124,7 +124,6 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
 
   Widget _buildCompactWithDeviceCount() {
     final groupProvider = Provider.of<GroupProvider>(context);
-    final onlineCount = groupProvider.onlineDevicesCount;
     final totalCount = groupProvider.totalDevicesCount;
     
     return GestureDetector(
@@ -203,7 +202,7 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
           
           SizedBox(width: 6),
           
-          // 设备在线数量 - 移动端显示"n/m在线"，桌面端隐藏
+          // 设备总数量 - 移动端显示"m台设备"，桌面端隐藏
           if (_isMobile()) 
             GestureDetector(
               onTap: () {
@@ -220,13 +219,13 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
-                  color: onlineCount > 0 
-                    ? Colors.green.withOpacity(0.1) 
+                  color: totalCount > 0 
+                    ? Colors.blue.withOpacity(0.1) 
                     : Colors.grey.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: onlineCount > 0 
-                      ? Colors.green.withOpacity(0.3) 
+                    color: totalCount > 0 
+                      ? Colors.blue.withOpacity(0.3) 
                       : Colors.grey.withOpacity(0.3),
                     width: 1,
                   ),
@@ -234,21 +233,18 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: onlineCount > 0 ? Colors.green : Colors.grey,
-                        shape: BoxShape.circle,
-                      ),
+                    Icon(
+                      Icons.devices,
+                      size: 10,
+                      color: totalCount > 0 ? Colors.blue[700] : Colors.grey[600],
                     ),
                     SizedBox(width: 4),
                     Text(
-                      LocalizationHelper.of(context).onlineStatus(onlineCount, totalCount),
+                      LocalizationHelper.of(context).deviceCount(totalCount),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: onlineCount > 0 ? Colors.green[700] : Colors.grey[600],
+                        color: totalCount > 0 ? Colors.blue[700] : Colors.grey[600],
                       ),
                     ),
                   ],

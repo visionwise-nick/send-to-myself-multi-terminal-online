@@ -606,8 +606,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                   ),
                     ),
                     const SizedBox(width: 8),
-                    // 🔥 连接状态显示在标题栏，右边显示在线设备数
-                    const ConnectionStatusWidget(showDeviceCount: true),
+                              // 🔥 连接状态显示在标题栏，右边显示设备总数
+          const ConnectionStatusWidget(showDeviceCount: true),
                   ],
                 ),
                 Text(
@@ -664,7 +664,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           ),
           const SizedBox(height: 8),
           
-          // 群组列表和在线状态
+          // 群组列表和设备数量
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -754,7 +754,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4), // 🔥 增加行间距
-                      // 🔥 替换为在线状态显示
+                      // 🔥 修改：构建群组设备数量显示（仅显示总数，不显示在线状态）
                       Consumer<GroupProvider>(
                         builder: (context, groupProvider, child) {
                           return _buildGroupOnlineStatus(group['id'], groupProvider, isSelected);
@@ -813,14 +813,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     );
   }
 
-  // 🔥 新增：构建群组在线状态显示
+  // 🔥 修改：构建群组设备数量显示（仅显示总数，不显示在线状态）
   Widget _buildGroupOnlineStatus(String? groupId, GroupProvider groupProvider, bool isSelected) {
     if (groupId == null) {
       return Text(
-        '0/0 在线',
+        LocalizationHelper.of(context).deviceCount(0),
         style: TextStyle(
           fontSize: 11,
-          color: isSelected ? Colors.white.withOpacity(0.8) : AppTheme.textSecondaryColor, // 🔥 适配选中态
+          color: isSelected ? Colors.white.withOpacity(0.8) : AppTheme.textSecondaryColor,
         ),
       );
     }
@@ -834,69 +834,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     
     if (targetGroup == null || targetGroup.isEmpty) {
       return Text(
-        '0/0 在线',
+        LocalizationHelper.of(context).deviceCount(0),
         style: TextStyle(
           fontSize: 11,
-          color: isSelected ? Colors.white.withOpacity(0.8) : AppTheme.textSecondaryColor, // 🔥 适配选中态
+          color: isSelected ? Colors.white.withOpacity(0.8) : AppTheme.textSecondaryColor,
         ),
       );
     }
 
     final devices = List<Map<String, dynamic>>.from(targetGroup['devices'] ?? []);
     final totalCount = devices.length;
-    
-    // 计算在线设备数量（使用与_buildOnlineIndicator相同的逻辑）
-    int onlineCount = 0;
-    for (var device in devices) {
-      bool isOnline = false;
-      
-      // 1. 特殊处理当前设备，当前设备始终在线
-      if (device['isCurrentDevice'] == true) {
-        isOnline = true;
-      }
-      // 2. 如果设备已登出，直接离线
-      else if (device['is_logged_out'] == true || device['isLoggedOut'] == true) {
-        isOnline = false;
-      }
-      // 3. 检查isOnline状态（优先）
-      else if (device['isOnline'] == true) {
-        isOnline = true;
-      }
-      // 4. 检查is_online状态（备用）
-      else if (device['is_online'] == true) {
-        isOnline = true;
-      }
-      // 5. 默认离线
-      else {
-        isOnline = false;
-      }
-      
-      if (isOnline) {
-        onlineCount++;
-      }
-    }
 
     return Row(
       children: [
-        // 状态指示灯
-        Container(
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(
-            color: isSelected 
-              ? (onlineCount > 0 ? Colors.white : Colors.white.withOpacity(0.6)) // 🔥 选中态使用白色
-              : (onlineCount > 0 ? AppTheme.onlineColor : Colors.red.shade400),
-            shape: BoxShape.circle,
-          ),
+        // 设备图标
+        Icon(
+          Icons.devices,
+          size: 10,
+          color: isSelected 
+            ? Colors.white.withOpacity(0.8) 
+            : AppTheme.textSecondaryColor,
         ),
         const SizedBox(width: 4),
         Text(
-          '$onlineCount/$totalCount 在线',
+          LocalizationHelper.of(context).deviceCount(totalCount),
           style: TextStyle(
             fontSize: 11,
             color: isSelected 
-              ? Colors.white.withOpacity(0.9) // 🔥 选中态使用白色
-              : (onlineCount > 0 ? AppTheme.onlineColor : Colors.red.shade400),
+              ? Colors.white.withOpacity(0.9) 
+              : AppTheme.textSecondaryColor,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -1422,7 +1388,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
               // 🔥 右对齐区域
               const Spacer(),
               
-              // 🔥 连接状态显示在标题栏右侧，包含在线设备数
+              // 🔥 连接状态显示在标题栏右侧，包含设备总数
               Transform.scale(
                 scale: 0.75, // 🔥 进一步缩小到75%
                 child: const ConnectionStatusWidget(showDeviceCount: true),
