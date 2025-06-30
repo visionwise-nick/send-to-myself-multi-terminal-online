@@ -27,18 +27,18 @@ class BackgroundShareService {
       final bool? isShare = await _channel.invokeMethod('isShareIntent');
       if (isShare != true) {
         print('❌ 不是分享Intent，跳过处理');
-        onProgressUpdate?.call('❌ 未检测到分享内容', '请重新尝试分享');
+        onProgressUpdate?.call('❌ No share content detected', 'Please try sharing again');
         return false;
       }
       
       print('✅ 检测到分享Intent，开始后台处理...');
-      onProgressUpdate?.call('检测到分享内容', '正在获取分享数据...');
+      onProgressUpdate?.call('Share content detected', 'Getting shared data...');
       
       // 获取分享数据
       final Map<dynamic, dynamic>? shareData = await _channel.invokeMethod('getSharedData');
       if (shareData == null) {
         print('❌ 没有分享数据');
-        onProgressUpdate?.call('❌ 获取分享数据失败', '没有检测到有效的分享内容');
+        onProgressUpdate?.call('❌ Failed to get share data', 'No valid share content detected');
         return false;
       }
       
@@ -53,7 +53,7 @@ class BackgroundShareService {
       
     } catch (e) {
       print('❌ 后台分享处理失败: $e');
-      onProgressUpdate?.call('❌ 分享处理失败', '发生异常: $e');
+      onProgressUpdate?.call('❌ Share processing failed', 'Exception occurred: $e');
       try {
         await _channel.invokeMethod('finishShare');
       } catch (_) {}
@@ -127,51 +127,51 @@ class BackgroundShareService {
   static Future<bool> _handleShareInBackground(Map<dynamic, dynamic> shareData, {Function(String, String)? onProgressUpdate}) async {
     try {
       // 1. 检查用户登录状态
-      onProgressUpdate?.call('验证用户身份...', '检查登录状态');
+      onProgressUpdate?.call('Verifying user identity...', 'Checking login status');
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
       final serverDeviceData = prefs.getString('server_device_data');
       
       if (token == null || serverDeviceData == null) {
         print('❌ 用户未登录，无法处理分享');
-        onProgressUpdate?.call('❌ 用户未登录', '请先登录应用');
+        onProgressUpdate?.call('❌ User not logged in', 'Please login first');
         return false;
       }
       
       // 2. 获取当前群组
-      onProgressUpdate?.call('获取目标群组...', '检查当前群组设置');
+      onProgressUpdate?.call('Getting target group...', 'Checking current group settings');
       final currentGroupId = prefs.getString('current_group_id');
       if (currentGroupId == null) {
         print('❌ 没有当前群组，无法处理分享');
-        onProgressUpdate?.call('❌ 没有目标群组', '请先选择一个群组');
+        onProgressUpdate?.call('❌ No target group', 'Please select a group first');
         return false;
       }
       
-      print('📤 准备发送到群组: $currentGroupId');
-      onProgressUpdate?.call('准备发送内容...', '目标群组已确认');
-      
-      // 3. 根据分享类型处理
-      final String type = shareData['type'] ?? '';
-      
-      if (type.startsWith('text/')) {
-        // 处理文本分享
-        final String? text = shareData['text'];
-        if (text != null && text.isNotEmpty) {
-          onProgressUpdate?.call('Sending message...', 'Uploading text content');
-                      final success = await _sendTextMessage(currentGroupId, text, token);
-                      if (success) {
-              onProgressUpdate?.call('✅ Text sent successfully!', 'Content sent to group');
-            } else {
-              onProgressUpdate?.call('❌ Text send failed', 'Please try again later');
-            }
-          return success;
-        }
-      } else if (type == 'multiple') {
-        // 🔥 新增：处理多个文件的分享
-        final List<dynamic>? files = shareData['files'];
-        if (files != null && files.isNotEmpty) {
-          print('📎 准备发送${files.length}个文件');
-          onProgressUpdate?.call('准备发送文件...', '共${files.length}个文件待发送');
+                print('📤 准备发送到群组: $currentGroupId');
+          onProgressUpdate?.call('Preparing to send content...', 'Target group confirmed');
+          
+          // 3. 根据分享类型处理
+          final String type = shareData['type'] ?? '';
+          
+          if (type.startsWith('text/')) {
+            // 处理文本分享
+            final String? text = shareData['text'];
+            if (text != null && text.isNotEmpty) {
+              onProgressUpdate?.call('Sending message...', 'Uploading text content');
+                          final success = await _sendTextMessage(currentGroupId, text, token);
+                          if (success) {
+                onProgressUpdate?.call('✅ Text sent successfully!', 'Content sent to group');
+              } else {
+                onProgressUpdate?.call('❌ Text send failed', 'Please try again later');
+              }
+            return success;
+          }
+        } else if (type == 'multiple') {
+          // 🔥 新增：处理多个文件的分享
+          final List<dynamic>? files = shareData['files'];
+          if (files != null && files.isNotEmpty) {
+            print('📎 准备发送${files.length}个文件');
+            onProgressUpdate?.call('Preparing to send files...', '${files.length} files to be sent');
           
           bool allSuccess = true;
           int successCount = 0;
@@ -183,7 +183,7 @@ class BackgroundShareService {
             String? fileType = file['type'];
             
             // 显示当前文件进度
-            onProgressUpdate?.call('正在发送第${i + 1}个文件...', fileName ?? '未知文件名');
+            onProgressUpdate?.call('Sending file ${i + 1}...', fileName ?? 'Unknown file');
             
             // 🔥 修复：如果文件类型检测失败，根据文件扩展名推断类型
             if (fileType == null || fileType.isEmpty) {
@@ -220,14 +220,14 @@ class BackgroundShareService {
               if (!file.existsSync()) {
                 print('❌ 第${i + 1}个文件不存在: $filePath');
                 allSuccess = false;
-                onProgressUpdate?.call('第${i + 1}个文件不存在', '$fileName 文件路径无效');
+                onProgressUpdate?.call('File ${i + 1} not found', '$fileName file path invalid');
                 continue;
               }
               
               // 显示文件大小信息
               final fileSize = file.lengthSync();
               print('📎 文件大小: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB');
-              onProgressUpdate?.call('发送第${i + 1}个文件 (${(fileSize / 1024 / 1024).toStringAsFixed(1)}MB)', fileName);
+              onProgressUpdate?.call('Sending file ${i + 1} (${(fileSize / 1024 / 1024).toStringAsFixed(1)}MB)', fileName);
               
               // 发送文件，增加重试机制
               bool success = false;
@@ -236,8 +236,8 @@ class BackgroundShareService {
               
               while (!success && retryCount < maxRetries) {
                 if (retryCount > 0) {
-                  print('🔄 重试发送第${i + 1}个文件，第${retryCount}次重试');
-                  onProgressUpdate?.call('重试发送第${i + 1}个文件', '第${retryCount}次重试 - $fileName');
+                                  print('🔄 重试发送第${i + 1}个文件，第${retryCount}次重试');
+                onProgressUpdate?.call('Retrying file ${i + 1}', 'Attempt ${retryCount} - $fileName');
                   // 重试前等待更长时间
                   await Future.delayed(Duration(seconds: 2));
                 }
@@ -245,15 +245,15 @@ class BackgroundShareService {
                 try {
                   success = await _sendFileMessage(currentGroupId, filePath, fileName, fileType, token);
                   
-                  if (success) {
-                    print('✅ 第${i + 1}个文件发送成功: $fileName');
-                    successCount++;
-                    onProgressUpdate?.call('✅ 第${i + 1}个文件发送成功', '已完成 $successCount/${files.length} 个文件');
+                                  if (success) {
+                  print('✅ 第${i + 1}个文件发送成功: $fileName');
+                  successCount++;
+                  onProgressUpdate?.call('✅ File ${i + 1} sent successfully', 'Completed $successCount/${files.length} files');
                     
                     // 发送成功后等待更长时间，确保服务器完全处理完毕
                     if (i < files.length - 1) {
                       print('⏳ 等待服务器处理完成...');
-                      onProgressUpdate?.call('等待服务器处理...', '确保文件完全上传');
+                      onProgressUpdate?.call('Waiting for server processing...', 'Ensuring file is completely uploaded');
                       await Future.delayed(Duration(seconds: 3)); // 增加到3秒
                     }
                   } else {
@@ -261,7 +261,7 @@ class BackgroundShareService {
                     if (retryCount >= maxRetries) {
                       print('❌ 第${i + 1}个文件发送失败，已达最大重试次数: $fileName');
                       allSuccess = false;
-                      onProgressUpdate?.call('❌ 第${i + 1}个文件发送失败', '$fileName 已重试${maxRetries}次仍失败');
+                      onProgressUpdate?.call('❌ File ${i + 1} failed to send', '$fileName failed after $maxRetries retries');
                     }
                   }
                 } catch (e) {
@@ -269,30 +269,30 @@ class BackgroundShareService {
                   print('❌ 发送第${i + 1}个文件时出现异常: $e');
                   if (retryCount >= maxRetries) {
                     allSuccess = false;
-                    onProgressUpdate?.call('❌ 第${i + 1}个文件发送异常', '$fileName 发送时出现错误: $e');
+                    onProgressUpdate?.call('❌ File ${i + 1} send exception', '$fileName error during send: $e');
                   }
                 }
               }
             } else {
               print('❌ 第${i + 1}个文件数据不完整: path=$filePath, name=$fileName, type=$fileType');
               allSuccess = false;
-              onProgressUpdate?.call('❌ 第${i + 1}个文件数据异常', '文件信息不完整');
+              onProgressUpdate?.call('❌ File ${i + 1} data error', 'File information incomplete');
             }
           }
           
           // 显示最终结果
           if (allSuccess) {
             print('✅ 所有${files.length}个文件发送成功');
-            onProgressUpdate?.call('✅ 所有文件发送完成！', '共发送了${files.length}个文件到当前群组');
+            onProgressUpdate?.call('✅ All files sent successfully!', 'Sent ${files.length} files to current group');
           } else {
             print('⚠️ 部分文件发送失败');
-            onProgressUpdate?.call('⚠️ 部分文件发送完成', '成功：$successCount/${files.length}个文件');
+            onProgressUpdate?.call('⚠️ Some files sent successfully', 'Success: $successCount/${files.length} files');
           }
           
           return allSuccess;
         } else {
           print('❌ 多文件分享数据为空');
-          onProgressUpdate?.call('❌ 没有文件可发送', '分享数据为空');
+          onProgressUpdate?.call('❌ No files to send', 'Share data is empty');
           return false;
         }
       } else if (type.startsWith('image/') || type.startsWith('video/') || 
@@ -301,19 +301,19 @@ class BackgroundShareService {
         final String? filePath = shareData['path'];
         final String? fileName = shareData['name'];
         if (filePath != null && fileName != null) {
-          onProgressUpdate?.call('发送文件...', fileName);
+          onProgressUpdate?.call('Sending file...', fileName);
           final success = await _sendFileMessage(currentGroupId, filePath, fileName, type, token);
           if (success) {
-            onProgressUpdate?.call('✅ 文件发送成功！', '$fileName 已发送到群组');
+            onProgressUpdate?.call('✅ File sent successfully!', '$fileName sent to group');
           } else {
-            onProgressUpdate?.call('❌ 文件发送失败', '$fileName 上传失败');
+            onProgressUpdate?.call('❌ File send failed', '$fileName upload failed');
           }
           return success;
         }
       }
       
       print('❌ 不支持的分享类型: $type');
-      onProgressUpdate?.call('❌ 不支持的分享类型', '无法处理此类型的内容');
+      onProgressUpdate?.call('❌ Unsupported share type', 'Cannot handle this type of content');
       return false;
       
     } catch (e) {
