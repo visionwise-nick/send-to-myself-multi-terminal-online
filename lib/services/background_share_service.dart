@@ -2,12 +2,10 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'local_storage_service.dart';
-import '../utils/localization_helper.dart';
 
 /// 后台分享服务 - 专门处理分享Intent而不启动完整应用
 class BackgroundShareService {
@@ -15,22 +13,12 @@ class BackgroundShareService {
   factory BackgroundShareService() => _instance;
   BackgroundShareService._internal();
   
-  /// 安全获取本地化文本的辅助方法
-  static String _getLocalizedText(BuildContext? context, String Function(dynamic) getter, String fallback) {
-    if (context != null) {
-      try {
-        return getter(LocalizationHelper.of(context));
-      } catch (e) {
-        print('获取本地化文本失败: $e');
-      }
-    }
-    return fallback;
-  }
+
 
   static const MethodChannel _channel = MethodChannel('com.example.send_to_myself/share');
   
   /// 处理分享Intent（带进度回调）
-  static Future<bool> handleShareIntent({Function(String, String)? onProgressUpdate, BuildContext? context}) async {
+  static Future<bool> handleShareIntent({Function(String, String)? onProgressUpdate}) async {
     try {
       print('🔍 检查是否为分享Intent...');
       onProgressUpdate?.call('正在检测分享内容...', '检查是否为分享Intent');

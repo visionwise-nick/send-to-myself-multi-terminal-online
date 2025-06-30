@@ -49,7 +49,6 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
     try {
       // 开始处理分享
       final success = await BackgroundShareService.handleShareIntent(
-        context: context,
         onProgressUpdate: (status, detail) {
           if (mounted) {
             setState(() {
@@ -58,15 +57,16 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
               
               // 只有在真正完成时才标记为完成（检查特定的完成信息）
               // 排除单个文件成功的状态（例如"第1个文件发送成功"），只有总体完成时才关闭
-              if ((status.contains(LocalizationHelper.of(context).allFilesSentComplete) || 
-                   status.contains(LocalizationHelper.of(context).partialFilesSentComplete) || 
-                   status.contains(LocalizationHelper.of(context).allFilesSendFailed) || 
-                   status.contains(LocalizationHelper.of(context).shareFailed) ||
-                   (status.contains(LocalizationHelper.of(context).fileSentSuccess) && !status.contains('第') && !status.contains('个文件发送成功'))) &&
-                  !status.contains(LocalizationHelper.of(context).waitingForServerProcessing)) {
+              if ((status.contains('所有文件发送完成') || status.contains('部分文件发送完成') || 
+                   status.contains('所有文件发送失败') || status.contains('分享失败') ||
+                   status.contains('All files sent') || status.contains('files sent to') ||
+                   status.contains('Text sent successfully') || status.contains('Share failed') ||
+                   (status.contains('文件发送成功！') && !status.contains('第') && !status.contains('个文件发送成功'))) &&
+                  !status.contains('等待服务器处理') && !status.contains('Waiting for server')) {
                 _isComplete = true;
-                _isSuccess = status.contains('✅') && (status.contains(LocalizationHelper.of(context).allFilesSentComplete) || 
-                             (status.contains(LocalizationHelper.of(context).fileSentSuccess) && !status.contains('第')));
+                _isSuccess = status.contains('✅') && (status.contains('所有文件发送完成') || 
+                             status.contains('All files sent') || status.contains('Text sent successfully') ||
+                             (status.contains('文件发送成功！') && !status.contains('第')));
                 _animationController.stop();
                 
                 // 分享完成后，给用户足够时间查看结果，延长到5秒
