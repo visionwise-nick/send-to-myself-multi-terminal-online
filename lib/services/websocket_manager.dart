@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../config/debug_config.dart';
 import '../config/sync_config.dart';
+import 'status_refresh_manager.dart';
 
 enum ConnectionState {
   disconnected,
@@ -37,7 +38,7 @@ class WebSocketManager {
   Timer? _connectionHealthTimer;
   Timer? _messageReceiveTestTimer;
   Timer? _activeSyncTimer;
-  Timer? _deviceStatusRefreshTimer;
+  // 🔥 优化：移除设备状态刷新定时器，改为事件驱动
   bool _isManualDisconnect = false;
   bool _isReconnecting = false; // 🔥 新增：防止重复重连的锁
   DateTime? _lastSuccessfulConnection;
@@ -353,8 +354,11 @@ class WebSocketManager {
     _startConnectionHealthCheck();
     _startMessageReceiveTest();
     _startActiveSync();
-    // 🔥 新增：启动设备状态实时刷新
+    // 🔥 优化：使用事件驱动的状态刷新管理器
     _startDeviceStatusRefresh();
+    
+    // 🔥 新增：通知状态刷新管理器WebSocket连接已建立
+    StatusRefreshManager().onWebSocketConnected();
     
     // 如果从离线状态恢复，执行增强同步
     if (wasReconnecting) {
@@ -1407,20 +1411,15 @@ class WebSocketManager {
     }
   }
 
-  /// 🔥 新增：启动设备状态实时刷新
+  /// 🔥 优化：移除设备状态刷新定时器，改为事件驱动
   void _startDeviceStatusRefresh() {
-    _stopDeviceStatusRefresh();
-    
-    // 临时禁用设备状态刷新以提高性能
-    /* _deviceStatusRefreshTimer = Timer.periodic(Duration(milliseconds: AppConfig.INSTANT_STATUS_UPDATE_INTERVAL), (_) {
-      _performDeviceStatusRefresh();
-    }); */
+    // 不再使用定时器，改为事件驱动的状态刷新
+    _log('✅ 设备状态刷新已切换到事件驱动模式');
   }
   
-  /// 🔥 新增：停止设备状态实时刷新
+  /// 🔥 优化：移除设备状态刷新定时器，改为事件驱动
   void _stopDeviceStatusRefresh() {
-    _deviceStatusRefreshTimer?.cancel();
-    _deviceStatusRefreshTimer = null;
+    // 无需停止定时器，事件驱动模式下无定时器
   }
   
   /// 🔥 新增：执行设备状态实时刷新

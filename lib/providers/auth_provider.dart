@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/device_auth_service.dart';
 import '../services/websocket_service.dart';
+import '../services/status_refresh_manager.dart';
 import '../config/debug_config.dart';
 
 class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
@@ -42,6 +43,9 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
         DebugConfig.debugPrint('应用回到前台，触发设备状态同步', module: 'APP');
         _websocketService.notifyDeviceActivityChange();
         _websocketService.forceSyncDeviceStatus();
+        
+        // 🔥 新增：通知状态刷新管理器应用已恢复
+        StatusRefreshManager().onAppResume();
         break;
         
       case AppLifecycleState.paused:
@@ -429,6 +433,9 @@ class AuthProvider with ChangeNotifier, WidgetsBindingObserver {
       
       // 无论API是否成功，都执行本地清理
       await _performLogoutCleanup(showMessage: false);
+      
+      // 🔥 新增：通知状态刷新管理器用户已登出
+      StatusRefreshManager().onLogout();
       
       return true;
       

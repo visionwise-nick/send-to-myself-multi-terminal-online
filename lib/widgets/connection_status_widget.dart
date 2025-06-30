@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../services/websocket_manager.dart' as ws;
+import '../services/status_refresh_manager.dart';
 import '../providers/group_provider.dart';
 import '../utils/localization_helper.dart';
 import 'dart:async';
@@ -24,19 +25,16 @@ class ConnectionStatusWidget extends StatefulWidget {
 class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget> 
     with SingleTickerProviderStateMixin {
   final ws.WebSocketManager _wsManager = ws.WebSocketManager();
+  final StatusRefreshManager _statusRefreshManager = StatusRefreshManager();
   ws.ConnectionState _connectionState = ws.ConnectionState.disconnected;
   ws.NetworkStatus _networkStatus = ws.NetworkStatus.unknown;
   
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
-  Timer? _statusRefreshTimer;
-  // 🔥 新增节流控制
+  // 🔥 优化：移除定时器相关变量，改为事件驱动
   DateTime? _lastRefreshTime;
   bool _isRefreshing = false;
-  int _refreshRequestCount = 0;
-  static const Duration _throttleInterval = Duration(minutes: 2); // 节流间隔改为2分钟
-  static const Duration _refreshInterval = Duration(minutes: 5); // 刷新间隔改为5分钟
-  static const int _maxRefreshPerHour = 12; // 每小时最多12次刷新
+  static const Duration _throttleInterval = Duration(seconds: 30); // 节流间隔缩短为30秒
 
   @override
   void initState() {
@@ -79,14 +77,14 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
     
     _updateAnimation();
     
-    // 🔥 新增：启动状态实时刷新定时器
-    _startStatusRefreshTimer();
+    // 🔥 优化：移除定时器，使用事件驱动的状态刷新管理器
+    // 无需手动启动定时器，状态刷新管理器会在需要时自动触发
   }
 
   @override
   void dispose() {
     _animationController.dispose();
-    _statusRefreshTimer?.cancel(); // 🔥 新增：清理定时器
+    // 🔥 优化：无需清理定时器
     super.dispose();
   }
 

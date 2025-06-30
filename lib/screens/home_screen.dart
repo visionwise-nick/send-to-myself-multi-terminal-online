@@ -9,6 +9,7 @@ import '../services/websocket_service.dart';
 import '../services/websocket_manager.dart';
 import '../services/system_share_service.dart';
 import '../services/chat_service.dart';
+import '../services/status_refresh_manager.dart';
 import '../widgets/connection_status_widget.dart';
 import '../theme/app_theme.dart';
 import '../widgets/logout_dialog.dart';
@@ -31,8 +32,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, WidgetsBindingObserver {
   int _selectedIndex = 0;
   late PageController _pageController;
-  Timer? _statusSyncTimer;
   final ChatService _chatService = ChatService();
+  final StatusRefreshManager _statusRefreshManager = StatusRefreshManager();
 
   @override
   void initState() {
@@ -45,8 +46,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       final groupProvider = Provider.of<GroupProvider>(context, listen: false);
       groupProvider.addListener(_onGroupChanged);
       
-      // 启动设备状态同步定时器
-      _startStatusSyncTimer();
+      // 🔥 优化：初始化状态刷新管理器（事件驱动）
+      _statusRefreshManager.initialize();
+      _statusRefreshManager.onAppStart();
       
       // 🔥 新增：设置系统分享监听
       _setupSystemShareListener();
@@ -58,27 +60,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     WidgetsBinding.instance.removeObserver(this);
     final groupProvider = Provider.of<GroupProvider>(context, listen: false);
     groupProvider.removeListener(_onGroupChanged);
-    _statusSyncTimer?.cancel();
+    _statusRefreshManager.dispose();
     _pageController.dispose();
     super.dispose();
   }
   
-  // 开始定期状态同步定时器
-  void _startStatusSyncTimer() {
-    _statusSyncTimer?.cancel();
-    
-    // 🔥 优化：从5秒改为30秒检查一次设备状态同步，减少服务器压力
-    _statusSyncTimer = Timer.periodic(Duration(seconds: 30), (timer) {
-      final websocketService = WebSocketService();
-      if (websocketService.isConnected) {
-        DebugConfig.debugPrint('定期设备状态同步检查（30秒间隔）', module: 'SYNC');
-        websocketService.refreshDeviceStatus();
-      }
-    });
+  // 🔥 优化：事件驱动的状态刷新（替代定时器）
+  void _triggerStatusRefresh(String reason) {
+    _statusRefreshManager.manualRefresh(reason: reason);
   }
   
   // 用户交互时触发状态同步
   void _onUserInteraction() {
+    // 🔥 优化：使用状态刷新管理器处理用户交互
+    _statusRefreshManager.manualRefresh(reason: '用户交互');
+    
+    // 保留原有的设备活跃状态通知
     final websocketService = WebSocketService();
     if (websocketService.isConnected) {
       websocketService.notifyDeviceActivityChange();
@@ -92,24 +89,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     print('🔄 应用生命周期变化: $state');
     
     if (state == AppLifecycleState.resumed) {
-      // 🔥 关键修复：应用回到前台时完整恢复连接和状态
-      print('📱 应用回到前台，开始恢复连接...');
+      // 🔥 优化：应用回到前台时触发状态刷新
+      print('📱 应用回到前台，触发状态刷新...');
+      _statusRefreshManager.onAppResume();
       _handleAppResumed();
     } else if (state == AppLifecycleState.paused) {
-      // 应用暂停时停止定时器但保持连接
-      print('⏸️ 应用暂停，停止定时器');
-      _statusSyncTimer?.cancel();
+      // 应用暂停时无需额外操作（事件驱动模式）
+      print('⏸️ 应用暂停');
     } else if (state == AppLifecycleState.detached) {
       // 应用完全关闭时清理资源
       print('🚪 应用关闭，清理资源');
-      _statusSyncTimer?.cancel();
     }
   }
   
   // 处理应用恢复到前台
   void _handleAppResumed() async {
-    // 重启状态同步定时器
-    _startStatusSyncTimer();
+    // 🔥 优化：应用恢复时不再启动定时器，改为事件驱动
+    print('🔄 应用恢复 - 使用事件驱动状态刷新');
     
     // 🔥 新增：检查分享内容
     try {
@@ -160,11 +156,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     final groupProvider = Provider.of<GroupProvider>(context, listen: false);
     groupProvider.refreshCurrentGroup();
     
-    // 刷新WebSocket状态
-    final websocketService = WebSocketService();
-    if (websocketService.isConnected) {
-      websocketService.refreshDeviceStatus();
-    }
+    // 🔥 优化：使用状态刷新管理器统一处理
+    _statusRefreshManager.manualRefresh(reason: '应用恢复后强制刷新');
     
     print('✅ 状态刷新完成');
   }
@@ -453,6 +446,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   void _onGroupChanged() {
     if (mounted) {
       print('检测到群组变化');
+      // 🔥 优化：群组变化时触发状态刷新
+      final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+      final currentGroupId = groupProvider.currentGroup?['id'];
+      _statusRefreshManager.onGroupChanged(currentGroupId);
       // 不需要强制重建，页面会通过 Consumer 自动响应变化
     }
   }
