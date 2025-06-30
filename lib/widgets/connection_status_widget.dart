@@ -35,6 +35,12 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
   DateTime? _lastRefreshTime;
   bool _isRefreshing = false;
   static const Duration _throttleInterval = Duration(seconds: 30); // 节流间隔缩短为30秒
+  
+  // 🔥 保留必要的变量以避免编译错误
+  int _refreshRequestCount = 0;
+  static const int _maxRefreshPerHour = 12;
+  Timer? _statusRefreshTimer;
+  static const Duration _refreshInterval = Duration(minutes: 5);
 
   @override
   void initState() {
