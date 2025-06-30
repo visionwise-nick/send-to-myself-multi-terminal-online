@@ -14,12 +14,22 @@ class ShareStatusScreen extends StatefulWidget {
 class _ShareStatusScreenState extends State<ShareStatusScreen> 
     with SingleTickerProviderStateMixin {
   
-  String _status = 'Processing shared content...';
+  String _status = '';
   String _detail = '';
   bool _isSuccess = false;
   bool _isComplete = false;
   late AnimationController _animationController;
   Timer? _closeTimer;
+  
+  // 本地化文本缓存
+  String _processingText = '';
+  String _shareSuccessfulText = '';
+  String _shareFailedText = '';
+  String _shareExceptionText = '';
+  String _contentSentText = '';
+  String _tryAgainText = '';
+  String _processingErrorText = '';
+  bool _localizedTextsInitialized = false;
 
   @override
   void initState() {
@@ -28,9 +38,33 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
       duration: const Duration(seconds: 1),
       vsync: this,
     )..repeat();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_localizedTextsInitialized) {
+      _initializeLocalizedTexts();
+      _localizedTextsInitialized = true;
+      // 初始化本地化文本后开始处理分享
+      _listenToShareStatus();
+    }
+  }
+
+  void _initializeLocalizedTexts() {
+    final l10n = LocalizationHelper.of(context);
+    _processingText = l10n.preparingToSendFiles;
+    _shareSuccessfulText = l10n.shareSuccess;
+    _shareFailedText = l10n.shareFailed;
+    _shareExceptionText = l10n.shareException;
+    _contentSentText = l10n.contentSentToGroup;
+    _tryAgainText = l10n.pleaseTryAgainLater;
+    _processingErrorText = l10n.processing;
     
-    // 监听分享处理状态
-    _listenToShareStatus();
+    // 设置初始状态
+    setState(() {
+      _status = _processingText;
+    });
   }
 
   @override
@@ -82,8 +116,8 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
       // 如果没有通过回调更新状态，手动更新最终状态
       if (mounted && !_isComplete) {
         setState(() {
-          _status = success ? '✅ Share successful!' : '❌ Share failed';
-          _detail = success ? 'All content has been sent to current group' : 'Please try again later';
+          _status = success ? _shareSuccessfulText : _shareFailedText;
+          _detail = success ? _contentSentText : _tryAgainText;
           _isSuccess = success;
           _isComplete = true;
         });
@@ -96,8 +130,8 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
     } catch (e) {
       if (mounted) {
         setState(() {
-          _status = '❌ Share exception';
-          _detail = 'Processing error: $e';
+          _status = _shareExceptionText;
+          _detail = '${_processingErrorText}: $e';
           _isSuccess = false;
           _isComplete = true;
         });
@@ -115,7 +149,7 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
       const platform = MethodChannel('com.example.send_to_myself/share');
       await platform.invokeMethod('finishShare');
     } catch (e) {
-      print('关闭应用失败: $e');
+      print('Failed to close application: $e');
     }
   }
 
