@@ -5697,63 +5697,32 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       final isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
       
       if (isDesktop) {
-        try {
-          // 使用super_clipboard复制文件
-          final clipboard = SystemClipboard.instance;
-          if (clipboard != null) {
-            DebugConfig.copyPasteDebug('📎 使用super_clipboard复制文件');
-            
-            // 创建文件URI
-            final fileUri = Uri.file(filePath);
-            DebugConfig.copyPasteDebug('📁 文件URI: $fileUri');
-            
-            // 创建剪贴板内容
-            final item = DataWriterItem();
-            item.add(Formats.fileUri([fileUri]));
-            
-            // 写入剪贴板
-            await clipboard.write([item]);
-            
-            DebugConfig.copyPasteDebug('✅ super_clipboard文件复制成功！');
+        if (Platform.isMacOS) {
+          // 在macOS上，使用AppleScript将文件本身放入剪贴板
+          final script = 'set the clipboard to (the POSIX file "$filePath")';
+          final result = await Process.run('osascript', ['-e', script]);
+          
+          if (result.exitCode == 0) {
+            DebugConfig.copyPasteDebug('✅ 文件已使用AppleScript复制到macOS剪贴板');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('✅ 文件已复制到剪贴板，现在可以在Finder中粘贴'),
-                  duration: Duration(seconds: 4),
-                ),
+                const SnackBar(content: Text('文件已复制，可在Finder中粘贴')),
               );
             }
-            return;
           } else {
-            DebugConfig.copyPasteDebug('⚠️ super_clipboard不可用，使用降级方案');
+            DebugConfig.copyPasteDebug('❌ AppleScript复制失败: ${result.stderr}，降级到路径复制');
+            await _copyFilePath(filePath); // 失败时降级
           }
-        } catch (e) {
-          DebugConfig.copyPasteDebug('❌ super_clipboard复制失败: $e');
-        }
-        
-        // 如果super_clipboard失败，降级到文件路径复制
-        DebugConfig.copyPasteDebug('🔄 降级到文件路径复制');
-        await Clipboard.setData(ClipboardData(text: filePath));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('⚠️ 文件复制失败，已复制文件路径到剪贴板'),
-              duration: Duration(seconds: 3),
-            ),
-          );
+        } else {
+          // 对于Windows和Linux，复制文件路径
+          await _copyFilePath(filePath);
         }
       } else {
-        // 非桌面端，复制文件路径
-        DebugConfig.copyPasteDebug('📱 非桌面端，复制文件路径');
-        await Clipboard.setData(ClipboardData(text: filePath));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('文件路径已复制到剪贴板')),
-          );
-        }
+        // 移动端，复制文件路径
+        await _copyFilePath(filePath);
       }
     } catch (e) {
-      DebugConfig.copyPasteDebug('❌ 复制文件异常: $e');
+      DebugConfig.copyPasteDebug('❌ 复制文件到剪贴板失败: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('复制文件失败: $e')),
