@@ -206,7 +206,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                 }
               }
             },
-            child: const Text('确定'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -214,15 +214,16 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
   }
   
   void _showLeaveGroupDialog() {
+    final l10n = LocalizationHelper.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('退出群组'),
-        content: Text('确定要退出群组"${_currentGroupData['name']}"吗？'),
+        title: Text(l10n.leaveGroup),
+        content: Text(l10n.groupLeaveConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -233,7 +234,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('退出'),
+            child: Text(l10n.leaveGroup),
           ),
         ],
       ),
@@ -257,16 +258,18 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
         
         if (success) {
           Navigator.pop(context); // 返回上一页
+          final l10n = LocalizationHelper.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('已退出群组'),
+            SnackBar(
+              content: Text(l10n.groupLeaveSuccess),
               backgroundColor: Colors.green,
             ),
           );
         } else {
+          final l10n = LocalizationHelper.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(groupProvider.error ?? '退出失败'),
+              content: Text(groupProvider.error ?? l10n.groupLeaveFailed),
               backgroundColor: Colors.red,
             ),
           );
@@ -277,9 +280,10 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
         setState(() {
           _isLoading = false;
         });
+        final l10n = LocalizationHelper.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('退出失败: $e'),
+            content: Text('${l10n.groupLeaveFailed}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -288,15 +292,16 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
   }
   
   void _showRemoveDeviceDialog(Map<String, dynamic> device) {
+    final l10n = LocalizationHelper.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('移除设备'),
-        content: Text('确定要将设备"${device['name']}"移除出群组吗？'),
+        title: Text(l10n.removeDevice),
+        content: Text('${LocalizationHelper.of(context).removeDevice}「${device['name'] ?? LocalizationHelper.of(context).unknownDevice}」?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -307,7 +312,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('移除'),
+            child: Text(l10n.removeDevice),
           ),
         ],
       ),
@@ -333,18 +338,20 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
         });
         
         if (success) {
+          final l10n = LocalizationHelper.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('已移除设备"${device['name']}"'),
+              content: Text(LocalizationHelper.of(context).deviceRemoved),
               backgroundColor: Colors.green,
             ),
           );
           // 立即刷新页面
           await _loadGroupDetails();
         } else {
+          final l10n = LocalizationHelper.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(groupProvider.error ?? '移除失败'),
+              content: Text(groupProvider.error ?? LocalizationHelper.of(context).error),
               backgroundColor: Colors.red,
             ),
           );
@@ -355,9 +362,10 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
         setState(() {
           _isLoading = false;
         });
+        final l10n = LocalizationHelper.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('移除失败: $e'),
+            content: Text('${LocalizationHelper.of(context).error}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -367,30 +375,31 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
   
   void _showRenameDeviceDialog() {
     final controller = TextEditingController();
+    final l10n = LocalizationHelper.of(context);
     
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('重命名设备'),
+        title: Text(l10n.deviceName),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: '设备名称',
-            hintText: '请输入新的设备名称',
+          decoration: InputDecoration(
+            labelText: l10n.deviceName,
+            hintText: l10n.deviceName,
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
               final newName = controller.text.trim();
               if (newName.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('请输入设备名称')),
+                  SnackBar(content: Text(l10n.deviceName)),
                 );
                 return;
               }
@@ -407,13 +416,13 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                   barrierDismissible: false,
                   builder: (context) {
                     dialogContext = context;
-                    return const AlertDialog(
+                    return AlertDialog(
                       content: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           CircularProgressIndicator(),
                           SizedBox(width: 16),
-                          Text('正在重命名设备...'),
+                          Text(l10n.loading),
                         ],
                       ),
                     );
@@ -429,15 +438,15 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                   
                   if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('设备重命名成功'),
+                      SnackBar(
+                        content: Text(l10n.success),
                         backgroundColor: Colors.green,
                       ),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('设备重命名失败'),
+                      SnackBar(
+                        content: Text(l10n.error),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -456,14 +465,14 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('重命名失败: $e'),
+                      content: Text('${l10n.error}: $e'),
                       backgroundColor: Colors.red,
                     ),
                   );
                 }
               }
             },
-            child: const Text('确定'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -495,7 +504,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: Text(_currentGroupData['name'] ?? '群组管理'),
+        title: Text(_currentGroupData['name'] ?? LocalizationHelper.of(context).groupManagement),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -570,7 +579,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      group['name'] ?? '未命名群组',
+                      group['name'] ?? LocalizationHelper.of(context).unnamedGroup,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -596,14 +605,14 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
               Expanded(
                 child: _buildInfoItem(
                   icon: Icons.people,
-                  label: '成员数量',
-                  value: '$deviceCount 台设备',
+                  label: LocalizationHelper.of(context).groupMembers,
+                  value: '$deviceCount ${LocalizationHelper.of(context).deviceName}',
                 ),
               ),
               Expanded(
                 child: _buildInfoItem(
                   icon: Icons.schedule,
-                  label: '创建时间',
+                  label: LocalizationHelper.of(context).createdOn,
                   value: TimeUtils.formatDateTime(group['createdAt']),
                 ),
               ),
@@ -619,7 +628,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                 child: ElevatedButton.icon(
                   onPressed: _showRenameGroupDialog,
                   icon: const Icon(Icons.edit, size: 18),
-                  label: const Text('重命名群组'),
+                  label: Text(LocalizationHelper.of(context).renameGroup),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white.withOpacity(0.2),
                     foregroundColor: Colors.white,
@@ -636,7 +645,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                 child: ElevatedButton.icon(
                   onPressed: _showQrGenerate,
                   icon: const Icon(Icons.qr_code_2_rounded, size: 18),
-                  label: const Text('生成二维码'),
+                  label: Text(LocalizationHelper.of(context).generateQRCode),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white.withOpacity(0.2),
                     foregroundColor: Colors.white,
@@ -705,7 +714,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                '暂无成员信息',
+                LocalizationHelper.of(context).noDevices,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: AppTheme.textSecondaryColor,
                 ),
@@ -720,7 +729,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '群组成员 (${_members!.length})',
+          '${LocalizationHelper.of(context).groupMembers} (${_members!.length})',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -828,7 +837,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      member['name'] ?? '未知设备',
+                                      member['name'] ?? LocalizationHelper.of(context).unknownDevice,
                                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -845,7 +854,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
-                                        '我',
+                                        LocalizationHelper.of(context).myself,
                                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                           color: AppTheme.primaryColor,
                                           fontWeight: FontWeight.w500,
@@ -866,12 +875,12 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                               
                               const SizedBox(height: 2),
                               
-                              Text(
-                                '加入于 ${TimeUtils.formatDateTime(member['joinedAt'])}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppTheme.textTertiaryColor,
-                                ),
-                              ),
+                                            Text(
+                '${LocalizationHelper.of(context).deviceConnected} ${TimeUtils.formatDateTime(member['joinedAt'])}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textTertiaryColor,
+                ),
+              ),
                             ],
                           ),
                         ),
@@ -920,10 +929,10 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
             
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Column(
+              child:               Column(
                 children: [
                   Text(
-                    member['name'] ?? '未知设备',
+                    member['name'] ?? LocalizationHelper.of(context).unknownDevice,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -935,7 +944,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                   if (isMe)
                     ListTile(
                       leading: const Icon(Icons.edit, color: Colors.blue),
-                      title: const Text('重命名设备'),
+                      title: Text(LocalizationHelper.of(context).deviceName),
                       onTap: () {
                         Navigator.pop(context);
                         _showRenameDeviceDialog();
@@ -946,7 +955,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                   ListTile(
                     leading: const Icon(Icons.remove_circle, color: Colors.red),
                     title: Text(
-                      isMe ? '移除我的设备' : '移除设备',
+                      LocalizationHelper.of(context).removeDevice,
                       style: const TextStyle(color: Colors.red),
                     ),
                     onTap: () {

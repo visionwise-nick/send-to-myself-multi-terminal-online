@@ -235,6 +235,57 @@
   "groupSettings": "群组设置",
   "membersList": "成员列表",
   "groupInfo": "群组信息",
+  "memberCount": "成员数量",
+  "devicesUnit": "台设备",
+  "createdTime": "创建时间",
+  "exitGroup": "退出群组",
+  "exitGroupConfirm": "确定要退出群组\"{name}\"吗？",
+  "@exitGroupConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "exit": "退出",
+  "exitedGroup": "已退出群组",
+  "exitFailed": "退出失败",
+  "removeDeviceConfirm": "确定要将设备\"{name}\"移除出群组吗？",
+  "@removeDeviceConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "remove": "移除",
+  "deviceRemoved": "已移除设备\"{name}\"",
+  "@deviceRemoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFailed": "移除失败",
+  "renameDevice": "重命名设备",
+  "deviceNameLabel": "设备名称",
+  "enterDeviceName": "请输入新的设备名称",
+  "pleaseEnterDeviceName": "请输入设备名称",
+  "renamingDevice": "正在重命名设备...",
+  "deviceRenameSuccess": "设备重命名成功",
+  "deviceRenameFailed": "设备重命名失败",
+  "joinedAt": "加入于",
+  "noMemberInfo": "暂无成员信息",
+  "groupMembersCount": "群组成员 ({count})",
+  "@groupMembersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "removeMyDevice": "移除我的设备",
   
   "sectiondevices": "",
   "deviceName": "设备名称",
