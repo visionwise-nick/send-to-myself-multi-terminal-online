@@ -1590,5 +1590,97 @@
         "type": "String"
       }
     }
+  },
+  "monthlyPlan": "Monthly",
+  "yearlyPlan": "Yearly",
+  "pricePerMonth": "{currencySymbol}{price}/month",
+  "@pricePerMonth": {
+    "placeholders": {
+      "currencySymbol": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "pricePerYear": "{currencySymbol}{price}/year",
+  "@pricePerYear": {
+    "placeholders": {
+      "currencySymbol": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "freePlan": "Free",
+  "freePlanDescription": "For personal use",
+  "basicPlan": "Basic",
+  "basicPlanDescription": "For small teams",
+  "proPlan": "Pro",
+  "proPlanDescription": "For teams",
+  "enterprisePlan": "Enterprise",
+  "enterprisePlanDescription": "For large enterprises",
+  "feature2DeviceGroup": "2 device groups",
+  "featureBasicFileTransfer": "Basic file transfer",
+  "featureTextMessage": "Text messages",
+  "featureImageTransfer": "Image transfer",
+  "feature5DeviceGroup": "5 device groups",
+  "featureUnlimitedFileTransfer": "Unlimited file transfer",
+  "featureVideoTransfer": "Video transfer",
+  "featureMemoryFunction": "Memory function",
+  "featurePrioritySupport": "Priority support",
+  "feature10DeviceGroup": "10 device groups",
+  "featureAdvancedMemory": "Advanced memory",
+  "featureDataSyncBackup": "Data sync & backup",
+  "featureDedicatedSupport": "Dedicated support",
+  "featureTeamManagement": "Team management",
+  "featureUnlimitedDeviceGroup": "Unlimited device groups",
+  "featureAdvancedAnalytics": "Advanced analytics",
+  "featureCustomIntegration": "Custom integration",
+  "subscriptionPricingTitle": "Subscription Pricing",
+  "subscriptionPricingSubtitle": "Choose the plan that's right for you",
+  "popularPlan": "Popular",
+  "mostPopular": "Most Popular",
+  "recommended": "Recommended",
+  "yearlyDiscount": "Yearly discount",
+  "savePercentage": "Save {percentage}%",
+  "@savePercentage": {
+    "placeholders": {
+      "percentage": {
+        "type": "int"
+      }
+    }
+  },
+  "priceVariesByRegion": "Subscription prices may vary by region",
+  "pricingNote": "Prices are automatically adjusted for your region",
+  "currencyDisclaimer": "Prices shown in local currency",
+  "subscribeTo": "Subscribe to",
+  "subscriptionStatus": "Subscription Status",
+  "currentPlan": "Current Plan",
+  "upgradeToUnlock": "Upgrade to unlock more features",
+  "manageSubscription": "Manage Subscription",
+  "restorePurchases": "Restore Purchases",
+  "subscriptionTerms": "By subscribing, you agree to our Terms of Service and Privacy Policy",
+  "purchaseSuccess": "Purchase successful!",
+  "purchaseFailed": "Purchase failed",
+  "purchaseRestored": "Purchase restored",
+  "noSubscriptionFound": "No subscription found",
+  "subscriptionExpired": "Subscription expired",
+  "subscriptionActive": "Subscription active",
+  "subscriptionCancelled": "Subscription cancelled",
+  "subscriptionPending": "Subscription pending",
+  "deviceLimitReached": "Device limit reached",
+  "upgradeRequired": "Upgrade required",
+  "upgradeToAddMore": "Upgrade to add more devices",
+  "freeTrialDaysLeft": "{days} days left in free trial",
+  "@freeTrialDaysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
   }
 } 

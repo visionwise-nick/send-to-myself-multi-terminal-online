@@ -5,6 +5,7 @@ import '../services/group_service.dart';
 import '../services/websocket_service.dart';
 import '../services/websocket_manager.dart';
 import '../services/device_auth_service.dart';
+import '../services/subscription_service.dart';
 import '../config/debug_config.dart';
 
 class GroupProvider extends ChangeNotifier {
@@ -12,6 +13,7 @@ class GroupProvider extends ChangeNotifier {
   final WebSocketService _websocketService = WebSocketService();
   final WebSocketManager _wsManager = WebSocketManager();
   final DeviceAuthService _authService = DeviceAuthService();
+  final SubscriptionService _subscriptionService = SubscriptionService();
   
   List<Map<String, dynamic>>? _groups;
   Map<String, dynamic>? _currentGroup;
@@ -379,6 +381,22 @@ class GroupProvider extends ChangeNotifier {
     notifyListeners();
     
     try {
+      // 🔥 新增：检查群组人数限制
+      if (groupId != null) {
+        final groupMembers = await getGroupMembers(groupId);
+        if (groupMembers != null) {
+          final memberCount = groupMembers.length + 1; // 加上将要加入的当前设备
+          final maxMembers = _subscriptionService.getGroupMemberLimit();
+          
+          if (memberCount > maxMembers) {
+            _error = '群组人数已达上限（$maxMembers台设备）。请升级订阅以支持更多设备。';
+            _isLoading = false;
+            notifyListeners();
+            return false;
+          }
+        }
+      }
+      
       final response = await _groupService.joinGroup(joinCode, groupId: groupId);
       
       print('加入群组响应: $response');
@@ -440,6 +458,73 @@ class GroupProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+  
+  // 🔥 新增：检查群组人数限制相关方法
+  
+  // 检查群组是否达到人数上限
+  bool isGroupMemberLimitReached(String groupId) {
+    if (_groups == null) return false;
+    
+    final group = _groups!.firstWhere(
+      (g) => g['id'] == groupId,
+      orElse: () => {},
+    );
+    
+    if (group.isEmpty) return false;
+    
+    final devices = group['devices'] as List<dynamic>? ?? [];
+    final currentMemberCount = devices.length;
+    final maxMembers = _subscriptionService.getGroupMemberLimit();
+    
+    return currentMemberCount >= maxMembers;
+  }
+  
+  // 获取群组当前成员数量
+  int getGroupMemberCount(String groupId) {
+    if (_groups == null) return 0;
+    
+    final group = _groups!.firstWhere(
+      (g) => g['id'] == groupId,
+      orElse: () => {},
+    );
+    
+    if (group.isEmpty) return 0;
+    
+    final devices = group['devices'] as List<dynamic>? ?? [];
+    return devices.length;
+  }
+  
+  // 获取群组成员上限
+  int getGroupMemberLimit() {
+    return _subscriptionService.getGroupMemberLimit();
+  }
+  
+  // 检查是否可以邀请更多成员
+  bool canInviteMoreMembers(String groupId) {
+    final currentCount = getGroupMemberCount(groupId);
+    return _subscriptionService.canAddMoreMembers(currentCount);
+  }
+  
+  // 获取升级建议
+  String getUpgradeSuggestion(String groupId) {
+    final currentCount = getGroupMemberCount(groupId);
+    final maxMembers = _subscriptionService.getGroupMemberLimit();
+    
+    if (currentCount < maxMembers) {
+      return '当前可添加 ${maxMembers - currentCount} 台设备';
+    } else if (maxMembers == 2) {
+      return '升级到基础版可支持5台设备';
+    } else if (maxMembers == 5) {
+      return '升级到专业版可支持10台设备';
+    } else {
+      return '已达到最大设备数量';
+    }
+  }
+  
+  // 显示升级订阅提示
+  bool shouldShowUpgradePrompt(String groupId) {
+    return isGroupMemberLimitReached(groupId) && _subscriptionService.getGroupMemberLimit() < 10;
   }
   
   // 保存当前群组到本地存储

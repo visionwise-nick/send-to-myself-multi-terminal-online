@@ -6,6 +6,7 @@ import 'router/app_router.dart';
 import 'providers/auth_provider.dart';
 import 'providers/group_provider.dart';
 import 'providers/memory_provider.dart';
+import 'providers/subscription_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
@@ -76,6 +77,9 @@ void main() async {
           create: (_) => GroupProvider()..initialize(),
         ),
         ChangeNotifierProvider(create: (context) => MemoryProvider()),
+        ChangeNotifierProvider(
+          create: (_) => SubscriptionProvider()..initialize(),
+        ),
         // 提供增强同步管理器
         Provider<EnhancedSyncManager>(create: (_) => EnhancedSyncManager()),
         // 🔥 新增：提供群组切换同步服务

@@ -447,6 +447,108 @@
   "noMemories": "暂无记忆",
   "noMemoriesDesc": "开始创建你的第一条记忆吧",
   "createMemory": "创建记忆",
+  
+  "sectionsubscription": "",
+  "subscription": "订阅",
+  "subscriptionPlan": "订阅计划",
+  "currentSubscription": "当前订阅",
+  "freeVersion": "免费版",
+  "basicVersion": "基础版",
+  "proVersion": "专业版",
+  "subscriptionStatus": "订阅状态",
+  "subscriptionActive": "订阅有效",
+  "subscriptionExpired": "订阅已过期",
+  "subscriptionCancelled": "订阅已取消",
+  "subscriptionPending": "订阅处理中",
+  "noSubscription": "未订阅",
+  "daysRemaining": "{days}天剩余",
+  "@daysRemaining": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "upgradeSubscription": "升级订阅",
+  "manageSubscription": "管理订阅",
+  "restorePurchases": "恢复购买",
+  "purchaseProduct": "购买",
+  "purchasing": "购买中...",
+  "purchaseSuccess": "购买成功",
+  "purchaseFailed": "购买失败",
+  "purchaseCancelled": "购买已取消",
+  "monthlyPlan": "月付",
+  "yearlyPlan": "年付",
+  "pricePerMonth": "{currencySymbol}{price}/月",
+  "@pricePerMonth": {
+    "placeholders": {
+      "currencySymbol": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "pricePerYear": "{currencySymbol}{price}/年",
+  "@pricePerYear": {
+    "placeholders": {
+      "currencySymbol": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "savePercent": "节省 {percent}%",
+  "@savePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "groupMemberLimit": "群组成员上限",
+  "deviceLimit": "设备上限",
+  "devicesSupported": "支持{count}台设备",
+  "@devicesSupported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "groupMemberLimitReached": "群组人数已达上限",
+  "upgradeToAddMoreDevices": "升级订阅以支持更多设备",
+  "currentPlanSupports": "当前计划支持{count}台设备",
+  "@currentPlanSupports": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "upgradeRequired": "需要升级",
+  "upgradeToBasic": "升级到基础版可支持5台设备",
+  "upgradeToPro": "升级到专业版可支持10台设备",
+  "subscriptionFeatures": "订阅功能",
+  "basicFileTransfer": "基础文件传输",
+  "textMessages": "文本消息",
+  "imageTransfer": "图片传输",
+  "unlimitedFileTransfer": "无限文件传输",
+  "videoTransfer": "视频传输",
+  "memoryFunction": "消息记忆功能",
+  "prioritySupport": "优先技术支持",
+  "advancedMemory": "高级消息记忆",
+  "dataBackup": "数据同步备份",
+  "dedicatedSupport": "专属客服支持",
+  "teamManagement": "团队管理功能",
+  "subscriptionNote": "订阅说明",
+  "autoRenewal": "订阅将自动续期，可随时取消",
+  "usableAfterCancel": "取消订阅后仍可使用至订阅期结束",
+  "priceVariesByRegion": "订阅价格可能因地区而异",
+  "manageInStore": "24小时内可在App Store/Google Play管理订阅",
   "editMemory": "编辑记忆",
   "deleteMemory": "删除记忆",
   "viewMemory": "查看记忆",
@@ -1577,5 +1679,47 @@
         "type": "String"
       }
     }
-  }
+  },
+  "freePlan": "免费版",
+  "freePlanDescription": "个人使用",
+  "basicPlan": "基础版",
+  "basicPlanDescription": "小团队使用",
+  "proPlan": "专业版",
+  "proPlanDescription": "团队使用",
+  "enterprisePlan": "企业版",
+  "enterprisePlanDescription": "大型企业使用",
+  "feature2DeviceGroup": "2台设备群组",
+  "featureBasicFileTransfer": "基础文件传输",
+  "featureTextMessage": "文本消息",
+  "featureImageTransfer": "图片传输",
+  "feature5DeviceGroup": "5台设备群组",
+  "featureUnlimitedFileTransfer": "无限文件传输",
+  "featureVideoTransfer": "视频传输",
+  "featureMemoryFunction": "消息记忆功能",
+  "featurePrioritySupport": "优先技术支持",
+  "feature10DeviceGroup": "10台设备群组",
+  "featureAdvancedMemory": "高级消息记忆",
+  "featureDataSyncBackup": "数据同步备份",
+  "featureDedicatedSupport": "专属客服支持",
+  "featureTeamManagement": "团队管理功能",
+  "featureUnlimitedDeviceGroup": "无限台设备群组",
+  "featureAdvancedAnalytics": "高级数据分析",
+  "featureCustomIntegration": "自定义集成",
+  "subscriptionPricingTitle": "订阅定价",
+  "subscriptionPricingSubtitle": "选择适合您的计划",
+  "popularPlan": "热门推荐",
+  "mostPopular": "最受欢迎",
+  "recommended": "推荐",
+  "yearlyDiscount": "年付优惠",
+  "savePercentage": "节省 {percentage}%",
+  "@savePercentage": {
+    "placeholders": {
+      "percentage": {
+        "type": "int"
+      }
+    }
+  },
+  "priceVariesByRegion": "订阅价格可能因地区而异",
+  "pricingNote": "价格根据您的地区自动调整",
+  "currencyDisclaimer": "价格以当地货币显示"
 } 

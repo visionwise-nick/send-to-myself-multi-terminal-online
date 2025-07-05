@@ -4917,6 +4917,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Retry {retry} - {fileName}'**
   String retryAttempt(int retry, String fileName);
+
+  /// No description provided for @monthlyPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthlyPlan;
+
+  /// No description provided for @yearlyPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get yearlyPlan;
+
+  /// No description provided for @pricePerMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'{currencySymbol}{price}/month'**
+  String pricePerMonth(String currencySymbol, String price);
+
+  /// No description provided for @pricePerYear.
+  ///
+  /// In en, this message translates to:
+  /// **'{currencySymbol}{price}/year'**
+  String pricePerYear(String currencySymbol, String price);
+
+  /// No description provided for @freePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get freePlan;
+
+  /// No description provided for @freePlanDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'For personal use'**
+  String get freePlanDescription;
+
+  /// No description provided for @basicPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic'**
+  String get basicPlan;
+
+  /// No description provided for @basicPlanDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'For small teams'**
+  String get basicPlanDescription;
+
+  /// No description provided for @proPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro'**
+  String get proPlan;
+
+  /// No description provided for @proPlanDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'For teams'**
+  String get proPlanDescription;
+
+  /// No description provided for @enterprisePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Enterprise'**
+  String get enterprisePlan;
+
+  /// No description provided for @enterprisePlanDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'For large enterprises'**
+  String get enterprisePlanDescription;
+
+  /// No description provided for @feature2DeviceGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'2 device groups'**
+  String get feature2DeviceGroup;
+
+  /// No description provided for @featureBasicFileTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic file transfer'**
+  String get featureBasicFileTransfer;
+
+  /// No description provided for @featureTextMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Text messages'**
+  String get featureTextMessage;
+
+  /// No description provided for @featureImageTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Image transfer'**
+  String get featureImageTransfer;
+
+  /// No description provided for @feature5DeviceGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'5 device groups'**
+  String get feature5DeviceGroup;
+
+  /// No description provided for @featureUnlimitedFileTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited file transfer'**
+  String get featureUnlimitedFileTransfer;
+
+  /// No description provided for @featureVideoTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Video transfer'**
+  String get featureVideoTransfer;
+
+  /// No description provided for @featureMemoryFunction.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory function'**
+  String get featureMemoryFunction;
+
+  /// No description provided for @featurePrioritySupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority support'**
+  String get featurePrioritySupport;
+
+  /// No description provided for @feature10DeviceGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'10 device groups'**
+  String get feature10DeviceGroup;
+
+  /// No description provided for @featureAdvancedMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced memory'**
+  String get featureAdvancedMemory;
+
+  /// No description provided for @featureDataSyncBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Data sync & backup'**
+  String get featureDataSyncBackup;
+
+  /// No description provided for @featureDedicatedSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Dedicated support'**
+  String get featureDedicatedSupport;
+
+  /// No description provided for @featureTeamManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Team management'**
+  String get featureTeamManagement;
+
+  /// No description provided for @featureUnlimitedDeviceGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited device groups'**
+  String get featureUnlimitedDeviceGroup;
+
+  /// No description provided for @featureAdvancedAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced analytics'**
+  String get featureAdvancedAnalytics;
+
+  /// No description provided for @featureCustomIntegration.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom integration'**
+  String get featureCustomIntegration;
+
+  /// No description provided for @subscriptionPricingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Pricing'**
+  String get subscriptionPricingTitle;
+
+  /// No description provided for @subscriptionPricingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the plan that\'s right for you'**
+  String get subscriptionPricingSubtitle;
+
+  /// No description provided for @popularPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular'**
+  String get popularPlan;
+
+  /// No description provided for @mostPopular.
+  ///
+  /// In en, this message translates to:
+  /// **'Most Popular'**
+  String get mostPopular;
+
+  /// No description provided for @recommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get recommended;
+
+  /// No description provided for @yearlyDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly discount'**
+  String get yearlyDiscount;
+
+  /// No description provided for @savePercentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Save {percentage}%'**
+  String savePercentage(int percentage);
+
+  /// No description provided for @priceVariesByRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription prices may vary by region'**
+  String get priceVariesByRegion;
+
+  /// No description provided for @pricingNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices are automatically adjusted for your region'**
+  String get pricingNote;
+
+  /// No description provided for @currencyDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices shown in local currency'**
+  String get currencyDisclaimer;
+
+  /// No description provided for @subscribeTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe to'**
+  String get subscribeTo;
+
+  /// No description provided for @subscriptionStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Status'**
+  String get subscriptionStatus;
+
+  /// No description provided for @currentPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Plan'**
+  String get currentPlan;
+
+  /// No description provided for @upgradeToUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to unlock more features'**
+  String get upgradeToUnlock;
+
+  /// No description provided for @manageSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Subscription'**
+  String get manageSubscription;
+
+  /// No description provided for @restorePurchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Purchases'**
+  String get restorePurchases;
+
+  /// No description provided for @subscriptionTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'By subscribing, you agree to our Terms of Service and Privacy Policy'**
+  String get subscriptionTerms;
+
+  /// No description provided for @purchaseSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase successful!'**
+  String get purchaseSuccess;
+
+  /// No description provided for @purchaseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase failed'**
+  String get purchaseFailed;
+
+  /// No description provided for @purchaseRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase restored'**
+  String get purchaseRestored;
+
+  /// No description provided for @noSubscriptionFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No subscription found'**
+  String get noSubscriptionFound;
+
+  /// No description provided for @subscriptionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription expired'**
+  String get subscriptionExpired;
+
+  /// No description provided for @subscriptionActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription active'**
+  String get subscriptionActive;
+
+  /// No description provided for @subscriptionCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription cancelled'**
+  String get subscriptionCancelled;
+
+  /// No description provided for @subscriptionPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription pending'**
+  String get subscriptionPending;
+
+  /// No description provided for @deviceLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Device limit reached'**
+  String get deviceLimitReached;
+
+  /// No description provided for @upgradeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade required'**
+  String get upgradeRequired;
+
+  /// No description provided for @upgradeToAddMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to add more devices'**
+  String get upgradeToAddMore;
+
+  /// No description provided for @freeTrialDaysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days left in free trial'**
+  String freeTrialDaysLeft(int days);
 }
 
 class _AppLocalizationsDelegate

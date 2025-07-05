@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/group_provider.dart';
+import '../providers/subscription_provider.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
 import '../utils/localization_helper.dart';
 import 'qr_generate_screen.dart';
+import 'subscription_screen.dart';
 
 class GroupManagementScreen extends StatefulWidget {
   final Map<String, dynamic> group;
@@ -603,10 +605,15 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
           Row(
             children: [
               Expanded(
-                child: _buildInfoItem(
-                  icon: Icons.people,
-                  label: LocalizationHelper.of(context).groupMembers,
-                  value: '$deviceCount ${LocalizationHelper.of(context).deviceName}',
+                child: Consumer<SubscriptionProvider>(
+                  builder: (context, subscriptionProvider, child) {
+                    final maxMembers = subscriptionProvider.maxGroupMembers;
+                    return _buildInfoItem(
+                      icon: Icons.people,
+                      label: LocalizationHelper.of(context).groupMembers,
+                      value: '$deviceCount / $maxMembers ${LocalizationHelper.of(context).deviceName}',
+                    );
+                  },
                 ),
               ),
               Expanded(
@@ -617,6 +624,72 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                 ),
               ),
             ],
+          ),
+          
+          // 🔥 新增：订阅限制提示
+          Consumer<SubscriptionProvider>(
+            builder: (context, subscriptionProvider, child) {
+              final groupProvider = Provider.of<GroupProvider>(context, listen: false);
+              final groupId = _currentGroupData['id'];
+              final currentCount = groupProvider.getGroupMemberCount(groupId);
+              final maxMembers = subscriptionProvider.maxGroupMembers;
+              
+              if (currentCount >= maxMembers && maxMembers < 10) {
+                return Container(
+                  margin: const EdgeInsets.only(top: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.orange.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '群组人数已达上限。升级订阅以支持更多设备。',
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => _showUpgradeDialog(subscriptionProvider),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '升级',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
           
           const SizedBox(height: 20),
@@ -987,5 +1060,70 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
       default:
         return '📱';
     }
+  }
+  
+  // 🔥 新增：显示升级对话框
+  void _showUpgradeDialog(SubscriptionProvider subscriptionProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              Icons.workspace_premium,
+              color: AppTheme.primaryColor,
+            ),
+            const SizedBox(width: 8),
+            const Text('升级订阅'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '当前群组人数已达上限',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '升级订阅计划以解锁更多设备群组功能：',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '• 基础版：支持5台设备\n• 专业版：支持10台设备',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondaryColor,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SubscriptionScreen(),
+                ),
+              );
+            },
+            child: Text('查看订阅'),
+          ),
+        ],
+      ),
+    );
   }
 } 

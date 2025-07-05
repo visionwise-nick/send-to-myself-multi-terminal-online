@@ -2539,4 +2539,187 @@ class AppLocalizationsZh extends AppLocalizations {
   String retryAttempt(int retry, String fileName) {
     return '第$retry次重试 - $fileName';
   }
+
+  @override
+  String get monthlyPlan => '月付';
+
+  @override
+  String get yearlyPlan => '年付';
+
+  @override
+  String pricePerMonth(String currencySymbol, String price) {
+    return '$currencySymbol$price/月';
+  }
+
+  @override
+  String pricePerYear(String currencySymbol, String price) {
+    return '$currencySymbol$price/年';
+  }
+
+  @override
+  String get freePlan => '免费版';
+
+  @override
+  String get freePlanDescription => '个人使用';
+
+  @override
+  String get basicPlan => '基础版';
+
+  @override
+  String get basicPlanDescription => '小团队使用';
+
+  @override
+  String get proPlan => '专业版';
+
+  @override
+  String get proPlanDescription => '团队使用';
+
+  @override
+  String get enterprisePlan => '企业版';
+
+  @override
+  String get enterprisePlanDescription => '大型企业使用';
+
+  @override
+  String get feature2DeviceGroup => '2台设备群组';
+
+  @override
+  String get featureBasicFileTransfer => '基础文件传输';
+
+  @override
+  String get featureTextMessage => '文本消息';
+
+  @override
+  String get featureImageTransfer => '图片传输';
+
+  @override
+  String get feature5DeviceGroup => '5台设备群组';
+
+  @override
+  String get featureUnlimitedFileTransfer => '无限文件传输';
+
+  @override
+  String get featureVideoTransfer => '视频传输';
+
+  @override
+  String get featureMemoryFunction => '消息记忆功能';
+
+  @override
+  String get featurePrioritySupport => '优先技术支持';
+
+  @override
+  String get feature10DeviceGroup => '10台设备群组';
+
+  @override
+  String get featureAdvancedMemory => '高级消息记忆';
+
+  @override
+  String get featureDataSyncBackup => '数据同步备份';
+
+  @override
+  String get featureDedicatedSupport => '专属客服支持';
+
+  @override
+  String get featureTeamManagement => '团队管理功能';
+
+  @override
+  String get featureUnlimitedDeviceGroup => '无限台设备群组';
+
+  @override
+  String get featureAdvancedAnalytics => '高级数据分析';
+
+  @override
+  String get featureCustomIntegration => '自定义集成';
+
+  @override
+  String get subscriptionPricingTitle => '订阅定价';
+
+  @override
+  String get subscriptionPricingSubtitle => '选择适合您的计划';
+
+  @override
+  String get popularPlan => '热门推荐';
+
+  @override
+  String get mostPopular => '最受欢迎';
+
+  @override
+  String get recommended => '推荐';
+
+  @override
+  String get yearlyDiscount => '年付优惠';
+
+  @override
+  String savePercentage(int percentage) {
+    return '节省 $percentage%';
+  }
+
+  @override
+  String get priceVariesByRegion => '订阅价格可能因地区而异';
+
+  @override
+  String get pricingNote => '价格根据您的地区自动调整';
+
+  @override
+  String get currencyDisclaimer => '价格以当地货币显示';
+
+  @override
+  String get subscribeTo => 'Subscribe to';
+
+  @override
+  String get subscriptionStatus => '订阅状态';
+
+  @override
+  String get currentPlan => 'Current Plan';
+
+  @override
+  String get upgradeToUnlock => 'Upgrade to unlock more features';
+
+  @override
+  String get manageSubscription => '管理订阅';
+
+  @override
+  String get restorePurchases => '恢复购买';
+
+  @override
+  String get subscriptionTerms =>
+      'By subscribing, you agree to our Terms of Service and Privacy Policy';
+
+  @override
+  String get purchaseSuccess => '购买成功';
+
+  @override
+  String get purchaseFailed => '购买失败';
+
+  @override
+  String get purchaseRestored => 'Purchase restored';
+
+  @override
+  String get noSubscriptionFound => 'No subscription found';
+
+  @override
+  String get subscriptionExpired => '订阅已过期';
+
+  @override
+  String get subscriptionActive => '订阅有效';
+
+  @override
+  String get subscriptionCancelled => '订阅已取消';
+
+  @override
+  String get subscriptionPending => '订阅处理中';
+
+  @override
+  String get deviceLimitReached => 'Device limit reached';
+
+  @override
+  String get upgradeRequired => '需要升级';
+
+  @override
+  String get upgradeToAddMore => 'Upgrade to add more devices';
+
+  @override
+  String freeTrialDaysLeft(int days) {
+    return '$days days left in free trial';
+  }
 }

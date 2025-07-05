@@ -2575,4 +2575,188 @@ class AppLocalizationsNl extends AppLocalizations {
   String retryAttempt(int retry, String fileName) {
     return 'Retry $retry - $fileName';
   }
+
+  @override
+  String get monthlyPlan => 'Monthly';
+
+  @override
+  String get yearlyPlan => 'Yearly';
+
+  @override
+  String pricePerMonth(String currencySymbol, String price) {
+    return '$currencySymbol$price/month';
+  }
+
+  @override
+  String pricePerYear(String currencySymbol, String price) {
+    return '$currencySymbol$price/year';
+  }
+
+  @override
+  String get freePlan => 'Free';
+
+  @override
+  String get freePlanDescription => 'For personal use';
+
+  @override
+  String get basicPlan => 'Basic';
+
+  @override
+  String get basicPlanDescription => 'For small teams';
+
+  @override
+  String get proPlan => 'Pro';
+
+  @override
+  String get proPlanDescription => 'For teams';
+
+  @override
+  String get enterprisePlan => 'Enterprise';
+
+  @override
+  String get enterprisePlanDescription => 'For large enterprises';
+
+  @override
+  String get feature2DeviceGroup => '2 device groups';
+
+  @override
+  String get featureBasicFileTransfer => 'Basic file transfer';
+
+  @override
+  String get featureTextMessage => 'Text messages';
+
+  @override
+  String get featureImageTransfer => 'Image transfer';
+
+  @override
+  String get feature5DeviceGroup => '5 device groups';
+
+  @override
+  String get featureUnlimitedFileTransfer => 'Unlimited file transfer';
+
+  @override
+  String get featureVideoTransfer => 'Video transfer';
+
+  @override
+  String get featureMemoryFunction => 'Memory function';
+
+  @override
+  String get featurePrioritySupport => 'Priority support';
+
+  @override
+  String get feature10DeviceGroup => '10 device groups';
+
+  @override
+  String get featureAdvancedMemory => 'Advanced memory';
+
+  @override
+  String get featureDataSyncBackup => 'Data sync & backup';
+
+  @override
+  String get featureDedicatedSupport => 'Dedicated support';
+
+  @override
+  String get featureTeamManagement => 'Team management';
+
+  @override
+  String get featureUnlimitedDeviceGroup => 'Unlimited device groups';
+
+  @override
+  String get featureAdvancedAnalytics => 'Advanced analytics';
+
+  @override
+  String get featureCustomIntegration => 'Custom integration';
+
+  @override
+  String get subscriptionPricingTitle => 'Subscription Pricing';
+
+  @override
+  String get subscriptionPricingSubtitle =>
+      'Choose the plan that\'s right for you';
+
+  @override
+  String get popularPlan => 'Popular';
+
+  @override
+  String get mostPopular => 'Most Popular';
+
+  @override
+  String get recommended => 'Recommended';
+
+  @override
+  String get yearlyDiscount => 'Yearly discount';
+
+  @override
+  String savePercentage(int percentage) {
+    return 'Save $percentage%';
+  }
+
+  @override
+  String get priceVariesByRegion => 'Subscription prices may vary by region';
+
+  @override
+  String get pricingNote => 'Prices are automatically adjusted for your region';
+
+  @override
+  String get currencyDisclaimer => 'Prices shown in local currency';
+
+  @override
+  String get subscribeTo => 'Subscribe to';
+
+  @override
+  String get subscriptionStatus => 'Subscription Status';
+
+  @override
+  String get currentPlan => 'Current Plan';
+
+  @override
+  String get upgradeToUnlock => 'Upgrade to unlock more features';
+
+  @override
+  String get manageSubscription => 'Manage Subscription';
+
+  @override
+  String get restorePurchases => 'Restore Purchases';
+
+  @override
+  String get subscriptionTerms =>
+      'By subscribing, you agree to our Terms of Service and Privacy Policy';
+
+  @override
+  String get purchaseSuccess => 'Purchase successful!';
+
+  @override
+  String get purchaseFailed => 'Purchase failed';
+
+  @override
+  String get purchaseRestored => 'Purchase restored';
+
+  @override
+  String get noSubscriptionFound => 'No subscription found';
+
+  @override
+  String get subscriptionExpired => 'Subscription expired';
+
+  @override
+  String get subscriptionActive => 'Subscription active';
+
+  @override
+  String get subscriptionCancelled => 'Subscription cancelled';
+
+  @override
+  String get subscriptionPending => 'Subscription pending';
+
+  @override
+  String get deviceLimitReached => 'Device limit reached';
+
+  @override
+  String get upgradeRequired => 'Upgrade required';
+
+  @override
+  String get upgradeToAddMore => 'Upgrade to add more devices';
+
+  @override
+  String freeTrialDaysLeft(int days) {
+    return '$days days left in free trial';
+  }
 }

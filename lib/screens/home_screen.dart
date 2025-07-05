@@ -21,6 +21,7 @@ import 'memories_tab.dart';
 import 'join_group_screen.dart';
 import 'qr_generate_screen.dart';
 import 'group_management_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -1447,6 +1448,42 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+          // 设置按钮
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+              icon: Icon(
+                Icons.settings,
+                size: 14,
+                color: AppTheme.textSecondaryColor,
+              ),
+              label: Text(
+                '设置',
+                style: TextStyle(
+                  color: AppTheme.textSecondaryColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: AppTheme.backgroundColor,
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 8),
+          
           // 退出登录按钮
           SizedBox(
             width: double.infinity,

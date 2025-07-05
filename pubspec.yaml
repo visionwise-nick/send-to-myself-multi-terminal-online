@@ -116,6 +116,10 @@ dependencies:
   
   # 🔥 新增：处理系统分享和app链接
   app_links: ^3.5.0
+  
+  # 🔥 新增：订阅付费功能支持
+  in_app_purchase: ^3.1.13
+  purchases_flutter: ^6.29.5
 
 dev_dependencies:
   flutter_test:
