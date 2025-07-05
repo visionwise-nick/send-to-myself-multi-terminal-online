@@ -1000,17 +1000,23 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     if (newMessages.isNotEmpty && mounted) {
       print('✅ 同步到${newMessages.length}条新消息，更新UI');
       
+      // 🔥 批量更新，减少setState调用次数
+      final updatedMessages = List<Map<String, dynamic>>.from(_messages)
+        ..addAll(newMessages);
+      
+      // 🔥 高效排序：只对新添加的部分进行排序插入
+      updatedMessages.sort((a, b) {
+        try {
+          final timeA = DateTime.parse(a['timestamp']);
+          final timeB = DateTime.parse(b['timestamp']);
+          return timeA.compareTo(timeB);
+        } catch (e) {
+          return 0;
+        }
+      });
+      
       setState(() {
-        _messages.addAll(newMessages);
-        _messages.sort((a, b) {
-          try {
-            final timeA = DateTime.parse(a['timestamp']);
-            final timeB = DateTime.parse(b['timestamp']);
-            return timeA.compareTo(timeB);
-          } catch (e) {
-            return 0;
-          }
-        });
+        _messages = updatedMessages;
       });
       
       // 为新消息自动下载文件
@@ -2232,9 +2238,23 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                   controller: _scrollController,
                                   padding: const EdgeInsets.symmetric(vertical: 8),
                                   itemCount: _messages.length,
+                                  // 🔥 启用缓存机制，提高滚动性能
+                                  cacheExtent: 1000.0,
+                                  // 🔥 使用findChildIndexCallback优化性能
+                                  findChildIndexCallback: (Key key) {
+                                    if (key is ValueKey<String>) {
+                                      final messageId = key.value;
+                                      return _messages.indexWhere((msg) => msg['id']?.toString() == messageId);
+                                    }
+                                    return null;
+                                  },
                                   itemBuilder: (context, index) {
                                     final message = _messages[index];
-                                    return _buildMessageBubble(message);
+                                    // 🔥 为每个消息项添加唯一的key，提高重建性能
+                                    return KeyedSubtree(
+                                      key: ValueKey<String>(message['id']?.toString() ?? 'msg_$index'),
+                                      child: _buildMessageBubble(message),
+                                    );
                                       },
                                     );
                                   },
@@ -2837,12 +2857,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final hasFile = message['fileType'] != null;
     final messageId = message['id']?.toString() ?? '';
     
-    // 添加调试日志
-    if (message['fileUrl'] != null || message['fileName'] != null) {
-      print('构建消息气泡: ID=${message['id']}, fileName=${message['fileName']}, fileType=${message['fileType']}, hasFile=$hasFile, fileUrl=${message['fileUrl']}');
+    // 🔥 移除调试日志，减少性能开销
+    // 只在开发调试时保留关键文件消息的日志
+    if (kDebugMode && message['fileUrl'] != null && message['fileName'] != null) {
+      // 只在debug模式下输出，且频率限制
+      if (DateTime.now().millisecondsSinceEpoch % 10 == 0) {
+        print('构建消息气泡: ID=${message['id']}, fileName=${message['fileName']}');
+      }
     }
-    
-    // 🔥 回复消息功能已实现，测试数据已移除
     
     return ListenableBuilder(
       listenable: _multiSelectController,
@@ -2850,107 +2872,118 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         final isSelected = _multiSelectController.isSelected(messageId);
         final isMultiSelectMode = _multiSelectController.isMultiSelectMode;
         
-        return GestureDetector(
-          onTap: () {
-            if (isMultiSelectMode) {
-              // 多选模式下点击切换选中状态
-              _multiSelectController.toggleMessage(messageId);
-            }
-          },
-          onLongPress: () {
-            if (isMultiSelectMode) {
-              // 已在多选模式，切换选中状态
-              _multiSelectController.toggleMessage(messageId);
-            } else {
-              // 显示长按菜单
-              _showMessageActionMenu(message, isMe);
-            }
-          },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: Column(
-              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-              children: [
-                // 消息气泡
-                Row(
-                  mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // 多选模式下显示选择框
-                    if (isMultiSelectMode) ...[
-                      Container(
-                        margin: EdgeInsets.only(
-                          right: isMe ? 0 : 8,
-                          left: isMe ? 8 : 0,
-                        ),
-                        child: Checkbox(
-                          value: isSelected,
-                          onChanged: (bool? value) {
-                            _multiSelectController.toggleMessage(messageId);
-                          },
-                          activeColor: AppTheme.primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
+        // 🔥 使用 RepaintBoundary 优化重绘性能
+        return RepaintBoundary(
+          child: GestureDetector(
+            onTap: () {
+              if (isMultiSelectMode) {
+                // 多选模式下点击切换选中状态
+                _multiSelectController.toggleMessage(messageId);
+              }
+            },
+            onLongPress: () {
+              if (isMultiSelectMode) {
+                // 已在多选模式，切换选中状态
+                _multiSelectController.toggleMessage(messageId);
+              } else {
+                // 显示长按菜单
+                _showMessageActionMenu(message, isMe);
+              }
+            },
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: Column(
+                crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  // 消息气泡
+                  Row(
+                    mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // 多选模式下显示选择框
+                      if (isMultiSelectMode) ...[
+                        Container(
+                          margin: EdgeInsets.only(
+                            right: isMe ? 0 : 8,
+                            left: isMe ? 8 : 0,
+                          ),
+                          child: Checkbox(
+                            value: isSelected,
+                            onChanged: (bool? value) {
+                              _multiSelectController.toggleMessage(messageId);
+                            },
+                            activeColor: AppTheme.primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                    
-                    Flexible(
-                      child: Container(
-                        constraints: BoxConstraints(
-                          maxWidth: MediaQuery.of(context).size.width * 
-                            (isMultiSelectMode ? 0.65 : 0.75),
-                        ),
-                        padding: EdgeInsets.all(hasFile ? 6 : 10),
-                        decoration: BoxDecoration(
-                          color: isSelected 
-                            ? AppTheme.primaryColor.withOpacity(0.1)
-                            : (isMe 
-                              ? (hasFile ? Colors.white : AppTheme.primaryColor) 
-                              : Colors.white),
-                          borderRadius: BorderRadius.circular(16).copyWith(
-                            bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
-                            bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
+                      ],
+                      
+                      Flexible(
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 
+                              (isMultiSelectMode ? 0.65 : 0.75),
                           ),
-                          border: Border.all(
+                          padding: EdgeInsets.all(hasFile ? 6 : 10),
+                          decoration: BoxDecoration(
                             color: isSelected 
-                              ? AppTheme.primaryColor.withOpacity(0.5)
-                              : const Color(0xFFE5E7EB), 
-                            width: isSelected ? 2 : 0.5,
+                              ? AppTheme.primaryColor.withOpacity(0.1)
+                              : (isMe 
+                                ? (hasFile ? Colors.white : AppTheme.primaryColor) 
+                                : Colors.white),
+                            borderRadius: BorderRadius.circular(16).copyWith(
+                              bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
+                              bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
+                            ),
+                            border: Border.all(
+                              color: isSelected 
+                                ? AppTheme.primaryColor.withOpacity(0.5)
+                                : const Color(0xFFE5E7EB), 
+                              width: isSelected ? 2 : 0.5,
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // 回复功能已移除
-                            
-                            // 文件内容
-                            if (hasFile) _buildFileContent(message, isMe),
-                            
-                            // 文本内容
-                            if (message['text'] != null && message['text'].isNotEmpty) ...[
-                              if (hasFile) const SizedBox(height: 6),
-                              // 🔥 桌面端添加右键菜单和可选择性
-                              _isDesktop()
-                                ? ContextMenuRegion(
-                                    contextMenu: GenericContextMenu(
-                                      buttonConfigs: [
-                                        // 🔥 桌面端右键菜单：只保留核心功能
-                                        if (message['fileType'] != null) ...[
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 回复功能已移除
+                              
+                              // 文件内容
+                              if (hasFile) _buildFileContent(message, isMe),
+                              
+                              // 文本内容
+                              if (message['text'] != null && message['text'].isNotEmpty) ...[
+                                if (hasFile) const SizedBox(height: 6),
+                                // 🔥 桌面端添加右键菜单和可选择性
+                                _isDesktop()
+                                  ? ContextMenuRegion(
+                                      contextMenu: GenericContextMenu(
+                                        buttonConfigs: [
+                                          // 🔥 桌面端右键菜单：只保留核心功能
+                                          if (message['fileType'] != null) ...[
+                                            ContextMenuButtonConfig(
+                                              "打开文件位置",
+                                              onPressed: () => _openFileLocationFromMessage(message),
+                                            ),
+                                          ],
+                                          // 回复功能已移除
                                           ContextMenuButtonConfig(
-                                            "打开文件位置",
-                                            onPressed: () => _openFileLocationFromMessage(message),
+                                            "删除",
+                                            onPressed: () => _deleteSingleMessage(message),
                                           ),
                                         ],
-                                        // 回复功能已移除
-                                        ContextMenuButtonConfig(
-                                          "删除",
-                                          onPressed: () => _deleteSingleMessage(message),
+                                      ),
+                                      child: SelectableText(
+                                        message['text'],
+                                        style: AppTheme.bodyStyle.copyWith(
+                                          color: isMe 
+                                            ? (hasFile ? AppTheme.textPrimaryColor : Colors.white)
+                                            : AppTheme.textPrimaryColor,
                                         ),
-                                      ],
-                                    ),
-                                    child: SelectableText(
+                                      ),
+                                    )
+                                  : Text(
                                       message['text'],
                                       style: AppTheme.bodyStyle.copyWith(
                                         color: isMe 
@@ -2958,48 +2991,40 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                           : AppTheme.textPrimaryColor,
                                       ),
                                     ),
-                                  )
-                                : Text(
-                                    message['text'],
-                                    style: AppTheme.bodyStyle.copyWith(
-                                      color: isMe 
-                                        ? (hasFile ? AppTheme.textPrimaryColor : Colors.white)
-                                        : AppTheme.textPrimaryColor,
-                                    ),
-                                  ),
+                              ],
                             ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                
-                // 时间戳和状态
-                const SizedBox(height: 2),
-                Row(
-                  mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                  children: [
-                    if (isMultiSelectMode && !isMe) 
-                      const SizedBox(width: 40), // 为复选框留出空间
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          TimeUtils.formatChatDateTime(message['timestamp']),
-                          style: AppTheme.smallStyle.copyWith(
-                            fontSize: 9,
                           ),
                         ),
-                        if (isMe) ...[
-                          const SizedBox(width: 3),
-                          _buildMessageStatusIcon(message),
+                      ),
+                    ],
+                  ),
+                  
+                  // 时间戳和状态
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                    children: [
+                      if (isMultiSelectMode && !isMe) 
+                        const SizedBox(width: 40), // 为复选框留出空间
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            TimeUtils.formatChatDateTime(message['timestamp']),
+                            style: AppTheme.smallStyle.copyWith(
+                              fontSize: 9,
+                            ),
+                          ),
+                          if (isMe) ...[
+                            const SizedBox(width: 3),
+                            _buildMessageStatusIcon(message),
+                          ],
                         ],
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );

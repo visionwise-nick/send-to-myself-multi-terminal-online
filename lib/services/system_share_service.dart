@@ -36,8 +36,8 @@ class SystemShareService {
         },
       );
       
-      // 延迟处理，确保UI已经初始化
-      await Future.delayed(Duration(milliseconds: 500));
+      // 🔥 优化：增加更长的延迟，确保UI和关键服务已经初始化
+      await Future.delayed(Duration(milliseconds: 1500));
       
       // 检查初始链接（当应用从分享启动时）
       final initialUri = await _appLinks.getInitialAppLink();
@@ -52,9 +52,14 @@ class SystemShareService {
         _isShareIntent = await _checkIsShareIntent();
         print('🔍 是否为分享Intent: $_isShareIntent');
         
-        // 延迟处理Android Intent，确保应用UI完全加载
-        await Future.delayed(Duration(milliseconds: 1000));
-        await handleAndroidIntent();
+        // 🔥 优化：增加更长的延迟，确保应用关键服务完全加载
+        // 但ShareStatusScreen已经有自己的检查机制，这里不需要处理Intent
+        if (!_isShareIntent) {
+          await Future.delayed(Duration(milliseconds: 2000));
+          await handleAndroidIntent();
+        } else {
+          print('🔄 检测到分享Intent，跳过这里的Intent处理（由ShareStatusScreen处理）');
+        }
       }
       
       print('✅ 系统分享服务初始化完成');

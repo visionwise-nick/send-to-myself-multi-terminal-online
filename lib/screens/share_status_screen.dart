@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import '../services/background_share_service.dart';
+import '../services/device_auth_service.dart';
+import '../services/local_storage_service.dart';
 import '../utils/localization_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ShareStatusScreen extends StatefulWidget {
   const ShareStatusScreen({super.key});
@@ -21,6 +24,12 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
   late AnimationController _animationController;
   Timer? _closeTimer;
   
+  // 🔥 新增：APP启动状态相关
+  bool _isAppReady = false;
+  int _initializationAttempts = 0;
+  static const int _maxInitializationAttempts = 10;
+  static const Duration _initializationCheckInterval = Duration(seconds: 1);
+  
   // 本地化文本缓存
   String _processingText = '';
   String _shareSuccessfulText = '';
@@ -29,6 +38,7 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
   String _contentSentText = '';
   String _tryAgainText = '';
   String _processingErrorText = '';
+  String _waitingForAppText = '';
   bool _localizedTextsInitialized = false;
 
   @override
@@ -38,6 +48,9 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
       duration: const Duration(seconds: 1),
       vsync: this,
     )..repeat();
+    
+    // 🔥 新增：开始APP启动状态检查
+    _checkAppReadyStatus();
   }
 
   @override
@@ -46,8 +59,6 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
     if (!_localizedTextsInitialized) {
       _initializeLocalizedTexts();
       _localizedTextsInitialized = true;
-      // 初始化本地化文本后开始处理分享
-      _listenToShareStatus();
     }
   }
 
@@ -60,18 +71,109 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
     _contentSentText = l10n.contentSentToGroup;
     _tryAgainText = l10n.pleaseTryAgainLater;
     _processingErrorText = l10n.processing;
+    _waitingForAppText = '正在启动应用...';
     
-    // 设置初始状态
+    // 🔥 修改：设置初始状态为等待APP启动
     setState(() {
-      _status = _processingText;
+      _status = _waitingForAppText;
+      _detail = '正在初始化应用服务，请稍候...';
     });
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    _closeTimer?.cancel();
-    super.dispose();
+  // 🔥 新增：检查APP启动状态
+  Future<void> _checkAppReadyStatus() async {
+    print('🔍 开始检查APP启动状态...');
+    
+    while (!_isAppReady && _initializationAttempts < _maxInitializationAttempts) {
+      _initializationAttempts++;
+      
+      try {
+        // 检查关键服务是否已初始化
+        final isReady = await _checkCriticalServicesReady();
+        
+        if (isReady) {
+          print('✅ APP关键服务已就绪，开始处理分享');
+          _isAppReady = true;
+          
+          // 等待额外的稳定时间
+          await Future.delayed(Duration(milliseconds: 500));
+          
+          // 开始处理分享
+          if (mounted) {
+            _listenToShareStatus();
+          }
+          return;
+        } else {
+          print('⏳ APP服务未就绪，等待中... (尝试 $_initializationAttempts/$_maxInitializationAttempts)');
+          
+          // 更新状态显示
+          if (mounted) {
+            setState(() {
+              _status = _waitingForAppText;
+              _detail = '正在启动应用服务... ($_initializationAttempts/$_maxInitializationAttempts)';
+            });
+          }
+          
+          // 等待下一次检查
+          await Future.delayed(_initializationCheckInterval);
+        }
+      } catch (e) {
+        print('❌ 检查APP状态时出错: $e');
+        await Future.delayed(_initializationCheckInterval);
+      }
+    }
+    
+    // 如果达到最大尝试次数仍未就绪，尝试强制处理分享
+    if (!_isAppReady) {
+      print('⚠️ 达到最大等待时间，强制开始处理分享');
+      if (mounted) {
+        setState(() {
+          _status = '应用启动较慢，正在尝试处理分享...';
+          _detail = '如果失败，请重新尝试分享';
+        });
+        
+        // 强制等待更长时间后开始处理
+        await Future.delayed(Duration(seconds: 2));
+        _listenToShareStatus();
+      }
+    }
+  }
+
+  // 🔥 新增：检查关键服务是否就绪
+  Future<bool> _checkCriticalServicesReady() async {
+    try {
+      // 1. 检查SharedPreferences是否可用
+      final prefs = await SharedPreferences.getInstance();
+      
+      // 2. 检查认证服务是否就绪
+      final authService = DeviceAuthService();
+      final token = await authService.getAuthToken();
+      final serverDeviceId = await authService.getServerDeviceId();
+      
+      if (token == null || serverDeviceId == null) {
+        print('⚠️ 认证信息不完整');
+        return false;
+      }
+      
+      // 3. 检查当前群组是否可用
+      final currentGroupId = prefs.getString('current_group_id');
+      if (currentGroupId == null) {
+        print('⚠️ 没有当前群组');
+        return false;
+      }
+      
+      // 4. 检查本地存储服务是否可用
+      final localStorage = LocalStorageService();
+      // 尝试简单操作测试服务是否就绪
+      await localStorage.getStorageInfo();
+      
+      print('✅ 关键服务检查通过');
+      return true;
+      
+    } catch (e) {
+      print('❌ 关键服务检查失败: $e');
+      return false;
+    }
   }
 
   void _listenToShareStatus() {
@@ -81,6 +183,14 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
   
   Future<void> _processShare() async {
     try {
+      // 🔥 新增：开始处理前的最后检查
+      if (mounted) {
+        setState(() {
+          _status = _processingText;
+          _detail = '正在处理分享内容...';
+        });
+      }
+      
       // 开始处理分享
       final success = await BackgroundShareService.handleShareIntent(
         onProgressUpdate: (status, detail) {
@@ -151,6 +261,13 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
     } catch (e) {
       print('Failed to close application: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _closeTimer?.cancel();
+    super.dispose();
   }
 
   @override

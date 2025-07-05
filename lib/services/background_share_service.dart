@@ -19,46 +19,72 @@ class BackgroundShareService {
   
   /// 处理分享Intent（带进度回调）
   static Future<bool> handleShareIntent({Function(String, String)? onProgressUpdate}) async {
-    try {
-      print('🔍 检查是否为分享Intent...');
-      onProgressUpdate?.call('正在检测分享内容...', '检查是否为分享Intent');
-      
-      // 检查是否为分享Intent
-      final bool? isShare = await _channel.invokeMethod('isShareIntent');
-      if (isShare != true) {
-        print('❌ 不是分享Intent，跳过处理');
-        onProgressUpdate?.call('❌ No share content detected', 'Please try sharing again');
-        return false;
-      }
-      
-      print('✅ 检测到分享Intent，开始后台处理...');
-      onProgressUpdate?.call('Share content detected', 'Getting shared data...');
-      
-      // 获取分享数据
-      final Map<dynamic, dynamic>? shareData = await _channel.invokeMethod('getSharedData');
-      if (shareData == null) {
-        print('❌ 没有分享数据');
-        onProgressUpdate?.call('❌ Failed to get share data', 'No valid share content detected');
-        return false;
-      }
-      
-      print('📥 获取到分享数据: $shareData');
-      
-      // 后台处理分享
-      final success = await _handleShareInBackground(shareData, onProgressUpdate: onProgressUpdate);
-      
-      print(success ? '✅ 分享处理成功' : '❌ 分享处理失败');
-      
-      return success;
-      
-    } catch (e) {
-      print('❌ 后台分享处理失败: $e');
-      onProgressUpdate?.call('❌ Share processing failed', 'Exception occurred: $e');
+    int retryCount = 0;
+    const int maxRetries = 3;
+    const Duration retryDelay = Duration(seconds: 2);
+    
+    while (retryCount < maxRetries) {
       try {
-        await _channel.invokeMethod('finishShare');
-      } catch (_) {}
-      return false;
+        print('🔍 检查是否为分享Intent... (尝试 ${retryCount + 1}/$maxRetries)');
+        onProgressUpdate?.call('正在检测分享内容...', 
+          retryCount > 0 ? '重新检测中 (${retryCount + 1}/$maxRetries)' : '检查是否为分享Intent');
+        
+        // 🔥 新增：在第一次尝试时添加额外等待时间
+        if (retryCount == 0) {
+          await Future.delayed(Duration(milliseconds: 1000));
+        }
+        
+        // 检查是否为分享Intent
+        final bool? isShare = await _channel.invokeMethod('isShareIntent')
+            .timeout(Duration(seconds: 10), onTimeout: () => false);
+        
+        if (isShare != true) {
+          print('❌ 不是分享Intent，跳过处理');
+          onProgressUpdate?.call('❌ No share content detected', 'Please try sharing again');
+          return false;
+        }
+        
+        print('✅ 检测到分享Intent，开始后台处理...');
+        onProgressUpdate?.call('Share content detected', 'Getting shared data...');
+        
+        // 获取分享数据
+        final Map<dynamic, dynamic>? shareData = await _channel.invokeMethod('getSharedData')
+            .timeout(Duration(seconds: 15), onTimeout: () => null);
+        
+        if (shareData == null) {
+          print('❌ 没有分享数据');
+          onProgressUpdate?.call('❌ Failed to get share data', 'No valid share content detected');
+          return false;
+        }
+        
+        print('📥 获取到分享数据: $shareData');
+        
+        // 后台处理分享
+        final success = await _handleShareInBackground(shareData, onProgressUpdate: onProgressUpdate);
+        
+        print(success ? '✅ 分享处理成功' : '❌ 分享处理失败');
+        
+        return success;
+        
+      } catch (e) {
+        retryCount++;
+        print('❌ 后台分享处理失败 (尝试 $retryCount/$maxRetries): $e');
+        
+        if (retryCount >= maxRetries) {
+          onProgressUpdate?.call('❌ Share processing failed', 'All retry attempts failed: $e');
+          try {
+            await _channel.invokeMethod('finishShare');
+          } catch (_) {}
+          return false;
+        }
+        
+        // 等待后重试
+        onProgressUpdate?.call('⏳ Retrying...', '正在重试... (${retryCount + 1}/$maxRetries)');
+        await Future.delayed(retryDelay);
+      }
     }
+    
+    return false;
   }
 
   /// 检查是否为分享Intent并处理（旧方法，保持兼容性）

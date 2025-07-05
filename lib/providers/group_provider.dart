@@ -723,14 +723,36 @@ class GroupProvider extends ChangeNotifier {
       }
     }
     
-    // 只有状态确实发生变化时才通知UI更新
+    // 🔥 优化：只有状态确实发生变化时才通知UI更新，并增加防抖动机制
     if (needsUpdate) {
       DebugConfig.debugPrint('群组设备状态发生变化，通知UI更新', module: 'SYNC');
-      notifyListeners();
+      
+      // 🔥 防抖动：避免短时间内频繁更新
+      _debounceNotifyListeners();
       
       // 设备状态更新后，通知WebSocket服务
       _websocketService.notifyDeviceActivityChange();
     }
+  }
+  
+  // 🔥 新增：防抖动通知机制
+  Timer? _debounceTimer;
+  bool _hasPendingUpdate = false;
+  
+  void _debounceNotifyListeners() {
+    _hasPendingUpdate = true;
+    
+    // 取消之前的定时器
+    _debounceTimer?.cancel();
+    
+    // 设置新的防抖动定时器
+    _debounceTimer = Timer(const Duration(milliseconds: 100), () {
+      if (_hasPendingUpdate) {
+        _hasPendingUpdate = false;
+        notifyListeners();
+        DebugConfig.debugPrint('防抖动状态更新已执行', module: 'SYNC');
+      }
+    });
   }
   
   // 检查设备状态是否发生变化
@@ -846,10 +868,10 @@ class GroupProvider extends ChangeNotifier {
       }
     }
     
-    // 只有状态确实发生变化时才通知UI更新
+    // 🔥 优化：只有状态确实发生变化时才通知UI更新，使用防抖动机制
     if (needsUpdate) {
       DebugConfig.debugPrint('在线设备状态发生变化，通知UI更新', module: 'SYNC');
-      notifyListeners();
+      _debounceNotifyListeners();
     }
   }
   
@@ -990,6 +1012,10 @@ class GroupProvider extends ChangeNotifier {
     _groupChangeSubscription?.cancel();
     _deviceStatusSubscription?.cancel();
     _wsManagerMessageSubscription?.cancel();
+    
+    // 🔥 清理防抖动定时器
+    _debounceTimer?.cancel();
+    
     super.dispose();
   }
 } 
