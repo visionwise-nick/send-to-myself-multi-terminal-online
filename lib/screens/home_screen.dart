@@ -1180,7 +1180,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                           color: AppTheme.primaryColor,
                         ),
                         label: Text(
-                          '设置',
+                          LocalizationHelper.of(context).settings,
                           style: TextStyle(
                             color: AppTheme.primaryColor,
                             fontSize: 14,
@@ -1502,7 +1502,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                 color: AppTheme.textSecondaryColor,
               ),
               label: Text(
-                '设置',
+                LocalizationHelper.of(context).settings,
                 style: TextStyle(
                   color: AppTheme.textSecondaryColor,
                   fontSize: 12,
@@ -1681,7 +1681,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   void _showGroupManagement(BuildContext context, Map<String, dynamic>? currentGroup) {
     if (currentGroup == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先选择一个群组')),
+        SnackBar(content: Text(LocalizationHelper.of(context).pleaseSelectGroup)),
       );
       return;
     }
