@@ -436,7 +436,7 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
                       ),
                     ),
                     Text(
-                      TimeUtils.formatRelativeTime(note['createdAt']),
+                                                      TimeUtils.formatRelativeTime(note['createdAt'], context),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppTheme.textTertiaryColor,
                       ),

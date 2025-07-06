@@ -1716,5 +1716,60 @@
         "type": "String"
       }
     }
+  },
+  
+  "versionNumber": "Version",
+  "expired": "Expired",
+  "justActive": "Just active",
+  "expiresInMinutes": "Expires in {minutes} minutes",
+  "@expiresInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "expiresInHoursAndMinutes": "Expires in {hours}h {minutes}m",
+  "@expiresInHoursAndMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "monday": "Monday",
+  "tuesday": "Tuesday", 
+  "wednesday": "Wednesday",
+  "thursday": "Thursday",
+  "friday": "Friday",
+  "saturday": "Saturday",
+  "sunday": "Sunday",
+  "monthDay": "{month}/{day}",
+  "@monthDay": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "yearMonthDay": "{month}/{day}/{year}",
+  "@yearMonthDay": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
   }
 } 

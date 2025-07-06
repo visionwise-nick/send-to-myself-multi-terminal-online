@@ -620,7 +620,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                 child: _buildInfoItem(
                   icon: Icons.schedule,
                   label: LocalizationHelper.of(context).createdOn,
-                  value: TimeUtils.formatDateTime(group['createdAt']),
+                  value: TimeUtils.formatDateTime(group['createdAt'], context),
                 ),
               ),
             ],
@@ -949,7 +949,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                               const SizedBox(height: 2),
                               
                                             Text(
-                '${LocalizationHelper.of(context).deviceConnected} ${TimeUtils.formatDateTime(member['joinedAt'])}',
+                '${LocalizationHelper.of(context).deviceConnected} ${TimeUtils.formatDateTime(member['joinedAt'], context)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppTheme.textTertiaryColor,
                 ),

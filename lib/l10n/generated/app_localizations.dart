@@ -5373,6 +5373,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Supports {count} device groups'**
   String supportXDeviceGroups(String count);
+
+  /// No description provided for @versionNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get versionNumber;
+
+  /// No description provided for @expired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get expired;
+
+  /// No description provided for @justActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Just active'**
+  String get justActive;
+
+  /// No description provided for @expiresInMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires in {minutes} minutes'**
+  String expiresInMinutes(int minutes);
+
+  /// No description provided for @expiresInHoursAndMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires in {hours}h {minutes}m'**
+  String expiresInHoursAndMinutes(int hours, int minutes);
+
+  /// No description provided for @monday.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get monday;
+
+  /// No description provided for @tuesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tuesday'**
+  String get tuesday;
+
+  /// No description provided for @wednesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Wednesday'**
+  String get wednesday;
+
+  /// No description provided for @thursday.
+  ///
+  /// In en, this message translates to:
+  /// **'Thursday'**
+  String get thursday;
+
+  /// No description provided for @friday.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday'**
+  String get friday;
+
+  /// No description provided for @saturday.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get saturday;
+
+  /// No description provided for @sunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get sunday;
+
+  /// No description provided for @monthDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{month}/{day}'**
+  String monthDay(int month, int day);
+
+  /// No description provided for @yearMonthDay.
+  ///
+  /// In en, this message translates to:
+  /// **'{month}/{day}/{year}'**
+  String yearMonthDay(int month, int day, int year);
 }
 
 class _AppLocalizationsDelegate

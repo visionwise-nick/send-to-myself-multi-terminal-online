@@ -101,7 +101,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
   }
 
   String _formatDateTime(String? dateTimeStr) {
-    return TimeUtils.formatExpirationTime(dateTimeStr);
+                    return TimeUtils.formatExpirationTime(dateTimeStr, context);
   }
 
   @override

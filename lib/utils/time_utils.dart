@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'localization_helper.dart';
+
 class TimeUtils {
   /// 解析时间字符串并转换为本地时间
   static DateTime? parseToLocal(String? dateTimeStr) {
@@ -18,28 +21,28 @@ class TimeUtils {
   }
   
   /// 格式化日期 (YYYY-MM-DD)
-  static String formatDate(dynamic date) {
-    if (date == null) return '未知';
+  static String formatDate(dynamic date, BuildContext context) {
+    if (date == null) return LocalizationHelper.of(context).unknown;
     
     final localTime = parseToLocal(date.toString());
-    if (localTime == null) return '未知';
+    if (localTime == null) return LocalizationHelper.of(context).unknown;
     
     return '${localTime.year}-${localTime.month.toString().padLeft(2, '0')}-${localTime.day.toString().padLeft(2, '0')}';
   }
   
   /// 格式化日期时间 (YYYY-MM-DD HH:mm)
-  static String formatDateTime(dynamic dateTime) {
-    if (dateTime == null) return '未知';
+  static String formatDateTime(dynamic dateTime, BuildContext context) {
+    if (dateTime == null) return LocalizationHelper.of(context).unknown;
     
     final localTime = parseToLocal(dateTime.toString());
-    if (localTime == null) return '未知';
+    if (localTime == null) return LocalizationHelper.of(context).unknown;
     
     return '${localTime.year}-${localTime.month.toString().padLeft(2, '0')}-${localTime.day.toString().padLeft(2, '0')} '
         '${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}';
   }
   
   /// 格式化相对时间 (例如: 5分钟前, 2小时前)
-  static String formatRelativeTime(dynamic dateTime) {
+  static String formatRelativeTime(dynamic dateTime, BuildContext context) {
     if (dateTime == null) return '';
     
     final localTime = parseToLocal(dateTime.toString());
@@ -49,37 +52,37 @@ class TimeUtils {
     final difference = now.difference(localTime);
     
     if (difference.inMinutes < 1) {
-      return '刚刚活跃';
+      return LocalizationHelper.of(context).justActive;
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}分钟前';
+      return LocalizationHelper.of(context).minutesAgo(difference.inMinutes);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}小时前';
+      return LocalizationHelper.of(context).hoursAgo(difference.inHours);
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}天前';
+      return LocalizationHelper.of(context).daysAgo(difference.inDays);
     } else {
       // 超过一周显示具体日期
-      return '${localTime.month}月${localTime.day}日';
+      return LocalizationHelper.of(context).monthDay(localTime.month, localTime.day);
     }
   }
   
   /// 格式化过期时间 (用于二维码过期显示)
-  static String formatExpirationTime(String? expiresAt) {
-    if (expiresAt == null) return '未知';
+  static String formatExpirationTime(String? expiresAt, BuildContext context) {
+    if (expiresAt == null) return LocalizationHelper.of(context).unknown;
     
     final localTime = parseToLocal(expiresAt);
-    if (localTime == null) return '未知';
+    if (localTime == null) return LocalizationHelper.of(context).unknown;
     
     final now = DateTime.now();
     final difference = localTime.difference(now);
     
     if (difference.inMinutes > 0) {
       if (difference.inHours > 0) {
-        return '${difference.inHours}小时${difference.inMinutes % 60}分钟后过期';
+        return LocalizationHelper.of(context).expiresInHoursAndMinutes(difference.inHours, difference.inMinutes % 60);
       } else {
-        return '${difference.inMinutes}分钟后过期';
+        return LocalizationHelper.of(context).expiresInMinutes(difference.inMinutes);
       }
     } else {
-      return '已过期';
+      return LocalizationHelper.of(context).expired;
     }
   }
   
@@ -111,7 +114,7 @@ class TimeUtils {
   }
   
   /// 格式化聊天消息的日期分组标题
-  static String formatDateGroupTitle(dynamic dateTime) {
+  static String formatDateGroupTitle(dynamic dateTime, BuildContext context) {
     if (dateTime == null) return '';
     
     final localTime = parseToLocal(dateTime.toString());
@@ -123,19 +126,27 @@ class TimeUtils {
     final messageDate = DateTime(localTime.year, localTime.month, localTime.day);
     
     if (isSameDay(messageDate, today)) {
-      return '今天';
+      return LocalizationHelper.of(context).today;
     } else if (isSameDay(messageDate, yesterday)) {
-      return '昨天';
+      return LocalizationHelper.of(context).yesterday;
     } else if (now.difference(messageDate).inDays < 7) {
       // 一周内显示星期几
-      const weekdays = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
+      final weekdays = [
+        LocalizationHelper.of(context).monday,
+        LocalizationHelper.of(context).tuesday,
+        LocalizationHelper.of(context).wednesday,
+        LocalizationHelper.of(context).thursday,
+        LocalizationHelper.of(context).friday,
+        LocalizationHelper.of(context).saturday,
+        LocalizationHelper.of(context).sunday
+      ];
       return weekdays[localTime.weekday - 1];
     } else if (localTime.year == now.year) {
       // 同年显示月日
-      return '${localTime.month}月${localTime.day}日';
+      return LocalizationHelper.of(context).monthDay(localTime.month, localTime.day);
     } else {
       // 不同年显示完整日期
-      return '${localTime.year}年${localTime.month}月${localTime.day}日';
+      return LocalizationHelper.of(context).yearMonthDay(localTime.month, localTime.day, localTime.year);
     }
   }
   

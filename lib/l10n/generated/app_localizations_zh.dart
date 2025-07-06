@@ -2781,4 +2781,54 @@ class AppLocalizationsZh extends AppLocalizations {
   String supportXDeviceGroups(String count) {
     return '支持 $count 台设备群组';
   }
+
+  @override
+  String get versionNumber => '版本号';
+
+  @override
+  String get expired => '已过期';
+
+  @override
+  String get justActive => '刚刚活跃';
+
+  @override
+  String expiresInMinutes(int minutes) {
+    return '$minutes分钟后过期';
+  }
+
+  @override
+  String expiresInHoursAndMinutes(int hours, int minutes) {
+    return '$hours小时$minutes分钟后过期';
+  }
+
+  @override
+  String get monday => '星期一';
+
+  @override
+  String get tuesday => '星期二';
+
+  @override
+  String get wednesday => '星期三';
+
+  @override
+  String get thursday => '星期四';
+
+  @override
+  String get friday => '星期五';
+
+  @override
+  String get saturday => '星期六';
+
+  @override
+  String get sunday => '星期日';
+
+  @override
+  String monthDay(int month, int day) {
+    return '$month月$day日';
+  }
+
+  @override
+  String yearMonthDay(int month, int day, int year) {
+    return '$year年$month月$day日';
+  }
 }

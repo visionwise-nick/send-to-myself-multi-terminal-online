@@ -2822,4 +2822,54 @@ class AppLocalizationsUk extends AppLocalizations {
   String supportXDeviceGroups(String count) {
     return 'Supports $count device groups';
   }
+
+  @override
+  String get versionNumber => 'Version';
+
+  @override
+  String get expired => 'Expired';
+
+  @override
+  String get justActive => 'Just active';
+
+  @override
+  String expiresInMinutes(int minutes) {
+    return 'Expires in $minutes minutes';
+  }
+
+  @override
+  String expiresInHoursAndMinutes(int hours, int minutes) {
+    return 'Expires in ${hours}h ${minutes}m';
+  }
+
+  @override
+  String get monday => 'Monday';
+
+  @override
+  String get tuesday => 'Tuesday';
+
+  @override
+  String get wednesday => 'Wednesday';
+
+  @override
+  String get thursday => 'Thursday';
+
+  @override
+  String get friday => 'Friday';
+
+  @override
+  String get saturday => 'Saturday';
+
+  @override
+  String get sunday => 'Sunday';
+
+  @override
+  String monthDay(int month, int day) {
+    return '$month/$day';
+  }
+
+  @override
+  String yearMonthDay(int month, int day, int year) {
+    return '$month/$day/$year';
+  }
 }

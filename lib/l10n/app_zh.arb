@@ -1350,6 +1350,61 @@
   "joinGroupFailedGeneric": "加入群组失败",
   "pleaseEnterInviteCode": "请输入邀请码",
   "inviteCodeLengthError": "邀请码长度必须在4-20位之间",
+  
+  "versionNumber": "版本号",
+  "expired": "已过期",
+  "justActive": "刚刚活跃",
+  "expiresInMinutes": "{minutes}分钟后过期",
+  "@expiresInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "expiresInHoursAndMinutes": "{hours}小时{minutes}分钟后过期",
+  "@expiresInHoursAndMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "monday": "星期一",
+  "tuesday": "星期二", 
+  "wednesday": "星期三",
+  "thursday": "星期四",
+  "friday": "星期五",
+  "saturday": "星期六",
+  "sunday": "星期日",
+  "monthDay": "{month}月{day}日",
+  "@monthDay": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "yearMonthDay": "{year}年{month}月{day}日",
+  "@yearMonthDay": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
   "operationFailed": "操作失败: {error}",
   "@operationFailed": {
     "placeholders": {

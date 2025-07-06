@@ -248,7 +248,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '关于应用',
+                  LocalizationHelper.of(context).aboutApp,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -265,7 +265,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           _buildInfoTile(
             icon: Icons.info,
-            title: '版本号',
+                            title: LocalizationHelper.of(context).versionNumber,
             subtitle: '1.1.0',
           ),
           _buildInfoTile(
@@ -307,7 +307,7 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         title: Text(
-          '退出登录',
+          LocalizationHelper.of(context).logoutConfirmTitle,
           style: TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.red,

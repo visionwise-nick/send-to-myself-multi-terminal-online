@@ -128,7 +128,7 @@ class MemoryListItem extends StatelessWidget {
                 children: [
                   // 时间
                   Text(
-                    TimeUtils.formatRelativeTime(memory.updatedAt),
+                                            TimeUtils.formatRelativeTime(memory.updatedAt, context),
                     style: AppTheme.smallStyle,
                   ),
                   
