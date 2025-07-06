@@ -6,6 +6,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, kDebugMode;
 import 'dart:io' show Platform;
+import 'dart:ui' show PlatformDispatcher;
 
 class DeviceAuthService {
   final String _baseUrl = "https://sendtomyself-api-adecumh2za-uc.a.run.app/api";
@@ -32,6 +33,17 @@ class DeviceAuthService {
       print('SharedPreferences访问失败，使用硬件生成的设备ID: $e');
       // 如果SharedPreferences无法访问，直接返回基于硬件信息的ID
       return await _generateStableDeviceId();
+    }
+  }
+
+  // 获取设备语言偏好
+  String _getDeviceLanguage() {
+    try {
+      final locale = PlatformDispatcher.instance.locale;
+      return locale.languageCode;
+    } catch (e) {
+      print('获取设备语言失败: $e');
+      return 'zh'; // 默认中文
     }
   }
 
@@ -146,7 +158,8 @@ class DeviceAuthService {
       "name": deviceName,
       "type": deviceType,
       "platform": platform,
-      "model": model
+      "model": model,
+      "language": _getDeviceLanguage()
     };
     
     print('设备信息: $result');
@@ -246,7 +259,10 @@ class DeviceAuthService {
       
       final response = await http.post(
         Uri.parse('$_baseUrl/device-auth/register'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept-Language': _getDeviceLanguage()
+        },
         body: jsonEncode(deviceInfo)
       ).timeout(const Duration(seconds: 30));
       
