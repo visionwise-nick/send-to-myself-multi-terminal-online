@@ -1682,5 +1682,39 @@
         "type": "int"
       }
     }
+  },
+  
+  "sectionscanqr": "",
+  "scanDeviceJoinOtherDevices": "Let other devices scan to join",
+  "groupPrefix": "Group: ",
+  "joinCode": "Join Code",
+  "qrCodeGenerationFailed": "QR code generation failed",
+  "otherDevicesCanScanQRDescription": "Other devices can scan this QR code or manually enter the join code to join your device group",
+  "cameraUnavailableSwitchedToInput": "Camera unavailable, switched to manual input mode",
+  "desktopCameraUnstableTip": "Desktop camera scanning may be unstable, manual input mode is recommended",
+  "joinGroupSuccessExclamation": "Successfully joined group!",
+  "joinGroupFailedGeneric": "Failed to join group",
+  "pleaseEnterInviteCode": "Please enter invite code",
+  "inviteCodeLengthError": "Invite code must be 4-20 characters long",
+  "operationFailed": "Operation failed: {error}",
+  "@operationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "generating": "Generating...",
+  "generateDeviceJoinCode": "Generate device join code",
+  "scanQRToJoinDeviceGroup": "Scan QR code to join this device group",
+  "subscriptionManagement": "Subscription Management",
+  "currentSubscription": "Current Subscription",
+  "supportXDeviceGroups": "Supports {count} device groups",
+  "@supportXDeviceGroups": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
   }
 } 

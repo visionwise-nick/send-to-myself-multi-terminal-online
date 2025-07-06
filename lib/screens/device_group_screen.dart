@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../utils/localization_helper.dart';
 
 class DeviceGroupScreen extends StatefulWidget {
   final String groupId;
@@ -273,7 +274,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                       ),
                       icon: const Icon(Icons.qr_code),
                       label: _isQrCodeLoading
-                          ? const Row(
+                          ? Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 SizedBox(
@@ -285,10 +286,10 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                                   ),
                                 ),
                                 SizedBox(width: 8),
-                                Text('生成中...'),
+                                Text(LocalizationHelper.of(context).generating),
                               ],
                             )
-                          : const Text('生成设备加入码'),
+                          : Text(LocalizationHelper.of(context).generateDeviceJoinCode),
                     ),
                   ),
                   
@@ -305,8 +306,8 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
-                            const Text(
-                              '扫描二维码加入此设备群组',
+                            Text(
+                              LocalizationHelper.of(context).scanQRToJoinDeviceGroup,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

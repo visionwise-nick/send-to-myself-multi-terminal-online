@@ -69,6 +69,20 @@ class SubscriptionPlanConfig {
     return prices[currency] ?? prices[CurrencyType.usd]!;
   }
 
+  // 获取计划名称（简化版，用于调试和显示）
+  String get name {
+    switch (plan) {
+      case SubscriptionPlan.free:
+        return 'Free';
+      case SubscriptionPlan.basic:
+        return 'Basic';
+      case SubscriptionPlan.pro:
+        return 'Pro';
+      case SubscriptionPlan.enterprise:
+        return 'Enterprise';
+    }
+  }
+
   // 价格定义
   static const Map<CurrencyType, PriceInfo> _freePrices = {
     CurrencyType.usd: PriceInfo(

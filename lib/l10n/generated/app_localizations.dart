@@ -5265,6 +5265,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days} days left in free trial'**
   String freeTrialDaysLeft(int days);
+
+  /// No description provided for @sectionscanqr.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionscanqr;
+
+  /// No description provided for @scanDeviceJoinOtherDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Let other devices scan to join'**
+  String get scanDeviceJoinOtherDevices;
+
+  /// No description provided for @groupPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Group: '**
+  String get groupPrefix;
+
+  /// No description provided for @joinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Code'**
+  String get joinCode;
+
+  /// No description provided for @qrCodeGenerationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code generation failed'**
+  String get qrCodeGenerationFailed;
+
+  /// No description provided for @otherDevicesCanScanQRDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Other devices can scan this QR code or manually enter the join code to join your device group'**
+  String get otherDevicesCanScanQRDescription;
+
+  /// No description provided for @cameraUnavailableSwitchedToInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera unavailable, switched to manual input mode'**
+  String get cameraUnavailableSwitchedToInput;
+
+  /// No description provided for @desktopCameraUnstableTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop camera scanning may be unstable, manual input mode is recommended'**
+  String get desktopCameraUnstableTip;
+
+  /// No description provided for @joinGroupSuccessExclamation.
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully joined group!'**
+  String get joinGroupSuccessExclamation;
+
+  /// No description provided for @joinGroupFailedGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to join group'**
+  String get joinGroupFailedGeneric;
+
+  /// No description provided for @pleaseEnterInviteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter invite code'**
+  String get pleaseEnterInviteCode;
+
+  /// No description provided for @inviteCodeLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code must be 4-20 characters long'**
+  String get inviteCodeLengthError;
+
+  /// No description provided for @operationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation failed: {error}'**
+  String operationFailed(String error);
+
+  /// No description provided for @generateDeviceJoinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate device join code'**
+  String get generateDeviceJoinCode;
+
+  /// No description provided for @scanQRToJoinDeviceGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR code to join this device group'**
+  String get scanQRToJoinDeviceGroup;
+
+  /// No description provided for @subscriptionManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Management'**
+  String get subscriptionManagement;
+
+  /// No description provided for @currentSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Subscription'**
+  String get currentSubscription;
+
+  /// No description provided for @supportXDeviceGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Supports {count} device groups'**
+  String supportXDeviceGroups(String count);
 }
 
 class _AppLocalizationsDelegate

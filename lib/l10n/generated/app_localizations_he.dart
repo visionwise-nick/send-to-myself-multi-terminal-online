@@ -2759,4 +2759,67 @@ class AppLocalizationsHe extends AppLocalizations {
   String freeTrialDaysLeft(int days) {
     return '$days days left in free trial';
   }
+
+  @override
+  String get sectionscanqr => '';
+
+  @override
+  String get scanDeviceJoinOtherDevices => 'Let other devices scan to join';
+
+  @override
+  String get groupPrefix => 'Group: ';
+
+  @override
+  String get joinCode => 'Join Code';
+
+  @override
+  String get qrCodeGenerationFailed => 'QR code generation failed';
+
+  @override
+  String get otherDevicesCanScanQRDescription =>
+      'Other devices can scan this QR code or manually enter the join code to join your device group';
+
+  @override
+  String get cameraUnavailableSwitchedToInput =>
+      'Camera unavailable, switched to manual input mode';
+
+  @override
+  String get desktopCameraUnstableTip =>
+      'Desktop camera scanning may be unstable, manual input mode is recommended';
+
+  @override
+  String get joinGroupSuccessExclamation => 'Successfully joined group!';
+
+  @override
+  String get joinGroupFailedGeneric => 'Failed to join group';
+
+  @override
+  String get pleaseEnterInviteCode => 'Please enter invite code';
+
+  @override
+  String get inviteCodeLengthError =>
+      'Invite code must be 4-20 characters long';
+
+  @override
+  String operationFailed(String error) {
+    return 'Operation failed: $error';
+  }
+
+  @override
+  String get generateDeviceJoinCode => 'Generate device join code';
+
+  @override
+  String get scanQRToJoinDeviceGroup =>
+      'Scan QR code to join this device group';
+
+  @override
+  String get subscriptionManagement => 'Subscription Management';
+
+  @override
+  String get currentSubscription => 'Current Subscription';
+
+  @override
+  String supportXDeviceGroups(String count) {
+    return 'Supports $count device groups';
+  }
 }

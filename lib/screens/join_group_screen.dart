@@ -100,7 +100,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('摄像头不可用，已切换到手动输入模式'),
+            content: Text(LocalizationHelper.of(context).cameraUnavailableSwitchedToInput),
             backgroundColor: Colors.orange,
             duration: Duration(seconds: 3),
           ),
@@ -123,7 +123,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
     if (!_isScanMode && _isDesktop()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('桌面端建议使用手动输入模式，摄像头扫描可能不稳定'),
+          content: Text(LocalizationHelper.of(context).desktopCameraUnstableTip),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 3),
         ),
@@ -168,7 +168,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
                 children: [
                   Icon(Icons.check_circle, color: Colors.white),
                   const SizedBox(width: 8),
-                  const Text('成功加入群组！'),
+                  Text(LocalizationHelper.of(context).joinGroupSuccessExclamation),
                 ],
               ),
               backgroundColor: Colors.green,
@@ -187,7 +187,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
                 children: [
                   Icon(Icons.error, color: Colors.white),
                   const SizedBox(width: 8),
-                  Text(groupProvider.error ?? '加入群组失败'),
+                  Text(groupProvider.error ?? LocalizationHelper.of(context).joinGroupFailedGeneric),
                 ],
               ),
               backgroundColor: Colors.red,
@@ -200,7 +200,7 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('操作失败: $e'),
+            content: Text(LocalizationHelper.of(context).operationFailed(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -218,14 +218,14 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> with TickerProviderSt
     final code = _codeController.text.trim().toUpperCase();
     if (code.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请输入邀请码')),
+        SnackBar(content: Text(LocalizationHelper.of(context).pleaseEnterInviteCode)),
       );
       return;
     }
     
     if (code.length < 4 || code.length > 20) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('邀请码长度必须在4-20位之间')),
+        SnackBar(content: Text(LocalizationHelper.of(context).inviteCodeLengthError)),
       );
       return;
     }

@@ -609,8 +609,8 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                   builder: (context, subscriptionProvider, child) {
                     final maxMembers = subscriptionProvider.maxGroupMembers;
                     return _buildInfoItem(
-                      icon: Icons.people,
-                      label: LocalizationHelper.of(context).groupMembers,
+                  icon: Icons.people,
+                  label: LocalizationHelper.of(context).groupMembers,
                       value: '$deviceCount / $maxMembers ${LocalizationHelper.of(context).deviceName}',
                     );
                   },

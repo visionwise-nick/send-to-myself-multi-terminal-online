@@ -9,6 +9,7 @@ import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/subscription_model.dart';
 import '../config/debug_config.dart';
+import 'subscription_api_service.dart';
 
 class SubscriptionService {
   static final SubscriptionService _instance = SubscriptionService._internal();
@@ -17,6 +18,9 @@ class SubscriptionService {
 
   final InAppPurchase _inAppPurchase = InAppPurchase.instance;
   late StreamSubscription<List<PurchaseDetails>> _subscription;
+  
+  // API服务
+  final SubscriptionApiService _apiService = SubscriptionApiService();
   
   // 监听器
   final StreamController<SubscriptionInfo> _subscriptionController = 
@@ -74,6 +78,9 @@ class SubscriptionService {
 
       // 恢复之前的购买
       await _restorePurchases();
+
+      // 从后端同步订阅状态
+      await syncSubscriptionFromBackend();
 
       _isInitialized = true;
       DebugConfig.debugPrint('订阅服务初始化完成', module: 'SUBSCRIPTION');
@@ -265,9 +272,38 @@ class SubscriptionService {
 
   // 验证购买
   Future<bool> _verifyPurchase(PurchaseDetails purchase) async {
-    // 在生产环境中，这里应该向服务器验证购买
-    // 现在暂时返回true
-    return true;
+    try {
+      DebugConfig.debugPrint('开始验证购买: ${purchase.productID}', module: 'SUBSCRIPTION');
+      
+      // 获取产品配置
+      final config = SubscriptionPlanConfig.getPlanConfigByProductId(purchase.productID);
+      if (config == null) {
+        DebugConfig.errorPrint('未找到产品配置: ${purchase.productID}');
+        return false;
+      }
+
+      final isYearly = purchase.productID == config.productIdYearly;
+      final priceInfo = config.getPriceInfo(_currentCurrency);
+      final price = isYearly ? priceInfo.yearlyPrice : priceInfo.monthlyPrice;
+      
+      // 同步购买信息到后端
+      await _apiService.syncPurchase(
+        plan: config.plan.name.toLowerCase(),
+        billing: isYearly ? 'yearly' : 'monthly',
+        currency: priceInfo.currencyCode,
+        productId: purchase.productID,
+        transactionId: purchase.purchaseID ?? '',
+        price: price,
+        receipt: purchase.verificationData.serverVerificationData,
+      );
+      
+      DebugConfig.debugPrint('购买验证成功: ${purchase.productID}', module: 'SUBSCRIPTION');
+      return true;
+    } catch (e) {
+      DebugConfig.errorPrint('购买验证失败: $e');
+      // 即使后端同步失败，也不阻止本地购买流程
+      return true;
+    }
   }
 
   // 从购买信息更新订阅
@@ -384,6 +420,66 @@ class SubscriptionService {
     if (_currentSubscription.isExpired) {
       DebugConfig.debugPrint('订阅已过期，切换到免费版', module: 'SUBSCRIPTION');
       await _updateSubscription(SubscriptionInfo.createFreeSubscription());
+    }
+  }
+
+  // 从后端同步订阅状态
+  Future<void> syncSubscriptionFromBackend() async {
+    try {
+      DebugConfig.debugPrint('从后端同步订阅状态...', module: 'SUBSCRIPTION');
+      
+      final backendSubscription = await _apiService.getUserSubscription();
+      
+      if (backendSubscription['plan'] != null && backendSubscription['plan'] != 'free') {
+        // 解析后端订阅信息
+        final planName = backendSubscription['plan'] as String;
+        final status = backendSubscription['status'] as String;
+        final startDate = DateTime.parse(backendSubscription['startDate']);
+        final endDate = DateTime.parse(backendSubscription['endDate']);
+        final isYearly = backendSubscription['billing'] == 'yearly';
+        
+        final plan = SubscriptionPlan.values.firstWhere(
+          (p) => p.name.toLowerCase() == planName.toLowerCase(),
+          orElse: () => SubscriptionPlan.free,
+        );
+        
+        final subscriptionStatus = SubscriptionStatus.values.firstWhere(
+          (s) => s.name.toLowerCase() == status.toLowerCase(),
+          orElse: () => SubscriptionStatus.expired,
+        );
+        
+        final subscription = SubscriptionInfo(
+          plan: plan,
+          status: subscriptionStatus,
+          startDate: startDate,
+          endDate: endDate,
+          isYearly: isYearly,
+          productId: backendSubscription['productId'] ?? '',
+          transactionId: backendSubscription['transactionId'] ?? '',
+          price: (backendSubscription['price'] as num?)?.toDouble() ?? 0.0,
+          currency: backendSubscription['currency'] ?? 'USD',
+        );
+        
+        await _updateSubscription(subscription);
+        DebugConfig.debugPrint('已从后端同步订阅状态: ${plan.name}', module: 'SUBSCRIPTION');
+      } else {
+        DebugConfig.debugPrint('后端显示免费版订阅', module: 'SUBSCRIPTION');
+      }
+    } catch (e) {
+      DebugConfig.errorPrint('从后端同步订阅状态失败: $e');
+      // 同步失败不影响本地状态
+    }
+  }
+
+  // 验证订阅状态（用于设备限制检查）
+  Future<bool> validateSubscriptionForDeviceLimit() async {
+    try {
+      final validationResult = await _apiService.validateSubscription();
+      return validationResult['isValid'] == true;
+    } catch (e) {
+      DebugConfig.errorPrint('验证订阅状态失败: $e');
+      // 验证失败时使用本地状态
+      return !_currentSubscription.isExpired;
     }
   }
 

@@ -1162,6 +1162,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                     
                     const Spacer(),
                     
+                    // 设置按钮
+                    Container(
+                      width: double.infinity,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsScreen(),
+                            ),
+                          );
+                        },
+                        icon: Icon(
+                          Icons.settings,
+                          size: 16,
+                          color: AppTheme.primaryColor,
+                        ),
+                        label: Text(
+                          '设置',
+                          style: TextStyle(
+                            color: AppTheme.primaryColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 8),
+                    
                     // 退出登录
                     Container(
             width: double.infinity,

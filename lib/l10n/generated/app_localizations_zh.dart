@@ -2722,4 +2722,63 @@ class AppLocalizationsZh extends AppLocalizations {
   String freeTrialDaysLeft(int days) {
     return '$days days left in free trial';
   }
+
+  @override
+  String get sectionscanqr => '';
+
+  @override
+  String get scanDeviceJoinOtherDevices => '让其他设备扫描加入';
+
+  @override
+  String get groupPrefix => '群组: ';
+
+  @override
+  String get joinCode => '加入码';
+
+  @override
+  String get qrCodeGenerationFailed => '二维码生成失败';
+
+  @override
+  String get otherDevicesCanScanQRDescription =>
+      '其他设备可以扫描此二维码或手动输入加入码来加入您的设备群组';
+
+  @override
+  String get cameraUnavailableSwitchedToInput => '摄像头不可用，已切换到手动输入模式';
+
+  @override
+  String get desktopCameraUnstableTip => '桌面端建议使用手动输入模式，摄像头扫描可能不稳定';
+
+  @override
+  String get joinGroupSuccessExclamation => '成功加入群组！';
+
+  @override
+  String get joinGroupFailedGeneric => '加入群组失败';
+
+  @override
+  String get pleaseEnterInviteCode => '请输入邀请码';
+
+  @override
+  String get inviteCodeLengthError => '邀请码长度必须在4-20位之间';
+
+  @override
+  String operationFailed(String error) {
+    return '操作失败: $error';
+  }
+
+  @override
+  String get generateDeviceJoinCode => '生成设备加入码';
+
+  @override
+  String get scanQRToJoinDeviceGroup => '扫描二维码加入此设备群组';
+
+  @override
+  String get subscriptionManagement => '订阅管理';
+
+  @override
+  String get currentSubscription => '当前订阅';
+
+  @override
+  String supportXDeviceGroups(String count) {
+    return '支持 $count 台设备群组';
+  }
 }

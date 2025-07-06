@@ -246,7 +246,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
             
             // 标题区域
             Text(
-              '让其他设备扫描加入',
+              LocalizationHelper.of(context).scanDeviceJoinOtherDevices,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textPrimaryColor,
@@ -258,7 +258,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
             
             if (groupName.isNotEmpty)
               Text(
-                '群组: $groupName',
+                '${LocalizationHelper.of(context).groupPrefix}$groupName',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: AppTheme.textSecondaryColor,
                 ),
@@ -317,7 +317,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    '二维码生成失败',
+                                    LocalizationHelper.of(context).qrCodeGenerationFailed,
                                     style: TextStyle(
                                       color: AppTheme.errorColor,
                                       fontSize: 14,
@@ -345,15 +345,15 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
                           width: 1,
                         ),
                       ),
-                      child: Column(
-                        children: [
-                          Text(
-                            '加入码',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.primaryColor,
-                              fontWeight: FontWeight.w500,
+                                              child: Column(
+                          children: [
+                            Text(
+                              LocalizationHelper.of(context).joinCode,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.primaryColor,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
                           const SizedBox(height: 8),
                           Text(
                             joinCode,
@@ -405,7 +405,7 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '其他设备可以扫描此二维码或手动输入加入码来加入您的设备群组',
+                    LocalizationHelper.of(context).otherDevicesCanScanQRDescription,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.textSecondaryColor,
                       height: 1.5,

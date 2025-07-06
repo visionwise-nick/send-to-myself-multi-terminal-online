@@ -1337,6 +1337,40 @@
       }
     }
   },
+  
+  "sectionscanqr": "",
+  "scanDeviceJoinOtherDevices": "让其他设备扫描加入",
+  "groupPrefix": "群组: ",
+  "joinCode": "加入码",
+  "qrCodeGenerationFailed": "二维码生成失败",
+  "otherDevicesCanScanQRDescription": "其他设备可以扫描此二维码或手动输入加入码来加入您的设备群组",
+  "cameraUnavailableSwitchedToInput": "摄像头不可用，已切换到手动输入模式",
+  "desktopCameraUnstableTip": "桌面端建议使用手动输入模式，摄像头扫描可能不稳定",
+  "joinGroupSuccessExclamation": "成功加入群组！",
+  "joinGroupFailedGeneric": "加入群组失败",
+  "pleaseEnterInviteCode": "请输入邀请码",
+  "inviteCodeLengthError": "邀请码长度必须在4-20位之间",
+  "operationFailed": "操作失败: {error}",
+  "@operationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "generating": "生成中...",
+  "generateDeviceJoinCode": "生成设备加入码",
+  "scanQRToJoinDeviceGroup": "扫描二维码加入此设备群组",
+  "subscriptionManagement": "订阅管理",
+  "currentSubscription": "当前订阅",
+  "supportXDeviceGroups": "支持 {count} 台设备群组",
+  "@supportXDeviceGroups": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "updateSuccess": "更新成功",
   "updateFailed": "更新失败: {error}",
   "@updateFailed": {
