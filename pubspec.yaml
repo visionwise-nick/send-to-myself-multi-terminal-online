@@ -130,6 +130,9 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  
+  # 🔥 新增：自动化图标替换工具
+  flutter_launcher_icons: ^0.13.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -175,3 +178,38 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# 🔥 图标配置
+flutter_launcher_icons:
+  # 主图标路径（需要1024x1024像素的PNG图片）
+  image_path: "assets/icons/app_icon.png"
+  
+  # 各平台配置
+  android:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
+    adaptive_icon_background: "#ffffff"
+    adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
+  
+  ios:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
+  
+  macos:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
+  
+  web:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
+    background_color: "#ffffff"
+    theme_color: "#000000"
+  
+  windows:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
+    icon_size: 48
+  
+  linux:
+    generate: true
+    image_path: "assets/icons/app_icon.png"
