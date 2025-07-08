@@ -1771,5 +1771,20 @@
         "type": "int"
       }
     }
-  }
+  },
+  
+  "deviceInformation": "Device Information",
+  "deviceName": "Device Name",
+  "deviceType": "Device Type", 
+  "deviceId": "Device ID",
+  "applicationName": "Application Name",
+  "applicationDescription": "Application Description",
+  "unknown": "Unknown",
+  "unknownDevice": "Unknown Device",
+  "appDescriptionText": "Cross-device file sharing and message memory assistant",
+  "logoutCurrentDeviceDescription": "Log out of current device",
+  "confirmLogoutTitle": "Confirm Logout",
+  "confirmLogoutContent": "Are you sure you want to log out of the current device?",
+  "confirmLogoutContent": "Are you sure you want to log out of the current device?",
+  "cancel": "Cancel"
 } 

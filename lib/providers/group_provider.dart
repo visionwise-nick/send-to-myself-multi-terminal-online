@@ -348,7 +348,7 @@ class GroupProvider extends ChangeNotifier {
   // 生成邀请码
   Future<Map<String, dynamic>?> generateInviteCode({int expiryHours = 24}) async {
     if (_currentGroup == null) {
-      _error = 'Please select a group first'; // 这里无法使用context，暂时使用英文
+      _error = '请先选择一个群组';
       notifyListeners();
       return null;
     }

@@ -261,7 +261,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get clickToStartChat => 'Click to start chat';
 
   @override
-  String get unknownDevice => 'Unknown device';
+  String get unknownDevice => 'Unknown Device';
 
   @override
   String get unknownType => 'Unknown type';
@@ -2872,4 +2872,27 @@ class AppLocalizationsPt extends AppLocalizations {
   String yearMonthDay(int month, int day, int year) {
     return '$month/$day/$year';
   }
+
+  @override
+  String get deviceInformation => 'Device Information';
+
+  @override
+  String get applicationName => 'Application Name';
+
+  @override
+  String get applicationDescription => 'Application Description';
+
+  @override
+  String get appDescriptionText =>
+      'Cross-device file sharing and message memory assistant';
+
+  @override
+  String get logoutCurrentDeviceDescription => 'Log out of current device';
+
+  @override
+  String get confirmLogoutTitle => 'Confirm Logout';
+
+  @override
+  String get confirmLogoutContent =>
+      'Are you sure you want to log out of the current device?';
 }

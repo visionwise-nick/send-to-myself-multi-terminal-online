@@ -1162,43 +1162,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                     
                     const Spacer(),
                     
-                    // 设置按钮
-                    Container(
-                      width: double.infinity,
-                      child: TextButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const SettingsScreen(),
-                            ),
-                          );
-                        },
-                        icon: Icon(
-                          Icons.settings,
-                          size: 16,
-                          color: AppTheme.primaryColor,
-                        ),
-                        label: Text(
-                          LocalizationHelper.of(context).settings,
-                          style: TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        style: TextButton.styleFrom(
-                          backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 8),
-                    
                     // 退出登录
                     Container(
             width: double.infinity,
@@ -1502,7 +1465,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                 color: AppTheme.textSecondaryColor,
               ),
               label: Text(
-                LocalizationHelper.of(context).settings,
+                '设置',
                 style: TextStyle(
                   color: AppTheme.textSecondaryColor,
                   fontSize: 12,
@@ -1681,7 +1644,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   void _showGroupManagement(BuildContext context, Map<String, dynamic>? currentGroup) {
     if (currentGroup == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(LocalizationHelper.of(context).pleaseSelectGroup)),
+        const SnackBar(content: Text('请先选择一个群组')),
       );
       return;
     }

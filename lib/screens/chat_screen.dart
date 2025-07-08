@@ -183,6 +183,17 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   static const int _maxCacheSize = 100; // 最多缓存100个文件路径
   final List<String> _cacheAccessOrder = []; // LRU访问顺序
   
+  // 🔥 新增：增强的下载状态管理
+  final Map<String, DateTime> _downloadStartTimes = {}; // URL -> 开始下载时间
+  final Map<String, Timer> _downloadTimeoutTimers = {}; // URL -> 超时定时器
+  final Map<String, String> _downloadingFileNames = {}; // URL -> 文件名（用于调试）
+  static const Duration _downloadTimeout = Duration(minutes: 10); // 下载超时时间
+  
+  // 🔥 新增：下载队列管理
+  final List<Map<String, dynamic>> _downloadQueue = []; // 下载队列
+  static const int _maxConcurrentDownloads = 3; // 最大并发下载数
+  int _currentDownloadCount = 0; // 当前正在下载的数量
+  
   // 文件去重相关
   final Map<String, String> _fileHashCache = {}; // 文件路径 -> 哈希值
   final Set<String> _seenFileHashes = {}; // 已见过的文件哈希
@@ -236,6 +247,15 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         _subscribeToChatMessages();
         _syncLatestMessages();
         _startConnectionHealthCheck();
+      }
+    });
+
+    // 🔥 新增：定期检查和清理僵尸下载状态
+    Timer.periodic(Duration(minutes: 2), (timer) {
+      if (mounted) {
+        _checkAndCleanupZombieDownloads();
+      } else {
+        timer.cancel();
       }
     });
   }
@@ -485,6 +505,18 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     
     // 🔥 新增：清理WebSocket连接状态订阅
     _connectionStateSubscription?.cancel();
+    
+    // 🔥 新增：清理下载超时定时器
+    for (final timer in _downloadTimeoutTimers.values) {
+      timer.cancel();
+    }
+    _downloadTimeoutTimers.clear();
+    
+    // 🔥 新增：清理下载状态管理相关数据
+    _downloadStartTimes.clear();
+    _downloadingFileNames.clear();
+    _downloadQueue.clear();
+    _currentDownloadCount = 0;
     
     super.dispose();
   }
@@ -3419,7 +3451,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   Widget _buildFilePreview(String? fileType, String? filePath, String? fileUrl, bool isMe, {Map<String, dynamic>? message}) {
     // 🔥 简化：减少调试日志，保持代码简洁
     
-    // 🔥 新增：检查是否正在下载
+    // 🔥 新增：检查是否正在下载或在队列中
     if (fileUrl != null) {
       String fullUrl = fileUrl;
       if (fileUrl.startsWith('/api/')) {
@@ -3429,6 +3461,29 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       // 如果正在下载，显示下载中状态
       if (_downloadingFiles.contains(fullUrl)) {
         return _buildDownloadingPreview(fileType);
+      }
+      
+      // 🔥 新增：检查是否在下载队列中
+      final inQueue = _downloadQueue.any((task) {
+        final taskMessage = task['message'] as Map<String, dynamic>;
+        final taskUrl = taskMessage['fileUrl'];
+        String taskFullUrl = taskUrl;
+        if (taskUrl != null && taskUrl.startsWith('/api/')) {
+          taskFullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$taskUrl';
+        }
+        return taskFullUrl == fullUrl;
+      });
+      
+      if (inQueue) {
+        return _buildQueuedPreview(fileType, _downloadQueue.indexWhere((task) {
+          final taskMessage = task['message'] as Map<String, dynamic>;
+          final taskUrl = taskMessage['fileUrl'];
+          String taskFullUrl = taskUrl;
+          if (taskUrl != null && taskUrl.startsWith('/api/')) {
+            taskFullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$taskUrl';
+          }
+          return taskFullUrl == fullUrl;
+        }) + 1);
       }
     }
     
@@ -3515,6 +3570,38 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
+  // 🔥 新增：排队中预览
+  Widget _buildQueuedPreview(String? fileType, int queuePosition) {
+    return Container(
+      height: 80,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F8FF),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.primaryColor.withOpacity(0.2)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.schedule,
+            size: 20,
+            color: AppTheme.primaryColor.withOpacity(0.7),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '排队中 ($queuePosition)',
+            style: TextStyle(
+              fontSize: 11,
+              color: AppTheme.primaryColor.withOpacity(0.8),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // 🔥 新增：准备下载预览 - 修复为可点击的下载触发器
   Widget _buildPrepareDownloadPreview(String? fileType, Map<String, dynamic> message) {
     return GestureDetector(
@@ -3576,7 +3663,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       
       // 标记为下载中
       setState(() {
-        _downloadingFiles.add(fullUrl);
+        _addDownloadingFile(fullUrl, fileName ?? 'unknown_file');
       });
       
       // 执行下载
@@ -3603,7 +3690,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       // 移除下载中标记
       if (mounted) {
         setState(() {
-          _downloadingFiles.remove(fileUrl.startsWith('/api/') 
+          _removeDownloadingFile(fileUrl.startsWith('/api/') 
             ? 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl' 
             : fileUrl);
         });
@@ -4248,9 +4335,25 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
     }
     
-    // 检查是否正在下载
+    // 🔥 修复：检查是否已在下载队列或正在下载
     if (_downloadingFiles.contains(fullUrl)) {
       print('文件正在下载中，跳过: $fileName');
+      return;
+    }
+    
+    // 检查是否已在下载队列中
+    final alreadyQueued = _downloadQueue.any((task) {
+      final taskMessage = task['message'] as Map<String, dynamic>;
+      final taskUrl = taskMessage['fileUrl'];
+      String taskFullUrl = taskUrl;
+      if (taskUrl != null && taskUrl.startsWith('/api/')) {
+        taskFullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$taskUrl';
+      }
+      return taskFullUrl == fullUrl;
+    });
+    
+    if (alreadyQueued) {
+      print('文件已在下载队列中，跳过: $fileName');
       return;
     }
     
@@ -4272,160 +4375,15 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         return;
       }
       
-      print('开始下载文件: $fileName (${fileSize ?? 'unknown'} bytes)');
-      _downloadingFiles.add(fullUrl);
+      // 3. 🔥 新增：添加到下载队列而不是立即下载
+      print('添加文件到下载队列: $fileName (${fileSize ?? 'unknown'} bytes)');
+      _addToDownloadQueue({
+        'message': message,
+        'priority': fileSize != null && fileSize > 50 * 1024 * 1024 ? 'low' : 'normal', // 大文件优先级较低
+      });
       
-      // 🔥 新增：初始化下载进度跟踪
-      final startTime = DateTime.now();
-      var lastUpdateTime = startTime;
-      var lastDownloadedBytes = 0;
-      
-      // 3. 带进度的文件下载
-      final dio = Dio();
-      final authService = DeviceAuthService();
-      final token = await authService.getAuthToken();
-      
-      // 🔥 优化：为大文件下载配置更长的超时时间
-      dio.options.connectTimeout = const Duration(seconds: 60);
-      dio.options.receiveTimeout = const Duration(minutes: 15); // 大文件下载15分钟超时
-      dio.options.sendTimeout = const Duration(minutes: 5);
-      
-      final response = await dio.get(
-        fullUrl,
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
-        ),
-        onReceiveProgress: (receivedBytes, totalBytes) {
-          // 🔥 新增：计算下载进度和速度
-          if (totalBytes > 0 && mounted) {
-            final progress = receivedBytes / totalBytes;
-            final currentTime = DateTime.now();
-            final timeDiff = currentTime.difference(lastUpdateTime).inMilliseconds;
-            
-            // 每500ms更新一次UI（避免过于频繁）
-            if (timeDiff >= 500) {
-              final bytesDiff = receivedBytes - lastDownloadedBytes;
-              final speedBytesPerMs = bytesDiff / timeDiff;
-              final speedKBps = speedBytesPerMs * 1000 / 1024; // 转换为KB/s
-              
-              // 计算预计剩余时间
-              final remainingBytes = totalBytes - receivedBytes;
-              final etaSeconds = speedKBps > 0 ? (remainingBytes / 1024 / speedKBps).round() : null;
-              
-              // 🔥 优化：大文件下载进度日志
-              if (totalBytes > 50 * 1024 * 1024) { // 大于50MB的文件
-                print('大文件下载进度: ${(progress * 100).toStringAsFixed(1)}% (${_formatFileSize(receivedBytes)}/${_formatFileSize(totalBytes)}) 速度: ${_formatTransferSpeed(speedKBps)}');
-              }
-              
-              setState(() {
-                final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
-                if (messageIndex != -1) {
-                  _messages[messageIndex]['downloadProgress'] = progress;
-                  _messages[messageIndex]['transferSpeed'] = speedKBps;
-                  _messages[messageIndex]['eta'] = etaSeconds;
-                }
-              });
-              
-              lastUpdateTime = currentTime;
-              lastDownloadedBytes = receivedBytes;
-            }
-          }
-        },
-      );
-      
-      if (response.statusCode == 200 && response.data != null) {
-        // 🔥 新增：下载完成，清除进度信息
-        setState(() {
-          final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
-          if (messageIndex != -1) {
-            _messages[messageIndex]['downloadProgress'] = null;
-            _messages[messageIndex]['transferSpeed'] = 0.0;
-            _messages[messageIndex]['eta'] = null;
-          }
-        });
-        
-        // 直接保存到永久存储
-        final savedPath = await _localStorage.saveFileToCache(fullUrl, response.data as List<int>, fileName);
-        
-        if (savedPath != null) {
-          print('文件下载并保存到永久存储完成: $fileName -> $savedPath');
-          
-          // 添加到内存缓存
-          _addToCache(fullUrl, savedPath);
-          
-          // 更新消息文件路径
-          _updateMessageFilePath(message, savedPath);
-          
-          // 保存消息更新
-          await _saveMessages();
-          
-          // 🔥 移除：不再显示下载完成提示，保持界面简洁
-          // 文件下载完成后直接显示，无需额外提示
-        }
-      } else {
-        throw Exception('下载失败: HTTP ${response.statusCode}');
-      }
     } catch (e) {
-      print('文件下载失败: $fileName - $e');
-      
-      // 🔥 新增：下载失败处理
-      if (mounted) {
-        setState(() {
-          final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
-          if (messageIndex != -1) {
-            _messages[messageIndex]['downloadProgress'] = null;
-            _messages[messageIndex]['transferSpeed'] = 0.0;
-            _messages[messageIndex]['eta'] = null;
-          }
-        });
-        
-        // 🔥 优化：根据文件大小和错误类型提供更详细的错误提示
-        String errorMessage = LocalizationHelper.of(context).fileDownloadFailed;
-        if (e.toString().contains('timeout')) {
-          if (fileSize != null && fileSize > 50 * 1024 * 1024) {
-            errorMessage = '大文件下载超时，请检查网络连接\n文件大小: ${_formatFileSize(fileSize)}\n建议在WiFi环境下重试';
-          } else {
-            errorMessage = '文件下载超时，请检查网络连接';
-          }
-        } else if (e.toString().contains('404')) {
-                      errorMessage = LocalizationHelper.of(context).fileNotExistsOrExpired;
-        } else if (e.toString().contains('403')) {
-                      errorMessage = LocalizationHelper.of(context).noPermissionToDownload;
-        } else if (e.toString().contains('network')) {
-          errorMessage = '网络连接错误，请检查网络设置';
-        } else if (e.toString().contains('space') || e.toString().contains('storage')) {
-          errorMessage = '设备存储空间不足，请清理空间后重试';
-        } else {
-          errorMessage = '文件下载失败: ${fileName}';
-        }
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            duration: const Duration(seconds: 5), // 增加显示时间
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: LocalizationHelper.of(context).retry,
-              textColor: Colors.white,
-              onPressed: () => _autoDownloadFile(message),
-            ),
-          ),
-        );
-      }
-    } finally {
-      // 🔥 修复：确保下载完成后清除下载状态
-      _downloadingFiles.remove(fullUrl);
-      if (mounted) {
-        setState(() {
-          final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
-          if (messageIndex != -1) {
-            _messages[messageIndex]['downloadProgress'] = null;
-            _messages[messageIndex]['transferSpeed'] = 0.0;
-            _messages[messageIndex]['eta'] = null;
-          }
-        });
-      }
+      print('处理下载请求失败: $fileName - $e');
     }
   }
   
@@ -4641,6 +4599,312 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       return filePath;
     }
     return null;
+  }
+
+  // 🔥 新增：增强的下载状态管理方法
+  void _addDownloadingFile(String url, String fileName) {
+    _downloadingFiles.add(url);
+    _downloadStartTimes[url] = DateTime.now();
+    _downloadingFileNames[url] = fileName;
+    
+    // 设置超时定时器
+    _downloadTimeoutTimers[url] = Timer(_downloadTimeout, () {
+      _handleDownloadTimeout(url);
+    });
+    
+    print('📥 添加下载任务: $fileName (URL: $url)');
+  }
+
+  void _removeDownloadingFile(String url) {
+    _downloadingFiles.remove(url);
+    _downloadStartTimes.remove(url);
+    _downloadingFileNames.remove(url);
+    
+    // 清理超时定时器
+    _downloadTimeoutTimers[url]?.cancel();
+    _downloadTimeoutTimers.remove(url);
+    
+    print('✅ 移除下载任务: $url');
+  }
+
+  void _handleDownloadTimeout(String url) {
+    final fileName = _downloadingFileNames[url] ?? 'unknown';
+    print('⏰ 下载超时，强制清理状态: $fileName (URL: $url)');
+    
+    if (mounted) {
+      setState(() {
+        _removeDownloadingFile(url);
+      });
+      
+      // 显示超时提示
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('文件下载超时: $fileName'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // 🔥 新增：检查和清理僵尸下载状态
+  void _checkAndCleanupZombieDownloads() {
+    final now = DateTime.now();
+    final zombieUrls = <String>[];
+    
+    for (final entry in _downloadStartTimes.entries) {
+      final url = entry.key;
+      final startTime = entry.value;
+      
+      if (now.difference(startTime) > _downloadTimeout) {
+        zombieUrls.add(url);
+      }
+    }
+    
+    if (zombieUrls.isNotEmpty) {
+      print('🧟 发现僵尸下载状态，强制清理: ${zombieUrls.length} 个');
+      for (final url in zombieUrls) {
+        _removeDownloadingFile(url);
+      }
+      
+      if (mounted) {
+        setState(() {
+          // 刷新UI
+        });
+      }
+    }
+  }
+
+  // 🔥 新增：获取下载状态信息
+  Map<String, dynamic> _getDownloadStatusInfo() {
+    final activeDownloads = <Map<String, dynamic>>[];
+    
+    for (final url in _downloadingFiles) {
+      final fileName = _downloadingFileNames[url] ?? 'unknown';
+      final startTime = _downloadStartTimes[url];
+      final duration = startTime != null ? DateTime.now().difference(startTime) : Duration.zero;
+      
+      activeDownloads.add({
+        'url': url,
+        'fileName': fileName,
+        'duration': duration.inSeconds,
+        'startTime': startTime?.toIso8601String(),
+      });
+    }
+    
+    return {
+      'activeCount': _downloadingFiles.length,
+      'activeDownloads': activeDownloads,
+      'queuedCount': _downloadQueue.length,
+      'currentDownloadCount': _currentDownloadCount,
+    };
+  }
+
+  // 🔥 新增：添加下载任务到队列
+  void _addToDownloadQueue(Map<String, dynamic> downloadTask) {
+    _downloadQueue.add(downloadTask);
+    _processDownloadQueue();
+  }
+
+  // 🔥 新增：处理下载队列
+  void _processDownloadQueue() {
+    if (_downloadQueue.isEmpty || _currentDownloadCount >= _maxConcurrentDownloads) {
+      return;
+    }
+    
+    // 从队列中取出任务
+    final task = _downloadQueue.removeAt(0);
+    _currentDownloadCount++;
+    
+    // 执行下载任务
+    _executeDownloadTask(task);
+  }
+
+  // 🔥 新增：执行下载任务
+  Future<void> _executeDownloadTask(Map<String, dynamic> task) async {
+    final message = task['message'] as Map<String, dynamic>;
+    
+    try {
+      await _performActualDownload(message);
+    } catch (e) {
+      print('下载任务执行失败: $e');
+    } finally {
+      _currentDownloadCount--;
+      
+      // 处理队列中的下一个任务
+      _processDownloadQueue();
+    }
+  }
+
+  // 🔥 新增：执行实际下载逻辑（从_autoDownloadFile分离出来）
+  Future<void> _performActualDownload(Map<String, dynamic> message) async {
+    final fileUrl = message['fileUrl'];
+    final fileName = message['fileName'];
+    final fileSize = message['fileSize'];
+    
+    if (fileUrl == null || fileName == null) return;
+    
+    // 转换相对URL为绝对URL
+    String fullUrl = fileUrl;
+    if (fileUrl.startsWith('/api/')) {
+      fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+    }
+    
+    // 检查是否已经在下载
+    if (_downloadingFiles.contains(fullUrl)) {
+      print('文件正在下载中，跳过: $fileName');
+      return;
+    }
+    
+    try {
+      print('开始执行下载任务: $fileName (${fileSize ?? 'unknown'} bytes)');
+      _addDownloadingFile(fullUrl, fileName);
+      
+      // 🔥 新增：初始化下载进度跟踪
+      final startTime = DateTime.now();
+      var lastUpdateTime = startTime;
+      var lastDownloadedBytes = 0;
+      
+      // 带进度的文件下载
+      final dio = Dio();
+      final authService = DeviceAuthService();
+      final token = await authService.getAuthToken();
+      
+      // 为大文件下载配置更长的超时时间
+      dio.options.connectTimeout = const Duration(seconds: 60);
+      dio.options.receiveTimeout = const Duration(minutes: 15);
+      dio.options.sendTimeout = const Duration(minutes: 5);
+      
+      final response = await dio.get(
+        fullUrl,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        ),
+        onReceiveProgress: (receivedBytes, totalBytes) {
+          if (totalBytes > 0 && mounted) {
+            final progress = receivedBytes / totalBytes;
+            final currentTime = DateTime.now();
+            final timeDiff = currentTime.difference(lastUpdateTime).inMilliseconds;
+            
+            // 每500ms更新一次UI
+            if (timeDiff >= 500) {
+              final bytesDiff = receivedBytes - lastDownloadedBytes;
+              final speedBytesPerMs = bytesDiff / timeDiff;
+              final speedKBps = speedBytesPerMs * 1000 / 1024;
+              
+              // 计算预计剩余时间
+              final remainingBytes = totalBytes - receivedBytes;
+              final etaSeconds = speedKBps > 0 ? (remainingBytes / 1024 / speedKBps).round() : null;
+              
+              if (totalBytes > 50 * 1024 * 1024) { // 大于50MB的文件
+                print('大文件下载进度: ${(progress * 100).toStringAsFixed(1)}% (${_formatFileSize(receivedBytes)}/${_formatFileSize(totalBytes)}) 速度: ${_formatTransferSpeed(speedKBps)}');
+              }
+              
+              setState(() {
+                final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+                if (messageIndex != -1) {
+                  _messages[messageIndex]['downloadProgress'] = progress;
+                  _messages[messageIndex]['transferSpeed'] = speedKBps;
+                  _messages[messageIndex]['eta'] = etaSeconds;
+                }
+              });
+              
+              lastUpdateTime = currentTime;
+              lastDownloadedBytes = receivedBytes;
+            }
+          }
+        },
+      );
+      
+      if (response.statusCode == 200 && response.data != null) {
+        // 下载完成，清除进度信息
+        setState(() {
+          final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+          if (messageIndex != -1) {
+            _messages[messageIndex]['downloadProgress'] = null;
+            _messages[messageIndex]['transferSpeed'] = 0.0;
+            _messages[messageIndex]['eta'] = null;
+          }
+        });
+        
+        // 保存到永久存储
+        final savedPath = await _localStorage.saveFileToCache(fullUrl, response.data as List<int>, fileName);
+        
+        if (savedPath != null) {
+          print('文件下载并保存到永久存储完成: $fileName -> $savedPath');
+          
+          // 添加到内存缓存
+          _addToCache(fullUrl, savedPath);
+          
+          // 更新消息文件路径
+          _updateMessageFilePath(message, savedPath);
+          
+          // 保存消息更新
+          await _saveMessages();
+        }
+      } else {
+        throw Exception('下载失败: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      print('文件下载失败: $fileName - $e');
+      
+      // 下载失败处理
+      if (mounted) {
+        setState(() {
+          final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+          if (messageIndex != -1) {
+            _messages[messageIndex]['downloadProgress'] = null;
+            _messages[messageIndex]['transferSpeed'] = 0.0;
+            _messages[messageIndex]['eta'] = null;
+          }
+        });
+        
+        String errorMessage = LocalizationHelper.of(context).fileDownloadFailed;
+        if (e.toString().contains('timeout')) {
+          if (fileSize != null && fileSize > 50 * 1024 * 1024) {
+            errorMessage = '大文件下载超时，请检查网络连接\n文件大小: ${_formatFileSize(fileSize)}\n建议在WiFi环境下重试';
+          } else {
+            errorMessage = '文件下载超时，请检查网络连接';
+          }
+        } else if (e.toString().contains('404')) {
+          errorMessage = LocalizationHelper.of(context).fileNotExistsOrExpired;
+        } else if (e.toString().contains('403')) {
+          errorMessage = LocalizationHelper.of(context).noPermissionToDownload;
+        } else if (e.toString().contains('network')) {
+          errorMessage = '网络连接错误，请检查网络设置';
+        } else if (e.toString().contains('space') || e.toString().contains('storage')) {
+          errorMessage = '设备存储空间不足，请清理空间后重试';
+        } else {
+          errorMessage = '文件下载失败: ${fileName}';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            duration: const Duration(seconds: 5),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: LocalizationHelper.of(context).retry,
+              textColor: Colors.white,
+              onPressed: () => _autoDownloadFile(message),
+            ),
+          ),
+        );
+      }
+    } finally {
+      _removeDownloadingFile(fullUrl);
+      if (mounted) {
+        setState(() {
+          final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+          if (messageIndex != -1) {
+            _messages[messageIndex]['downloadProgress'] = null;
+            _messages[messageIndex]['transferSpeed'] = 0.0;
+            _messages[messageIndex]['eta'] = null;
+          }
+        });
+      }
+    }
   }
 
   // 🔥 新增：去重诊断工具

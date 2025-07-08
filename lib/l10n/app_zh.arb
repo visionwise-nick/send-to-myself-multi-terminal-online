@@ -1405,6 +1405,16 @@
       }
     }
   },
+  
+  "deviceInformation": "设备信息",
+  "deviceName": "设备名称",
+  "deviceType": "设备类型", 
+  "deviceId": "设备ID",
+  "applicationName": "应用名称",
+  "applicationDescription": "应用描述",
+  "unknown": "未知",
+  "unknownDevice": "未知设备",
+  "appDescriptionText": "跨设备文件共享和消息记忆助手",
   "operationFailed": "操作失败: {error}",
   "@operationFailed": {
     "placeholders": {
@@ -1810,5 +1820,10 @@
   },
   "priceVariesByRegion": "订阅价格可能因地区而异",
   "pricingNote": "价格根据您的地区自动调整",
-  "currencyDisclaimer": "价格以当地货币显示"
+  "currencyDisclaimer": "价格以当地货币显示",
+  "logoutCurrentDeviceDescription": "退出当前设备的登录状态",
+  "confirmLogoutTitle": "确认退出",
+  "confirmLogoutContent": "确定要退出当前设备的登录状态吗？",
+  "cancel": "取消",
+  "confirm": "确认"
 } 

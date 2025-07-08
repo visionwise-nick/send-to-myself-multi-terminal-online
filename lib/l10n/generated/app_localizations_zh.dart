@@ -2831,4 +2831,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String yearMonthDay(int month, int day, int year) {
     return '$year年$month月$day日';
   }
+
+  @override
+  String get deviceInformation => '设备信息';
+
+  @override
+  String get applicationName => '应用名称';
+
+  @override
+  String get applicationDescription => '应用描述';
+
+  @override
+  String get appDescriptionText => '跨设备文件共享和消息记忆助手';
+
+  @override
+  String get logoutCurrentDeviceDescription => '退出当前设备的登录状态';
+
+  @override
+  String get confirmLogoutTitle => '确认退出';
+
+  @override
+  String get confirmLogoutContent => '确定要退出当前设备的登录状态吗？';
 }

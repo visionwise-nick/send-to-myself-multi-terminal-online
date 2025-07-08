@@ -655,7 +655,7 @@ abstract class AppLocalizations {
   /// No description provided for @unknownDevice.
   ///
   /// In en, this message translates to:
-  /// **'Unknown device'**
+  /// **'Unknown Device'**
   String get unknownDevice;
 
   /// No description provided for @unknownType.
@@ -5457,6 +5457,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{month}/{day}/{year}'**
   String yearMonthDay(int month, int day, int year);
+
+  /// No description provided for @deviceInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Device Information'**
+  String get deviceInformation;
+
+  /// No description provided for @applicationName.
+  ///
+  /// In en, this message translates to:
+  /// **'Application Name'**
+  String get applicationName;
+
+  /// No description provided for @applicationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Application Description'**
+  String get applicationDescription;
+
+  /// No description provided for @appDescriptionText.
+  ///
+  /// In en, this message translates to:
+  /// **'Cross-device file sharing and message memory assistant'**
+  String get appDescriptionText;
+
+  /// No description provided for @logoutCurrentDeviceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out of current device'**
+  String get logoutCurrentDeviceDescription;
+
+  /// No description provided for @confirmLogoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Logout'**
+  String get confirmLogoutTitle;
+
+  /// No description provided for @confirmLogoutContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to log out of the current device?'**
+  String get confirmLogoutContent;
 }
 
 class _AppLocalizationsDelegate

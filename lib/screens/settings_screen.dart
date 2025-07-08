@@ -14,7 +14,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(LocalizationHelper.of(context).settings),
+        title: const Text('设置'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: AppTheme.textPrimaryColor,
@@ -64,7 +64,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                                      LocalizationHelper.of(context).subscriptionManagement,
+                  '订阅管理',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -95,7 +95,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                     title: Text(
-                      LocalizationHelper.of(context).currentSubscription,
+                      '当前订阅',
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         color: AppTheme.textPrimaryColor,
@@ -133,7 +133,7 @@ class SettingsScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            LocalizationHelper.of(context).supportXDeviceGroups(subscription.maxGroupMembers.toString()),
+                            '支持 ${subscription.maxGroupMembers} 台设备群组',
                             style: TextStyle(
                               fontSize: 14,
                               color: AppTheme.textSecondaryColor,
@@ -248,7 +248,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  LocalizationHelper.of(context).aboutApp,
+                  '关于应用',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -265,7 +265,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           _buildInfoTile(
             icon: Icons.info,
-                            title: LocalizationHelper.of(context).versionNumber,
+            title: '版本号',
             subtitle: '1.1.0',
           ),
           _buildInfoTile(
@@ -307,7 +307,7 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         title: Text(
-          LocalizationHelper.of(context).logoutConfirmTitle,
+          '退出登录',
           style: TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.red,
@@ -320,7 +320,7 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         onTap: () {
-          showLogoutDialog(context);
+          LogoutDialog.showLogoutConfirmDialog(context);
         },
       ),
     );
@@ -349,34 +349,6 @@ class SettingsScreen extends StatelessWidget {
         style: TextStyle(
           color: AppTheme.textSecondaryColor,
         ),
-      ),
-    );
-  }
-
-  void showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('确认退出'),
-        content: const Text('确定要退出当前设备的登录状态吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // 执行退出登录逻辑
-              context.read<AuthProvider>().logout();
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                '/login',
-                (route) => false,
-              );
-            },
-            child: const Text('确认'),
-          ),
-        ],
       ),
     );
   }
