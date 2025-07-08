@@ -1493,6 +1493,25 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         print('修复的文件路径: $fixedCount 条');
         print('=== 本地消息加载详情结束 ===');
         
+        // 🔥 修复：为本地发送的文件建立缓存映射
+        for (final message in messages) {
+          if (message['isLocalSent'] == true && 
+              message['fileUrl'] != null && 
+              message['filePath'] != null) {
+            
+            String fullUrl = message['fileUrl'];
+            if (fullUrl.startsWith('/api/')) {
+              fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fullUrl';
+            }
+            
+            final filePath = message['filePath'];
+            if (await File(filePath).exists()) {
+              _addToCache(fullUrl, filePath);
+              print('恢复本地发送文件缓存: ${message['fileName']} -> $filePath');
+            }
+          }
+        }
+        
         setState(() {
           _messages = messages;
         });
@@ -1867,6 +1886,18 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 }
                 if (fileUrl != null) {
                   _messages[index]['fileUrl'] = fileUrl;
+                  // 🔥 修复：确保本地文件路径信息保持不变
+                  if (permanentFilePath != null) {
+                    _messages[index]['filePath'] = permanentFilePath;
+                  }
+                  // 🔥 修复：添加到内存缓存映射
+                  String fullUrl = fileUrl;
+                  if (fileUrl.startsWith('/api/')) {
+                    fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+                  }
+                  if (permanentFilePath != null) {
+                    _addToCache(fullUrl, permanentFilePath);
+                  }
                 }
                 if (apiResult['fileName'] != null) {
                   _messages[index]['fileName'] = apiResult['fileName'];
@@ -1874,9 +1905,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 if (apiResult['fileSize'] != null) {
                   _messages[index]['fileSize'] = apiResult['fileSize'];
                 }
+                // 🔥 修复：标记为本地发送的文件
+                _messages[index]['isLocalSent'] = true;
               }
             });
             await _saveMessages();
+            
+            // 🔥 修复：强制刷新UI以确保图片立即显示
+            if (mounted) {
+              setState(() {
+                // 触发UI重建
+              });
+            }
+            
             print('文件发送成功: $fileName');
           }
         }
@@ -1927,6 +1968,18 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 }
                 if (fileUrl != null) {
                   _messages[index]['fileUrl'] = fileUrl;
+                  // 🔥 修复：确保本地文件路径信息保持不变
+                  if (permanentFilePath != null) {
+                    _messages[index]['filePath'] = permanentFilePath;
+                  }
+                  // 🔥 修复：添加到内存缓存映射
+                  String fullUrl = fileUrl;
+                  if (fileUrl.startsWith('/api/')) {
+                    fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+                  }
+                  if (permanentFilePath != null) {
+                    _addToCache(fullUrl, permanentFilePath);
+                  }
                 }
                 if (apiResult['fileName'] != null) {
                   _messages[index]['fileName'] = apiResult['fileName'];
@@ -1934,9 +1987,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 if (apiResult['fileSize'] != null) {
                   _messages[index]['fileSize'] = apiResult['fileSize'];
                 }
+                // 🔥 修复：标记为本地发送的文件
+                _messages[index]['isLocalSent'] = true;
               }
             });
             await _saveMessages();
+            
+            // 🔥 修复：强制刷新UI以确保图片立即显示
+            if (mounted) {
+              setState(() {
+                // 触发UI重建
+              });
+            }
+            
             print('文件发送成功: $fileName');
           }
         }
@@ -3449,10 +3512,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   // 构建文件预览 - 简化版本
   Widget _buildFilePreview(String? fileType, String? filePath, String? fileUrl, bool isMe, {Map<String, dynamic>? message}) {
-    // 🔥 简化：减少调试日志，保持代码简洁
+    // 🔥 修复：对于本地发送的文件，优先使用本地路径
+    final isLocalSent = message?['isLocalSent'] == true;
     
     // 🔥 新增：检查是否正在下载或在队列中
-    if (fileUrl != null) {
+    if (fileUrl != null && !isLocalSent) {
       String fullUrl = fileUrl;
       if (fileUrl.startsWith('/api/')) {
         fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
@@ -3487,10 +3551,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       }
     }
     
-    // 1. 优先使用传入的本地文件路径
+    // 🔥 修复：增强本地文件路径检查
     if (filePath != null) {
-      if (File(filePath).existsSync()) {
+      final file = File(filePath);
+      if (file.existsSync()) {
+        print('使用本地文件路径显示: $filePath');
         return _buildActualFilePreview(fileType, filePath, fileUrl, isMe);
+      } else {
+        print('本地文件不存在: $filePath');
       }
     }
     
@@ -3519,6 +3587,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           if (persistentPath != null && File(persistentPath).existsSync()) {
             _addToCache(fullUrl, persistentPath);
             return _buildActualFilePreview(fileType, persistentPath, fileUrl, isMe);
+          }
+          
+          // 🔥 修复：对于本地发送的文件，如果缓存查找失败，显示错误而不是下载
+          if (isLocalSent) {
+            print('本地发送文件缓存查找失败: $fullUrl');
+            return _buildFileNotFoundPreview(fileType, fileUrl);
           }
           
           // 🔥 修复：显示准备下载状态而不是"文件不存在"
@@ -5728,7 +5802,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  Icon(Icons.check_circle, color: Colors.white, size: 20),
                   const SizedBox(width: 8),
                   Text(LocalizationHelper.of(context).textShared),
                 ],
