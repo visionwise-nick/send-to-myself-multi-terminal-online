@@ -469,7 +469,7 @@ class BackgroundShareService {
     return 'file';
   }
   
-  /// 🔥 新增：将分享的文件保存为本地消息
+  /// 🔥 修复：将分享的文件保存为本地消息
   static Future<void> _saveSharedFileAsLocalMessage(
     String groupId, 
     String fileName, 
@@ -502,7 +502,22 @@ class BackgroundShareService {
         }
       }
       
-      // 构建本地消息对象
+      // 🔥 修复：复制文件到永久存储，确保与正常发送文件一致
+      String? permanentFilePath;
+      try {
+        final localStorage = LocalStorageService();
+        permanentFilePath = await localStorage.copyFileToPermanentStorage(
+          filePath, 
+          fileName,
+          fileUrl: responseData?['fileUrl'], // 同时设置文件URL映射
+        );
+        print('🔥 分享文件已复制到永久存储: $filePath -> $permanentFilePath');
+      } catch (e) {
+        print('❌ 复制分享文件到永久存储失败: $e');
+        permanentFilePath = filePath; // 使用原始路径作为备用
+      }
+      
+      // 🔥 修复：构建与正常发送文件一致的本地消息对象
       final localMessage = {
         'id': responseData?['id'] ?? 'shared_${DateTime.now().millisecondsSinceEpoch}',
         'text': '',
@@ -510,12 +525,13 @@ class BackgroundShareService {
         'fileName': fileName,
         'fileUrl': responseData?['fileUrl'],
         'fileSize': responseData?['fileSize'] ?? File(filePath).lengthSync(),
-        'filePath': filePath, // 保存本地文件路径
+        'filePath': permanentFilePath, // 🔥 使用永久存储路径
         'timestamp': DateTime.now().toUtc().toIso8601String(),
         'isMe': true,
         'status': 'sent',
         'sourceDeviceId': currentDeviceId,
-        'isSharedFile': true, // 标记为分享的文件
+        'isLocalSent': true, // 🔥 修复：标记为本地发送的文件
+        'isTemporary': false, // 🔥 修复：确保不是临时消息
       };
       
       // 获取群组对话ID
@@ -537,15 +553,49 @@ class BackgroundShareService {
         await localStorage.saveChatMessages(conversationId, existingMessages);
         
         print('💾 分享文件已保存为本地消息: $fileName (ID: $messageId)');
+        print('💾 文件路径: $permanentFilePath');
+        print('💾 文件URL: ${responseData?['fileUrl']}');
+        print('💾 isLocalSent: true');
+        
+        // 🔥 修复：建立缓存映射，确保图片能立即显示
+        if (permanentFilePath != null && responseData?['fileUrl'] != null) {
+          try {
+            String fileUrl = responseData!['fileUrl'] as String;
+            String fullUrl = fileUrl;
+            if (fileUrl.startsWith('/api/')) {
+              fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+            }
+            
+            // 🔥 新增：通过LocalStorageService确保缓存映射生效
+            await localStorage.saveFileToCache(fullUrl, File(permanentFilePath!).readAsBytesSync(), fileName);
+            print('💾 文件URL映射已强制建立: $fullUrl -> $permanentFilePath');
+            
+            // 🔥 新增：直接验证文件映射是否成功
+            final cachedPath = await localStorage.getFileFromCache(fullUrl);
+            if (cachedPath != null) {
+              print('✅ 文件映射验证成功: $cachedPath');
+            } else {
+              print('❌ 文件映射验证失败');
+            }
+          } catch (e) {
+            print('⚠️ 建立文件URL映射失败: $e');
+          }
+        }
+        
+        // 🔥 新增：设置标志通知UI刷新
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('last_shared_file_time', DateTime.now().toIso8601String());
+        await prefs.setString('last_shared_file_group', groupId);
+        print('🔄 已通知UI刷新分享文件');
       } else {
         print('💾 分享文件消息已存在，跳过保存: $fileName');
       }
       
-         } catch (e) {
-       print('❌ 保存分享文件为本地消息失败: $e');
-       // 不抛出异常，避免影响分享流程
-     }
-   }
+    } catch (e) {
+      print('❌ 保存分享文件为本地消息失败: $e');
+      // 不抛出异常，避免影响分享流程
+    }
+  }
    
    /// 🔥 新增：将分享的文本保存为本地消息
    static Future<void> _saveSharedTextAsLocalMessage(

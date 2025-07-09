@@ -241,6 +241,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     // 🔥 修复：立即加载本地消息
     _loadLocalMessages();
     
+    // 🔥 新增：监听分享文件更新
+    _listenForSharedFiles();
+    
     // 延迟执行后台任务，避免阻塞UI
     Future.delayed(Duration(milliseconds: 500), () {
       if (mounted) {
@@ -6587,6 +6590,60 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         });
       }
     });
+  }
+  
+  // 🔥 新增：监听分享文件更新
+  void _listenForSharedFiles() {
+    // 定期检查是否有新的分享文件
+    Timer.periodic(Duration(seconds: 2), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      _checkForNewSharedFiles();
+    });
+  }
+  
+  // 🔥 新增：检查新的分享文件
+  Future<void> _checkForNewSharedFiles() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastSharedTime = prefs.getString('last_shared_file_time');
+      final lastSharedGroup = prefs.getString('last_shared_file_group');
+      
+      if (lastSharedTime != null && lastSharedGroup != null) {
+        // 检查是否是当前群组的分享文件
+        final currentGroupId = widget.conversation['type'] == 'group' 
+            ? widget.conversation['groupData']['id'].toString()
+            : null;
+            
+        if (currentGroupId == lastSharedGroup) {
+          final sharedTime = DateTime.parse(lastSharedTime);
+          final now = DateTime.now();
+          
+          // 如果分享时间在5秒内，说明是新的分享文件
+          if (now.difference(sharedTime).inSeconds < 5) {
+            print('🔄 检测到新的分享文件，刷新UI...');
+            
+            // 重新加载消息
+            await _loadLocalMessages();
+            
+            // 清除标志，避免重复刷新
+            await prefs.remove('last_shared_file_time');
+            await prefs.remove('last_shared_file_group');
+            
+            // 强制刷新UI
+            if (mounted) {
+              setState(() {
+                // 触发UI重建
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ 检查分享文件失败: $e');
+    }
   }
   
   // 🔥 新增：处理滚动通知 - 简化版本
