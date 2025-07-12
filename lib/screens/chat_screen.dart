@@ -187,7 +187,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final Map<String, DateTime> _downloadStartTimes = {}; // URL -> 开始下载时间
   final Map<String, Timer> _downloadTimeoutTimers = {}; // URL -> 超时定时器
   final Map<String, String> _downloadingFileNames = {}; // URL -> 文件名（用于调试）
+  final Map<String, String> _downloadFailureReasons = {}; // URL -> 失败原因
+  final Map<String, int> _downloadRetryCount = {}; // URL -> 重试次数
+  final Map<String, DateTime> _downloadLastRetryTime = {}; // URL -> 最后重试时间
   static const Duration _downloadTimeout = Duration(minutes: 10); // 下载超时时间
+  static const int _maxRetryAttempts = 3; // 最大重试次数
+  static const Duration _retryDelay = Duration(seconds: 5); // 重试延迟
   
   // 🔥 新增：下载队列管理
   final List<Map<String, dynamic>> _downloadQueue = []; // 下载队列
@@ -3600,6 +3605,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           
           // 🔥 修复：显示准备下载状态而不是"文件不存在"
           if (message != null) {
+            // 🔥 新增：检查是否下载失败，显示失败状态和重试按钮
+            if (message['downloadFailed'] == true) {
+              return _buildDownloadFailedPreview(fileType, message);
+            }
             return _buildPrepareDownloadPreview(fileType, message);
           } else {
             return _buildFileNotFoundPreview(fileType, fileUrl);
@@ -3643,6 +3652,121 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
           ),
         ],
+      ),
+    );
+  }
+  
+  // 🔥 新增：下载失败预览
+  Widget _buildDownloadFailedPreview(String? fileType, Map<String, dynamic> message) {
+    final fileName = message['fileName'] ?? 'unknown_file';
+    final failureReason = message['failureReason'] ?? '';
+    final fileUrl = message['fileUrl'];
+    
+    String fullUrl = fileUrl ?? '';
+    if (fileUrl != null && fileUrl.startsWith('/api/')) {
+      fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+    }
+    
+    final retryCount = _downloadRetryCount[fullUrl] ?? 0;
+    
+    return Container(
+      height: 120,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF2F2),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFFF6B6B)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 16,
+                  color: Colors.red,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '下载失败',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.red[700],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              fileName,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.red[600],
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (retryCount > 0)
+              Text(
+                '已重试 $retryCount/$_maxRetryAttempts 次',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.red[500],
+                ),
+              ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _manualRetryDownload(message),
+                  icon: Icon(Icons.refresh, size: 14, color: Colors.blue[700]),
+                  label: Text(
+                    '重试',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.blue[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(60, 28),
+                    backgroundColor: Colors.blue[50],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => _showDownloadErrorDetails(message),
+                  icon: Icon(Icons.info_outline, size: 14, color: Colors.grey[700]),
+                  label: Text(
+                    '详情',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(60, 28),
+                    backgroundColor: Colors.grey[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -4684,6 +4808,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _downloadStartTimes[url] = DateTime.now();
     _downloadingFileNames[url] = fileName;
     
+    // 🔥 新增：初始化重试相关数据
+    _downloadRetryCount[url] = 0;
+    _downloadFailureReasons.remove(url); // 清除之前的失败原因
+    
     // 设置超时定时器
     _downloadTimeoutTimers[url] = Timer(_downloadTimeout, () {
       _handleDownloadTimeout(url);
@@ -4696,6 +4824,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _downloadingFiles.remove(url);
     _downloadStartTimes.remove(url);
     _downloadingFileNames.remove(url);
+    
+    // 🔥 新增：清理重试相关数据
+    _downloadRetryCount.remove(url);
+    _downloadFailureReasons.remove(url);
+    _downloadLastRetryTime.remove(url);
     
     // 清理超时定时器
     _downloadTimeoutTimers[url]?.cancel();
@@ -4721,6 +4854,296 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           duration: Duration(seconds: 3),
         ),
       );
+    }
+  }
+  
+  // 🔥 新增：判断是否应该重试下载
+  bool _shouldRetryDownload(String errorMessage, int currentRetryCount) {
+    // 已达到最大重试次数
+    if (currentRetryCount >= _maxRetryAttempts) {
+      return false;
+    }
+    
+    // 永久性错误，不应重试
+    if (errorMessage.contains('404') || 
+        errorMessage.contains('403') || 
+        errorMessage.contains('401') ||
+        errorMessage.contains('space') || 
+        errorMessage.contains('storage')) {
+      return false;
+    }
+    
+    // 可重试的错误
+    return errorMessage.contains('timeout') || 
+           errorMessage.contains('network') ||
+           errorMessage.contains('connection') ||
+           errorMessage.contains('socket') ||
+           errorMessage.contains('500') ||
+           errorMessage.contains('502') ||
+           errorMessage.contains('503');
+  }
+  
+  // 🔥 新增：重试下载
+  Future<void> _retryDownload(Map<String, dynamic> message) async {
+    final fileUrl = message['fileUrl'];
+    if (fileUrl == null) return;
+    
+    String fullUrl = fileUrl;
+    if (fileUrl.startsWith('/api/')) {
+      fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+    }
+    
+    // 清除当前下载状态，重新开始
+    _removeDownloadingFile(fullUrl);
+    
+    // 重新下载
+    await _performActualDownload(message);
+  }
+  
+  // 🔥 新增：处理下载最终失败
+  void _handleDownloadFinalFailure(Map<String, dynamic> message, String errorMessage) {
+    final fileName = message['fileName'] ?? 'unknown_file';
+    final fileSize = message['fileSize'];
+    
+    if (mounted) {
+      setState(() {
+        final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+        if (messageIndex != -1) {
+          _messages[messageIndex]['downloadProgress'] = null;
+          _messages[messageIndex]['transferSpeed'] = 0.0;
+          _messages[messageIndex]['eta'] = null;
+          _messages[messageIndex]['downloadFailed'] = true;
+          _messages[messageIndex]['failureReason'] = errorMessage;
+        }
+      });
+      
+      String userErrorMessage = LocalizationHelper.of(context).fileDownloadFailed;
+      if (errorMessage.contains('timeout')) {
+        if (fileSize != null && fileSize > 50 * 1024 * 1024) {
+          userErrorMessage = '大文件下载超时，请检查网络连接\n文件大小: ${_formatFileSize(fileSize)}\n建议在WiFi环境下重试';
+        } else {
+          userErrorMessage = '文件下载超时，请检查网络连接';
+        }
+      } else if (errorMessage.contains('404')) {
+        userErrorMessage = LocalizationHelper.of(context).fileNotExistsOrExpired;
+      } else if (errorMessage.contains('403')) {
+        userErrorMessage = LocalizationHelper.of(context).noPermissionToDownload;
+      } else if (errorMessage.contains('network')) {
+        userErrorMessage = '网络连接错误，请检查网络设置';
+      } else if (errorMessage.contains('space') || errorMessage.contains('storage')) {
+        userErrorMessage = '设备存储空间不足，请清理空间后重试';
+      } else {
+        userErrorMessage = '文件下载失败: ${fileName}';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(userErrorMessage),
+          duration: const Duration(seconds: 5),
+          backgroundColor: Colors.red,
+          action: SnackBarAction(
+            label: '手动重试',
+            textColor: Colors.white,
+            onPressed: () => _manualRetryDownload(message),
+          ),
+        ),
+      );
+    }
+  }
+  
+  // 🔥 新增：手动重试下载
+  Future<void> _manualRetryDownload(Map<String, dynamic> message) async {
+    final fileUrl = message['fileUrl'];
+    if (fileUrl == null) return;
+    
+    String fullUrl = fileUrl;
+    if (fileUrl.startsWith('/api/')) {
+      fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+    }
+    
+    // 重置重试计数和失败状态
+    _downloadRetryCount[fullUrl] = 0;
+    _downloadFailureReasons.remove(fullUrl);
+    
+    if (mounted) {
+      setState(() {
+        final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+        if (messageIndex != -1) {
+          _messages[messageIndex]['downloadFailed'] = false;
+          _messages[messageIndex]['failureReason'] = null;
+        }
+      });
+    }
+    
+    // 重新开始下载
+    await _autoDownloadFile(message);
+  }
+  
+  // 🔥 新增：重置所有下载状态（紧急重置功能）
+  void _resetAllDownloadStates() {
+    print('🧹 执行紧急下载状态重置...');
+    
+    // 取消所有超时定时器
+    for (final timer in _downloadTimeoutTimers.values) {
+      timer.cancel();
+    }
+    
+    // 清空所有下载相关状态
+    _downloadingFiles.clear();
+    _downloadStartTimes.clear();
+    _downloadTimeoutTimers.clear();
+    _downloadingFileNames.clear();
+    _downloadFailureReasons.clear();
+    _downloadRetryCount.clear();
+    _downloadLastRetryTime.clear();
+    _downloadQueue.clear();
+    _currentDownloadCount = 0;
+    
+    // 清除所有消息的下载进度状态
+    for (final message in _messages) {
+      message['downloadProgress'] = null;
+      message['transferSpeed'] = 0.0;
+      message['eta'] = null;
+      message['downloadFailed'] = false;
+      message['failureReason'] = null;
+    }
+    
+    if (mounted) {
+      setState(() {
+        // 刷新UI
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ 已重置所有下载状态'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+    
+    print('✅ 下载状态重置完成');
+  }
+  
+  // 🔥 新增：显示下载错误详情
+  void _showDownloadErrorDetails(Map<String, dynamic> message) {
+    final fileName = message['fileName'] ?? 'unknown_file';
+    final failureReason = message['failureReason'] ?? '未知错误';
+    final fileUrl = message['fileUrl'];
+    
+    String fullUrl = fileUrl ?? '';
+    if (fileUrl != null && fileUrl.startsWith('/api/')) {
+      fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+    }
+    
+    final retryCount = _downloadRetryCount[fullUrl] ?? 0;
+    final lastRetryTime = _downloadLastRetryTime[fullUrl];
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text('下载错误详情', style: TextStyle(fontSize: 16))),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDetailRow('文件名', fileName),
+              _buildDetailRow('重试次数', '$retryCount/$_maxRetryAttempts'),
+              if (lastRetryTime != null)
+                _buildDetailRow('最后重试', _formatTime(lastRetryTime)),
+              _buildDetailRow('错误原因', failureReason),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('可用操作:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    const SizedBox(height: 4),
+                    Text('• 手动重试下载', style: TextStyle(fontSize: 11)),
+                    Text('• 重置所有下载状态', style: TextStyle(fontSize: 11)),
+                    Text('• 检查网络连接', style: TextStyle(fontSize: 11)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('关闭'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _resetAllDownloadStates();
+              },
+              child: Text('重置所有下载', style: TextStyle(color: Colors.orange)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _manualRetryDownload(message);
+              },
+              child: Text('重试下载'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 70,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 12),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final diff = now.difference(time);
+    
+    if (diff.inSeconds < 60) {
+      return '${diff.inSeconds}秒前';
+    } else if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}分钟前';
+    } else {
+      return '${diff.inHours}小时前';
     }
   }
 
@@ -4926,60 +5349,58 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     } catch (e) {
       print('文件下载失败: $fileName - $e');
       
-      // 下载失败处理
-      if (mounted) {
-        setState(() {
-          final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
-          if (messageIndex != -1) {
-            _messages[messageIndex]['downloadProgress'] = null;
-            _messages[messageIndex]['transferSpeed'] = 0.0;
-            _messages[messageIndex]['eta'] = null;
+      // 🔥 新增：记录失败原因并尝试重试
+      _downloadFailureReasons[fullUrl] = e.toString();
+      final currentRetryCount = _downloadRetryCount[fullUrl] ?? 0;
+      
+      // 判断是否应该重试
+      final shouldRetry = _shouldRetryDownload(e.toString(), currentRetryCount);
+      
+      if (shouldRetry) {
+        print('🔄 下载失败，准备重试 (${currentRetryCount + 1}/$_maxRetryAttempts): $fileName');
+        _downloadRetryCount[fullUrl] = currentRetryCount + 1;
+        _downloadLastRetryTime[fullUrl] = DateTime.now();
+        
+        // 延迟重试
+        Timer(_retryDelay, () {
+          if (mounted) {
+            print('🔄 开始重试下载: $fileName');
+            _retryDownload(message);
           }
         });
         
-        String errorMessage = LocalizationHelper.of(context).fileDownloadFailed;
-        if (e.toString().contains('timeout')) {
-          if (fileSize != null && fileSize > 50 * 1024 * 1024) {
-            errorMessage = '大文件下载超时，请检查网络连接\n文件大小: ${_formatFileSize(fileSize)}\n建议在WiFi环境下重试';
-          } else {
-            errorMessage = '文件下载超时，请检查网络连接';
-          }
-        } else if (e.toString().contains('404')) {
-          errorMessage = LocalizationHelper.of(context).fileNotExistsOrExpired;
-        } else if (e.toString().contains('403')) {
-          errorMessage = LocalizationHelper.of(context).noPermissionToDownload;
-        } else if (e.toString().contains('network')) {
-          errorMessage = '网络连接错误，请检查网络设置';
-        } else if (e.toString().contains('space') || e.toString().contains('storage')) {
-          errorMessage = '设备存储空间不足，请清理空间后重试';
-        } else {
-          errorMessage = '文件下载失败: ${fileName}';
-        }
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            duration: const Duration(seconds: 5),
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: LocalizationHelper.of(context).retry,
-              textColor: Colors.white,
-              onPressed: () => _autoDownloadFile(message),
+        // 显示重试提示
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('下载失败，${_retryDelay.inSeconds}秒后自动重试 (${currentRetryCount + 1}/$_maxRetryAttempts)'),
+              duration: _retryDelay,
+              backgroundColor: Colors.orange,
             ),
-          ),
-        );
+          );
+        }
+        return; // 不立即清理状态，等待重试
       }
+      
+      // 重试失败或不应重试，处理最终失败
+      _handleDownloadFinalFailure(message, e.toString());
     } finally {
-      _removeDownloadingFile(fullUrl);
-      if (mounted) {
-        setState(() {
-          final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
-          if (messageIndex != -1) {
-            _messages[messageIndex]['downloadProgress'] = null;
-            _messages[messageIndex]['transferSpeed'] = 0.0;
-            _messages[messageIndex]['eta'] = null;
-          }
-        });
+      // 🔥 修复：只有在不重试的情况下才清理状态
+      final shouldRetry = _downloadRetryCount[fullUrl] != null && 
+                         _downloadRetryCount[fullUrl]! < _maxRetryAttempts;
+      
+      if (!shouldRetry) {
+        _removeDownloadingFile(fullUrl);
+        if (mounted) {
+          setState(() {
+            final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+            if (messageIndex != -1) {
+              _messages[messageIndex]['downloadProgress'] = null;
+              _messages[messageIndex]['transferSpeed'] = 0.0;
+              _messages[messageIndex]['eta'] = null;
+            }
+          });
+        }
       }
     }
   }
