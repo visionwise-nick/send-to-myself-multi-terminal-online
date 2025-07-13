@@ -7015,8 +7015,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   
   // 🔥 新增：监听分享文件更新
   void _listenForSharedFiles() {
-    // 定期检查是否有新的分享文件
-    Timer.periodic(Duration(seconds: 2), (timer) {
+    // 🔥 修复：使用更高频率的检查来确保及时刷新
+    Timer.periodic(Duration(milliseconds: 500), (timer) {
       if (!mounted) {
         timer.cancel();
         return;
@@ -7031,6 +7031,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       final prefs = await SharedPreferences.getInstance();
       final lastSharedTime = prefs.getString('last_shared_file_time');
       final lastSharedGroup = prefs.getString('last_shared_file_group');
+      final lastSharedId = prefs.getString('last_shared_file_id');
+      final lastSharedName = prefs.getString('last_shared_file_name');
       
       if (lastSharedTime != null && lastSharedGroup != null) {
         // 检查是否是当前群组的分享文件
@@ -7042,28 +7044,104 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           final sharedTime = DateTime.parse(lastSharedTime);
           final now = DateTime.now();
           
-          // 如果分享时间在5秒内，说明是新的分享文件
-          if (now.difference(sharedTime).inSeconds < 5) {
+          // 🔥 修复：扩大检查时间窗口到15秒，确保不遗漏
+          if (now.difference(sharedTime).inSeconds < 15) {
             print('🔄 检测到新的分享文件，刷新UI...');
+            print('🔄 文件信息: ID=$lastSharedId, 名称=$lastSharedName');
             
-            // 重新加载消息
-            await _loadLocalMessages();
+            // 🔥 修复：强制重新加载消息，确保显示最新状态
+            await _forceReloadMessages();
+            
+            // 🔥 修复：检查新消息是否已正确加载
+            if (lastSharedId != null) {
+              final messageExists = _messages.any((msg) => msg['id'] == lastSharedId);
+              if (!messageExists) {
+                print('⚠️ 分享文件消息未找到，再次尝试加载...');
+                await Future.delayed(Duration(seconds: 1));
+                await _forceReloadMessages();
+              } else {
+                print('✅ 分享文件消息已找到并显示');
+              }
+            }
             
             // 清除标志，避免重复刷新
             await prefs.remove('last_shared_file_time');
             await prefs.remove('last_shared_file_group');
-            
-            // 强制刷新UI
-            if (mounted) {
-              setState(() {
-                // 触发UI重建
-              });
-            }
+            await prefs.remove('last_shared_file_id');
+            await prefs.remove('last_shared_file_name');
           }
         }
       }
     } catch (e) {
       print('❌ 检查分享文件失败: $e');
+    }
+  }
+  
+  // 🔥 新增：强制重新加载消息
+  Future<void> _forceReloadMessages() async {
+    try {
+      print('🔄 强制重新加载消息...');
+      
+      final chatId = widget.conversation['id'];
+      final reloadedMessages = await _localStorage.loadChatMessages(chatId);
+      
+      if (mounted) {
+        setState(() {
+          _messages = reloadedMessages;
+          // 确保按时间排序
+          _messages.sort((a, b) {
+            try {
+              final timeA = DateTime.parse(a['timestamp']);
+              final timeB = DateTime.parse(b['timestamp']);
+              return timeA.compareTo(timeB);
+            } catch (e) {
+              return 0;
+            }
+          });
+        });
+        
+        print('✅ 消息重新加载完成，总数: ${_messages.length}');
+        
+        // 🔥 修复：为分享的文件消息自动下载文件
+        final fileMessages = _messages.where((msg) => 
+          msg['fileUrl'] != null && 
+          msg['isShared'] == true && 
+          msg['isMe'] == true
+        ).toList();
+        
+        for (final message in fileMessages) {
+          // 即使是自己分享的文件，也要确保有本地缓存
+          _ensureFileAvailableLocally(message);
+        }
+      }
+    } catch (e) {
+      print('❌ 强制重新加载消息失败: $e');
+    }
+  }
+  
+  // 🔥 新增：确保文件在本地可用
+  Future<void> _ensureFileAvailableLocally(Map<String, dynamic> message) async {
+    try {
+      final fileUrl = message['fileUrl'];
+      final fileName = message['fileName'];
+      
+      if (fileUrl != null && fileName != null) {
+        String fullUrl = fileUrl;
+        if (fileUrl.startsWith('/api/')) {
+          fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+        }
+        
+        // 检查文件是否已在缓存中
+        final cachedPath = await _localStorage.getFileFromCache(fullUrl);
+        if (cachedPath == null || !File(cachedPath).existsSync()) {
+          print('🔄 分享文件不在缓存中，触发下载: $fileName');
+          _autoDownloadFile(message);
+        } else {
+          print('✅ 分享文件已在缓存中: $fileName -> $cachedPath');
+        }
+      }
+    } catch (e) {
+      print('❌ 检查文件本地可用性失败: $e');
     }
   }
   

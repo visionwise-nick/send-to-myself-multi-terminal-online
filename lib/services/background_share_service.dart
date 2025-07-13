@@ -528,10 +528,12 @@ class BackgroundShareService {
         'filePath': permanentFilePath, // 🔥 使用永久存储路径
         'timestamp': DateTime.now().toUtc().toIso8601String(),
         'isMe': true,
-        'status': 'sent',
+        'status': 'sent', // 🔥 关键修复：确保状态为已发送
         'sourceDeviceId': currentDeviceId,
         'isLocalSent': true, // 🔥 修复：标记为本地发送的文件
         'isTemporary': false, // 🔥 修复：确保不是临时消息
+        'progress': 1.0, // 🔥 新增：标记为完成状态
+        'isShared': true, // 🔥 新增：标记为分享文件
       };
       
       // 获取群组对话ID
@@ -570,30 +572,66 @@ class BackgroundShareService {
             await localStorage.saveFileToCache(fullUrl, File(permanentFilePath!).readAsBytesSync(), fileName);
             print('💾 文件URL映射已强制建立: $fullUrl -> $permanentFilePath');
             
-            // 🔥 新增：直接验证文件映射是否成功
-            final cachedPath = await localStorage.getFileFromCache(fullUrl);
-            if (cachedPath != null) {
-              print('✅ 文件映射验证成功: $cachedPath');
-            } else {
-              print('❌ 文件映射验证失败');
+            // 🔥 新增：多次验证文件映射，确保稳定性
+            bool mappingSuccess = false;
+            for (int i = 0; i < 3; i++) {
+              await Future.delayed(Duration(milliseconds: 100 * (i + 1)));
+              final cachedPath = await localStorage.getFileFromCache(fullUrl);
+              if (cachedPath != null && File(cachedPath).existsSync()) {
+                print('✅ 文件映射验证成功 (尝试${i + 1}次): $cachedPath');
+                mappingSuccess = true;
+                break;
+              }
+            }
+            
+            if (!mappingSuccess) {
+              print('❌ 文件映射验证失败，尝试备用方案');
+              // 🔥 备用方案：直接设置文件路径到消息对象
+              localMessage['filePath'] = permanentFilePath;
+              localMessage['filePathForced'] = true;
             }
           } catch (e) {
             print('⚠️ 建立文件URL映射失败: $e');
+            // 🔥 出错时使用备用方案
+            localMessage['filePath'] = permanentFilePath;
+            localMessage['filePathForced'] = true;
           }
         }
         
-        // 🔥 新增：设置标志通知UI刷新
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('last_shared_file_time', DateTime.now().toIso8601String());
-        await prefs.setString('last_shared_file_group', groupId);
-        print('🔄 已通知UI刷新分享文件');
+        // 🔥 新增：强制触发UI刷新
+        try {
+          // 设置标志通知UI刷新
+          await prefs.setString('last_shared_file_time', DateTime.now().toIso8601String());
+          await prefs.setString('last_shared_file_group', groupId);
+          await prefs.setString('last_shared_file_id', messageId);
+          await prefs.setString('last_shared_file_name', fileName);
+          
+          // 🔥 新增：通过WebSocket通知其他设备
+          try {
+            const platform = MethodChannel('com.example.send_to_myself/share');
+            await platform.invokeMethod('notifyUIRefresh', {
+              'groupId': groupId,
+              'messageId': messageId,
+              'fileName': fileName,
+              'action': 'file_shared'
+            });
+            print('🔄 已通知原生层刷新UI');
+          } catch (e) {
+            print('⚠️ 通知原生层刷新UI失败: $e');
+          }
+          
+          print('🔄 已设置UI刷新标志');
+        } catch (e) {
+          print('⚠️ 设置UI刷新标志失败: $e');
+        }
+        
       } else {
-        print('💾 分享文件消息已存在，跳过保存: $fileName');
+        print('⚠️ 发现重复消息，跳过保存: $messageId');
       }
       
     } catch (e) {
       print('❌ 保存分享文件为本地消息失败: $e');
-      // 不抛出异常，避免影响分享流程
+      rethrow;
     }
   }
    
