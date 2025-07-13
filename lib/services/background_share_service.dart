@@ -398,6 +398,21 @@ class BackgroundShareService {
         return false;
       }
       
+      // 🔥 关键修复：在发送前立即复制文件到永久存储
+      final localStorage = LocalStorageService();
+      String permanentFilePath;
+      try {
+        final tempPath = await localStorage.copyFileToPermanentStorage(
+          filePath, 
+          fileName
+        );
+        permanentFilePath = tempPath ?? filePath; // 如果返回null，使用原始路径
+        print('🔥 分享文件已复制到永久存储: $filePath -> $permanentFilePath');
+      } catch (e) {
+        print('❌ 复制分享文件到永久存储失败: $e');
+        permanentFilePath = filePath; // 使用原始路径作为备用
+      }
+      
       final fileSize = file.lengthSync();
       print('📎 文件大小: $fileSize bytes');
       
@@ -408,8 +423,8 @@ class BackgroundShareService {
       
       request.headers['Authorization'] = 'Bearer $token';
       
-      // 添加文件
-      final multipartFile = await http.MultipartFile.fromPath('file', filePath);
+      // 🔥 修复：使用永久存储路径创建文件
+      final multipartFile = await http.MultipartFile.fromPath('file', permanentFilePath);
       request.files.add(multipartFile);
       print('📎 添加文件到请求: ${multipartFile.filename}, 大小: ${multipartFile.length}');
       
@@ -434,9 +449,9 @@ class BackgroundShareService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('✅ 文件发送成功: $fileName');
         
-        // 🔥 新增：将分享的文件保存为本地消息
+        // 🔥 关键修复：立即保存为本地消息，使用永久存储路径
         try {
-          await _saveSharedFileAsLocalMessage(groupId, fileName, filePath, fileType, responseBody);
+          await _saveSharedFileAsLocalMessage(groupId, fileName, permanentFilePath, fileType, responseBody);
         } catch (e) {
           print('⚠️ 保存分享文件为本地消息失败: $e');
           // 不影响分享成功的返回结果
@@ -502,20 +517,8 @@ class BackgroundShareService {
         }
       }
       
-      // 🔥 修复：复制文件到永久存储，确保与正常发送文件一致
-      String? permanentFilePath;
-      try {
-        final localStorage = LocalStorageService();
-        permanentFilePath = await localStorage.copyFileToPermanentStorage(
-          filePath, 
-          fileName,
-          fileUrl: responseData?['fileUrl'], // 同时设置文件URL映射
-        );
-        print('🔥 分享文件已复制到永久存储: $filePath -> $permanentFilePath');
-      } catch (e) {
-        print('❌ 复制分享文件到永久存储失败: $e');
-        permanentFilePath = filePath; // 使用原始路径作为备用
-      }
+      // 🔥 关键修复：文件已经在发送前复制到永久存储，直接使用
+      print('🔥 使用已复制的永久存储路径: $filePath');
       
       // 🔥 修复：构建与正常发送文件一致的本地消息对象
       final localMessage = {
@@ -525,15 +528,13 @@ class BackgroundShareService {
         'fileName': fileName,
         'fileUrl': responseData?['fileUrl'],
         'fileSize': responseData?['fileSize'] ?? File(filePath).lengthSync(),
-        'filePath': permanentFilePath, // 🔥 使用永久存储路径
+        'filePath': filePath, // 🔥 使用已复制的永久存储路径
         'timestamp': DateTime.now().toUtc().toIso8601String(),
         'isMe': true,
-        'status': 'sent', // 🔥 关键修复：确保状态为已发送
+        'status': 'sent',
         'sourceDeviceId': currentDeviceId,
         'isLocalSent': true, // 🔥 修复：标记为本地发送的文件
         'isTemporary': false, // 🔥 修复：确保不是临时消息
-        'progress': 1.0, // 🔥 新增：标记为完成状态
-        'isShared': true, // 🔥 新增：标记为分享文件
       };
       
       // 获取群组对话ID
@@ -555,12 +556,12 @@ class BackgroundShareService {
         await localStorage.saveChatMessages(conversationId, existingMessages);
         
         print('💾 分享文件已保存为本地消息: $fileName (ID: $messageId)');
-        print('💾 文件路径: $permanentFilePath');
+        print('💾 文件路径: $filePath');
         print('💾 文件URL: ${responseData?['fileUrl']}');
         print('💾 isLocalSent: true');
         
         // 🔥 修复：建立缓存映射，确保图片能立即显示
-        if (permanentFilePath != null && responseData?['fileUrl'] != null) {
+        if (responseData?['fileUrl'] != null) {
           try {
             String fileUrl = responseData!['fileUrl'] as String;
             String fullUrl = fileUrl;
@@ -569,69 +570,34 @@ class BackgroundShareService {
             }
             
             // 🔥 新增：通过LocalStorageService确保缓存映射生效
-            await localStorage.saveFileToCache(fullUrl, File(permanentFilePath!).readAsBytesSync(), fileName);
-            print('💾 文件URL映射已强制建立: $fullUrl -> $permanentFilePath');
+            final localStorage = LocalStorageService();
+            await localStorage.saveFileToCache(fullUrl, File(filePath).readAsBytesSync(), fileName);
+            print('💾 文件URL映射已强制建立: $fullUrl -> $filePath');
             
-            // 🔥 新增：多次验证文件映射，确保稳定性
-            bool mappingSuccess = false;
-            for (int i = 0; i < 3; i++) {
-              await Future.delayed(Duration(milliseconds: 100 * (i + 1)));
-              final cachedPath = await localStorage.getFileFromCache(fullUrl);
-              if (cachedPath != null && File(cachedPath).existsSync()) {
-                print('✅ 文件映射验证成功 (尝试${i + 1}次): $cachedPath');
-                mappingSuccess = true;
-                break;
-              }
-            }
-            
-            if (!mappingSuccess) {
-              print('❌ 文件映射验证失败，尝试备用方案');
-              // 🔥 备用方案：直接设置文件路径到消息对象
-              localMessage['filePath'] = permanentFilePath;
-              localMessage['filePathForced'] = true;
+            // 🔥 新增：直接验证文件映射是否成功
+            final cachedPath = await localStorage.getFileFromCache(fullUrl);
+            if (cachedPath != null) {
+              print('✅ 文件映射验证成功: $cachedPath');
+            } else {
+              print('❌ 文件映射验证失败');
             }
           } catch (e) {
             print('⚠️ 建立文件URL映射失败: $e');
-            // 🔥 出错时使用备用方案
-            localMessage['filePath'] = permanentFilePath;
-            localMessage['filePathForced'] = true;
           }
         }
         
-        // 🔥 新增：强制触发UI刷新
-        try {
-          // 设置标志通知UI刷新
-          await prefs.setString('last_shared_file_time', DateTime.now().toIso8601String());
-          await prefs.setString('last_shared_file_group', groupId);
-          await prefs.setString('last_shared_file_id', messageId);
-          await prefs.setString('last_shared_file_name', fileName);
-          
-          // 🔥 新增：通过WebSocket通知其他设备
-          try {
-            const platform = MethodChannel('com.example.send_to_myself/share');
-            await platform.invokeMethod('notifyUIRefresh', {
-              'groupId': groupId,
-              'messageId': messageId,
-              'fileName': fileName,
-              'action': 'file_shared'
-            });
-            print('🔄 已通知原生层刷新UI');
-          } catch (e) {
-            print('⚠️ 通知原生层刷新UI失败: $e');
-          }
-          
-          print('🔄 已设置UI刷新标志');
-        } catch (e) {
-          print('⚠️ 设置UI刷新标志失败: $e');
-        }
-        
+        // 🔥 新增：设置标志通知UI刷新
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('last_shared_file_time', DateTime.now().toIso8601String());
+        await prefs.setString('last_shared_file_group', groupId);
+        print('🔄 已通知UI刷新分享文件');
       } else {
-        print('⚠️ 发现重复消息，跳过保存: $messageId');
+        print('💾 分享文件消息已存在，跳过保存: $fileName');
       }
       
     } catch (e) {
       print('❌ 保存分享文件为本地消息失败: $e');
-      rethrow;
+      // 不抛出异常，避免影响分享流程
     }
   }
    
