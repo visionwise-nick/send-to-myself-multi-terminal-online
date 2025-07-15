@@ -3015,6 +3015,18 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             ),
           ),
           actions: [
+            // 🔥 新增：重置所有下载状态按钮
+            TextButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _resetAllDownloadStates();
+              },
+              icon: Icon(Icons.refresh, size: 16, color: Colors.orange),
+              label: Text(
+                '重置下载状态', 
+                style: TextStyle(color: Colors.orange),
+              ),
+            ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
@@ -3669,6 +3681,29 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       }
     }
     
+    // 🔥 新增：检查filePath（兼容性检查）
+    if (filePath != null) {
+      final file = File(filePath);
+      if (file.existsSync()) {
+        print('✅ 使用filePath显示文件: $filePath');
+        // 如果文件存在但没有标记为下载完成，立即标记
+        if (message != null && message['downloadCompleted'] != true) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+                if (messageIndex != -1) {
+                  _messages[messageIndex]['downloadCompleted'] = true;
+                  _messages[messageIndex]['localFilePath'] = filePath;
+                }
+              });
+            }
+          });
+        }
+        return _buildActualFilePreview(fileType, filePath, fileUrl, isMe);
+      }
+    }
+    
     // 🔥 新增：检查是否正在下载或在队列中
     if (fileUrl != null && !isLocalSent) {
       String fullUrl = fileUrl;
@@ -3676,9 +3711,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
       }
       
-      // 如果正在下载，显示下载中状态
+      // 🔥 修复：如果正在下载，显示下载中状态
       if (_downloadingFiles.contains(fullUrl)) {
+        print('📥 文件正在下载中: ${message?['fileName']} - $fullUrl');
         return _buildDownloadingPreview(fileType, message);
+      }
+      
+      // 🔥 新增：检查是否刚完成下载但UI未刷新
+      if (message != null && message['downloadCompleted'] == true) {
+        final completedPath = message['localFilePath'] ?? message['filePath'];
+        if (completedPath != null && File(completedPath).existsSync()) {
+          print('✅ 检测到下载完成的文件，立即显示: $completedPath');
+          return _buildActualFilePreview(fileType, completedPath, fileUrl, isMe);
+        }
       }
       
       // 🔥 新增：检查是否在下载队列中
@@ -3734,7 +3779,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         future: _localStorage.getFileFromCache(fullUrl),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return _buildLoadingPreview();
+            return _buildLoadingPreview(message);
           }
           
           final persistentPath = snapshot.data;
@@ -3766,12 +3811,26 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     return _buildFileNotFoundPreview(fileType, fileUrl);
   }
 
-  // 🔥 新增：下载中预览（带重试功能）
+  // 🔥 修复：下载中预览（带重试功能和完成检查）
   Widget _buildDownloadingPreview(String? fileType, [Map<String, dynamic>? message]) {
     final fileUrl = message?['fileUrl'];
     String fullUrl = fileUrl ?? '';
     if (fileUrl != null && fileUrl.startsWith('/api/')) {
       fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+    }
+    
+    // 🔥 新增：检查是否实际已完成下载但状态未清理
+    if (message != null) {
+      final completedPath = message['localFilePath'] ?? message['filePath'];
+      if (completedPath != null && File(completedPath).existsSync()) {
+        print('⚠️ 检测到下载已完成但仍显示下载中状态，立即清理: $completedPath');
+        // 立即清理下载状态
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _removeDownloadingFile(fullUrl);
+        });
+        // 返回实际文件预览
+        return _buildActualFilePreview(fileType, completedPath, fileUrl, false);
+      }
     }
     
     // 检查下载开始时间，如果超过1分钟显示重试按钮
@@ -4041,33 +4100,63 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  // 🔥 新增：准备下载预览 - 修复为可点击的下载触发器
+  // 🔥 修复：准备下载预览 - 自动触发下载并提供手动重试
   Widget _buildPrepareDownloadPreview(String? fileType, Map<String, dynamic> message) {
+    // 🔥 关键修复：自动触发下载
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final fileUrl = message['fileUrl'];
+      if (fileUrl != null && mounted) {
+        String fullUrl = fileUrl;
+        if (fileUrl.startsWith('/api/')) {
+          fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+        }
+        
+        // 检查是否已经在下载中，避免重复触发
+        if (!_downloadingFiles.contains(fullUrl)) {
+          print('🚀 自动触发文件下载: ${message['fileName']}');
+          _autoDownloadFile(message);
+        }
+      }
+    });
+    
     return GestureDetector(
       onTap: () => _triggerFileDownload(message),
       child: Container(
         height: 80,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: const Color(0xFFF0F8FF),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3)),
+          border: Border.all(color: AppTheme.primaryColor.withOpacity(0.5)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.cloud_download_outlined,
-              size: 24,
-              color: AppTheme.primaryColor,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.cloud_download_outlined,
+                  size: 20,
+                  color: AppTheme.primaryColor,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '正在准备下载...',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(
-              LocalizationHelper.of(context).downloadFile,
+              '点击手动重试',
               style: TextStyle(
-                fontSize: 11,
-                color: AppTheme.primaryColor,
-                fontWeight: FontWeight.w500,
+                fontSize: 9,
+                color: AppTheme.primaryColor.withOpacity(0.7),
               ),
             ),
           ],
@@ -4137,52 +4226,140 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 加载中预览
-  Widget _buildLoadingPreview() {
-    return Container(
-      height: 80,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: const Center(
-        child: SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(strokeWidth: 2),
+  // 🔥 修复：加载中预览 - 添加超时保护和手动重试
+  Widget _buildLoadingPreview([Map<String, dynamic>? message]) {
+    return GestureDetector(
+      onTap: () {
+        // 如果用户点击加载中状态，给出提示并提供重试选项
+        if (message != null) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('文件加载中'),
+              content: Text('文件正在加载中，如果长时间没有响应，可以选择重试。'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('继续等待'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _triggerFileDownload(message);
+                  },
+                  child: Text('重新下载'),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+      child: Container(
+        height: 80,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '加载中...',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey[600],
+              ),
+            ),
+            Text(
+              '点击可选择重试',
+              style: TextStyle(
+                fontSize: 8,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // 文件未找到预览
+  // 🔥 修复：文件未找到预览 - 添加重试按钮，永远不显示无法操作的错误状态
   Widget _buildFileNotFoundPreview(String? fileType, String? fileUrl) {
-    return Container(
-      height: 80,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            _getFileTypeIcon(fileType),
-            size: 24,
-            color: const Color(0xFF9CA3AF),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'File does not exist',
-            style: TextStyle(
-              fontSize: 10,
-              color: const Color(0xFF9CA3AF),
+    return GestureDetector(
+      onTap: () {
+        // 如果有fileUrl，尝试重新下载；否则显示提示
+        if (fileUrl != null) {
+          final tempMessage = {
+            'id': 'retry_${DateTime.now().millisecondsSinceEpoch}',
+            'fileUrl': fileUrl,
+            'fileName': 'unknown_file',
+          };
+          _triggerFileDownload(tempMessage);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('文件信息缺失，无法重新下载'),
+              backgroundColor: Colors.orange,
+              action: SnackBarAction(
+                label: '刷新',
+                textColor: Colors.white,
+                onPressed: () {
+                  setState(() {
+                    // 刷新UI状态
+                  });
+                },
+              ),
             ),
-          ),
-        ],
+          );
+        }
+      },
+      child: Container(
+        height: 80,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF2F2),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.orange),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.refresh,
+                  size: 16,
+                  color: Colors.orange,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '点击重试下载',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.orange,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '文件可能暂时不可用',
+              style: TextStyle(
+                fontSize: 9,
+                color: Colors.orange[600],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -4464,36 +4641,82 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                             }
                             return KeyEventResult.ignored;
                           },
-                          child: TextField(
-                            controller: _messageController,
-                            focusNode: _focusNode,
-                            decoration: InputDecoration(
-                              hintText: _isDesktop() 
-                                ? (_pendingFiles.isNotEmpty 
-                                  ? LocalizationHelper.of(context).addDescriptionText 
-                                  : LocalizationHelper.of(context).inputMessageHintDesktop)
-                                : LocalizationHelper.of(context).inputMessageHintMobile,
-                              hintStyle: AppTheme.bodyStyle.copyWith(
-                                color: AppTheme.textTertiaryColor,
-                                fontSize: _isDesktop() ? 13 : 14,
+                          child: GestureDetector(
+                            onLongPress: () {
+                              // 🔥 新增：长按输入框显示调试菜单
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (context) => Container(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ListTile(
+                                        leading: Icon(Icons.refresh, color: Colors.orange),
+                                        title: Text('重置所有下载状态'),
+                                        subtitle: Text('清理所有卡住的下载状态'),
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                          _resetAllDownloadStates();
+                                        },
+                                      ),
+                                      ListTile(
+                                        leading: Icon(Icons.info_outline, color: Colors.blue),
+                                        title: Text('调试信息'),
+                                        subtitle: Text('查看存储和下载状态详情'),
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                          _showStorageInfo();
+                                        },
+                                      ),
+                                      ListTile(
+                                        leading: Icon(Icons.cleaning_services, color: Colors.green),
+                                        title: Text('清理重复记录'),
+                                        subtitle: Text('重启消息同步机制'),
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                          _forceClearDuplicationRecords();
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('已强制清理去重记录并重启WebSocket监听')),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                            child: TextField(
+                              controller: _messageController,
+                              focusNode: _focusNode,
+                              decoration: InputDecoration(
+                                hintText: _isDesktop() 
+                                  ? (_pendingFiles.isNotEmpty 
+                                    ? LocalizationHelper.of(context).addDescriptionText 
+                                    : LocalizationHelper.of(context).inputMessageHintDesktop)
+                                  : LocalizationHelper.of(context).inputMessageHintMobile,
+                                hintStyle: AppTheme.bodyStyle.copyWith(
+                                  color: AppTheme.textTertiaryColor,
+                                  fontSize: _isDesktop() ? 13 : 14,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              style: AppTheme.bodyStyle,
+                              maxLines: 4,
+                              minLines: 1,
+                              textInputAction: _isDesktop() ? TextInputAction.newline : TextInputAction.send,
+                              onChanged: (text) {
+                                setState(() {
+                                  _isTyping = text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
+                                });
+                              },
+                              onSubmitted: (text) {
+                                if (!_isDesktop()) {
+                                  _sendMessageWithFiles();
+                                }
+                              },
                             ),
-                            style: AppTheme.bodyStyle,
-                            maxLines: 4,
-                            minLines: 1,
-                            textInputAction: _isDesktop() ? TextInputAction.newline : TextInputAction.send,
-                            onChanged: (text) {
-                              setState(() {
-                                _isTyping = text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
-                              });
-                            },
-                            onSubmitted: (text) {
-                              if (!_isDesktop()) {
-                                _sendMessageWithFiles();
-                              }
-                            },
                           ),
                         ),
                       ),
@@ -4826,12 +5049,26 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
   
-  // 更新消息中的文件路径
+  // 🔥 修复：更新消息中的文件路径并强制刷新UI
   void _updateMessageFilePath(Map<String, dynamic> message, String filePath) {
     setState(() {
       final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
       if (messageIndex != -1) {
         _messages[messageIndex]['localFilePath'] = filePath;
+        _messages[messageIndex]['filePath'] = filePath; // 兼容性设置
+        _messages[messageIndex]['downloadCompleted'] = true; // 标记下载完成
+        _messages[messageIndex]['downloadFailed'] = false; // 清除失败标记
+        _messages[messageIndex]['downloadProgress'] = null; // 清除进度
+      }
+    });
+    
+    // 🔥 新增：延迟强制刷新确保UI立即更新
+    Future.delayed(Duration(milliseconds: 30), () {
+      if (mounted) {
+        setState(() {
+          // 强制刷新文件预览
+        });
+        print('🔄 文件路径更新后强制UI刷新: ${message['fileName']}');
       }
     });
   }
@@ -5074,6 +5311,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     if (mounted) {
       setState(() {
         // 触发UI重建，确保下载状态被正确移除
+      });
+      
+      // 🔥 新增：延迟再次强制刷新，确保UI完全更新
+      Future.delayed(Duration(milliseconds: 100), () {
+        if (mounted) {
+          setState(() {
+            // 二次强制刷新，确保文件内容立即显示
+          });
+          print('🔄 二次UI刷新完成，确保文件立即显示');
+        }
       });
     }
   }
@@ -5696,7 +5943,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               _messages[messageIndex]['transferSpeed'] = 0.0;
               _messages[messageIndex]['eta'] = null;
               _messages[messageIndex]['localFilePath'] = savedPath; // 🔥 修复：立即设置本地文件路径
+              _messages[messageIndex]['filePath'] = savedPath; // 🔥 新增：同时设置filePath确保兼容性
               _messages[messageIndex]['downloadCompleted'] = true; // 🔥 修复：标记下载完成
+              _messages[messageIndex]['downloadFailed'] = false; // 🔥 清除失败标记
             }
           });
           
@@ -5707,6 +5956,15 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           if (mounted) {
             setState(() {
               // 强制触发UI重建
+            });
+            
+            // 🔥 新增：延迟再次刷新确保文件预览组件完全重建
+            Future.delayed(Duration(milliseconds: 50), () {
+              if (mounted) {
+                setState(() {
+                  // 再次强制刷新，确保文件预览立即显示
+                });
+              }
             });
           }
           
@@ -7137,7 +7395,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         '-e',
         '''
         try
-          set clipFiles to (the clipboard as list)
+          set clipFiles to (clipboard as list)
           set fileList to {}
           repeat with clipItem in clipFiles
             try
