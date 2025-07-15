@@ -41,6 +41,7 @@ import 'package:context_menus/context_menus.dart';
 import '../services/websocket_manager.dart' as ws_manager; // 🔥 修复：使用别名避免命名冲突
 import '../utils/localization_helper.dart';
 import '../config/debug_config.dart';
+import '../widgets/message_filter_widget.dart';
 
 // 文件下载处理器类
 class FileDownloadHandler {
@@ -159,6 +160,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final MessageActionsService _messageActionsService = MessageActionsService();
   final MultiSelectController _multiSelectController = MultiSelectController();
   
+  // 🔥 新增：消息筛选功能相关
+  MessageFilter _messageFilter = MessageFilter();
+  bool _showFilterPanel = false;
+  List<Map<String, dynamic>> _filteredMessages = [];
+  
   // 消息处理相关
   final Set<String> _processedMessageIds = <String>{}; // 防止重复处理
   bool _isInitialLoad = true;
@@ -268,6 +274,34 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     });
   }
   
+  // 🔥 新增：消息筛选相关方法
+  void _applyMessageFilter() {
+    setState(() {
+      if (_messageFilter.hasActiveFilters) {
+        _filteredMessages = _messages.where((message) => _messageFilter.matchesMessage(message)).toList();
+      } else {
+        _filteredMessages = List.from(_messages);
+      }
+    });
+  }
+  
+  void _onFilterChanged(MessageFilter newFilter) {
+    setState(() {
+      _messageFilter = newFilter;
+    });
+    _applyMessageFilter();
+  }
+  
+  void _toggleFilterPanel() {
+    setState(() {
+      _showFilterPanel = !_showFilterPanel;
+    });
+  }
+  
+  List<Map<String, dynamic>> get _displayMessages {
+    return _messageFilter.hasActiveFilters ? _filteredMessages : _messages;
+  }
+
   // 🔥 新增：设置WebSocket连接状态监听
   void _setupWebSocketConnectionStateListener() {
     // 🔥 修复：通过WebSocketManager实例直接访问连接状态流
@@ -1059,6 +1093,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         _messages = updatedMessages;
       });
       
+      // 🔥 新增：更新筛选结果
+      _applyMessageFilter();
+      
       // 为新消息自动下载文件
       for (final message in newMessages) {
         if (message['fileUrl'] != null && !message['isMe']) {
@@ -1523,6 +1560,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         setState(() {
           _messages = messages;
         });
+        
+        // 🔥 新增：初始化筛选结果
+        _applyMessageFilter();
         
         // 如果有文件路径被修复，保存更新
         if (fixedCount > 0) {
@@ -2302,6 +2342,82 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           // 🔥 彻底移除AppBar - 完全沉浸式聊天界面
           body: Column(
             children: [
+              // 🔥 新增：筛选面板和工具栏
+              if (_showFilterPanel)
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  child: MessageFilterWidget(
+                    currentFilter: _messageFilter,
+                    onFilterChanged: _onFilterChanged,
+                    onClose: () => setState(() => _showFilterPanel = false),
+                  ),
+                ),
+              
+              // 🔥 新增：筛选工具栏
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade200),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // 返回按钮
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.arrow_back, size: 24),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    const SizedBox(width: 12),
+                    
+                    // 对话标题
+                    Expanded(
+                      child: Text(
+                        title ?? '',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    
+                    // 筛选按钮
+                    IconButton(
+                      onPressed: _toggleFilterPanel,
+                      icon: Icon(
+                        _showFilterPanel ? Icons.filter_list_off : Icons.filter_list,
+                        color: _messageFilter.hasActiveFilters 
+                            ? Theme.of(context).primaryColor 
+                            : Colors.grey.shade600,
+                      ),
+                      tooltip: _showFilterPanel ? '隐藏筛选' : '筛选消息',
+                    ),
+                    
+                    // 筛选状态指示器
+                    if (_messageFilter.hasActiveFilters && !_showFilterPanel)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${_displayMessages.length}/${_messages.length}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              
               // 消息列表
               Expanded(
                 child: _isLoading
@@ -2311,7 +2427,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                         color: AppTheme.primaryColor,
                       ),
                     )
-                  : _messages.isEmpty
+                  : _displayMessages.isEmpty
                     ? _buildEmptyState()
                     : Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -2340,7 +2456,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                     return ListView.builder(
                                   controller: _scrollController,
                                   padding: const EdgeInsets.symmetric(vertical: 8),
-                                  itemCount: _messages.length,
+                                  itemCount: _displayMessages.length,
                                   // 🔥 启用缓存机制，提高滚动性能
                                   cacheExtent: 1000.0,
                                   // 🔥 使用findChildIndexCallback优化性能
@@ -2351,8 +2467,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                     }
                                     return null;
                                   },
-                                  itemBuilder: (context, index) {
-                                    final message = _messages[index];
+                                                                      itemBuilder: (context, index) {
+                                      final message = _displayMessages[index];
                                     // 🔥 为每个消息项添加唯一的key，提高重建性能
                                     return KeyedSubtree(
                                       key: ValueKey<String>(message['id']?.toString() ?? 'msg_$index'),
@@ -2626,12 +2742,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
   
-  // 🔥 新增：批量分享到系统应用
+  // 🔥 修复：批量分享到系统应用
   Future<void> _batchShareToSystem(List<Map<String, dynamic>> messages) async {
     try {
       // 分离文本和文件消息
       final textMessages = <String>[];
       final fileMessages = <Map<String, dynamic>>[];
+      final validFiles = <XFile>[];
       
       for (final message in messages) {
         final text = message['text']?.toString() ?? '';
@@ -2646,64 +2763,130 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         }
       }
       
-             // 如果只有文本消息，直接分享文本
-       if (fileMessages.isEmpty && textMessages.isNotEmpty) {
-         final combinedText = textMessages.join('\n\n');
-         // 创建临时文本消息进行分享
-         final tempMessage = {'text': combinedText};
-         await _shareMessageToSystem(tempMessage);
-         
-         _multiSelectController.exitMultiSelectMode();
-         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text(LocalizationHelper.of(context).textSharedCount(textMessages.length))),
-           );
-         }
-         return;
-       }
-       
-       // 如果有文件消息，需要逐个处理
-       if (fileMessages.isNotEmpty) {
-         int successCount = 0;
-         
-         for (final message in fileMessages) {
-           try {
-             await _shareMessageToSystem(message);
-             successCount++;
-           } catch (e) {
-             print('分享消息失败: $e');
-           }
-           
-           // 添加延迟避免系统分享冲突
-           await Future.delayed(const Duration(milliseconds: 500));
-         }
-         
-         // 如果还有文本消息，最后分享文本
-         if (textMessages.isNotEmpty) {
-           final combinedText = textMessages.join('\n\n');
-           final tempMessage = {'text': combinedText};
-           try {
-             await _shareMessageToSystem(tempMessage);
-           } catch (e) {
-             print('分享文本失败: $e');
-           }
-         }
+      // 🔥 修复：处理文件消息，收集所有可用的文件
+      for (final message in fileMessages) {
+        final fileName = message['fileName']?.toString() ?? '';
+        final filePath = message['filePath']?.toString();
+        final fileUrl = message['fileUrl']?.toString();
         
+        String? pathToShare;
+        
+        // 1. 优先使用本地路径
+        if (filePath != null && File(filePath).existsSync()) {
+          pathToShare = filePath;
+        }
+        // 2. 如果没有本地文件，尝试从缓存获取
+        else if (fileUrl != null) {
+          pathToShare = await _localStorage.getFileFromCache(fileUrl);
+          
+          // 3. 如果缓存中也没有，先下载文件
+          if (pathToShare == null || !File(pathToShare).existsSync()) {
+            try {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('正在准备文件: $fileName...'),
+                    backgroundColor: Colors.blue,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+              pathToShare = await _downloadFileForSaving(fileUrl, fileName);
+            } catch (e) {
+              print('下载文件失败: $fileName, $e');
+              continue; // 跳过这个文件，继续处理其他文件
+            }
+          }
+        }
+        
+        // 添加到可用文件列表
+        if (pathToShare != null && File(pathToShare).existsSync()) {
+          validFiles.add(XFile(pathToShare));
+        }
+      }
+      
+      // 🔥 修复：一次性分享所有内容
+      if (validFiles.isNotEmpty || textMessages.isNotEmpty) {
+        // 准备分享的文本内容
+        String? shareText;
+        if (textMessages.isNotEmpty) {
+          shareText = textMessages.join('\n\n');
+        }
+        
+        // 准备主题
+        String subject = 'Send To Myself';
+        if (validFiles.isNotEmpty && textMessages.isNotEmpty) {
+          subject += ' - ${validFiles.length}个文件和${textMessages.length}条消息';
+        } else if (validFiles.isNotEmpty) {
+          subject += ' - ${validFiles.length}个文件';
+        } else {
+          subject += ' - ${textMessages.length}条消息';
+        }
+        
+        // 🔥 关键修复：一次性分享所有文件和文本
+        if (validFiles.isNotEmpty) {
+          // 分享文件和文本
+          await Share.shareXFiles(
+            validFiles,
+            text: shareText,
+            subject: subject,
+          );
+        } else if (shareText != null) {
+          // 只分享文本
+          await Share.share(
+            shareText,
+            subject: subject,
+          );
+        }
+        
+        _multiSelectController.exitMultiSelectMode();
+        
+        if (mounted) {
+          String message;
+          if (validFiles.isNotEmpty && textMessages.isNotEmpty) {
+            message = '已分享${validFiles.length}个文件和${textMessages.length}条消息';
+          } else if (validFiles.isNotEmpty) {
+            message = '已分享${validFiles.length}个文件';
+          } else {
+            message = '已分享${textMessages.length}条消息';
+          }
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text(message),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        // 没有可分享的内容
         _multiSelectController.exitMultiSelectMode();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(textMessages.isNotEmpty 
-          ? LocalizationHelper.of(context).sharedFilesAndText(successCount, textMessages.length)
-                                  : LocalizationHelper.of(context).fileShared('$successCount files'))),
+            SnackBar(
+              content: Text('没有可分享的内容'),
+              backgroundColor: Colors.orange,
+            ),
           );
         }
       }
       
     } catch (e) {
+      print('批量分享失败: $e');
       _multiSelectController.exitMultiSelectMode();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(LocalizationHelper.of(context).batchShareFailed(e.toString()))),
+          SnackBar(
+            content: Text('分享失败: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -4836,16 +5019,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   void _removeDownloadingFile(String url) {
     _downloadingFiles.remove(url);
     _downloadStartTimes.remove(url);
-    _downloadingFileNames.remove(url);
-    
-    // 🔥 新增：清理重试相关数据
-    _downloadRetryCount.remove(url);
-    _downloadFailureReasons.remove(url);
-    _downloadLastRetryTime.remove(url);
-    
-    // 清理超时定时器
     _downloadTimeoutTimers[url]?.cancel();
     _downloadTimeoutTimers.remove(url);
+    _downloadingFileNames.remove(url);
+    _downloadFailureReasons.remove(url);
+    _downloadRetryCount.remove(url);
+    _downloadLastRetryTime.remove(url);
     
     print('✅ 移除下载任务: $url');
     
@@ -5454,7 +5633,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       if (fileUrl != null) {
         String fullUrl = fileUrl;
         if (fileUrl.startsWith('/api/')) {
-          fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fullUrl';
+          fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
         }
         
         // 检查缓存中是否有文件
@@ -7460,10 +7639,10 @@ Add-Type -AssemblyName System.Drawing
 \$video.Dispose()
 \$thumb.Dispose()
 ''';
-          
-          final result = await Process.run('powershell', ['-Command', psScript]);
-          
-          if (result.exitCode == 0) {
+           
+           final result = await Process.run('powershell', ['-Command', psScript]);
+            
+           if (result.exitCode == 0) {
             final thumbnailFile = File(tempPath);
             if (await thumbnailFile.exists()) {
               final thumbnailBytes = await thumbnailFile.readAsBytes();
