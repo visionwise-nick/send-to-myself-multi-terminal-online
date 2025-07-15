@@ -56,6 +56,28 @@ class MessageFilter {
            searchKeyword.isNotEmpty;
   }
 
+  // 🔥 新增：从参数创建筛选器
+  factory MessageFilter.fromParams(Map<String, dynamic> params) {
+    return MessageFilter(
+      type: MessageFilterType.values[params['type'] ?? 0],
+      sender: MessageSenderType.values[params['sender'] ?? 0],
+      startDate: params['startDate'] != null ? DateTime.parse(params['startDate']) : null,
+      endDate: params['endDate'] != null ? DateTime.parse(params['endDate']) : null,
+      searchKeyword: params['searchKeyword'] ?? '',
+    );
+  }
+
+  // 🔥 新增：转换为参数
+  Map<String, dynamic> toParams() {
+    return {
+      'type': type.index,
+      'sender': sender.index,
+      'startDate': startDate?.toIso8601String(),
+      'endDate': endDate?.toIso8601String(),
+      'searchKeyword': searchKeyword,
+    };
+  }
+
   bool matchesMessage(Map<String, dynamic> message) {
     // 检查消息类型筛选
     if (type != MessageFilterType.all) {

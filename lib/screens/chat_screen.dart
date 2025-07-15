@@ -129,10 +129,16 @@ class FileDownloadHandler {
 
 class ChatScreen extends StatefulWidget {
   final Map<String, dynamic> conversation;
+  final bool showFilterPanel;
+  final Map<String, dynamic>? filterParams;
+  final Function(Map<String, dynamic>?)? onFilterChanged;
 
   const ChatScreen({
     super.key,
     required this.conversation,
+    this.showFilterPanel = false,
+    this.filterParams,
+    this.onFilterChanged,
   });
 
   @override
@@ -160,9 +166,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   final MessageActionsService _messageActionsService = MessageActionsService();
   final MultiSelectController _multiSelectController = MultiSelectController();
   
-  // 🔥 新增：消息筛选功能相关
-  MessageFilter _messageFilter = MessageFilter();
-  bool _showFilterPanel = false;
+  // 🔥 新增：消息筛选功能相关（由父组件管理）
   List<Map<String, dynamic>> _filteredMessages = [];
   
   // 消息处理相关
@@ -274,11 +278,20 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     });
   }
   
-  // 🔥 新增：消息筛选相关方法
+  // 🔥 新增：消息筛选相关方法（使用父组件传递的状态）
+  MessageFilter get _currentFilter {
+    if (widget.filterParams == null || widget.filterParams!.isEmpty) {
+      return MessageFilter();
+    }
+    // 从父组件参数构建筛选器
+    return MessageFilter.fromParams(widget.filterParams!);
+  }
+  
   void _applyMessageFilter() {
     setState(() {
-      if (_messageFilter.hasActiveFilters) {
-        _filteredMessages = _messages.where((message) => _messageFilter.matchesMessage(message)).toList();
+      final filter = _currentFilter;
+      if (filter.hasActiveFilters) {
+        _filteredMessages = _messages.where((message) => filter.matchesMessage(message)).toList();
       } else {
         _filteredMessages = List.from(_messages);
       }
@@ -286,20 +299,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
   
   void _onFilterChanged(MessageFilter newFilter) {
-    setState(() {
-      _messageFilter = newFilter;
-    });
+    // 将筛选变化传递给父组件
+    widget.onFilterChanged?.call(newFilter.toParams());
     _applyMessageFilter();
   }
   
-  void _toggleFilterPanel() {
-    setState(() {
-      _showFilterPanel = !_showFilterPanel;
-    });
-  }
-  
   List<Map<String, dynamic>> get _displayMessages {
-    return _messageFilter.hasActiveFilters ? _filteredMessages : _messages;
+    final filter = _currentFilter;
+    return filter.hasActiveFilters ? _filteredMessages : _messages;
   }
 
   // 🔥 新增：设置WebSocket连接状态监听
@@ -2342,81 +2349,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           // 🔥 彻底移除AppBar - 完全沉浸式聊天界面
           body: Column(
             children: [
-              // 🔥 新增：筛选面板和工具栏
-              if (_showFilterPanel)
+              // 🔥 新增：筛选面板（由父组件控制显示）
+              if (widget.showFilterPanel)
                 Container(
                   margin: const EdgeInsets.all(16),
                   child: MessageFilterWidget(
-                    currentFilter: _messageFilter,
+                    currentFilter: _currentFilter,
                     onFilterChanged: _onFilterChanged,
-                    onClose: () => setState(() => _showFilterPanel = false),
+                    onClose: () => widget.onFilterChanged?.call(null),
                   ),
                 ),
-              
-              // 🔥 新增：筛选工具栏
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade200),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    // 返回按钮
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back, size: 24),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                    const SizedBox(width: 12),
-                    
-                    // 对话标题
-                    Expanded(
-                      child: Text(
-                        title ?? '',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    
-                    // 筛选按钮
-                    IconButton(
-                      onPressed: _toggleFilterPanel,
-                      icon: Icon(
-                        _showFilterPanel ? Icons.filter_list_off : Icons.filter_list,
-                        color: _messageFilter.hasActiveFilters 
-                            ? Theme.of(context).primaryColor 
-                            : Colors.grey.shade600,
-                      ),
-                      tooltip: _showFilterPanel ? '隐藏筛选' : '筛选消息',
-                    ),
-                    
-                    // 筛选状态指示器
-                    if (_messageFilter.hasActiveFilters && !_showFilterPanel)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${_displayMessages.length}/${_messages.length}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
               
               // 消息列表
               Expanded(

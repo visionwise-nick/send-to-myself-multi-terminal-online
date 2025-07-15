@@ -35,6 +35,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   late PageController _pageController;
   final ChatService _chatService = ChatService();
   final StatusRefreshManager _statusRefreshManager = StatusRefreshManager();
+  
+  // 🔥 新增：消息筛选状态管理
+  bool _showMessageFilter = false;
+  Map<String, dynamic>? _filterParams;
 
   @override
   void initState() {
@@ -473,6 +477,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
 
   void _showLogoutDialog() {
     LogoutDialog.showLogoutConfirmDialog(context);
+  }
+  
+  // 🔥 新增：消息筛选相关方法
+  void _toggleMessageFilter() {
+    setState(() {
+      _showMessageFilter = !_showMessageFilter;
+    });
+  }
+  
+  bool _isFilterActive() {
+    return _filterParams != null && _filterParams!.isNotEmpty;
+  }
+  
+  void _updateFilterParams(Map<String, dynamic>? params) {
+    setState(() {
+      _filterParams = params;
+      if (params == null || params.isEmpty) {
+        _showMessageFilter = false;
+      }
+    });
   }
 
   // 判断是否为桌面端
@@ -1051,7 +1075,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
             
             // 主要内容区域 - 只显示聊天界面，屏蔽记忆功能
             Expanded(
-              child: MessagesTab(),
+              child: MessagesTab(
+                showFilterPanel: _showMessageFilter,
+                filterParams: _filterParams,
+                onFilterChanged: _updateFilterParams,
+              ),
             ),
           ],
         ),
@@ -1388,6 +1416,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
               
               // 🔥 右对齐区域
               const Spacer(),
+              
+              // 🔥 筛选按钮（消息筛选功能）
+              GestureDetector(
+                onTap: () => _toggleMessageFilter(),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: _isFilterActive() 
+                        ? AppTheme.primaryColor.withOpacity(0.1)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(
+                    Icons.filter_list,
+                    size: 16,
+                    color: _isFilterActive() 
+                        ? AppTheme.primaryColor 
+                        : AppTheme.textSecondaryColor,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(width: 8),
               
               // 🔥 连接状态显示在标题栏右侧，包含设备总数
               Transform.scale(

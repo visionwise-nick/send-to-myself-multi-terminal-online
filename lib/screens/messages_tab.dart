@@ -14,7 +14,16 @@ import '../config/debug_config.dart';
 import 'dart:math' as math;
 
 class MessagesTab extends StatefulWidget {
-  const MessagesTab({super.key});
+  final bool showFilterPanel;
+  final Map<String, dynamic>? filterParams;
+  final Function(Map<String, dynamic>?)? onFilterChanged;
+  
+  const MessagesTab({
+    super.key,
+    this.showFilterPanel = false,
+    this.filterParams,
+    this.onFilterChanged,
+  });
 
   @override
   State<MessagesTab> createState() => _MessagesTabState();
@@ -332,6 +341,9 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
             child: ChatScreen(
               key: ValueKey('chat_${currentGroup['id']}'),
               conversation: groupConversation,
+              showFilterPanel: widget.showFilterPanel,
+              filterParams: widget.filterParams,
+              onFilterChanged: widget.onFilterChanged,
             ),
           );
         }
