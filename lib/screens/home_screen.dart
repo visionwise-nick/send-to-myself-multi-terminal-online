@@ -1417,7 +1417,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
               // 🔥 右对齐区域
               const Spacer(),
               
-              // 🔥 筛选按钮（消息筛选功能）
+              // 🔥 连接状态显示在标题栏右侧，包含设备总数
+              Transform.scale(
+                scale: 0.75, // 🔥 进一步缩小到75%
+                child: const ConnectionStatusWidget(showDeviceCount: true),
+              ),
+              
+              const SizedBox(width: 8),
+              
+              // 🔥 筛选按钮（消息筛选功能）- 移至最右侧
               GestureDetector(
                 onTap: () => _toggleMessageFilter(),
                 child: Container(
@@ -1437,14 +1445,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                   ),
                 ),
               ),
-              
-              const SizedBox(width: 8),
-              
-              // 🔥 连接状态显示在标题栏右侧，包含设备总数
-              Transform.scale(
-                scale: 0.75, // 🔥 进一步缩小到75%
-                child: const ConnectionStatusWidget(showDeviceCount: true),
-          ),
         ],
       ),
     );

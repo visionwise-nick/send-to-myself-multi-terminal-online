@@ -269,11 +269,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     });
 
     // 🔥 新增：定期检查和清理僵尸下载状态
-    Timer.periodic(Duration(minutes: 2), (timer) {
+    Timer.periodic(Duration(seconds: 30), (timer) {
       if (mounted) {
         _checkAndCleanupZombieDownloads();
+        _detectAndFixDeadlockDownloads();
       } else {
         timer.cancel();
+      }
+    });
+    
+    // 🔥 新增：页面显示时立即检查死锁状态
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _detectAndFixDeadlockDownloads();
       }
     });
   }
@@ -3670,7 +3678,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       
       // 如果正在下载，显示下载中状态
       if (_downloadingFiles.contains(fullUrl)) {
-        return _buildDownloadingPreview(fileType);
+        return _buildDownloadingPreview(fileType, message);
       }
       
       // 🔥 新增：检查是否在下载队列中
@@ -3758,8 +3766,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     return _buildFileNotFoundPreview(fileType, fileUrl);
   }
 
-  // 🔥 新增：下载中预览
-  Widget _buildDownloadingPreview(String? fileType) {
+  // 🔥 新增：下载中预览（带重试功能）
+  Widget _buildDownloadingPreview(String? fileType, [Map<String, dynamic>? message]) {
+    final fileUrl = message?['fileUrl'];
+    String fullUrl = fileUrl ?? '';
+    if (fileUrl != null && fileUrl.startsWith('/api/')) {
+      fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+    }
+    
+    // 检查下载开始时间，如果超过1分钟显示重试按钮
+    final startTime = _downloadStartTimes[fullUrl];
+    final showRetryButton = startTime != null && 
+        DateTime.now().difference(startTime).inMinutes >= 1;
+    
     return Container(
       height: 80,
       width: double.infinity,
@@ -3768,30 +3787,111 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
         children: [
-          SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
-            ),
+          // 主要内容
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '下载中...',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.textSecondaryColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              // 显示下载时长
+              if (startTime != null)
+                Text(
+                  '已用时: ${DateTime.now().difference(startTime).inMinutes}分钟',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppTheme.textSecondaryColor.withOpacity(0.7),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            '下载中...',
-            style: TextStyle(
-              fontSize: 11,
-              color: AppTheme.textSecondaryColor,
-              fontWeight: FontWeight.w500,
+          
+          // 右上角重试按钮
+          if (showRetryButton && message != null)
+            Positioned(
+              right: 4,
+              top: 4,
+              child: GestureDetector(
+                onTap: () => _forceRetryDownload(message),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.refresh,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ),
-
-          ),
         ],
       ),
     );
+  }
+  
+  // 🔥 新增：强制重试下载
+  Future<void> _forceRetryDownload(Map<String, dynamic> message) async {
+    final fileUrl = message['fileUrl'];
+    final fileName = message['fileName'] ?? 'unknown_file';
+    
+    if (fileUrl == null) return;
+    
+    String fullUrl = fileUrl;
+    if (fileUrl.startsWith('/api/')) {
+      fullUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$fileUrl';
+    }
+    
+    print('🔄 用户手动重试下载: $fileName');
+    
+    // 强制清理当前下载状态
+    _removeDownloadingFile(fullUrl);
+    
+    // 重置重试计数
+    _downloadRetryCount[fullUrl] = 0;
+    _downloadFailureReasons.remove(fullUrl);
+    
+    // 清除消息中的失败状态
+    if (mounted) {
+      setState(() {
+        final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+        if (messageIndex != -1) {
+          _messages[messageIndex]['downloadFailed'] = false;
+          _messages[messageIndex]['failureReason'] = null;
+          _messages[messageIndex]['downloadProgress'] = null;
+        }
+      });
+    }
+    
+    // 显示重试提示
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('正在重新下载: $fileName'),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.blue,
+      ),
+    );
+    
+    // 重新开始下载
+    await _autoDownloadFile(message);
   }
   
   // 🔥 新增：下载失败预览
@@ -5312,6 +5412,123 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         setState(() {
           // 刷新UI
         });
+      }
+    }
+  }
+  
+  // 🔥 新增：检测和修复死锁下载状态
+  void _detectAndFixDeadlockDownloads() {
+    final now = DateTime.now();
+    final deadlockUrls = <String>[];
+    final autoRetryUrls = <String>[];
+    
+    // 检查每个下载中的文件
+    for (final entry in _downloadStartTimes.entries) {
+      final url = entry.key;
+      final startTime = entry.value;
+      final duration = now.difference(startTime);
+      
+      // 超过2分钟的下载被认为可能死锁
+      if (duration.inMinutes >= 2) {
+        final fileName = _downloadingFileNames[url] ?? 'unknown';
+        print('🔍 检测到可能的死锁下载: $fileName (持续${duration.inMinutes}分钟)');
+        
+        // 超过5分钟的直接清理
+        if (duration.inMinutes >= 5) {
+          deadlockUrls.add(url);
+        } else {
+          // 2-5分钟的尝试自动重试
+          autoRetryUrls.add(url);
+        }
+      }
+    }
+    
+    // 清理死锁状态
+    if (deadlockUrls.isNotEmpty) {
+      print('💀 清理死锁下载状态: ${deadlockUrls.length} 个');
+      
+      for (final url in deadlockUrls) {
+        final fileName = _downloadingFileNames[url] ?? 'unknown';
+        print('🧹 清理死锁下载: $fileName');
+        
+        // 找到对应的消息并标记为失败
+        final message = _messages.firstWhere(
+          (m) {
+            final messageUrl = m['fileUrl'];
+            if (messageUrl == null) return false;
+            String fullMessageUrl = messageUrl;
+            if (messageUrl.startsWith('/api/')) {
+              fullMessageUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$messageUrl';
+            }
+            return fullMessageUrl == url;
+          },
+          orElse: () => {},
+        );
+        
+        if (message.isNotEmpty) {
+          _handleDownloadFinalFailure(message, '下载超时，已自动清理');
+        }
+        
+        _removeDownloadingFile(url);
+      }
+      
+      if (mounted) {
+        setState(() {
+          // 刷新UI
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('已清理 ${deadlockUrls.length} 个死锁下载状态'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+    
+    // 自动重试可能死锁的下载
+    if (autoRetryUrls.isNotEmpty) {
+      print('🔄 自动重试可能死锁的下载: ${autoRetryUrls.length} 个');
+      
+      for (final url in autoRetryUrls) {
+        final fileName = _downloadingFileNames[url] ?? 'unknown';
+        
+        // 检查重试次数，避免无限重试
+        final retryCount = _downloadRetryCount[url] ?? 0;
+        if (retryCount < _maxRetryAttempts) {
+          print('🔄 自动重试下载: $fileName (重试次数: ${retryCount + 1})');
+          
+          // 找到对应的消息
+          final message = _messages.firstWhere(
+            (m) {
+              final messageUrl = m['fileUrl'];
+              if (messageUrl == null) return false;
+              String fullMessageUrl = messageUrl;
+              if (messageUrl.startsWith('/api/')) {
+                fullMessageUrl = 'https://sendtomyself-api-adecumh2za-uc.a.run.app$messageUrl';
+              }
+              return fullMessageUrl == url;
+            },
+            orElse: () => {},
+          );
+          
+          if (message.isNotEmpty) {
+            // 清理当前状态并重新开始下载
+            _removeDownloadingFile(url);
+            _downloadRetryCount[url] = retryCount + 1;
+            
+            // 延迟一下再重试，避免立即重试
+            Timer(Duration(seconds: 2), () {
+              if (mounted) {
+                _autoDownloadFile(message);
+              }
+            });
+          }
+        } else {
+          print('🚫 下载重试次数已达上限，标记为失败: $fileName');
+          deadlockUrls.add(url); // 加入清理队列
+        }
       }
     }
   }
