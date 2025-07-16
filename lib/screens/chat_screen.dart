@@ -187,10 +187,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   DateTime? _lastMessageReceivedTime;
   bool _hasWebSocketIssue = false;
   
-  // 🔥 性能优化：图片尺寸和文件存在性缓存
+  // 🔥 内存优化：轻量级缓存（iOS内存安全）
   final Map<String, Size> _imageSizeCache = <String, Size>{};
   final Map<String, bool> _fileExistsCache = <String, bool>{};
-  final Map<String, ui.Image> _imageCache = <String, ui.Image>{};
+  // 🔥 移除ui.Image缓存，改用轻量级尺寸缓存
+  Timer? _memoryCacheCleanupTimer;
   
   // 文件下载相关 - 优化缓存策略
   final Dio _dio = Dio();
@@ -566,6 +567,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _syncUIUpdateSubscription?.cancel();
     _messageIdCleanupTimer?.cancel();
     _connectionHealthTimer?.cancel();
+    _memoryCacheCleanupTimer?.cancel(); // 🔥 iOS内存监控定时器
     
     // 🔥 新增：清理WebSocket连接状态订阅
     _connectionStateSubscription?.cancel();
@@ -593,12 +595,31 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _messageIdCleanupTimer = Timer.periodic(Duration(minutes: 30), (_) {
       _cleanupOldProcessedMessageIds();
       
-      // 🔥 性能优化：定期清理图片缓存
-      if (_imageSizeCache.length > 50 || _fileExistsCache.length > 100) {
+      // 🔥 iOS内存安全：更激进的缓存清理
+      if (_imageSizeCache.length > 20 || _fileExistsCache.length > 50) {
         print('定期清理图片缓存，当前尺寸: ${_imageSizeCache.length}, 文件检查: ${_fileExistsCache.length}');
         _clearImageCaches();
       }
     });
+    
+    // 🔥 iOS专用：启动内存压力监控
+    _startMemoryPressureMonitoring();
+  }
+  
+  // 🔥 iOS内存安全：内存压力监控
+  void _startMemoryPressureMonitoring() {
+    if (Platform.isIOS) {
+      _memoryCacheCleanupTimer = Timer.periodic(Duration(minutes: 2), (_) {
+        // iOS内存压力下主动清理
+        if (_imageSizeCache.length > 10 || _fileExistsCache.length > 30) {
+          print('iOS内存压力检测：主动清理缓存');
+          _clearImageCaches();
+          
+          // 强制垃圾回收建议
+          print('建议系统进行垃圾回收');
+        }
+      });
+    }
   }
   
   // 🔥 关键修复：清理过期的消息ID
@@ -4470,32 +4491,30 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           width: displayWidth,
           height: displayHeight,
           fit: BoxFit.cover,
-          // 🔥 添加图片缓存配置
-          cacheWidth: 83,
-          cacheHeight: (83 / aspectRatio).round(),
+          // 🔥 iOS内存优化：大幅减小缓存尺寸
+          cacheWidth: 40,
+          cacheHeight: (40 / aspectRatio).round(),
         );
       } else {
         // 第一次加载，使用FutureBuilder但缓存结果
-        imageWidget = FutureBuilder<ui.Image>(
-          future: _getImageDimensions(File(filePath)),
+        imageWidget = FutureBuilder<Size>(
+          future: _getImageSize(File(filePath)),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              final image = snapshot.data!;
-              final aspectRatio = image.width / image.height;
+              final size = snapshot.data!;
+              final aspectRatio = size.width / size.height;
               final maxWidth = 83.0;
               final displayWidth = maxWidth;
               final displayHeight = displayWidth / aspectRatio;
-              
-              // 缓存尺寸信息
-              _imageSizeCache[filePath] = Size(image.width.toDouble(), image.height.toDouble());
               
               return Image.file(
                 File(filePath),
                 width: displayWidth,
                 height: displayHeight,
                 fit: BoxFit.cover,
-                cacheWidth: 83,
-                cacheHeight: displayHeight.round(),
+                // 🔥 iOS内存优化：进一步减小缓存尺寸
+                cacheWidth: 40,
+                cacheHeight: (40 / aspectRatio).round(),
               );
             } else {
               // 加载中显示固定尺寸
@@ -4504,8 +4523,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 height: 50,
                 width: 83,
                 fit: BoxFit.cover,
-                cacheWidth: 83,
-                cacheHeight: 50,
+                cacheWidth: 40,
+                cacheHeight: 40,
               );
             }
           },
@@ -4520,9 +4539,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         child: Image.network(
           fileUrl,
           fit: BoxFit.cover,
-          // 🔥 性能优化：添加图片缓存配置
-          cacheWidth: 83,
-          cacheHeight: 100,
+          // 🔥 iOS内存优化：大幅减小网络图片缓存
+          cacheWidth: 40,
+          cacheHeight: 50,
           headers: _dio.options.headers.map((key, value) => MapEntry(key, value.toString())),
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
@@ -4556,13 +4575,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  // 🔥 性能优化：获取图片尺寸的方法（带缓存）
-  Future<ui.Image> _getImageDimensions(File imageFile) async {
+  // 🔥 内存安全：获取图片尺寸（不缓存ui.Image对象）
+  Future<Size> _getImageSize(File imageFile) async {
     final path = imageFile.path;
     
-    // 检查缓存
-    if (_imageCache.containsKey(path)) {
-      return _imageCache[path]!;
+    // 检查轻量级尺寸缓存
+    if (_imageSizeCache.containsKey(path)) {
+      return _imageSizeCache[path]!;
     }
     
     try {
@@ -4571,12 +4590,17 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       final frame = await codec.getNextFrame();
       final image = frame.image;
       
-      // 缓存结果（限制缓存大小防止内存泄漏）
-      if (_imageCache.length < 100) {
-        _imageCache[path] = image;
+      final size = Size(image.width.toDouble(), image.height.toDouble());
+      
+      // 立即释放ui.Image对象，只缓存尺寸信息
+      image.dispose();
+      
+      // 缓存轻量级尺寸信息（iOS安全）
+      if (_imageSizeCache.length < 30) { // 减少到30个缓存项
+        _imageSizeCache[path] = size;
       }
       
-      return image;
+      return size;
     } catch (e) {
       print('获取图片尺寸失败: $e');
       rethrow;
@@ -4599,16 +4623,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     return exists;
   }
 
-  // 🔥 性能优化：清理缓存（在适当时机调用）
+  // 🔥 内存安全：清理轻量级缓存
   void _clearImageCaches() {
     _imageSizeCache.clear();
     _fileExistsCache.clear();
-    // 不清理_imageCache，因为ui.Image对象需要手动dispose
-    for (final image in _imageCache.values) {
-      image.dispose();
-    }
-    _imageCache.clear();
-    print('图片缓存已清理');
+    print('轻量级图片缓存已清理');
   }
 
   // 🔥 修复：构建原始尺寸视频预览
