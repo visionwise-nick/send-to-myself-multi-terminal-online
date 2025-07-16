@@ -54,28 +54,66 @@ class _MediaViewerState extends State<MediaViewer> with TickerProviderStateMixin
 
   @override
   void dispose() {
-    _pageController.dispose();
-    _videoController?.dispose();
-    _uiAnimationController.dispose();
+    // 🔥 修复：安全释放所有资源
+    try {
+      _pageController.dispose();
+    } catch (e) {
+      print('PageController dispose错误: $e');
+    }
+    
+    try {
+      _videoController?.dispose();
+      _videoController = null;
+    } catch (e) {
+      print('VideoController dispose错误: $e');
+    }
+    
+    try {
+      _uiAnimationController.dispose();
+    } catch (e) {
+      print('Animation Controller dispose错误: $e');
+    }
+    
     super.dispose();
   }
 
   void _initializeMedia() {
-    _videoController?.dispose();
+    // 🔥 修复：安全释放之前的视频控制器
+    try {
+      _videoController?.dispose();
+    } catch (e) {
+      print('释放VideoController错误: $e');
+    }
     _videoController = null;
+    _isVideoPlaying = false;
+    
+    if (!mounted) return;
     
     final currentMessage = widget.mediaMessages[_currentIndex];
     final fileType = currentMessage['fileType'];
     
+    // 🔥 修复：只有视频文件才创建VideoPlayerController
     if (fileType == 'video') {
       final filePath = _getMediaFilePath(currentMessage);
       if (filePath != null && File(filePath).existsSync()) {
-        _videoController = VideoPlayerController.file(File(filePath));
-        _videoController!.initialize().then((_) {
-          if (mounted) {
-            setState(() {});
-          }
-        });
+        try {
+          _videoController = VideoPlayerController.file(File(filePath));
+          _videoController!.initialize().then((_) {
+            if (mounted && _videoController != null) {
+              setState(() {});
+            }
+          }).catchError((error) {
+            print('VideoPlayer初始化错误: $error');
+            if (mounted) {
+              setState(() {
+                _videoController = null;
+              });
+            }
+          });
+        } catch (e) {
+          print('创建VideoPlayerController错误: $e');
+          _videoController = null;
+        }
       }
     }
   }
@@ -115,10 +153,19 @@ class _MediaViewerState extends State<MediaViewer> with TickerProviderStateMixin
   }
 
   void _onPageChanged(int index) {
+    // 🔥 修复：安全的页面切换
+    if (!mounted) return;
+    
     setState(() {
       _currentIndex = index;
     });
-    _initializeMedia();
+    
+    // 🔥 修复：延迟初始化媒体，避免竞争条件
+    Future.microtask(() {
+      if (mounted) {
+        _initializeMedia();
+      }
+    });
   }
 
   void _showActionMenu() {
@@ -390,11 +437,6 @@ class _MediaViewerState extends State<MediaViewer> with TickerProviderStateMixin
   Widget _buildImageViewer(Map<String, dynamic> message) {
     final filePath = _getMediaFilePath(message);
     
-    // 🔥 调试信息
-    print('图片查看器 - 文件路径: $filePath');
-    print('图片查看器 - 文件类型: ${message['fileType']}');
-    print('图片查看器 - 消息数据: $message');
-    
     if (filePath == null || !File(filePath).existsSync()) {
       print('图片查看器错误 - 文件不存在: $filePath');
       return _buildErrorViewer('图片文件不存在');
@@ -417,11 +459,6 @@ class _MediaViewerState extends State<MediaViewer> with TickerProviderStateMixin
   Widget _buildVideoViewer(Map<String, dynamic> message) {
     final filePath = _getMediaFilePath(message);
     
-    // 🔥 调试信息
-    print('视频查看器 - 文件路径: $filePath');
-    print('视频查看器 - 文件类型: ${message['fileType']}');
-    print('视频查看器 - 消息数据: $message');
-    
     if (filePath == null || !File(filePath).existsSync()) {
       print('视频查看器错误 - 文件不存在: $filePath');
       return _buildErrorViewer('视频文件不存在');
@@ -438,21 +475,36 @@ class _MediaViewerState extends State<MediaViewer> with TickerProviderStateMixin
         aspectRatio: _videoController!.value.aspectRatio,
         child: Stack(
           children: [
-            VideoPlayer(_videoController!),
+            // 🔥 修复：安全的视频播放器
+            _videoController != null && _videoController!.value.isInitialized
+                ? VideoPlayer(_videoController!)
+                : Container(
+                    color: Colors.black,
+                    child: Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    ),
+                  ),
             
             // 播放控制
             Positioned.fill(
               child: GestureDetector(
                 onTap: () {
-                  setState(() {
-                    if (_videoController!.value.isPlaying) {
-                      _videoController!.pause();
-                      _isVideoPlaying = false;
-                    } else {
-                      _videoController!.play();
-                      _isVideoPlaying = true;
-                    }
-                  });
+                  // 🔥 修复：安全的视频播放控制
+                  if (_videoController != null && _videoController!.value.isInitialized && mounted) {
+                    setState(() {
+                      try {
+                        if (_videoController!.value.isPlaying) {
+                          _videoController!.pause();
+                          _isVideoPlaying = false;
+                        } else {
+                          _videoController!.play();
+                          _isVideoPlaying = true;
+                        }
+                      } catch (e) {
+                        print('视频播放控制错误: $e');
+                      }
+                    });
+                  }
                 },
                 child: Container(
                   color: Colors.transparent,

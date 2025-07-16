@@ -4596,20 +4596,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       return fileType == 'image' || fileType == 'video';
     }).toList();
     
-    // 🔥 调试信息
-    print('打开媒体查看器 - 当前文件路径: $currentFilePath');
-    print('打开媒体查看器 - 当前文件类型: $currentFileType');
-    print('打开媒体查看器 - 媒体消息数量: ${mediaMessages.length}');
-    
     // 找到当前点击文件的索引
     int currentIndex = 0;
     for (int i = 0; i < mediaMessages.length; i++) {
       final message = mediaMessages[i];
       final messagePath = message['localFilePath'] ?? message['filePath'];
-      print('媒体消息 $i - 文件路径: $messagePath, 文件类型: ${message['fileType']}');
       if (messagePath == currentFilePath) {
         currentIndex = i;
-        print('找到匹配的媒体消息，索引: $currentIndex');
         break;
       }
     }
