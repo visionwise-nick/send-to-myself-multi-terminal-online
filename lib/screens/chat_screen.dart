@@ -4540,14 +4540,53 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
+  // 🔥 新增：修复iOS Container路径的辅助方法
+  String? _fixIOSContainerPath(String? originalPath) {
+    if (originalPath == null || !Platform.isIOS) {
+      return originalPath;
+    }
+    
+    // 如果文件已经存在，直接返回
+    if (File(originalPath).existsSync()) {
+      return originalPath;
+    }
+    
+    try {
+      // 获取文件名
+      final fileName = originalPath.split('/').last;
+      final currentAppDir = Directory.systemTemp.parent.path;
+      
+      // 在files_cache目录中查找文件
+      final fixedPath = '$currentAppDir/Library/Application Support/files_cache/$fileName';
+      if (File(fixedPath).existsSync()) {
+        print('iOS路径修复成功: $fixedPath');
+        return fixedPath;
+      }
+      
+      // 尝试在Document目录中查找
+      final docPath = '$currentAppDir/Documents/$fileName';
+      if (File(docPath).existsSync()) {
+        print('iOS路径修复成功(Documents): $docPath');
+        return docPath;
+      }
+    } catch (e) {
+      print('iOS路径修复失败: $e');
+    }
+    
+    return originalPath;
+  }
+
   // 🔥 增强：打开文件（区分媒体文件和其他文件）
   Future<void> _openFile(String? filePath, String? fileUrl, String? fileType) async {
     try {
       String? pathToOpen;
       
-      // 优先使用传入的本地路径
-      if (filePath != null && File(filePath).existsSync()) {
-        pathToOpen = filePath;
+      // 🔥 修复：iOS Container路径问题
+      String? fixedFilePath = _fixIOSContainerPath(filePath);
+      
+      // 优先使用修复后的本地路径
+      if (fixedFilePath != null && File(fixedFilePath).existsSync()) {
+        pathToOpen = fixedFilePath;
       } else if (fileUrl != null) {
         // 转换相对URL为绝对URL
         String fullUrl = fileUrl;
@@ -4596,14 +4635,28 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       return fileType == 'image' || fileType == 'video';
     }).toList();
     
-    // 找到当前点击文件的索引
+    // 🔥 修复：找到当前点击文件的索引（处理iOS Container路径问题）
     int currentIndex = 0;
+    final currentFileName = currentFilePath.split('/').last;
+    
     for (int i = 0; i < mediaMessages.length; i++) {
       final message = mediaMessages[i];
       final messagePath = message['localFilePath'] ?? message['filePath'];
-      if (messagePath == currentFilePath) {
+      final fixedMessagePath = _fixIOSContainerPath(messagePath);
+      
+      // 首先尝试完全匹配
+      if (fixedMessagePath == currentFilePath) {
         currentIndex = i;
         break;
+      }
+      
+      // 如果完全匹配失败，尝试文件名匹配（处理Container路径变化）
+      if (messagePath != null) {
+        final messageFileName = messagePath.split('/').last;
+        if (messageFileName == currentFileName) {
+          currentIndex = i;
+          break;
+        }
       }
     }
     

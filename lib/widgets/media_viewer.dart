@@ -6,6 +6,7 @@ import 'package:video_player/video_player.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:gal/gal.dart';
+import 'package:flutter/foundation.dart';
 import '../utils/localization_helper.dart';
 import '../theme/app_theme.dart';
 
@@ -119,7 +120,47 @@ class _MediaViewerState extends State<MediaViewer> with TickerProviderStateMixin
   }
 
   String? _getMediaFilePath(Map<String, dynamic> message) {
-    return message['localFilePath'] ?? message['filePath'];
+    // 🔥 修复：iOS Container路径问题
+    String? localPath = message['localFilePath'];
+    String? originalPath = message['filePath'];
+    
+    // 优先使用localFilePath，如果文件存在
+    if (localPath != null && File(localPath).existsSync()) {
+      return localPath;
+    }
+    
+    // 如果localFilePath不存在，尝试originalPath
+    if (originalPath != null && File(originalPath).existsSync()) {
+      return originalPath;
+    }
+    
+    // 🔥 iOS修复：如果都不存在，尝试修复Container路径
+    if (localPath != null && Platform.isIOS) {
+      try {
+        // 获取当前应用的文档目录
+        final fileName = localPath.split('/').last;
+        final currentAppDir = Directory.systemTemp.parent.path;
+        
+        // 在files_cache目录中查找文件
+        final fixedPath = '$currentAppDir/Library/Application Support/files_cache/$fileName';
+        if (File(fixedPath).existsSync()) {
+          print('iOS路径修复成功: $fixedPath');
+          return fixedPath;
+        }
+        
+        // 尝试在Document目录中查找
+        final docPath = '$currentAppDir/Documents/$fileName';
+        if (File(docPath).existsSync()) {
+          print('iOS路径修复成功(Documents): $docPath');
+          return docPath;
+        }
+      } catch (e) {
+        print('iOS路径修复失败: $e');
+      }
+    }
+    
+    // 如果所有尝试都失败，返回原始路径
+    return localPath ?? originalPath;
   }
 
   void _toggleUI() {
