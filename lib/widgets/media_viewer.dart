@@ -390,7 +390,13 @@ class _MediaViewerState extends State<MediaViewer> with TickerProviderStateMixin
   Widget _buildImageViewer(Map<String, dynamic> message) {
     final filePath = _getMediaFilePath(message);
     
+    // 🔥 调试信息
+    print('图片查看器 - 文件路径: $filePath');
+    print('图片查看器 - 文件类型: ${message['fileType']}');
+    print('图片查看器 - 消息数据: $message');
+    
     if (filePath == null || !File(filePath).existsSync()) {
+      print('图片查看器错误 - 文件不存在: $filePath');
       return _buildErrorViewer('图片文件不存在');
     }
 
@@ -411,7 +417,13 @@ class _MediaViewerState extends State<MediaViewer> with TickerProviderStateMixin
   Widget _buildVideoViewer(Map<String, dynamic> message) {
     final filePath = _getMediaFilePath(message);
     
+    // 🔥 调试信息
+    print('视频查看器 - 文件路径: $filePath');
+    print('视频查看器 - 文件类型: ${message['fileType']}');
+    print('视频查看器 - 消息数据: $message');
+    
     if (filePath == null || !File(filePath).existsSync()) {
+      print('视频查看器错误 - 文件不存在: $filePath');
       return _buildErrorViewer('视频文件不存在');
     }
 

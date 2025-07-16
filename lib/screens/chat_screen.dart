@@ -4447,7 +4447,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           if (snapshot.hasData) {
             final image = snapshot.data!;
             final aspectRatio = image.width / image.height;
-            final maxWidth = 250.0; // 最大宽度
+            final maxWidth = 83.0; // 最大宽度缩小到1/3
             final displayWidth = maxWidth;
             final displayHeight = displayWidth / aspectRatio;
             
@@ -4461,8 +4461,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             // 加载中显示固定尺寸
             return Image.file(
               File(filePath),
-              height: 150,
-              width: 250,
+              height: 50,
+              width: 83,
               fit: BoxFit.cover,
             );
           }
@@ -4471,8 +4471,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     } else if (fileUrl != null) {
       imageWidget = Container(
         constraints: BoxConstraints(
-          maxWidth: 250,
-          maxHeight: 300,
+          maxWidth: 83,
+          maxHeight: 100,
         ),
         child: Image.network(
           fileUrl,
@@ -4481,8 +4481,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return Container(
-              height: 150,
-              width: 250,
+              height: 50,
+              width: 83,
               color: const Color(0xFFF3F4F6),
               child: const Center(
                 child: CircularProgressIndicator(strokeWidth: 2),
@@ -4492,8 +4492,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           errorBuilder: (context, error, stackTrace) {
             print('图片加载失败: $error');
             return Container(
-              height: 150,
-              width: 250,
+              height: 50,
+              width: 83,
               color: const Color(0xFFF3F4F6),
               child: const Icon(Icons.image_not_supported, size: 20),
             );
@@ -4522,9 +4522,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   Widget _buildSimpleVideoPreview(String? filePath, String? fileUrl) {
     return Container(
       constraints: BoxConstraints(
-        maxWidth: 250,
-        maxHeight: 300,
-        minHeight: 150,
+        maxWidth: 83,
+        maxHeight: 100,
+        minHeight: 50,
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
@@ -4596,13 +4596,20 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       return fileType == 'image' || fileType == 'video';
     }).toList();
     
+    // 🔥 调试信息
+    print('打开媒体查看器 - 当前文件路径: $currentFilePath');
+    print('打开媒体查看器 - 当前文件类型: $currentFileType');
+    print('打开媒体查看器 - 媒体消息数量: ${mediaMessages.length}');
+    
     // 找到当前点击文件的索引
     int currentIndex = 0;
     for (int i = 0; i < mediaMessages.length; i++) {
       final message = mediaMessages[i];
       final messagePath = message['localFilePath'] ?? message['filePath'];
+      print('媒体消息 $i - 文件路径: $messagePath, 文件类型: ${message['fileType']}');
       if (messagePath == currentFilePath) {
         currentIndex = i;
+        print('找到匹配的媒体消息，索引: $currentIndex');
         break;
       }
     }
