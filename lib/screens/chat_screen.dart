@@ -187,6 +187,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   DateTime? _lastMessageReceivedTime;
   bool _hasWebSocketIssue = false;
   
+  // 🔥 性能优化：图片尺寸和文件存在性缓存
+  final Map<String, Size> _imageSizeCache = <String, Size>{};
+  final Map<String, bool> _fileExistsCache = <String, bool>{};
+  final Map<String, ui.Image> _imageCache = <String, ui.Image>{};
+  
   // 文件下载相关 - 优化缓存策略
   final Dio _dio = Dio();
   // 使用LRU缓存，限制内存中的文件路径映射数量
@@ -577,6 +582,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _downloadQueue.clear();
     _currentDownloadCount = 0;
     
+    // 🔥 性能优化：清理图片缓存
+    _clearImageCaches();
+    
     super.dispose();
   }
   
@@ -584,6 +592,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   void _startMessageIdCleanup() {
     _messageIdCleanupTimer = Timer.periodic(Duration(minutes: 30), (_) {
       _cleanupOldProcessedMessageIds();
+      
+      // 🔥 性能优化：定期清理图片缓存
+      if (_imageSizeCache.length > 50 || _fileExistsCache.length > 100) {
+        print('定期清理图片缓存，当前尺寸: ${_imageSizeCache.length}, 文件检查: ${_fileExistsCache.length}');
+        _clearImageCaches();
+      }
     });
   }
   
@@ -2409,8 +2423,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                   controller: _scrollController,
                                   padding: const EdgeInsets.symmetric(vertical: 8),
                                   itemCount: _displayMessages.length,
-                                  // 🔥 启用缓存机制，提高滚动性能
-                                  cacheExtent: 1000.0,
+                                  // 🔥 性能优化：增强滚动性能配置
+                                  cacheExtent: 1500.0, // 增加缓存范围
+                                  addAutomaticKeepAlives: true, // 保持已构建的widget
+                                  addRepaintBoundaries: true, // 添加重绘边界
                                   // 🔥 使用findChildIndexCallback优化性能
                                   findChildIndexCallback: (Key key) {
                                     if (key is ValueKey<String>) {
@@ -4435,39 +4451,66 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 修复：构建原始尺寸图片预览
+  // 🔥 性能优化：构建原始尺寸图片预览（带缓存）
   Widget _buildSimpleImagePreview(String? filePath, String? fileUrl) {
     Widget imageWidget;
     
-    if (filePath != null && File(filePath).existsSync()) {
-      // 🔥 使用原始尺寸，但限制最大宽度
-      imageWidget = FutureBuilder<ui.Image>(
-        future: _getImageDimensions(File(filePath)),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final image = snapshot.data!;
-            final aspectRatio = image.width / image.height;
-            final maxWidth = 83.0; // 最大宽度缩小到1/3
-            final displayWidth = maxWidth;
-            final displayHeight = displayWidth / aspectRatio;
-            
-            return Image.file(
-              File(filePath),
-              width: displayWidth,
-              height: displayHeight,
-              fit: BoxFit.cover,
-            );
-          } else {
-            // 加载中显示固定尺寸
-            return Image.file(
-              File(filePath),
-              height: 50,
-              width: 83,
-              fit: BoxFit.cover,
-            );
-          }
-        },
-      );
+    if (filePath != null && _cachedFileExists(filePath)) {
+      // 🔥 使用缓存的尺寸计算，避免重复异步操作
+      if (_imageSizeCache.containsKey(filePath)) {
+        // 使用缓存的尺寸
+        final cachedSize = _imageSizeCache[filePath]!;
+        final aspectRatio = cachedSize.width / cachedSize.height;
+        final maxWidth = 83.0;
+        final displayWidth = maxWidth;
+        final displayHeight = displayWidth / aspectRatio;
+        
+        imageWidget = Image.file(
+          File(filePath),
+          width: displayWidth,
+          height: displayHeight,
+          fit: BoxFit.cover,
+          // 🔥 添加图片缓存配置
+          cacheWidth: 83,
+          cacheHeight: (83 / aspectRatio).round(),
+        );
+      } else {
+        // 第一次加载，使用FutureBuilder但缓存结果
+        imageWidget = FutureBuilder<ui.Image>(
+          future: _getImageDimensions(File(filePath)),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final image = snapshot.data!;
+              final aspectRatio = image.width / image.height;
+              final maxWidth = 83.0;
+              final displayWidth = maxWidth;
+              final displayHeight = displayWidth / aspectRatio;
+              
+              // 缓存尺寸信息
+              _imageSizeCache[filePath] = Size(image.width.toDouble(), image.height.toDouble());
+              
+              return Image.file(
+                File(filePath),
+                width: displayWidth,
+                height: displayHeight,
+                fit: BoxFit.cover,
+                cacheWidth: 83,
+                cacheHeight: displayHeight.round(),
+              );
+            } else {
+              // 加载中显示固定尺寸
+              return Image.file(
+                File(filePath),
+                height: 50,
+                width: 83,
+                fit: BoxFit.cover,
+                cacheWidth: 83,
+                cacheHeight: 50,
+              );
+            }
+          },
+        );
+      }
     } else if (fileUrl != null) {
       imageWidget = Container(
         constraints: BoxConstraints(
@@ -4477,6 +4520,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         child: Image.network(
           fileUrl,
           fit: BoxFit.cover,
+          // 🔥 性能优化：添加图片缓存配置
+          cacheWidth: 83,
+          cacheHeight: 100,
           headers: _dio.options.headers.map((key, value) => MapEntry(key, value.toString())),
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
@@ -4490,7 +4536,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             );
           },
           errorBuilder: (context, error, stackTrace) {
-            print('图片加载失败: $error');
+            print('网络图片加载失败: $error');
             return Container(
               height: 50,
               width: 83,
@@ -4510,12 +4556,59 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     );
   }
 
-  // 🔥 新增：获取图片尺寸的方法
+  // 🔥 性能优化：获取图片尺寸的方法（带缓存）
   Future<ui.Image> _getImageDimensions(File imageFile) async {
-    final bytes = await imageFile.readAsBytes();
-    final codec = await ui.instantiateImageCodec(bytes);
-    final frame = await codec.getNextFrame();
-    return frame.image;
+    final path = imageFile.path;
+    
+    // 检查缓存
+    if (_imageCache.containsKey(path)) {
+      return _imageCache[path]!;
+    }
+    
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      final image = frame.image;
+      
+      // 缓存结果（限制缓存大小防止内存泄漏）
+      if (_imageCache.length < 100) {
+        _imageCache[path] = image;
+      }
+      
+      return image;
+    } catch (e) {
+      print('获取图片尺寸失败: $e');
+      rethrow;
+    }
+  }
+
+  // 🔥 性能优化：缓存的文件存在性检查
+  bool _cachedFileExists(String filePath) {
+    if (_fileExistsCache.containsKey(filePath)) {
+      return _fileExistsCache[filePath]!;
+    }
+    
+    final exists = File(filePath).existsSync();
+    
+    // 缓存结果（限制缓存大小）
+    if (_fileExistsCache.length < 200) {
+      _fileExistsCache[filePath] = exists;
+    }
+    
+    return exists;
+  }
+
+  // 🔥 性能优化：清理缓存（在适当时机调用）
+  void _clearImageCaches() {
+    _imageSizeCache.clear();
+    _fileExistsCache.clear();
+    // 不清理_imageCache，因为ui.Image对象需要手动dispose
+    for (final image in _imageCache.values) {
+      image.dispose();
+    }
+    _imageCache.clear();
+    print('图片缓存已清理');
   }
 
   // 🔥 修复：构建原始尺寸视频预览

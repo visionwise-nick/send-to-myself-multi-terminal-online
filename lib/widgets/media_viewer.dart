@@ -124,6 +124,7 @@ class _MediaViewerState extends State<MediaViewer> with TickerProviderStateMixin
     String? localPath = message['localFilePath'];
     String? originalPath = message['filePath'];
     
+    // 🔥 性能优化：使用缓存避免重复文件系统访问
     // 优先使用localFilePath，如果文件存在
     if (localPath != null && File(localPath).existsSync()) {
       return localPath;
