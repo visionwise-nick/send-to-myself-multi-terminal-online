@@ -324,7 +324,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final filter = _currentFilter;
     return filter.hasActiveFilters ? _filteredMessages : _messages;
   }
-
+  
   // 🔥 新增：设置WebSocket连接状态监听
   void _setupWebSocketConnectionStateListener() {
     // 🔥 修复：通过WebSocketManager实例直接访问连接状态流
@@ -2456,7 +2456,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                     }
                                     return null;
                                   },
-                                                                      itemBuilder: (context, index) {
+                                  itemBuilder: (context, index) {
                                       final message = _displayMessages[index];
                                     // 🔥 为每个消息项添加唯一的key，提高重建性能
                                     return KeyedSubtree(
@@ -2771,8 +2771,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           // 3. 如果缓存中也没有，先下载文件
           if (pathToShare == null || !File(pathToShare).existsSync()) {
             try {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
+         if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('正在准备文件: $fileName...'),
                     backgroundColor: Colors.blue,
@@ -2791,9 +2791,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         // 添加到可用文件列表
         if (pathToShare != null && File(pathToShare).existsSync()) {
           validFiles.add(XFile(pathToShare));
-        }
-      }
-      
+         }
+       }
+       
       // 🔥 修复：一次性分享所有内容
       if (validFiles.isNotEmpty || textMessages.isNotEmpty) {
         // 准备分享的文本内容
@@ -2853,7 +2853,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               duration: Duration(seconds: 3),
             ),
           );
-        }
+           }
       } else {
         // 没有可分享的内容
         _multiSelectController.exitMultiSelectMode();
@@ -3889,24 +3889,24 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         children: [
           // 主要内容
           Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '下载中...',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppTheme.textSecondaryColor,
-                  fontWeight: FontWeight.w500,
-                ),
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '下载中...',
+            style: TextStyle(
+              fontSize: 11,
+              color: AppTheme.textSecondaryColor,
+              fontWeight: FontWeight.w500,
+            ),
               ),
               // 显示下载时长
               if (startTime != null)
@@ -3940,7 +3940,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-            ),
+          ),
         ],
       ),
     );
@@ -4172,19 +4172,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.cloud_download_outlined,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.cloud_download_outlined,
                   size: 20,
-                  color: AppTheme.primaryColor,
-                ),
+              color: AppTheme.primaryColor,
+            ),
                 const SizedBox(width: 6),
-                Text(
+            Text(
                   '正在准备下载...',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppTheme.primaryColor,
+              style: TextStyle(
+                fontSize: 11,
+                color: AppTheme.primaryColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -4294,19 +4294,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         }
       },
       child: Container(
-        height: 80,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(4),
-        ),
+      height: 80,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(4),
+      ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(height: 4),
             Text(
@@ -4360,34 +4360,34 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         }
       },
       child: Container(
-        height: 80,
-        width: double.infinity,
-        decoration: BoxDecoration(
+      height: 80,
+      width: double.infinity,
+      decoration: BoxDecoration(
           color: const Color(0xFFFFF2F2),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: Colors.orange),
-        ),
-        child: Column(
+      ),
+      child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
                   Icons.refresh,
                   size: 16,
                   color: Colors.orange,
-                ),
+          ),
                 const SizedBox(width: 4),
-                Text(
+          Text(
                   '点击重试下载',
-                  style: TextStyle(
+            style: TextStyle(
                     fontSize: 11,
                     color: Colors.orange,
                     fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            ),
+          ),
+        ],
             ),
             const SizedBox(height: 2),
             Text(
@@ -4486,11 +4486,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         final displayWidth = maxWidth;
         final displayHeight = displayWidth / aspectRatio;
         
-        imageWidget = Image.file(
-          File(filePath),
+      imageWidget = Image.file(
+        File(filePath),
           width: displayWidth,
           height: displayHeight,
-          fit: BoxFit.cover,
+        fit: BoxFit.cover,
           // 🔥 iOS内存优化：大幅减小缓存尺寸
           cacheWidth: 40,
           cacheHeight: (40 / aspectRatio).round(),
@@ -4537,32 +4537,32 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           maxHeight: 100,
         ),
         child: Image.network(
-          fileUrl,
-          fit: BoxFit.cover,
+        fileUrl,
+        fit: BoxFit.cover,
           // 🔥 iOS内存优化：大幅减小网络图片缓存
           cacheWidth: 40,
           cacheHeight: 50,
           headers: _dio.options.headers.map((key, value) => MapEntry(key, value.toString())),
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
               height: 50,
               width: 83,
-              color: const Color(0xFFF3F4F6),
-              child: const Center(
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
+            color: const Color(0xFFF3F4F6),
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
             print('网络图片加载失败: $error');
-            return Container(
+          return Container(
               height: 50,
               width: 83,
-              color: const Color(0xFFF3F4F6),
+            color: const Color(0xFFF3F4F6),
               child: const Icon(Icons.image_not_supported, size: 20),
-            );
-          },
+          );
+        },
         ),
       );
     } else {
@@ -4632,24 +4632,24 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   // 🔥 修复：构建原始尺寸视频预览
   Widget _buildSimpleVideoPreview(String? filePath, String? fileUrl) {
-    return Container(
+          return Container(
       constraints: BoxConstraints(
         maxWidth: 83,
         maxHeight: 100,
         minHeight: 50,
       ),
-      decoration: BoxDecoration(
+            decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        color: const Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: _VideoGifPreview(
           videoPath: filePath,
           videoUrl: fileUrl,
-        ),
-      ),
-    );
+              ),
+            ),
+          );
   }
 
   // 🔥 新增：修复iOS Container路径的辅助方法
@@ -4723,11 +4723,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           _openMediaViewer(pathToOpen, fileType);
         } else {
           // 其他文件类型使用系统默认应用打开
-          final result = await OpenFilex.open(pathToOpen);
-          print('文件打开结果: ${result.type}, ${result.message}');
-          
-          if (result.type != ResultType.done) {
-            _showErrorMessage('无法打开文件: ${result.message}');
+        final result = await OpenFilex.open(pathToOpen);
+        print('文件打开结果: ${result.type}, ${result.message}');
+        
+        if (result.type != ResultType.done) {
+          _showErrorMessage('无法打开文件: ${result.message}');
           }
         }
       } else {
@@ -4932,37 +4932,37 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                   ),
                                 ),
                               );
-                            },
-                            child: TextField(
-                              controller: _messageController,
-                              focusNode: _focusNode,
-                              decoration: InputDecoration(
-                                hintText: _isDesktop() 
-                                  ? (_pendingFiles.isNotEmpty 
-                                    ? LocalizationHelper.of(context).addDescriptionText 
-                                    : LocalizationHelper.of(context).inputMessageHintDesktop)
-                                  : LocalizationHelper.of(context).inputMessageHintMobile,
-                                hintStyle: AppTheme.bodyStyle.copyWith(
-                                  color: AppTheme.textTertiaryColor,
-                                  fontSize: _isDesktop() ? 13 : 14,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          },
+                          child: TextField(
+                            controller: _messageController,
+                            focusNode: _focusNode,
+                            decoration: InputDecoration(
+                              hintText: _isDesktop() 
+                                ? (_pendingFiles.isNotEmpty 
+                                  ? LocalizationHelper.of(context).addDescriptionText 
+                                  : LocalizationHelper.of(context).inputMessageHintDesktop)
+                                : LocalizationHelper.of(context).inputMessageHintMobile,
+                              hintStyle: AppTheme.bodyStyle.copyWith(
+                                color: AppTheme.textTertiaryColor,
+                                fontSize: _isDesktop() ? 13 : 14,
                               ),
-                              style: AppTheme.bodyStyle,
-                              maxLines: 4,
-                              minLines: 1,
-                              textInputAction: _isDesktop() ? TextInputAction.newline : TextInputAction.send,
-                              onChanged: (text) {
-                                setState(() {
-                                  _isTyping = text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
-                                });
-                              },
-                              onSubmitted: (text) {
-                                if (!_isDesktop()) {
-                                  _sendMessageWithFiles();
-                                }
-                              },
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                            style: AppTheme.bodyStyle,
+                            maxLines: 4,
+                            minLines: 1,
+                            textInputAction: _isDesktop() ? TextInputAction.newline : TextInputAction.send,
+                            onChanged: (text) {
+                              setState(() {
+                                _isTyping = text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
+                              });
+                            },
+                            onSubmitted: (text) {
+                              if (!_isDesktop()) {
+                                _sendMessageWithFiles();
+                              }
+                            },
                             ),
                           ),
                         ),
@@ -6261,23 +6261,23 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     } finally {
       // 🔥 修复：确保下载状态总是被正确清理
       if (_downloadingFiles.contains(fullUrl)) {
-        final shouldRetry = _downloadRetryCount[fullUrl] != null && 
-                           _downloadRetryCount[fullUrl]! < _maxRetryAttempts;
-        
-        if (!shouldRetry) {
+      final shouldRetry = _downloadRetryCount[fullUrl] != null && 
+                         _downloadRetryCount[fullUrl]! < _maxRetryAttempts;
+      
+      if (!shouldRetry) {
           print('🧹 清理下载状态: $fileName');
-          _removeDownloadingFile(fullUrl);
-          if (mounted) {
-            setState(() {
-              final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
-              if (messageIndex != -1) {
-                _messages[messageIndex]['downloadProgress'] = null;
-                _messages[messageIndex]['transferSpeed'] = 0.0;
-                _messages[messageIndex]['eta'] = null;
-              }
-            });
-          }
+        _removeDownloadingFile(fullUrl);
+        if (mounted) {
+          setState(() {
+            final messageIndex = _messages.indexWhere((m) => m['id'] == message['id']);
+            if (messageIndex != -1) {
+              _messages[messageIndex]['downloadProgress'] = null;
+              _messages[messageIndex]['transferSpeed'] = 0.0;
+              _messages[messageIndex]['eta'] = null;
+            }
+          });
         }
+      }
       }
     }
   }
@@ -8303,10 +8303,10 @@ Add-Type -AssemblyName System.Drawing
 \$video.Dispose()
 \$thumb.Dispose()
 ''';
-           
-           final result = await Process.run('powershell', ['-Command', psScript]);
-            
-           if (result.exitCode == 0) {
+          
+          final result = await Process.run('powershell', ['-Command', psScript]);
+          
+          if (result.exitCode == 0) {
             final thumbnailFile = File(tempPath);
             if (await thumbnailFile.exists()) {
               final thumbnailBytes = await thumbnailFile.readAsBytes();

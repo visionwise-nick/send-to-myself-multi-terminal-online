@@ -2333,6 +2333,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareFailed => '❌ Share failed';
 
   @override
+  String get downloadedFile => 'downloaded_file';
+
+  @override
   String get shareException => '❌ Share exception';
 
   @override
@@ -2895,4 +2898,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get confirmLogoutContent =>
       'Are you sure you want to log out of the current device?';
+
+  @override
+  String get selectFromGallery => 'Select from Gallery';
+
+  @override
+  String get copyright => '© 2023 Send To Myself';
 }

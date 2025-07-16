@@ -460,7 +460,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noMemories => '暂无记忆';
 
   @override
-  String get searchMemories => '搜索记忆...';
+  String get searchMemories => '搜索记忆内容、标签...';
 
   @override
   String get filterByCategory => '按分类筛选';
@@ -472,7 +472,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sortByPriority => '按优先级排序';
 
   @override
-  String get memoryCategories => '记忆分类';
+  String get memoryCategories => '分类';
 
   @override
   String get personalMemory => '个人';
@@ -1719,7 +1719,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendFileFailed => '发送文件失败';
 
   @override
-  String get noFilesToSend => '没有要发送的文件';
+  String get noFilesToSend => '没有文件可发送';
 
   @override
   String get batchRecall => '批量撤回';
@@ -1757,7 +1757,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String fileNotExists(int index) {
-    return '第$index个文件不存在';
+    return '文件不存在';
   }
 
   @override
@@ -2303,6 +2303,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shareFailed => '❌ 分享失败';
 
   @override
+  String get downloadedFile => '已下载文件';
+
+  @override
   String get shareException => '❌ 分享异常';
 
   @override
@@ -2345,199 +2348,203 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fileUnavailableSharedText => '文件不可用，已分享文字内容';
 
   @override
-  String get resolvingServerDomain => '🔍 解析服务器域名...';
+  String get resolvingServerDomain => '🔍 Resolving server domain...';
 
   @override
   String serverDnsSuccess(String address) {
-    return '✅ 服务器DNS解析成功: $address';
+    return '✅ Server DNS resolution successful: $address';
   }
 
   @override
-  String get serverDnsFailed => '❌ 服务器DNS解析失败: 无结果';
+  String get serverDnsFailed => '❌ Server DNS resolution failed: no result';
 
   @override
   String serverDnsError(String error) {
-    return '❌ 服务器DNS解析失败: $error';
+    return '❌ Server DNS resolution failed: $error';
   }
 
   @override
-  String get testingServerConnection => '🔍 测试服务器连接...';
+  String get testingServerConnection => '🔍 Testing server connection...';
 
   @override
-  String get serverConnectionSuccess => '✅ 服务器连接成功';
+  String get serverConnectionSuccess => '✅ Server connection successful';
 
   @override
   String serverConnectionFailed(String error) {
-    return '❌ 服务器连接失败: $error';
+    return '❌ Server connection failed: $error';
   }
 
   @override
-  String get startingWebSocketTest => '🧪 开始WebSocket连接测试...';
+  String get startingWebSocketTest =>
+      '🧪 Starting WebSocket connection test...';
 
   @override
   String currentConnectionStatus(String status) {
-    return '📊 当前连接状态: $status';
+    return '📊 Current connection status: $status';
   }
 
   @override
-  String get sendingTestPing => '📡 发送测试ping...';
+  String get sendingTestPing => '📡 Sending test ping...';
 
   @override
-  String get webSocketNotConnected => '⚠️ WebSocket未连接，无法发送测试消息';
+  String get webSocketNotConnected =>
+      '⚠️ WebSocket not connected, unable to send test message';
 
   @override
-  String get executingForceReconnect => '🔄 执行强制重连...';
+  String get executingForceReconnect => '🔄 Executing force reconnect...';
 
   @override
-  String get stopPingTest => '⏹️ 停止Ping测试';
+  String get stopPingTest => '⏹️ Stop Ping test';
 
   @override
-  String get startPingTest => '🏓 开始Ping测试 (每5秒)';
+  String get startPingTest => '🏓 Start Ping test (every 5 seconds)';
 
   @override
-  String get sendingPing => '🏓 发送测试ping';
+  String get sendingPing => '🏓 Sending test ping';
 
   @override
-  String get connectionDisconnectedPausePing => '⚠️ 连接断开，暂停ping测试';
+  String get connectionDisconnectedPausePing =>
+      '⚠️ Connection disconnected, pausing ping test';
 
   @override
-  String get logCleared => '🧹 日志已清除';
+  String get logCleared => '🧹 Log cleared';
 
   @override
-  String get logCopiedToClipboard => '日志已复制到剪贴板';
+  String get logCopiedToClipboard => 'Log copied to clipboard';
 
   @override
-  String get noResult => '无结果';
+  String get noResult => 'no result';
 
   @override
   String get sectionwidgets => '';
 
   @override
-  String get logoutErrorMessage => '退出登录时发生错误';
+  String get logoutErrorMessage => 'Error occurred during logout';
 
   @override
-  String get loginStatusExpired => '登录状态已失效';
+  String get loginStatusExpired => 'Login status has expired';
 
   @override
-  String get logoutFailedMessage => '退出登录失败，您可以选择强制退出或重试。';
+  String get logoutFailedMessage =>
+      'Logout failed, you can choose to force logout or retry.';
 
   @override
-  String get preparingToSendFiles => '准备发送文件...';
+  String get preparingToSendFiles => 'Preparing to send files...';
 
   @override
   String sendingFileCount(int current) {
-    return '正在发送第$current个文件...';
+    return 'Sending file $current...';
   }
 
   @override
   String sendingFileProgress(int current, String sizeMB) {
-    return '发送第$current个文件 (${sizeMB}MB)';
+    return 'Sending file $current (${sizeMB}MB)';
   }
 
   @override
   String retryingSendFile(int current) {
-    return '重试发送第$current个文件';
+    return 'Retrying to send file $current';
   }
 
   @override
   String fileSendSuccess(int current) {
-    return '✅ 第$current个文件发送成功';
+    return '✅ File $current sent successfully';
   }
 
   @override
   String filesCompleted(int success, int total) {
-    return '已完成 $success/$total 个文件';
+    return 'Completed $success/$total files';
   }
 
   @override
-  String get waitingForServerProcessing => '等待服务器处理...';
+  String get waitingForServerProcessing => 'Waiting for server processing...';
 
   @override
-  String get ensureFileFullyUploaded => '确保文件完全上传';
+  String get ensureFileFullyUploaded => 'Ensuring file is fully uploaded';
 
   @override
   String fileSendFailed(int current) {
-    return '❌ 第$current个文件发送失败';
+    return '❌ File $current failed to send';
   }
 
   @override
   String maxRetriesReached(String fileName, int maxRetries) {
-    return '$fileName 已重试$maxRetries次仍失败';
+    return '$fileName failed after $maxRetries retries';
   }
 
   @override
   String fileSendException(int current) {
-    return '❌ 第$current个文件发送异常';
+    return '❌ File $current send exception';
   }
 
   @override
   String sendErrorMessage(String fileName, String error) {
-    return '$fileName 发送时出现错误: $error';
+    return '$fileName error during send: $error';
   }
 
   @override
   String fileDataIncomplete(int current) {
-    return '❌ 第$current个文件数据异常';
+    return '❌ File $current data exception';
   }
 
   @override
-  String get fileInfoIncompleteMessage => '文件信息不完整';
+  String get fileInfoIncompleteMessage => 'File information incomplete';
 
   @override
   String allFilesSentToGroup(int count) {
-    return '共发送了$count个文件到当前群组';
+    return 'Sent $count files to current group';
   }
 
   @override
   String successCountFiles(int success, int total) {
-    return '成功：$success/$total个文件';
+    return 'Success: $success/$total files';
   }
 
   @override
-  String get noFilesToSendError => '❌ 没有文件可发送';
+  String get noFilesToSendError => '❌ No files to send';
 
   @override
-  String get shareDataEmpty => '分享数据为空';
+  String get shareDataEmpty => 'Share data is empty';
 
   @override
-  String get sendingFile => '发送文件...';
+  String get sendingFile => 'Sending file...';
 
   @override
   String fileUploadFailed(String fileName) {
-    return '$fileName 上传失败';
+    return '$fileName upload failed';
   }
 
   @override
   String fileSentToGroup(String fileName) {
-    return '$fileName 已发送到群组';
+    return '$fileName sent to group';
   }
 
   @override
-  String get unsupportedShareType => '❌ 不支持的分享类型';
+  String get unsupportedShareType => '❌ Unsupported share type';
 
   @override
-  String get cannotHandleContentType => '无法处理此类型的内容';
+  String get cannotHandleContentType => 'Cannot handle this content type';
 
   @override
-  String get textSendSuccess => '✅ 文本发送成功！';
+  String get textSendSuccess => '✅ Text sent successfully!';
 
   @override
-  String get contentSentToGroup => '内容已发送到群组';
+  String get contentSentToGroup => 'Content sent to group';
 
   @override
-  String get textSendFailed => '❌ 文本发送失败';
+  String get textSendFailed => '❌ Text send failed';
 
   @override
-  String get unknownFileName => '未知文件名';
+  String get unknownFileName => 'Unknown file name';
 
   @override
   String filePathInvalid(String fileName) {
-    return '$fileName 文件路径无效';
+    return '$fileName invalid file path';
   }
 
   @override
   String retryAttempt(int retry, String fileName) {
-    return '第$retry次重试 - $fileName';
+    return 'Retry $retry - $fileName';
   }
 
   @override
@@ -2557,111 +2564,112 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get freePlan => '免费版';
+  String get freePlan => 'Free';
 
   @override
-  String get freePlanDescription => '个人使用';
+  String get freePlanDescription => 'For personal use';
 
   @override
-  String get basicPlan => '基础版';
+  String get basicPlan => 'Basic';
 
   @override
-  String get basicPlanDescription => '小团队使用';
+  String get basicPlanDescription => 'For small teams';
 
   @override
-  String get proPlan => '专业版';
+  String get proPlan => 'Pro';
 
   @override
-  String get proPlanDescription => '团队使用';
+  String get proPlanDescription => 'For teams';
 
   @override
-  String get enterprisePlan => '企业版';
+  String get enterprisePlan => 'Enterprise';
 
   @override
-  String get enterprisePlanDescription => '大型企业使用';
+  String get enterprisePlanDescription => 'For large enterprises';
 
   @override
-  String get feature2DeviceGroup => '2台设备群组';
+  String get feature2DeviceGroup => '2 device groups';
 
   @override
-  String get featureBasicFileTransfer => '基础文件传输';
+  String get featureBasicFileTransfer => 'Basic file transfer';
 
   @override
-  String get featureTextMessage => '文本消息';
+  String get featureTextMessage => 'Text messages';
 
   @override
-  String get featureImageTransfer => '图片传输';
+  String get featureImageTransfer => 'Image transfer';
 
   @override
-  String get feature5DeviceGroup => '5台设备群组';
+  String get feature5DeviceGroup => '5 device groups';
 
   @override
-  String get featureUnlimitedFileTransfer => '无限文件传输';
+  String get featureUnlimitedFileTransfer => 'Unlimited file transfer';
 
   @override
-  String get featureVideoTransfer => '视频传输';
+  String get featureVideoTransfer => 'Video transfer';
 
   @override
-  String get featureMemoryFunction => '消息记忆功能';
+  String get featureMemoryFunction => 'Memory function';
 
   @override
-  String get featurePrioritySupport => '优先技术支持';
+  String get featurePrioritySupport => 'Priority support';
 
   @override
-  String get feature10DeviceGroup => '10台设备群组';
+  String get feature10DeviceGroup => '10 device groups';
 
   @override
-  String get featureAdvancedMemory => '高级消息记忆';
+  String get featureAdvancedMemory => 'Advanced memory';
 
   @override
-  String get featureDataSyncBackup => '数据同步备份';
+  String get featureDataSyncBackup => 'Data sync & backup';
 
   @override
-  String get featureDedicatedSupport => '专属客服支持';
+  String get featureDedicatedSupport => 'Dedicated support';
 
   @override
-  String get featureTeamManagement => '团队管理功能';
+  String get featureTeamManagement => 'Team management';
 
   @override
-  String get featureUnlimitedDeviceGroup => '无限台设备群组';
+  String get featureUnlimitedDeviceGroup => 'Unlimited device groups';
 
   @override
-  String get featureAdvancedAnalytics => '高级数据分析';
+  String get featureAdvancedAnalytics => 'Advanced analytics';
 
   @override
-  String get featureCustomIntegration => '自定义集成';
+  String get featureCustomIntegration => 'Custom integration';
 
   @override
-  String get subscriptionPricingTitle => '订阅定价';
+  String get subscriptionPricingTitle => 'Subscription Pricing';
 
   @override
-  String get subscriptionPricingSubtitle => '选择适合您的计划';
+  String get subscriptionPricingSubtitle =>
+      'Choose the plan that\'s right for you';
 
   @override
-  String get popularPlan => '热门推荐';
+  String get popularPlan => 'Popular';
 
   @override
-  String get mostPopular => '最受欢迎';
+  String get mostPopular => 'Most Popular';
 
   @override
-  String get recommended => '推荐';
+  String get recommended => 'Recommended';
 
   @override
-  String get yearlyDiscount => '年付优惠';
+  String get yearlyDiscount => 'Yearly discount';
 
   @override
   String savePercentage(int percentage) {
-    return '节省 $percentage%';
+    return 'Save $percentage%';
   }
 
   @override
   String get priceVariesByRegion => '订阅价格可能因地区而异';
 
   @override
-  String get pricingNote => '价格根据您的地区自动调整';
+  String get pricingNote => 'Prices are automatically adjusted for your region';
 
   @override
-  String get currencyDisclaimer => '价格以当地货币显示';
+  String get currencyDisclaimer => 'Prices shown in local currency';
 
   @override
   String get subscribeTo => 'Subscribe to';
@@ -2845,11 +2853,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appDescriptionText => '跨设备文件共享和消息记忆助手';
 
   @override
-  String get logoutCurrentDeviceDescription => '退出当前设备的登录状态';
+  String get logoutCurrentDeviceDescription => 'Log out of current device';
 
   @override
-  String get confirmLogoutTitle => '确认退出';
+  String get confirmLogoutTitle => 'Confirm Logout';
 
   @override
-  String get confirmLogoutContent => '确定要退出当前设备的登录状态吗？';
+  String get confirmLogoutContent =>
+      'Are you sure you want to log out of the current device?';
+
+  @override
+  String get selectFromGallery => '从相册选择';
+
+  @override
+  String get copyright => '© 2023 Send To Myself';
 }

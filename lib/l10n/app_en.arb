@@ -411,6 +411,7 @@
   "deviceId": "Device ID",
   "platform": "Platform",
   "unknown": "Unknown",
+  "logoutConfirmation": "Log out of the current device",
   "appTheme": "App Theme",
   "defaultTheme": "Default",
   "notificationSettings": "Notification Settings",
@@ -1280,6 +1281,29 @@
   "processingShareContent": "Processing shared content...",
   "shareSuccess": "✅ Share successful!",
   "shareFailed": "❌ Share failed",
+  "downloadedFile": "downloaded_file",
+  "takePhoto": "Take Photo",
+  "selectFromGallery": "Select from Gallery",
+  "copyright": "© 2023 Send To Myself",
+  "settings": "Settings",
+  "subscriptionManagement": "Subscription Management",
+  "currentSubscription": "Current Subscription",
+  "deviceInfo": "Device Information",
+  "deviceName": "Device Name",
+  "deviceType": "Device Type",
+  "unknownDevice": "Unknown Device",
+  "unknownPlatform": "Unknown",
+  "deviceId": "Device ID",
+  "about": "About",
+  "supportedDeviceGroup": "Supports {count} device group",
+  "@supportedDeviceGroup": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknown": "Unknown",
   "shareException": "❌ Share exception",
   "allContentSentToGroup": "All content has been sent to current group",
   "pleaseTryAgainLater": "Please try again later",

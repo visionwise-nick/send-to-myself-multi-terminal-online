@@ -4534,6 +4534,12 @@ abstract class AppLocalizations {
   /// **'❌ Share failed'**
   String get shareFailed;
 
+  /// No description provided for @downloadedFile.
+  ///
+  /// In en, this message translates to:
+  /// **'downloaded_file'**
+  String get downloadedFile;
+
   /// No description provided for @shareException.
   ///
   /// In en, this message translates to:

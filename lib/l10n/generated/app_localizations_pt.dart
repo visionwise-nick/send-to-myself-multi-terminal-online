@@ -2333,6 +2333,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get shareFailed => '❌ Share failed';
 
   @override
+  String get downloadedFile => 'downloaded_file';
+
+  @override
   String get shareException => '❌ Share exception';
 
   @override

@@ -3,18 +3,21 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/subscription_provider.dart';
 import '../theme/app_theme.dart';
-import '../utils/localization_helper.dart';
 import '../widgets/logout_dialog.dart';
 import 'subscription_screen.dart';
+import 'package:send_to_myself/l10n/generated/app_localizations.dart';
+
+const String _logoutConfirmation = '退出当前设备';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('设置'),
+        title: Text(l10n.settings),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: AppTheme.textPrimaryColor,
@@ -37,6 +40,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildSubscriptionSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -64,7 +68,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '订阅管理',
+                  l10n.subscriptionManagement,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -95,7 +99,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                     title: Text(
-                      '当前订阅',
+                      l10n.currentSubscription,
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         color: AppTheme.textPrimaryColor,
@@ -153,6 +157,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildDeviceInfoSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -180,7 +185,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '设备信息',
+                  l10n.deviceInfo,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -198,18 +203,18 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   _buildInfoTile(
                     icon: Icons.device_hub,
-                    title: '设备名称',
-                    subtitle: deviceInfo?['name'] ?? '未知设备',
+                    title: l10n.deviceName,
+                    subtitle: deviceInfo?['name'] ?? l10n.unknownDevice,
                   ),
                   _buildInfoTile(
                     icon: Icons.phone_android,
-                    title: '设备类型',
-                    subtitle: '${deviceInfo?['platform'] ?? '未知'} ${deviceInfo?['model'] ?? ''}',
+                    title: l10n.deviceType,
+                    subtitle: '${deviceInfo?['platform'] ?? l10n.unknown} ${deviceInfo?['model'] ?? ''}',
                   ),
                   _buildInfoTile(
                     icon: Icons.fingerprint,
-                    title: '设备ID',
-                    subtitle: deviceInfo?['deviceId']?.substring(0, 8) ?? '未知',
+                    title: l10n.deviceId,
+                    subtitle: deviceInfo?['deviceId']?.substring(0, 8) ?? l10n.unknown,
                   ),
                 ],
               );
@@ -221,6 +226,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildAboutSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -279,6 +285,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildLogoutSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -307,14 +314,14 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         title: Text(
-          '退出登录',
+          l10n.logout,
           style: TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.red,
           ),
         ),
-        subtitle: Text(
-          '退出当前设备的登录状态',
+        subtitle: const Text(
+          _logoutConfirmation,
           style: TextStyle(
             color: AppTheme.textSecondaryColor,
           ),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
-import '../utils/localization_helper.dart';
+import 'package:send_to_myself/l10n/generated/app_localizations.dart';
+
+const String _copyright = '© 2023 Send To Myself';
 
 class SettingsTab extends StatelessWidget {
   const SettingsTab({super.key});
@@ -12,7 +14,7 @@ class SettingsTab extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     final deviceInfo = authProvider.deviceInfo;
     final isSmallScreen = AppTheme.isSmallScreen(context);
-    final l10n = LocalizationHelper.of(context);
+    final l10n = AppLocalizations.of(context)!;
     
     return Padding(
       padding: EdgeInsets.all(AppTheme.getPadding(context)),
@@ -127,12 +129,12 @@ class SettingsTab extends StatelessWidget {
                 const SizedBox(height: 8),
                 
                 // 版权信息
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Center(
                     child: Text(
-                      '© 2023 Send To Myself',
-                      style: TextStyle(
+                      _copyright,
+                      style: const TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
                       ),
@@ -216,7 +218,7 @@ class SettingsTab extends StatelessWidget {
   
   // 显示功能即将上线对话框
   void _showComingSoonDialog(BuildContext context) {
-    final l10n = LocalizationHelper.of(context);
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -236,7 +238,7 @@ class SettingsTab extends StatelessWidget {
   
   // 显示退出登录确认对话框
   void _showLogoutDialog(BuildContext context) {
-    final l10n = LocalizationHelper.of(context);
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
