@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:crypto/crypto.dart';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
@@ -42,6 +43,7 @@ import '../services/websocket_manager.dart' as ws_manager; // 🔥 修复：使�
 import '../utils/localization_helper.dart';
 import '../config/debug_config.dart';
 import '../widgets/message_filter_widget.dart';
+import '../widgets/media_viewer.dart';
 
 // 文件下载处理器类
 class FileDownloadHandler {
@@ -4433,75 +4435,112 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 构建简单图片预览
+  // 🔥 修复：构建原始尺寸图片预览
   Widget _buildSimpleImagePreview(String? filePath, String? fileUrl) {
     Widget imageWidget;
     
     if (filePath != null && File(filePath).existsSync()) {
-      imageWidget = Image.file(
-        File(filePath),
-        height: 80, // 减少高度
-        width: double.infinity,
-        fit: BoxFit.cover,
+      // 🔥 使用原始尺寸，但限制最大宽度
+      imageWidget = FutureBuilder<ui.Image>(
+        future: _getImageDimensions(File(filePath)),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final image = snapshot.data!;
+            final aspectRatio = image.width / image.height;
+            final maxWidth = 250.0; // 最大宽度
+            final displayWidth = maxWidth;
+            final displayHeight = displayWidth / aspectRatio;
+            
+            return Image.file(
+              File(filePath),
+              width: displayWidth,
+              height: displayHeight,
+              fit: BoxFit.cover,
+            );
+          } else {
+            // 加载中显示固定尺寸
+            return Image.file(
+              File(filePath),
+              height: 150,
+              width: 250,
+              fit: BoxFit.cover,
+            );
+          }
+        },
       );
     } else if (fileUrl != null) {
-      imageWidget = Image.network(
-        fileUrl,
-        height: 80, // 减少高度
-        width: double.infinity,
-        fit: BoxFit.cover,
-        headers: _dio.options.headers.map((key, value) => MapEntry(key, value.toString())), // 添加认证头
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            height: 80, // 减少高度
-            width: double.infinity,
-            color: const Color(0xFFF3F4F6),
-            child: const Center(
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          print('图片加载失败: $error');
-          return Container(
-            height: 80, // 减少高度
-            width: double.infinity,
-            color: const Color(0xFFF3F4F6),
-            child: const Icon(Icons.image_not_supported, size: 20), // 减小图标
-          );
-        },
+      imageWidget = Container(
+        constraints: BoxConstraints(
+          maxWidth: 250,
+          maxHeight: 300,
+        ),
+        child: Image.network(
+          fileUrl,
+          fit: BoxFit.cover,
+          headers: _dio.options.headers.map((key, value) => MapEntry(key, value.toString())),
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              height: 150,
+              width: 250,
+              color: const Color(0xFFF3F4F6),
+              child: const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            print('图片加载失败: $error');
+            return Container(
+              height: 150,
+              width: 250,
+              color: const Color(0xFFF3F4F6),
+              child: const Icon(Icons.image_not_supported, size: 20),
+            );
+          },
+        ),
       );
     } else {
       return const SizedBox.shrink();
     }
     
     return ClipRRect(
-      borderRadius: BorderRadius.circular(4), // 减小圆角
+      borderRadius: BorderRadius.circular(8),
       child: imageWidget,
     );
   }
 
-  // 构建简单视频预览
+  // 🔥 新增：获取图片尺寸的方法
+  Future<ui.Image> _getImageDimensions(File imageFile) async {
+    final bytes = await imageFile.readAsBytes();
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    return frame.image;
+  }
+
+  // 🔥 修复：构建原始尺寸视频预览
   Widget _buildSimpleVideoPreview(String? filePath, String? fileUrl) {
-          return Container(
-      height: 80, // 减少高度
-            width: double.infinity,
-            decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4), // 减小圆角
-              color: const Color(0xFF1F2937),
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: 250,
+        maxHeight: 300,
+        minHeight: 150,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: const Color(0xFF1F2937),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(4), // 减小圆角
+        borderRadius: BorderRadius.circular(8),
         child: _VideoGifPreview(
           videoPath: filePath,
           videoUrl: fileUrl,
-              ),
-            ),
-          );
+        ),
+      ),
+    );
   }
 
-  // 打开本地文件（简化版）
+  // 🔥 增强：打开文件（区分媒体文件和其他文件）
   Future<void> _openFile(String? filePath, String? fileUrl, String? fileType) async {
     try {
       String? pathToOpen;
@@ -4526,12 +4565,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       }
       
       if (pathToOpen != null) {
-        print('打开文件: $pathToOpen');
-        final result = await OpenFilex.open(pathToOpen);
-        print('文件打开结果: ${result.type}, ${result.message}');
+        print('打开文件: $pathToOpen (类型: $fileType)');
         
-        if (result.type != ResultType.done) {
-          _showErrorMessage('无法打开文件: ${result.message}');
+        // 🔥 新增：对于图片和视频，使用自定义媒体查看器
+        if (fileType == 'image' || fileType == 'video') {
+          _openMediaViewer(pathToOpen, fileType);
+        } else {
+          // 其他文件类型使用系统默认应用打开
+          final result = await OpenFilex.open(pathToOpen);
+          print('文件打开结果: ${result.type}, ${result.message}');
+          
+          if (result.type != ResultType.done) {
+            _showErrorMessage('无法打开文件: ${result.message}');
+          }
         }
       } else {
         _showErrorMessage('文件不存在或正在下载中，请稍后再试');
@@ -4540,6 +4586,42 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       print('打开文件失败: $e');
       _showErrorMessage('打开文件失败: $e');
     }
+  }
+
+  // 🔥 新增：打开媒体查看器
+  void _openMediaViewer(String currentFilePath, String? currentFileType) {
+    // 收集所有媒体消息（图片和视频）
+    final mediaMessages = _messages.where((message) {
+      final fileType = message['fileType'];
+      return fileType == 'image' || fileType == 'video';
+    }).toList();
+    
+    // 找到当前点击文件的索引
+    int currentIndex = 0;
+    for (int i = 0; i < mediaMessages.length; i++) {
+      final message = mediaMessages[i];
+      final messagePath = message['localFilePath'] ?? message['filePath'];
+      if (messagePath == currentFilePath) {
+        currentIndex = i;
+        break;
+      }
+    }
+    
+    if (mediaMessages.isEmpty) {
+      _showErrorMessage('没有找到媒体文件');
+      return;
+    }
+    
+    // 打开媒体查看器
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => MediaViewer(
+          mediaMessages: mediaMessages,
+          initialIndex: currentIndex,
+        ),
+        fullscreenDialog: true,
+      ),
+    );
   }
 
   // 显示错误消息
