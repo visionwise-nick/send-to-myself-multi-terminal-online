@@ -1467,16 +1467,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
               GestureDetector(
                 onTap: () => _toggleMessageFilter(),
                 child: Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: _isFilterActive() 
-                        ? AppTheme.primaryColor.withOpacity(0.1)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(4),
+                        ? AppTheme.primaryColor.withOpacity(0.15)
+                        : AppTheme.primaryColor.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: _isFilterActive() 
+                          ? AppTheme.primaryColor.withOpacity(0.3)
+                          : AppTheme.primaryColor.withOpacity(0.1),
+                      width: 1,
+                    ),
                   ),
                   child: Icon(
                     Icons.filter_list,
-                    size: 16,
+                    size: 18,
                     color: _isFilterActive() 
                         ? AppTheme.primaryColor 
                         : AppTheme.textSecondaryColor,

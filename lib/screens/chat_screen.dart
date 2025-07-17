@@ -2398,6 +2398,17 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               if (widget.showFilterPanel)
                 Container(
                   margin: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
                   child: MessageFilterWidget(
                     currentFilter: _currentFilter,
                     onFilterChanged: _onFilterChanged,
@@ -4491,9 +4502,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           width: displayWidth,
           height: displayHeight,
         fit: BoxFit.cover,
-          // 🔥 iOS内存优化：大幅减小缓存尺寸
-          cacheWidth: 40,
-          cacheHeight: (40 / aspectRatio).round(),
+          // 🔥 修复：提高缓存尺寸以获得更清晰的缩略图
+          cacheWidth: 200,
+          cacheHeight: (200 / aspectRatio).round(),
         );
       } else {
         // 第一次加载，使用FutureBuilder但缓存结果
@@ -4512,9 +4523,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 width: displayWidth,
                 height: displayHeight,
                 fit: BoxFit.cover,
-                // 🔥 iOS内存优化：进一步减小缓存尺寸
-                cacheWidth: 40,
-                cacheHeight: (40 / aspectRatio).round(),
+                // 🔥 修复：提高缓存尺寸以获得更清晰的缩略图
+                cacheWidth: 200,
+                cacheHeight: (200 / aspectRatio).round(),
               );
             } else {
               // 加载中显示固定尺寸
@@ -4523,8 +4534,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 height: 50,
                 width: 83,
                 fit: BoxFit.cover,
-                cacheWidth: 40,
-                cacheHeight: 40,
+                cacheWidth: 200,
+                cacheHeight: 200,
               );
             }
           },
@@ -4539,9 +4550,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         child: Image.network(
         fileUrl,
         fit: BoxFit.cover,
-          // 🔥 iOS内存优化：大幅减小网络图片缓存
-          cacheWidth: 40,
-          cacheHeight: 50,
+          // 🔥 修复：提高网络图片缓存尺寸以获得更清晰的缩略图
+          cacheWidth: 200,
+          cacheHeight: 250,
           headers: _dio.options.headers.map((key, value) => MapEntry(key, value.toString())),
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
