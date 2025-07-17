@@ -481,9 +481,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   
   // 🔥 新增：消息筛选相关方法
   void _toggleMessageFilter() {
+    print('🔍 切换筛选面板状态: $_showMessageFilter -> ${!_showMessageFilter}');
     setState(() {
       _showMessageFilter = !_showMessageFilter;
     });
+    print('🔍 筛选面板状态已更新: $_showMessageFilter');
   }
   
   bool _isFilterActive() {
@@ -491,10 +493,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   }
   
   void _updateFilterParams(Map<String, dynamic>? params) {
+    print('🔍 更新筛选参数: $params');
     setState(() {
       _filterParams = params;
       if (params == null || params.isEmpty) {
         _showMessageFilter = false;
+        print('🔍 清除筛选参数，关闭筛选面板');
+      } else {
+        print('🔍 设置筛选参数: $params');
       }
     });
   }

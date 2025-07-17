@@ -2417,6 +2417,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final isGroup = widget.conversation['type'] == 'group';
     final title = widget.conversation['title'];
     
+    // 🔥 调试：筛选面板状态
+    print('🔍 构建聊天界面 - 筛选面板状态: ${widget.showFilterPanel}, 筛选参数: ${widget.filterParams}');
+    print('🔍 当前筛选器: ${_currentFilter.hasActiveFilters ? "有筛选条件" : "无筛选条件"}');
+    
     return ListenableBuilder(
       listenable: _multiSelectController,
       builder: (context, child) {
