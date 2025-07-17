@@ -1568,5 +1568,8 @@
   "sentByOthers": "他人发送的",
   
   "deviceOs": "操作系统",
-  "deviceVersion": "版本号"
+  "deviceVersion": "版本号",
+  
+  "confirm": "确认",
+  "cancel": "取消"
 } 

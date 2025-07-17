@@ -315,7 +315,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
   
   void _onFilterChanged(MessageFilter newFilter) {
-    // 将筛选变化传递给父组件
+    // 🔥 修复：将筛选变化传递给父组件，并立即应用筛选
     widget.onFilterChanged?.call(newFilter.toParams());
     _applyMessageFilter();
   }
@@ -2395,7 +2395,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           // 🔥 彻底移除AppBar - 完全沉浸式聊天界面
           body: Column(
             children: [
-              // 🔥 新增：筛选面板（由父组件控制显示）
+              // 🔥 修复：筛选面板（由父组件控制显示）
               if (widget.showFilterPanel)
                 Container(
                   margin: const EdgeInsets.all(16),
@@ -2410,10 +2410,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                       ),
                     ],
                   ),
-                  child: MessageFilterWidget(
-                    currentFilter: _currentFilter,
-                    onFilterChanged: _onFilterChanged,
-                    onClose: () => widget.onFilterChanged?.call(null),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: MessageFilterWidget(
+                      currentFilter: _currentFilter,
+                      onFilterChanged: _onFilterChanged,
+                      onClose: () => widget.onFilterChanged?.call(null),
+                    ),
                   ),
                 ),
               

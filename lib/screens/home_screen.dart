@@ -479,10 +479,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     LogoutDialog.showLogoutConfirmDialog(context);
   }
   
-  // 🔥 新增：消息筛选相关方法
+  // 🔥 修复：消息筛选相关方法
   void _toggleMessageFilter() {
     setState(() {
       _showMessageFilter = !_showMessageFilter;
+      // 🔥 修复：如果关闭筛选面板，清除筛选状态
+      if (!_showMessageFilter) {
+        _filterParams = null;
+      }
     });
   }
   
@@ -493,6 +497,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   void _updateFilterParams(Map<String, dynamic>? params) {
     setState(() {
       _filterParams = params;
+      // 🔥 修复：只有在有筛选条件时才保持面板打开
       if (params == null || params.isEmpty) {
         _showMessageFilter = false;
       }

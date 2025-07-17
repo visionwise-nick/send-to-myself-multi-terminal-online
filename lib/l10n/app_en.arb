@@ -1834,5 +1834,8 @@
   "sentByOthers": "Sent by Others",
   
   "deviceOs": "Operating System",
-  "deviceVersion": "Version"
+  "deviceVersion": "Version",
+  
+  "confirm": "Confirm",
+  "cancel": "Cancel"
 } 
