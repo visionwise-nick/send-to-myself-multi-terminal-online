@@ -306,11 +306,21 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   void _applyMessageFilter() {
     setState(() {
       final filter = _currentFilter;
+      print('🔍 开始应用筛选条件: ${filter.hasActiveFilters ? "有筛选条件" : "无筛选条件"}');
+      print('🔍 筛选详情: 类型=${filter.type}, 发送者=${filter.sender}, 关键词="${filter.searchKeyword}", 开始日期=${filter.startDate}, 结束日期=${filter.endDate}');
+      
       if (filter.hasActiveFilters) {
-        _filteredMessages = _messages.where((message) => filter.matchesMessage(message)).toList();
+        _filteredMessages = _messages.where((message) {
+          final matches = filter.matchesMessage(message);
+          if (!matches) {
+            print('🔍 消息不匹配筛选条件: ID=${message['id']}, 类型=${message['fileType']}, 发送者=${message['isMe'] ? "我" : "他人"}, 内容=${message['text']?.toString().substring(0, math.min(20, message['text']?.toString().length ?? 0)) ?? "文件"}');
+          }
+          return matches;
+        }).toList();
         print('🔍 应用筛选条件，筛选结果: ${_filteredMessages.length}/${_messages.length} 条消息');
       } else {
         _filteredMessages = List.from(_messages);
+        print('🔍 无筛选条件，显示所有消息: ${_messages.length} 条');
       }
     });
   }

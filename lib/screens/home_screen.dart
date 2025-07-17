@@ -1468,24 +1468,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => _toggleMessageFilter(),
-                  borderRadius: BorderRadius.circular(6),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _isFilterActive() 
-                          ? AppTheme.primaryColor.withOpacity(0.15)
-                          : AppTheme.primaryColor.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: _isFilterActive() 
-                            ? AppTheme.primaryColor.withOpacity(0.3)
-                            : AppTheme.primaryColor.withOpacity(0.1),
-                        width: 1,
-                      ),
-                    ),
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
                     child: Icon(
                       Icons.filter_list,
-                      size: 18,
+                      size: 16,
                       color: _isFilterActive() 
                           ? AppTheme.primaryColor 
                           : AppTheme.textSecondaryColor,
@@ -1528,7 +1516,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   // 🔥 优化：桌面端主内容区 - 屏蔽记忆功能，只显示聊天
   Widget _buildDesktopMainContent() {
     // 暂时屏蔽记忆功能，只显示聊天界面
-        return const MessagesTab();
+    return MessagesTab(
+      showFilterPanel: _showMessageFilter,
+      filterParams: _filterParams,
+      onFilterChanged: _updateFilterParams,
+    );
   }
 
   // 🔥 桌面端底部操作区
