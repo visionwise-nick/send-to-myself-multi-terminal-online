@@ -1810,5 +1810,29 @@
   "confirmLogoutTitle": "Confirm Logout",
   "confirmLogoutContent": "Are you sure you want to log out of the current device?",
   "confirmLogoutContent": "Are you sure you want to log out of the current device?",
-  "cancel": "Cancel"
+  "cancel": "Cancel",
+  
+  "sectionfilter": "",
+  "messageFilter": "Message Filter",
+  "searchMessagesOrFiles": "Search messages or files...",
+  "messageType": "Message Type",
+  "sender": "Sender",
+  "dateRange": "Date Range",
+  "startDate": "Start Date",
+  "endDate": "End Date",
+  "clearDate": "Clear Date",
+  "clearAll": "Clear All",
+  "filterActive": "Filter Active",
+  "noFilterConditions": "No Filter Conditions",
+  "all": "All",
+  "text": "Text",
+  "image": "Image",
+  "video": "Video",
+  "file": "File",
+  "document": "Document",
+  "sentByMe": "Sent by Me",
+  "sentByOthers": "Sent by Others",
+  
+  "deviceOs": "Operating System",
+  "deviceVersion": "Version"
 } 

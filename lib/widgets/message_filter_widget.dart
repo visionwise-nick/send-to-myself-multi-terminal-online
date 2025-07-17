@@ -162,6 +162,15 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
   }
 
   @override
+  void didUpdateWidget(MessageFilterWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentFilter != widget.currentFilter) {
+      _filter = widget.currentFilter;
+      _searchController.text = _filter.searchKeyword;
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -172,12 +181,12 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
@@ -192,7 +201,7 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
               const Icon(Icons.filter_list, size: 20),
               const SizedBox(width: 8),
               Text(
-                '消息筛选',
+                LocalizationHelper.of(context).messageFilter,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -213,7 +222,7 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
           TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: '搜索消息内容或文件名...',
+              hintText: LocalizationHelper.of(context).searchMessagesOrFiles,
               prefixIcon: const Icon(Icons.search, size: 20),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
@@ -237,7 +246,7 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
 
           // 消息类型筛选
           Text(
-            '消息类型',
+            LocalizationHelper.of(context).messageType,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -261,7 +270,7 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
 
           // 发送者筛选
           Text(
-            '发送者',
+            LocalizationHelper.of(context).sender,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -285,7 +294,7 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
 
           // 日期范围筛选
           Text(
-            '日期范围',
+            LocalizationHelper.of(context).dateRange,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -300,7 +309,7 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
                   label: Text(
                     _filter.startDate != null
                         ? '${_filter.startDate!.month}/${_filter.startDate!.day}'
-                        : '开始日期',
+                        : LocalizationHelper.of(context).startDate,
                   ),
                 ),
               ),
@@ -312,7 +321,7 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
                   label: Text(
                     _filter.endDate != null
                         ? '${_filter.endDate!.month}/${_filter.endDate!.day}'
-                        : '结束日期',
+                        : LocalizationHelper.of(context).endDate,
                   ),
                 ),
               ),
@@ -320,7 +329,7 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
                 IconButton(
                   onPressed: () => _updateFilter(clearDates: true),
                   icon: const Icon(Icons.clear, size: 20),
-                  tooltip: '清除日期',
+                  tooltip: LocalizationHelper.of(context).clearDate,
                 ),
             ],
           ),
@@ -333,15 +342,49 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
                 TextButton.icon(
                   onPressed: _clearAllFilters,
                   icon: const Icon(Icons.clear_all, size: 16),
-                  label: const Text('清除所有'),
+                  label: Text(LocalizationHelper.of(context).clearAll),
                 ),
               const Spacer(),
               Text(
-                _filter.hasActiveFilters ? '筛选已激活' : '无筛选条件',
+                _filter.hasActiveFilters 
+                    ? LocalizationHelper.of(context).filterActive 
+                    : LocalizationHelper.of(context).noFilterConditions,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: _filter.hasActiveFilters 
                       ? Theme.of(context).primaryColor 
                       : Colors.grey,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // 🔥 新增：确认和取消按钮
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    // 取消筛选，恢复到原始状态
+                    setState(() {
+                      _filter = widget.currentFilter;
+                      _searchController.text = _filter.searchKeyword;
+                    });
+                    widget.onClose?.call();
+                  },
+                  child: Text(LocalizationHelper.of(context).cancel),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    // 确认筛选，应用当前筛选条件
+                    widget.onFilterChanged(_filter);
+                    widget.onClose?.call();
+                  },
+                  child: Text(LocalizationHelper.of(context).confirm),
                 ),
               ),
             ],
@@ -354,28 +397,28 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
   String _getTypeLabel(MessageFilterType type) {
     switch (type) {
       case MessageFilterType.all:
-        return '全部';
+        return LocalizationHelper.of(context).all;
       case MessageFilterType.text:
-        return '文本';
+        return LocalizationHelper.of(context).text;
       case MessageFilterType.image:
-        return '图片';
+        return LocalizationHelper.of(context).image;
       case MessageFilterType.video:
-        return '视频';
+        return LocalizationHelper.of(context).video;
       case MessageFilterType.file:
-        return '文件';
+        return LocalizationHelper.of(context).file;
       case MessageFilterType.document:
-        return '文档';
+        return LocalizationHelper.of(context).document;
     }
   }
 
   String _getSenderLabel(MessageSenderType sender) {
     switch (sender) {
       case MessageSenderType.all:
-        return '全部';
+        return LocalizationHelper.of(context).all;
       case MessageSenderType.me:
-        return '我发送的';
+        return LocalizationHelper.of(context).sentByMe;
       case MessageSenderType.others:
-        return '他人发送的';
+        return LocalizationHelper.of(context).sentByOthers;
     }
   }
 
@@ -397,7 +440,8 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
         clearDates: clearDates,
       );
     });
-    widget.onFilterChanged(_filter);
+    // 🔥 移除实时应用筛选，改为只在确认时应用
+    // widget.onFilterChanged(_filter);
   }
 
   Future<void> _selectStartDate() async {

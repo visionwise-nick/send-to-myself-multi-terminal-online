@@ -1012,6 +1012,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unknown => '未知';
 
   @override
+  String get logoutConfirmation => '退出当前设备';
+
+  @override
   String get appTheme => '应用主题';
 
   @override
@@ -2306,6 +2309,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadedFile => '已下载文件';
 
   @override
+  String get takePhoto => '拍照';
+
+  @override
+  String get selectFromGallery => '从相册选择';
+
+  @override
+  String get copyright => '© 2023 Send To Myself';
+
+  @override
+  String get subscriptionManagement => '订阅管理';
+
+  @override
+  String get currentSubscription => '当前订阅';
+
+  @override
+  String get unknownPlatform => '未知';
+
+  @override
+  String supportedDeviceGroup(int count) {
+    return '支持 $count 台设备群组';
+  }
+
+  @override
   String get shareException => '❌ 分享异常';
 
   @override
@@ -2780,12 +2806,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanQRToJoinDeviceGroup => '扫描二维码加入此设备群组';
 
   @override
-  String get subscriptionManagement => '订阅管理';
-
-  @override
-  String get currentSubscription => '当前订阅';
-
-  @override
   String supportXDeviceGroups(String count) {
     return '支持 $count 台设备群组';
   }
@@ -2863,8 +2883,56 @@ class AppLocalizationsZh extends AppLocalizations {
       'Are you sure you want to log out of the current device?';
 
   @override
-  String get selectFromGallery => '从相册选择';
+  String get sectionfilter => '';
 
   @override
-  String get copyright => '© 2023 Send To Myself';
+  String get messageFilter => '消息筛选';
+
+  @override
+  String get searchMessagesOrFiles => '搜索消息内容或文件名...';
+
+  @override
+  String get messageType => '消息类型';
+
+  @override
+  String get sender => '发送者';
+
+  @override
+  String get dateRange => '日期范围';
+
+  @override
+  String get startDate => '开始日期';
+
+  @override
+  String get endDate => '结束日期';
+
+  @override
+  String get clearDate => '清除日期';
+
+  @override
+  String get clearAll => '清除所有';
+
+  @override
+  String get filterActive => '筛选已激活';
+
+  @override
+  String get noFilterConditions => '无筛选条件';
+
+  @override
+  String get all => '全部';
+
+  @override
+  String get text => '文本';
+
+  @override
+  String get sentByMe => '我发送的';
+
+  @override
+  String get sentByOthers => '他人发送的';
+
+  @override
+  String get deviceOs => '操作系统';
+
+  @override
+  String get deviceVersion => '版本号';
 }

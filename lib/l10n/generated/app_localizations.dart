@@ -2128,6 +2128,12 @@ abstract class AppLocalizations {
   /// **'Unknown'**
   String get unknown;
 
+  /// No description provided for @logoutConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out of the current device'**
+  String get logoutConfirmation;
+
   /// No description provided for @appTheme.
   ///
   /// In en, this message translates to:
@@ -4540,6 +4546,48 @@ abstract class AppLocalizations {
   /// **'downloaded_file'**
   String get downloadedFile;
 
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @selectFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Select from Gallery'**
+  String get selectFromGallery;
+
+  /// No description provided for @copyright.
+  ///
+  /// In en, this message translates to:
+  /// **'© 2023 Send To Myself'**
+  String get copyright;
+
+  /// No description provided for @subscriptionManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Management'**
+  String get subscriptionManagement;
+
+  /// No description provided for @currentSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Subscription'**
+  String get currentSubscription;
+
+  /// No description provided for @unknownPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknownPlatform;
+
+  /// No description provided for @supportedDeviceGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Supports {count} device group'**
+  String supportedDeviceGroup(int count);
+
   /// No description provided for @shareException.
   ///
   /// In en, this message translates to:
@@ -5362,18 +5410,6 @@ abstract class AppLocalizations {
   /// **'Scan QR code to join this device group'**
   String get scanQRToJoinDeviceGroup;
 
-  /// No description provided for @subscriptionManagement.
-  ///
-  /// In en, this message translates to:
-  /// **'Subscription Management'**
-  String get subscriptionManagement;
-
-  /// No description provided for @currentSubscription.
-  ///
-  /// In en, this message translates to:
-  /// **'Current Subscription'**
-  String get currentSubscription;
-
   /// No description provided for @supportXDeviceGroups.
   ///
   /// In en, this message translates to:
@@ -5505,6 +5541,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to log out of the current device?'**
   String get confirmLogoutContent;
+
+  /// No description provided for @sectionfilter.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get sectionfilter;
+
+  /// No description provided for @messageFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Message Filter'**
+  String get messageFilter;
+
+  /// No description provided for @searchMessagesOrFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Search messages or files...'**
+  String get searchMessagesOrFiles;
+
+  /// No description provided for @messageType.
+  ///
+  /// In en, this message translates to:
+  /// **'Message Type'**
+  String get messageType;
+
+  /// No description provided for @sender.
+  ///
+  /// In en, this message translates to:
+  /// **'Sender'**
+  String get sender;
+
+  /// No description provided for @dateRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Range'**
+  String get dateRange;
+
+  /// No description provided for @startDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Date'**
+  String get startDate;
+
+  /// No description provided for @endDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End Date'**
+  String get endDate;
+
+  /// No description provided for @clearDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Date'**
+  String get clearDate;
+
+  /// No description provided for @clearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All'**
+  String get clearAll;
+
+  /// No description provided for @filterActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter Active'**
+  String get filterActive;
+
+  /// No description provided for @noFilterConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'No Filter Conditions'**
+  String get noFilterConditions;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @text.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get text;
+
+  /// No description provided for @sentByMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent by Me'**
+  String get sentByMe;
+
+  /// No description provided for @sentByOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent by Others'**
+  String get sentByOthers;
+
+  /// No description provided for @deviceOs.
+  ///
+  /// In en, this message translates to:
+  /// **'Operating System'**
+  String get deviceOs;
+
+  /// No description provided for @deviceVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get deviceVersion;
 }
 
 class _AppLocalizationsDelegate

@@ -1188,6 +1188,44 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                       ),
                     ),
                     
+                    const SizedBox(height: 24),
+                    
+                    // 🔥 新增：设置模块
+                    _buildDrawerSection(
+                      title: LocalizationHelper.of(context).settings,
+                      child: Column(
+                        children: [
+                          // 订阅管理
+                          _buildDrawerItem(
+                            icon: Icons.workspace_premium,
+                            title: LocalizationHelper.of(context).subscriptionManagement,
+                            subtitle: LocalizationHelper.of(context).manageSubscription,
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const SettingsScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          
+                          const SizedBox(height: 8),
+                          
+                          // 设备信息
+                          _buildDrawerItem(
+                            icon: Icons.device_hub,
+                            title: LocalizationHelper.of(context).deviceInfo,
+                            subtitle: deviceName,
+                            onTap: () {
+                              Navigator.pop(context);
+                              _showDeviceInfoDialog(context);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    
                     const Spacer(),
                     
                     // 退出登录
@@ -1704,6 +1742,125 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       context,
       MaterialPageRoute(
         builder: (context) => GroupManagementScreen(group: currentGroup),
+      ),
+    );
+  }
+
+  // 🔥 新增：构建抽屉项目
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.grey.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 18,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimaryColor,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondaryColor,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: AppTheme.textTertiaryColor,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 🔥 新增：显示设备信息对话框
+  void _showDeviceInfoDialog(BuildContext context) {
+    final deviceInfo = Provider.of<AuthProvider>(context, listen: false).deviceInfo;
+    final deviceName = deviceInfo?['name'] ?? 'Unknown Device';
+    final deviceId = deviceInfo?['id'] ?? 'N/A';
+    final deviceType = deviceInfo?['type'] ?? 'N/A';
+    final deviceOs = deviceInfo?['os'] ?? 'N/A';
+    final deviceVersion = deviceInfo?['version'] ?? 'N/A';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(LocalizationHelper.of(context).deviceInfo),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(LocalizationHelper.of(context).deviceName + ': $deviceName'),
+            const SizedBox(height: 8),
+            Text(LocalizationHelper.of(context).deviceId + ': $deviceId'),
+            const SizedBox(height: 8),
+            Text(LocalizationHelper.of(context).deviceType + ': $deviceType'),
+            const SizedBox(height: 8),
+            Text(LocalizationHelper.of(context).deviceOs + ': $deviceOs'),
+            const SizedBox(height: 8),
+            Text(LocalizationHelper.of(context).deviceVersion + ': $deviceVersion'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(LocalizationHelper.of(context).close),
+          ),
+        ],
       ),
     );
   }

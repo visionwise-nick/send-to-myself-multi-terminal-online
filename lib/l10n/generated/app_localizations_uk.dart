@@ -1016,6 +1016,9 @@ class AppLocalizationsUk extends AppLocalizations {
   String get unknown => 'Unknown';
 
   @override
+  String get logoutConfirmation => 'Log out of the current device';
+
+  @override
   String get appTheme => 'App Theme';
 
   @override
@@ -2336,6 +2339,29 @@ class AppLocalizationsUk extends AppLocalizations {
   String get downloadedFile => 'downloaded_file';
 
   @override
+  String get takePhoto => 'Take Photo';
+
+  @override
+  String get selectFromGallery => 'Select from Gallery';
+
+  @override
+  String get copyright => '© 2023 Send To Myself';
+
+  @override
+  String get subscriptionManagement => 'Subscription Management';
+
+  @override
+  String get currentSubscription => 'Current Subscription';
+
+  @override
+  String get unknownPlatform => 'Unknown';
+
+  @override
+  String supportedDeviceGroup(int count) {
+    return 'Supports $count device group';
+  }
+
+  @override
   String get shareException => '❌ Share exception';
 
   @override
@@ -2816,12 +2842,6 @@ class AppLocalizationsUk extends AppLocalizations {
       'Scan QR code to join this device group';
 
   @override
-  String get subscriptionManagement => 'Subscription Management';
-
-  @override
-  String get currentSubscription => 'Current Subscription';
-
-  @override
   String supportXDeviceGroups(String count) {
     return 'Supports $count device groups';
   }
@@ -2898,4 +2918,58 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get confirmLogoutContent =>
       'Are you sure you want to log out of the current device?';
+
+  @override
+  String get sectionfilter => '';
+
+  @override
+  String get messageFilter => 'Message Filter';
+
+  @override
+  String get searchMessagesOrFiles => 'Search messages or files...';
+
+  @override
+  String get messageType => 'Message Type';
+
+  @override
+  String get sender => 'Sender';
+
+  @override
+  String get dateRange => 'Date Range';
+
+  @override
+  String get startDate => 'Start Date';
+
+  @override
+  String get endDate => 'End Date';
+
+  @override
+  String get clearDate => 'Clear Date';
+
+  @override
+  String get clearAll => 'Clear All';
+
+  @override
+  String get filterActive => 'Filter Active';
+
+  @override
+  String get noFilterConditions => 'No Filter Conditions';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get text => 'Text';
+
+  @override
+  String get sentByMe => 'Sent by Me';
+
+  @override
+  String get sentByOthers => 'Sent by Others';
+
+  @override
+  String get deviceOs => 'Operating System';
+
+  @override
+  String get deviceVersion => 'Version';
 }

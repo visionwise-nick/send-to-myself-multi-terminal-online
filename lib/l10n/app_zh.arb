@@ -1544,5 +1544,29 @@
     }
   },
   "unknown": "未知",
-  "logoutConfirmation": "退出当前设备"
+  "logoutConfirmation": "退出当前设备",
+  
+  "sectionfilter": "",
+  "messageFilter": "消息筛选",
+  "searchMessagesOrFiles": "搜索消息内容或文件名...",
+  "messageType": "消息类型",
+  "sender": "发送者",
+  "dateRange": "日期范围",
+  "startDate": "开始日期",
+  "endDate": "结束日期",
+  "clearDate": "清除日期",
+  "clearAll": "清除所有",
+  "filterActive": "筛选已激活",
+  "noFilterConditions": "无筛选条件",
+  "all": "全部",
+  "text": "文本",
+  "image": "图片",
+  "video": "视频",
+  "file": "文件",
+  "document": "文档",
+  "sentByMe": "我发送的",
+  "sentByOthers": "他人发送的",
+  
+  "deviceOs": "操作系统",
+  "deviceVersion": "版本号"
 } 
