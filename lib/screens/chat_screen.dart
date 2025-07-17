@@ -308,14 +308,29 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       final filter = _currentFilter;
       if (filter.hasActiveFilters) {
         _filteredMessages = _messages.where((message) => filter.matchesMessage(message)).toList();
+        print('🔍 应用筛选条件，筛选结果: ${_filteredMessages.length}/${_messages.length} 条消息');
       } else {
         _filteredMessages = List.from(_messages);
       }
     });
   }
   
+  // 🔥 新增：保持筛选状态的方法
+  void _preserveFilterState() {
+    final currentFilter = _currentFilter;
+    if (currentFilter.hasActiveFilters) {
+      print('🔍 保持筛选状态: ${currentFilter.searchKeyword.isNotEmpty ? "搜索" : ""} ${currentFilter.type != MessageFilterType.all ? "类型筛选" : ""} ${currentFilter.sender != MessageSenderType.all ? "发送者筛选" : ""}');
+      // 延迟应用筛选，确保消息列表已更新
+      Future.delayed(Duration(milliseconds: 100), () {
+        if (mounted) {
+          _applyMessageFilter();
+        }
+      });
+    }
+  }
+  
   void _onFilterChanged(MessageFilter newFilter) {
-    // 🔥 修复：将筛选变化传递给父组件，并立即应用筛选
+    // 将筛选变化传递给父组件
     widget.onFilterChanged?.call(newFilter.toParams());
     _applyMessageFilter();
   }
@@ -568,7 +583,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _messageIdCleanupTimer?.cancel();
     _connectionHealthTimer?.cancel();
     _memoryCacheCleanupTimer?.cancel(); // 🔥 iOS内存监控定时器
-    _debounceTimer?.cancel(); // 🔥 新增：清理防抖定时器
     
     // 🔥 新增：清理WebSocket连接状态订阅
     _connectionStateSubscription?.cancel();
@@ -1462,6 +1476,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           });
         });
         
+        // 🔥 修复：保持筛选状态
+        if (_currentFilter.hasActiveFilters) {
+          _preserveFilterState();
+        }
+        
         // 为新消息自动下载文件
         for (final message in newMessages) {
           if (message['fileUrl'] != null && !message['isMe']) {
@@ -1614,8 +1633,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           _messages = messages;
         });
         
-        // 🔥 新增：初始化筛选结果
-        _applyMessageFilter();
+        // 🔥 修复：保持筛选状态，只在有筛选条件时应用筛选
+        if (_currentFilter.hasActiveFilters) {
+          _preserveFilterState();
+        }
         
         // 如果有文件路径被修复，保存更新
         if (fixedCount > 0) {
@@ -2395,30 +2416,47 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           // 🔥 彻底移除AppBar - 完全沉浸式聊天界面
           body: Column(
             children: [
-              // 🔥 修复：筛选面板（由父组件控制显示）
+              // 🔥 新增：筛选面板（由父组件控制显示）
               if (widget.showFilterPanel)
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
+                _isDesktop() 
+                  ? Container(
+                      margin: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: MessageFilterWidget(
-                      currentFilter: _currentFilter,
-                      onFilterChanged: _onFilterChanged,
-                      onClose: () => widget.onFilterChanged?.call(null),
+                      child: MessageFilterWidget(
+                        currentFilter: _currentFilter,
+                        onFilterChanged: _onFilterChanged,
+                        onClose: () => widget.onFilterChanged?.call(null),
+                      ),
+                    )
+                  : Container(
+                      margin: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: MessageFilterWidget(
+                        currentFilter: _currentFilter,
+                        onFilterChanged: _onFilterChanged,
+                        onClose: () => widget.onFilterChanged?.call(null),
+                      ),
                     ),
-                  ),
-                ),
               
               // 消息列表
               Expanded(
@@ -2459,26 +2497,26 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                                   controller: _scrollController,
                                   padding: const EdgeInsets.symmetric(vertical: 8),
                                   itemCount: _displayMessages.length,
-                                  // 🔥 性能优化：优化滚动性能配置
-                                  cacheExtent: 500.0, // 减少缓存范围，降低内存占用
-                                  addAutomaticKeepAlives: false, // 关闭自动保持，减少内存占用
-                                  addRepaintBoundaries: true, // 保持重绘边界
-                                  // 🔥 优化：使用更高效的查找回调
+                                  // 🔥 性能优化：增强滚动性能配置
+                                  cacheExtent: 1500.0, // 增加缓存范围
+                                  addAutomaticKeepAlives: true, // 保持已构建的widget
+                                  addRepaintBoundaries: true, // 添加重绘边界
+                                  // 🔥 使用findChildIndexCallback优化性能
                                   findChildIndexCallback: (Key key) {
                                     if (key is ValueKey<String>) {
                                       final messageId = key.value;
-                                      return _displayMessages.indexWhere((msg) => msg['id']?.toString() == messageId);
+                                      return _messages.indexWhere((msg) => msg['id']?.toString() == messageId);
                                     }
                                     return null;
                                   },
                                   itemBuilder: (context, index) {
-                                    final message = _displayMessages[index];
-                                    // 🔥 优化：为每个消息项添加唯一的key，并实现懒加载
+                                      final message = _displayMessages[index];
+                                    // 🔥 为每个消息项添加唯一的key，提高重建性能
                                     return KeyedSubtree(
                                       key: ValueKey<String>(message['id']?.toString() ?? 'msg_$index'),
-                                      child: _buildLazyMessageBubble(message, index),
+                                      child: _buildMessageBubble(message),
                                     );
-                                  },
+                                      },
                                     );
                                   },
                                 ),
@@ -3148,99 +3186,6 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             style: AppTheme.captionStyle.copyWith(
               fontSize: 10, // 进一步减小说明文字
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 🔥 新增：懒加载消息气泡构建方法
-  Widget _buildLazyMessageBubble(Map<String, dynamic> message, int index) {
-    // 检查是否在可视区域内，实现懒加载
-    final isInViewport = _isMessageInViewport(index);
-    
-    if (!isInViewport) {
-      // 不在可视区域内，返回占位符
-      return _buildMessagePlaceholder(message);
-    }
-    
-    // 在可视区域内，构建完整消息气泡
-    return _buildMessageBubble(message);
-  }
-  
-  // 🔥 新增：检查消息是否在可视区域内
-  bool _isMessageInViewport(int index) {
-    if (!_scrollController.hasClients) return true;
-    
-    final itemHeight = 100.0; // 估算每个消息的高度
-    final viewportHeight = _scrollController.position.viewportDimension;
-    final scrollOffset = _scrollController.position.pixels;
-    
-    final itemTop = index * itemHeight;
-    final itemBottom = (index + 1) * itemHeight;
-    
-    // 检查是否在可视区域内（增加缓冲区）
-    final buffer = viewportHeight * 0.5; // 50%的缓冲区
-    return itemBottom >= (scrollOffset - buffer) && 
-           itemTop <= (scrollOffset + viewportHeight + buffer);
-  }
-  
-  // 🔥 新增：消息占位符（用于懒加载）
-  Widget _buildMessagePlaceholder(Map<String, dynamic> message) {
-    final isMe = message['isMe'] == true;
-    final hasFile = message['fileType'] != null;
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-            children: [
-              Flexible(
-                child: Container(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.75,
-                  ),
-                  padding: EdgeInsets.all(hasFile ? 6 : 10),
-                  decoration: BoxDecoration(
-                    color: isMe 
-                      ? (hasFile ? Colors.white : AppTheme.primaryColor) 
-                      : Colors.white,
-                    borderRadius: BorderRadius.circular(16).copyWith(
-                      bottomLeft: isMe ? const Radius.circular(16) : const Radius.circular(4),
-                      bottomRight: isMe ? const Radius.circular(4) : const Radius.circular(16),
-                    ),
-                    border: Border.all(
-                      color: const Color(0xFFE5E7EB), 
-                      width: 0.5,
-                    ),
-                  ),
-                  child: Container(
-                    height: hasFile ? 60 : 20,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Row(
-            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-            children: [
-              Container(
-                height: 10,
-                width: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -4580,12 +4525,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
-  // 🔥 性能优化：构建真正的缩略图预览（优化内存和加载性能）
+  // 🔥 性能优化：构建原始尺寸图片预览（带缓存）
   Widget _buildSimpleImagePreview(String? filePath, String? fileUrl) {
     Widget imageWidget;
     
     if (filePath != null && _cachedFileExists(filePath)) {
-      // 🔥 优化：使用更小的缓存尺寸，实现真正的缩略图
+      // 🔥 使用缓存的尺寸计算，避免重复异步操作
       if (_imageSizeCache.containsKey(filePath)) {
         // 使用缓存的尺寸
         final cachedSize = _imageSizeCache[filePath]!;
@@ -4594,23 +4539,14 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         final displayWidth = maxWidth;
         final displayHeight = displayWidth / aspectRatio;
         
-        imageWidget = Image.file(
-          File(filePath),
+      imageWidget = Image.file(
+        File(filePath),
           width: displayWidth,
           height: displayHeight,
-          fit: BoxFit.cover,
-          // 🔥 优化：使用更小的缓存尺寸，减少内存占用
-          cacheWidth: 100, // 减少到100px
-          cacheHeight: (100 / aspectRatio).round(),
-          // 🔥 新增：添加图片加载优化
-          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-            if (wasSynchronouslyLoaded) return child;
-            return AnimatedOpacity(
-              opacity: frame == null ? 0 : 1,
-              duration: const Duration(milliseconds: 200),
-              child: child,
-            );
-          },
+        fit: BoxFit.cover,
+          // 🔥 修复：提高缓存尺寸以获得更清晰的缩略图
+          cacheWidth: 200,
+          cacheHeight: (200 / aspectRatio).round(),
         );
       } else {
         // 第一次加载，使用FutureBuilder但缓存结果
@@ -4629,30 +4565,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                 width: displayWidth,
                 height: displayHeight,
                 fit: BoxFit.cover,
-                // 🔥 优化：使用更小的缓存尺寸
-                cacheWidth: 100,
-                cacheHeight: (100 / aspectRatio).round(),
-                frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                  if (wasSynchronouslyLoaded) return child;
-                  return AnimatedOpacity(
-                    opacity: frame == null ? 0 : 1,
-                    duration: const Duration(milliseconds: 200),
-                    child: child,
-                  );
-                },
+                // 🔥 修复：提高缓存尺寸以获得更清晰的缩略图
+                cacheWidth: 200,
+                cacheHeight: (200 / aspectRatio).round(),
               );
             } else {
-              // 加载中显示占位符
-              return Container(
+              // 加载中显示固定尺寸
+              return Image.file(
+                File(filePath),
                 height: 50,
                 width: 83,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Center(
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+                fit: BoxFit.cover,
+                cacheWidth: 200,
+                cacheHeight: 200,
               );
             }
           },
@@ -4665,52 +4590,32 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           maxHeight: 100,
         ),
         child: Image.network(
-          fileUrl,
-          fit: BoxFit.cover,
-          // 🔥 优化：使用更小的网络图片缓存尺寸
-          cacheWidth: 120, // 减少到120px
-          cacheHeight: 150, // 减少到150px
+        fileUrl,
+        fit: BoxFit.cover,
+          // 🔥 修复：提高网络图片缓存尺寸以获得更清晰的缩略图
+          cacheWidth: 200,
+          cacheHeight: 250,
           headers: _dio.options.headers.map((key, value) => MapEntry(key, value.toString())),
-          // 🔥 新增：添加渐进式加载
-          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-            if (wasSynchronouslyLoaded) return child;
-            return AnimatedOpacity(
-              opacity: frame == null ? 0 : 1,
-              duration: const Duration(milliseconds: 300),
-              child: child,
-            );
-          },
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Container(
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
               height: 50,
               width: 83,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                      : null,
-                ),
-              ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
+            color: const Color(0xFFF3F4F6),
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
             print('网络图片加载失败: $error');
-            return Container(
+          return Container(
               height: 50,
               width: 83,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(8),
-              ),
+            color: const Color(0xFFF3F4F6),
               child: const Icon(Icons.image_not_supported, size: 20),
-            );
-          },
+          );
+        },
         ),
       );
     } else {
@@ -8070,10 +7975,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   double _currentPullOffset = 0.0; // 当前拖拽偏移
   bool _isAtBottom = false; // 是否在底部
   
-  // 🔥 新增：防抖定时器，用于优化滚动性能
-  Timer? _debounceTimer;
-  
-  // 🔥 优化：滚动监听器设置（减少重建频率）
+  // 🔥 新增：滚动监听器设置
   void _setupScrollListener() {
     _scrollController.addListener(() {
       // 检测是否在底部（允许50px的容差）
@@ -8081,16 +7983,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           _scrollController.position.pixels >= 
           (_scrollController.position.maxScrollExtent - 50);
       
-      // 🔥 优化：减少setState调用频率，只在状态真正改变时更新
       if (_isAtBottom != isAtBottomNow) {
-        // 使用防抖机制，避免频繁重建
-        _debounceTimer?.cancel();
-        _debounceTimer = Timer(const Duration(milliseconds: 100), () {
-          if (mounted) {
-            setState(() {
-              _isAtBottom = isAtBottomNow;
-            });
-          }
+        setState(() {
+          _isAtBottom = isAtBottomNow;
         });
       }
     });

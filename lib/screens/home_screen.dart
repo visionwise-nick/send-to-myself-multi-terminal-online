@@ -479,14 +479,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     LogoutDialog.showLogoutConfirmDialog(context);
   }
   
-  // 🔥 修复：消息筛选相关方法
+  // 🔥 新增：消息筛选相关方法
   void _toggleMessageFilter() {
     setState(() {
       _showMessageFilter = !_showMessageFilter;
-      // 🔥 修复：如果关闭筛选面板，清除筛选状态
-      if (!_showMessageFilter) {
-        _filterParams = null;
-      }
     });
   }
   
@@ -497,7 +493,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   void _updateFilterParams(Map<String, dynamic>? params) {
     setState(() {
       _filterParams = params;
-      // 🔥 修复：只有在有筛选条件时才保持面板打开
       if (params == null || params.isEmpty) {
         _showMessageFilter = false;
       }
@@ -1469,28 +1464,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
               const SizedBox(width: 8),
               
               // 🔥 筛选按钮（消息筛选功能）- 移至最右侧
-              GestureDetector(
-                onTap: () => _toggleMessageFilter(),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _isFilterActive() 
-                        ? AppTheme.primaryColor.withOpacity(0.15)
-                        : AppTheme.primaryColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _toggleMessageFilter(),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
                       color: _isFilterActive() 
-                          ? AppTheme.primaryColor.withOpacity(0.3)
-                          : AppTheme.primaryColor.withOpacity(0.1),
-                      width: 1,
+                          ? AppTheme.primaryColor.withOpacity(0.15)
+                          : AppTheme.primaryColor.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: _isFilterActive() 
+                            ? AppTheme.primaryColor.withOpacity(0.3)
+                            : AppTheme.primaryColor.withOpacity(0.1),
+                        width: 1,
+                      ),
                     ),
-                  ),
-                  child: Icon(
-                    Icons.filter_list,
-                    size: 18,
-                    color: _isFilterActive() 
-                        ? AppTheme.primaryColor 
-                        : AppTheme.textSecondaryColor,
+                    child: Icon(
+                      Icons.filter_list,
+                      size: 18,
+                      color: _isFilterActive() 
+                          ? AppTheme.primaryColor 
+                          : AppTheme.textSecondaryColor,
+                    ),
                   ),
                 ),
               ),
