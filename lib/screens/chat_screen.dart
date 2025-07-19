@@ -297,17 +297,22 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   // 🔥 新增：消息筛选相关方法（使用父组件传递的状态）
   MessageFilter get _currentFilter {
     if (widget.filterParams == null || widget.filterParams!.isEmpty) {
+      print('🔍 构建筛选器: 无参数，使用默认筛选器');
       return MessageFilter();
     }
     // 从父组件参数构建筛选器
-    return MessageFilter.fromParams(widget.filterParams!);
+    print('🔍 构建筛选器: 参数=${widget.filterParams}');
+    final filter = MessageFilter.fromParams(widget.filterParams!);
+    print('🔍 构建的筛选器: 类型=${filter.type}(${filter.type.index}), 关键词="${filter.searchKeyword}"');
+    return filter;
   }
   
-  void _applyMessageFilter() {
+  void _applyMessageFilter([MessageFilter? customFilter]) {
     setState(() {
-      final filter = _currentFilter;
+      final filter = customFilter ?? _currentFilter;
       print('🔍 开始应用筛选条件: ${filter.hasActiveFilters ? "有筛选条件" : "无筛选条件"}');
-      print('🔍 筛选详情: 类型=${filter.type}, 发送者=${filter.sender}, 关键词="${filter.searchKeyword}", 开始日期=${filter.startDate}, 结束日期=${filter.endDate}');
+      print('🔍 筛选详情: 类型=${filter.type}(${filter.type.index}), 关键词="${filter.searchKeyword}"');
+      print('🔍 筛选条件检查: type!=all=${filter.type != MessageFilterType.all}, hasKeyword=${filter.searchKeyword.isNotEmpty}');
       
       if (filter.hasActiveFilters) {
         _filteredMessages = _messages.where((message) {
@@ -329,7 +334,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   void _preserveFilterState() {
     final currentFilter = _currentFilter;
     if (currentFilter.hasActiveFilters) {
-      print('🔍 保持筛选状态: ${currentFilter.searchKeyword.isNotEmpty ? "搜索" : ""} ${currentFilter.type != MessageFilterType.all ? "类型筛选" : ""} ${currentFilter.sender != MessageSenderType.all ? "发送者筛选" : ""}');
+      print('🔍 保持筛选状态: ${currentFilter.searchKeyword.isNotEmpty ? "搜索" : ""} ${currentFilter.type != MessageFilterType.all ? "类型筛选" : ""}');
       // 延迟应用筛选，确保消息列表已更新
       Future.delayed(Duration(milliseconds: 100), () {
         if (mounted) {
@@ -341,8 +346,21 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   
   void _onFilterChanged(MessageFilter newFilter) {
     // 将筛选变化传递给父组件
-    widget.onFilterChanged?.call(newFilter.toParams());
-    _applyMessageFilter();
+    final params = newFilter.toParams();
+    print('🔍 传递筛选参数给父组件: $params');
+    widget.onFilterChanged?.call(params);
+    
+    // 立即应用筛选，不等待父组件更新
+    _applyMessageFilter(newFilter);
+  }
+  
+  // 🔥 新增：处理筛选面板关闭
+  void _onFilterPanelClose() {
+    print('🔍 关闭筛选面板，保持当前筛选状态');
+    // 通知父组件关闭筛选面板，但保持当前筛选参数
+    if (widget.filterParams != null) {
+      widget.onFilterChanged?.call(widget.filterParams);
+    }
   }
   
   List<Map<String, dynamic>> get _displayMessages {
@@ -1486,9 +1504,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           });
         });
         
-        // 🔥 修复：保持筛选状态
+        // 🔥 修复：不自动应用筛选，避免WebSocket重连后意外筛选
         if (_currentFilter.hasActiveFilters) {
-          _preserveFilterState();
+          print('🔍 检测到有筛选条件，但不自动应用，避免WebSocket重连后意外筛选');
+          // _preserveFilterState(); // 注释掉自动应用筛选
         }
         
         // 为新消息自动下载文件
@@ -1643,9 +1662,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           _messages = messages;
         });
         
-        // 🔥 修复：保持筛选状态，只在有筛选条件时应用筛选
+        // 🔥 修复：不自动应用筛选，避免WebSocket重连后意外筛选
+        // 用户需要手动重新应用筛选条件
         if (_currentFilter.hasActiveFilters) {
-          _preserveFilterState();
+          print('🔍 检测到有筛选条件，但不自动应用，避免WebSocket重连后意外筛选');
+          // _preserveFilterState(); // 注释掉自动应用筛选
         }
         
         // 如果有文件路径被修复，保存更新
@@ -2434,7 +2455,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               if (widget.showFilterPanel)
                 _isDesktop() 
                   ? Container(
-                      margin: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -2446,10 +2467,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                           ),
                         ],
                       ),
-                      child: MessageFilterWidget(
-                        currentFilter: _currentFilter,
-                        onFilterChanged: _onFilterChanged,
-                        onClose: () => widget.onFilterChanged?.call(null),
+                  child: MessageFilterWidget(
+                    currentFilter: _currentFilter,
+                    onFilterChanged: _onFilterChanged,
+                        onClose: _onFilterPanelClose,
                       ),
                     )
                   : Container(
@@ -2468,9 +2489,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                       child: MessageFilterWidget(
                         currentFilter: _currentFilter,
                         onFilterChanged: _onFilterChanged,
-                        onClose: () => widget.onFilterChanged?.call(null),
-                      ),
-                    ),
+                        onClose: _onFilterPanelClose,
+                  ),
+                ),
               
               // 消息列表
               Expanded(

@@ -239,12 +239,16 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
                       color: totalCount > 0 ? Colors.blue[700] : Colors.grey[600],
                     ),
                     SizedBox(width: 4),
-                    Text(
-                      LocalizationHelper.of(context).deviceCount(totalCount),
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: totalCount > 0 ? Colors.blue[700] : Colors.grey[600],
+                    Flexible(
+                      child: Text(
+                        _getShortDeviceCount(totalCount),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: totalCount > 0 ? Colors.blue[700] : Colors.grey[600],
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                   ],
@@ -913,5 +917,18 @@ class _ConnectionStatusWidgetState extends State<ConnectionStatusWidget>
     }
     return defaultTargetPlatform == TargetPlatform.android ||
            defaultTargetPlatform == TargetPlatform.iOS;
+  }
+  
+  // 🔥 新增：获取简短的设备数量显示，避免英文版本UI错乱
+  String _getShortDeviceCount(int count) {
+    final locale = Localizations.localeOf(context);
+    
+    // 英文版本使用简短格式，避免文本过长
+    if (locale.languageCode == 'en') {
+      return '$count dev${count == 1 ? '' : 's'}';
+    }
+    
+    // 其他语言使用完整格式
+    return LocalizationHelper.of(context).deviceCount(count);
   }
 } 

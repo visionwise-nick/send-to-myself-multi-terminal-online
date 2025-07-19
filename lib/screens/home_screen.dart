@@ -492,15 +492,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     return _filterParams != null && _filterParams!.isNotEmpty;
   }
   
+  // 🔥 新增：获取筛选条件数量
+  int _getFilterCount() {
+    if (_filterParams == null || _filterParams!.isEmpty) return 0;
+    
+    int count = 0;
+    if (_filterParams!['searchKeyword'] != null && _filterParams!['searchKeyword'].toString().isNotEmpty) count++;
+    if (_filterParams!['type'] != null && _filterParams!['type'].toString().isNotEmpty && _filterParams!['type'] != 0) count++;
+    
+    return count;
+  }
+  
   void _updateFilterParams(Map<String, dynamic>? params) {
     print('🔍 更新筛选参数: $params');
     setState(() {
       _filterParams = params;
+      // 关键修复：仅当筛选参数为空时才关闭筛选面板
       if (params == null || params.isEmpty) {
         _showMessageFilter = false;
         print('🔍 清除筛选参数，关闭筛选面板');
       } else {
-        print('🔍 设置筛选参数: $params');
+        // 如果有筛选参数，保持筛选状态，但不关闭筛选面板
+        _showMessageFilter = true;
+        print('🔍 设置筛选参数: $params，保持筛选面板打开');
       }
     });
   }
@@ -1196,67 +1210,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                     
                     const SizedBox(height: 24),
                     
-                    // 🔥 新增：设置模块
-                    _buildDrawerSection(
-                      title: LocalizationHelper.of(context).settings,
-                      child: Column(
-                        children: [
-                          // 订阅管理
-                          _buildDrawerItem(
-                            icon: Icons.workspace_premium,
-                            title: LocalizationHelper.of(context).subscriptionManagement,
-                            subtitle: LocalizationHelper.of(context).manageSubscription,
-                            onTap: () {
-                              Navigator.pop(context);
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const SettingsScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          
-                          const SizedBox(height: 8),
-                          
-                          // 设备信息
-                          _buildDrawerItem(
-                            icon: Icons.device_hub,
-                            title: LocalizationHelper.of(context).deviceInfo,
-                            subtitle: deviceName,
-                            onTap: () {
-                              Navigator.pop(context);
-                              _showDeviceInfoDialog(context);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    
                     const Spacer(),
                     
-                    // 退出登录
+                    // 设置
                     Container(
             width: double.infinity,
             child: TextButton.icon(
               onPressed: () {
                           Navigator.pop(context);
-                LogoutDialog.showLogoutConfirmDialog(context);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const SettingsScreen(),
+                            ),
+                          );
               },
               icon: Icon(
-                Icons.logout,
+                          Icons.settings,
                           size: 16,
-                color: Colors.red.shade600,
+                          color: AppTheme.primaryColor,
               ),
               label: Text(
-                LocalizationHelper.of(context).logout,
+                          LocalizationHelper.of(context).settings,
                 style: TextStyle(
-                  color: Colors.red.shade600,
+                            color: AppTheme.primaryColor,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                 ),
               ),
               style: TextButton.styleFrom(
-                backgroundColor: Colors.red.shade50,
+                          backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
                           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -1467,7 +1449,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                 child: const ConnectionStatusWidget(showDeviceCount: true),
               ),
               
-              const SizedBox(width: 8),
+              const SizedBox(width: 2), // 调整间距
               
               // 🔥 筛选按钮（消息筛选功能）- 移至最右侧
               Material(
@@ -1475,14 +1457,61 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                 child: InkWell(
                   onTap: () => _toggleMessageFilter(),
                   borderRadius: BorderRadius.circular(4),
-                  child: Padding(
+                  child: Container(
                     padding: const EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.filter_list,
-                      size: 16,
+                    decoration: BoxDecoration(
                       color: _isFilterActive() 
-                          ? AppTheme.primaryColor 
-                          : AppTheme.textSecondaryColor,
+                          ? AppTheme.primaryColor.withOpacity(0.15)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(4),
+                      border: _isFilterActive()
+                          ? Border.all(
+                              color: AppTheme.primaryColor.withOpacity(0.3),
+                              width: 1,
+                            )
+                          : null,
+                    ),
+                    child: Stack(
+                      children: [
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          transitionBuilder: (Widget child, Animation<double> animation) {
+                            return ScaleTransition(
+                              scale: animation,
+                              child: child,
+                            );
+                          },
+                                                  child: Icon(
+                          Icons.filter_list,
+                          key: ValueKey(_isFilterActive()),
+                          size: 16,
+                          color: _isFilterActive() 
+                              ? AppTheme.primaryColor 
+                              : AppTheme.textSecondaryColor,
+                        ),
+                        ),
+                        // 🔥 筛选条件数量提示
+                        if (_isFilterActive() && _getFilterCount() > 0)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${_getFilterCount()}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),

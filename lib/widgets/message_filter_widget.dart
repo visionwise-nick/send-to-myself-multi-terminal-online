@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import '../utils/localization_helper.dart';
 
@@ -6,63 +7,36 @@ enum MessageFilterType {
   text,
   image,
   video,
-  file,
   document,
 }
 
-enum MessageSenderType {
-  all,
-  me,
-  others,
-}
-
-class MessageFilter {
+class MessageFilter extends Equatable {
   final MessageFilterType type;
-  final MessageSenderType sender;
-  final DateTime? startDate;
-  final DateTime? endDate;
   final String searchKeyword;
 
-  MessageFilter({
+  const MessageFilter({
     this.type = MessageFilterType.all,
-    this.sender = MessageSenderType.all,
-    this.startDate,
-    this.endDate,
     this.searchKeyword = '',
   });
 
   MessageFilter copyWith({
     MessageFilterType? type,
-    MessageSenderType? sender,
-    DateTime? startDate,
-    DateTime? endDate,
     String? searchKeyword,
-    bool clearDates = false,
   }) {
     return MessageFilter(
       type: type ?? this.type,
-      sender: sender ?? this.sender,
-      startDate: clearDates ? null : (startDate ?? this.startDate),
-      endDate: clearDates ? null : (endDate ?? this.endDate),
       searchKeyword: searchKeyword ?? this.searchKeyword,
     );
   }
 
   bool get hasActiveFilters {
-    return type != MessageFilterType.all ||
-           sender != MessageSenderType.all ||
-           startDate != null ||
-           endDate != null ||
-           searchKeyword.isNotEmpty;
+    return type != MessageFilterType.all || searchKeyword.isNotEmpty;
   }
 
   // 🔥 新增：从参数创建筛选器
   factory MessageFilter.fromParams(Map<String, dynamic> params) {
     return MessageFilter(
       type: MessageFilterType.values[params['type'] ?? 0],
-      sender: MessageSenderType.values[params['sender'] ?? 0],
-      startDate: params['startDate'] != null ? DateTime.parse(params['startDate']) : null,
-      endDate: params['endDate'] != null ? DateTime.parse(params['endDate']) : null,
       searchKeyword: params['searchKeyword'] ?? '',
     );
   }
@@ -71,9 +45,6 @@ class MessageFilter {
   Map<String, dynamic> toParams() {
     return {
       'type': type.index,
-      'sender': sender.index,
-      'startDate': startDate?.toIso8601String(),
-      'endDate': endDate?.toIso8601String(),
       'searchKeyword': searchKeyword,
     };
   }
@@ -83,27 +54,6 @@ class MessageFilter {
     if (type != MessageFilterType.all) {
       final messageType = _getMessageType(message);
       if (messageType != type) return false;
-    }
-
-    // 检查发送者筛选
-    if (sender != MessageSenderType.all) {
-      final isMe = message['isMe'] == true;
-      if (sender == MessageSenderType.me && !isMe) return false;
-      if (sender == MessageSenderType.others && isMe) return false;
-    }
-
-    // 检查日期筛选
-    if (startDate != null || endDate != null) {
-      final timestamp = message['timestamp']?.toString();
-      if (timestamp != null) {
-        try {
-          final messageDate = DateTime.parse(timestamp);
-          if (startDate != null && messageDate.isBefore(startDate!)) return false;
-          if (endDate != null && messageDate.isAfter(endDate!.add(Duration(days: 1)))) return false;
-        } catch (e) {
-          // 如果时间戳解析失败，跳过日期筛选
-        }
-      }
     }
 
     // 检查关键词搜索
@@ -129,9 +79,13 @@ class MessageFilter {
       case 'document':
         return MessageFilterType.document;
       default:
-        return MessageFilterType.file;
+        // 所有其他文件类型都视为“文档”
+        return MessageFilterType.document;
     }
   }
+
+  @override
+  List<Object?> get props => [type, searchKeyword];
 }
 
 class MessageFilterWidget extends StatefulWidget {
@@ -157,6 +111,7 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
   @override
   void initState() {
     super.initState();
+    // 关键修复：确保初始状态正确反映传入的筛选器
     _filter = widget.currentFilter;
     _searchController.text = _filter.searchKeyword;
   }
@@ -164,9 +119,12 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
   @override
   void didUpdateWidget(MessageFilterWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // 关键修复：仅当外部筛选器实际发生变化时才更新内部状态
     if (oldWidget.currentFilter != widget.currentFilter) {
-      _filter = widget.currentFilter;
-      _searchController.text = _filter.searchKeyword;
+      setState(() {
+        _filter = widget.currentFilter;
+        _searchController.text = _filter.searchKeyword;
+      });
     }
   }
 
@@ -174,6 +132,14 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+  
+  // 🔥 新增：获取激活的筛选条件数量
+  int _getActiveFilterCount() {
+    int count = 0;
+    if (_filter.type != MessageFilterType.all) count++;
+    if (_filter.searchKeyword.isNotEmpty) count++;
+    return count;
   }
 
   @override
@@ -205,6 +171,41 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
                 ),
             ],
           ),
+          
+          // 🔥 新增：筛选状态提示
+          if (_filter.hasActiveFilters)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: Theme.of(context).primaryColor.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 14,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '当前正在筛选消息，已设置 ${_getActiveFilterCount()} 个筛选条件',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 16),
 
           // 搜索框
@@ -257,87 +258,14 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
           ),
           const SizedBox(height: 16),
 
-          // 发送者筛选
-          Text(
-            LocalizationHelper.of(context).sender,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: MessageSenderType.values.map((sender) {
-              return FilterChip(
-                label: Text(_getSenderLabel(sender)),
-                selected: _filter.sender == sender,
-                onSelected: (selected) {
-                  if (selected) {
-                    _updateFilter(sender: sender);
-                  }
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-
-          // 日期范围筛选
-          Text(
-            LocalizationHelper.of(context).dateRange,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: TextButton.icon(
-                  onPressed: () => _selectStartDate(),
-                  icon: const Icon(Icons.calendar_today, size: 16),
-                  label: Text(
-                    _filter.startDate != null
-                        ? '${_filter.startDate!.month}/${_filter.startDate!.day}'
-                        : LocalizationHelper.of(context).startDate,
-                  ),
-                ),
-              ),
-              const Text(' 至 '),
-              Expanded(
-                child: TextButton.icon(
-                  onPressed: () => _selectEndDate(),
-                  icon: const Icon(Icons.calendar_today, size: 16),
-                  label: Text(
-                    _filter.endDate != null
-                        ? '${_filter.endDate!.month}/${_filter.endDate!.day}'
-                        : LocalizationHelper.of(context).endDate,
-                  ),
-                ),
-              ),
-              if (_filter.startDate != null || _filter.endDate != null)
-                IconButton(
-                  onPressed: () => _updateFilter(clearDates: true),
-                  icon: const Icon(Icons.clear, size: 20),
-                  tooltip: LocalizationHelper.of(context).clearDate,
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
           // 操作按钮
           Row(
             children: [
-              if (_filter.hasActiveFilters)
-                TextButton.icon(
-                  onPressed: _clearAllFilters,
-                  icon: const Icon(Icons.clear_all, size: 16),
-                  label: Text(LocalizationHelper.of(context).clearAll),
-                ),
               const Spacer(),
               Text(
                 _filter.hasActiveFilters 
-                    ? LocalizationHelper.of(context).filterActive 
-                    : LocalizationHelper.of(context).noFilterConditions,
+                    ? '已设置筛选条件' 
+                    : '未设置筛选条件',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: _filter.hasActiveFilters 
                       ? Theme.of(context).primaryColor 
@@ -393,77 +321,22 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
         return LocalizationHelper.of(context).image;
       case MessageFilterType.video:
         return LocalizationHelper.of(context).video;
-      case MessageFilterType.file:
-        return LocalizationHelper.of(context).file;
       case MessageFilterType.document:
         return LocalizationHelper.of(context).document;
     }
   }
 
-  String _getSenderLabel(MessageSenderType sender) {
-    switch (sender) {
-      case MessageSenderType.all:
-        return LocalizationHelper.of(context).all;
-      case MessageSenderType.me:
-        return LocalizationHelper.of(context).sentByMe;
-      case MessageSenderType.others:
-        return LocalizationHelper.of(context).sentByOthers;
-    }
-  }
-
   void _updateFilter({
     MessageFilterType? type,
-    MessageSenderType? sender,
-    DateTime? startDate,
-    DateTime? endDate,
     String? searchKeyword,
-    bool clearDates = false,
   }) {
     setState(() {
       _filter = _filter.copyWith(
         type: type,
-        sender: sender,
-        startDate: startDate,
-        endDate: endDate,
         searchKeyword: searchKeyword,
-        clearDates: clearDates,
       );
     });
     // 🔥 移除实时应用筛选，改为只在确认时应用
     // widget.onFilterChanged(_filter);
-  }
-
-  Future<void> _selectStartDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _filter.startDate ?? DateTime.now(),
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now(),
-    );
-    if (date != null) {
-      _updateFilter(startDate: date);
-    }
-  }
-
-  Future<void> _selectEndDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _filter.endDate ?? DateTime.now(),
-      firstDate: _filter.startDate ?? DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now(),
-    );
-    if (date != null) {
-      _updateFilter(endDate: date);
-    }
-  }
-
-  void _clearAllFilters() {
-    _searchController.clear();
-    _updateFilter(
-      type: MessageFilterType.all,
-      sender: MessageSenderType.all,
-      searchKeyword: '',
-      clearDates: true,
-    );
   }
 } 
