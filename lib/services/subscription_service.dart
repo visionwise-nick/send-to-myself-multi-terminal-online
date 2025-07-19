@@ -180,6 +180,14 @@ class SubscriptionService {
       
       if (response.error != null) {
         DebugConfig.errorPrint('查询产品信息失败: ${response.error}');
+        // 如果无法获取真实产品信息，创建模拟产品
+        _createMockProducts();
+        return;
+      }
+
+      if (response.productDetails.isEmpty) {
+        DebugConfig.warningPrint('未找到真实产品信息，使用模拟产品');
+        _createMockProducts();
         return;
       }
 
@@ -191,7 +199,45 @@ class SubscriptionService {
       }
     } catch (e) {
       DebugConfig.errorPrint('加载产品信息异常: $e');
+      // 异常时也创建模拟产品
+      _createMockProducts();
     }
+  }
+
+  // 创建模拟产品信息（用于开发测试）
+  void _createMockProducts() {
+    DebugConfig.debugPrint('创建模拟产品信息', module: 'SUBSCRIPTION');
+    _products = [];
+    
+    for (final config in SubscriptionPlanConfig.allPlans) {
+      if (config.plan == SubscriptionPlan.free) continue;
+      
+      final priceInfo = config.getPriceInfo(_currentCurrency);
+      
+      // 创建月付模拟产品
+      final monthlyProduct = ProductDetails(
+        id: config.productIdMonthly,
+        title: '${config.plan.name} 月付订阅',
+        description: '${config.plan.name} 月付订阅计划',
+        price: '${priceInfo.currencySymbol}${priceInfo.monthlyPrice.toStringAsFixed(2)}',
+        rawPrice: priceInfo.monthlyPrice,
+        currencyCode: priceInfo.currencyCode,
+      );
+      _products.add(monthlyProduct);
+      
+      // 创建年付模拟产品
+      final yearlyProduct = ProductDetails(
+        id: config.productIdYearly,
+        title: '${config.plan.name} 年付订阅',
+        description: '${config.plan.name} 年付订阅计划',
+        price: '${priceInfo.currencySymbol}${priceInfo.yearlyPrice.toStringAsFixed(2)}',
+        rawPrice: priceInfo.yearlyPrice,
+        currencyCode: priceInfo.currencyCode,
+      );
+      _products.add(yearlyProduct);
+    }
+    
+    DebugConfig.debugPrint('创建了 ${_products.length} 个模拟产品', module: 'SUBSCRIPTION');
   }
 
   // 处理购买更新
@@ -497,20 +543,22 @@ class SubscriptionService {
       final priceInfo = config.getPriceInfo(_currentCurrency);
       
       // 月付选项
-      final monthlyProduct = _products.firstWhere(
-        (p) => p.id == config.productIdMonthly,
-        orElse: () {
-          // 创建默认的ProductDetails，避免类型不匹配
-          return ProductDetails(
-            id: config.productIdMonthly,
-            title: '${config.plan.name} 月付',
-            description: '${config.plan.name} 月付订阅',
-            price: '${priceInfo.currencySymbol}${priceInfo.monthlyPrice.toStringAsFixed(2)}',
-            rawPrice: priceInfo.monthlyPrice,
-            currencyCode: priceInfo.currencyCode,
-          );
-        },
-      );
+      ProductDetails monthlyProduct;
+      try {
+        monthlyProduct = _products.firstWhere(
+          (p) => p.id == config.productIdMonthly,
+        );
+      } catch (e) {
+        // 如果找不到产品，创建默认的ProductDetails
+        monthlyProduct = ProductDetails(
+          id: config.productIdMonthly,
+          title: '${config.plan.name} 月付订阅',
+          description: '${config.plan.name} 月付订阅计划',
+          price: '${priceInfo.currencySymbol}${priceInfo.monthlyPrice.toStringAsFixed(2)}',
+          rawPrice: priceInfo.monthlyPrice,
+          currencyCode: priceInfo.currencyCode,
+        );
+      }
       
       options.add(PurchaseOption.create(
         plan: config.plan,
@@ -521,20 +569,22 @@ class SubscriptionService {
       ));
       
       // 年付选项
-      final yearlyProduct = _products.firstWhere(
-        (p) => p.id == config.productIdYearly,
-        orElse: () {
-          // 创建默认的ProductDetails，避免类型不匹配
-          return ProductDetails(
-            id: config.productIdYearly,
-            title: '${config.plan.name} 年付',
-            description: '${config.plan.name} 年付订阅',
-            price: '${priceInfo.currencySymbol}${priceInfo.yearlyPrice.toStringAsFixed(2)}',
-            rawPrice: priceInfo.yearlyPrice,
-            currencyCode: priceInfo.currencyCode,
-          );
-        },
-      );
+      ProductDetails yearlyProduct;
+      try {
+        yearlyProduct = _products.firstWhere(
+          (p) => p.id == config.productIdYearly,
+        );
+      } catch (e) {
+        // 如果找不到产品，创建默认的ProductDetails
+        yearlyProduct = ProductDetails(
+          id: config.productIdYearly,
+          title: '${config.plan.name} 年付订阅',
+          description: '${config.plan.name} 年付订阅计划',
+          price: '${priceInfo.currencySymbol}${priceInfo.yearlyPrice.toStringAsFixed(2)}',
+          rawPrice: priceInfo.yearlyPrice,
+          currencyCode: priceInfo.currencyCode,
+        );
+      }
       
       options.add(PurchaseOption.create(
         plan: config.plan,
