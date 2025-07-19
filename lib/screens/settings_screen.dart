@@ -137,7 +137,7 @@ class SettingsScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '支持 ${subscription.maxGroupMembers} 台设备群组',
+                            '${l10n.supports} ${subscription.maxGroupMembers} ${l10n.deviceGroup}',
                             style: TextStyle(
                               fontSize: 14,
                               color: AppTheme.textSecondaryColor,
@@ -254,7 +254,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '关于应用',
+                  l10n.about,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -266,17 +266,17 @@ class SettingsScreen extends StatelessWidget {
           ),
           _buildInfoTile(
             icon: Icons.apps,
-            title: '应用名称',
+            title: l10n.appName,
             subtitle: 'Send To Myself',
           ),
           _buildInfoTile(
             icon: Icons.info,
-            title: '版本号',
-            subtitle: '1.1.0',
+            title: l10n.version,
+            subtitle: '1.0.0', // 示例版本号
           ),
           _buildInfoTile(
             icon: Icons.description,
-            title: '应用描述',
+            title: l10n.appDescription,
             subtitle: '跨设备文件共享和消息记忆助手',
           ),
         ],
@@ -299,36 +299,31 @@ class SettingsScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.red.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(
+      child: SizedBox(
+        width: double.infinity,
+        child: TextButton.icon(
+          onPressed: () {
+            LogoutDialog.showLogoutConfirmDialog(context);
+          },
+          icon: Icon(
             Icons.logout,
-            color: Colors.red,
             size: 20,
+            color: Colors.red.shade600,
           ),
-        ),
-        title: Text(
-          l10n.logout,
-          style: TextStyle(
+          label: Text(
+            l10n.logoutFromCurrentDevice,
+            style: TextStyle(
             fontWeight: FontWeight.w500,
             color: Colors.red,
           ),
-        ),
-        subtitle: const Text(
-          _logoutConfirmation,
-          style: TextStyle(
-            color: AppTheme.textSecondaryColor,
+          ),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
-        onTap: () {
-          LogoutDialog.showLogoutConfirmDialog(context);
-        },
       ),
     );
   }

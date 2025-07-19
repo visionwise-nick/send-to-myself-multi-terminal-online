@@ -126,7 +126,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get about => '关于';
 
   @override
-  String get version => '版本 1.0.0';
+  String get version => '版本';
+
+  @override
+  String monthDay(int month, int day) {
+    return '$month/$day';
+  }
+
+  @override
+  String expiresInHoursAndMinutes(int hours, int minutes) {
+    return 'Expires in ${hours}h ${minutes}m';
+  }
+
+  @override
+  String expiresInMinutes(int minutes) {
+    return 'Expires in ${minutes}m';
+  }
+
+  @override
+  String get expired => 'Expired';
+
+  @override
+  String yearMonthDay(int year, int month, int day) {
+    return '$year/$month/$day';
+  }
 
   @override
   String get update => '更新';
@@ -162,7 +185,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connected => '已连接';
 
   @override
-  String get disconnected => '未连接';
+  String get disconnected => '已断开';
 
   @override
   String get retry_connection => '重试连接';
@@ -201,698 +224,1260 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deviceRegistration => '设备注册';
 
   @override
-  String get deviceRegistrationSuccess => '设备注册成功';
-
-  @override
-  String get deviceRegistrationFailed => '设备注册失败';
-
-  @override
-  String get loginSuccess => '登录成功';
-
-  @override
-  String get loginFailed => '登录失败';
-
-  @override
-  String get logoutSuccess => '退出成功';
-
-  @override
-  String get logoutConfirm => '确定要退出吗？';
-
-  @override
-  String get navigationSection => '';
-
-  @override
-  String get home => '首页';
-
-  @override
-  String get messages => '消息';
-
-  @override
-  String get files => '文件';
-
-  @override
-  String get memories => '记忆';
-
-  @override
-  String get groups => '群组';
-
-  @override
-  String get sectionmessages => '';
-
-  @override
-  String get newMessage => '新消息';
-
-  @override
-  String get onlyMyself => '仅有自己';
-
-  @override
-  String devicesCount(int count) {
-    return '$count台设备';
-  }
-
-  @override
-  String get clickToStartGroupChat => '点击开始群聊';
-
-  @override
-  String get sendToMyself => '给自己发消息';
-
-  @override
-  String get clickToStartChat => '点击开始聊天';
-
-  @override
-  String get unknownDevice => '未知设备';
-
-  @override
-  String get unknownType => '未知类型';
-
-  @override
-  String get myself => '我';
-
-  @override
-  String get noConversations => '暂无对话';
-
-  @override
-  String get joinGroupToStartChat => '加入设备群组后即可开始聊天';
-
-  @override
-  String get pleaseSelectGroup => '请先选择一个群组';
-
-  @override
-  String get clickGroupSelectorHint => '点击顶部群组选择器来选择或创建群组';
-
-  @override
-  String get sendMessage => '发送消息';
-
-  @override
-  String get messageHint => '输入您的消息...';
-
-  @override
-  String get noMessages => '暂无消息';
-
-  @override
-  String get messagesSent => '已发送消息';
-
-  @override
-  String get messagesReceived => '已接收消息';
-
-  @override
-  String get messageDelivered => '已送达';
-
-  @override
-  String get messageFailed => '发送失败';
-
-  @override
-  String get messagePending => '等待中';
-
-  @override
-  String get copyMessage => '复制消息';
-
-  @override
-  String get deleteMessage => '删除消息';
-
-  @override
-  String get replyMessage => '回复';
-
-  @override
-  String get forwardMessage => '转发';
-
-  @override
-  String get selectMessages => '选择消息';
-
-  @override
-  String selectedMessages(int count) {
-    return '已选择 $count 条';
-  }
-
-  @override
-  String get deleteSelectedMessages => '删除选中消息';
-
-  @override
-  String get deleteMessageConfirm => '确定要删除此消息吗？';
-
-  @override
-  String deleteMessagesConfirm(int count) {
-    return '确定要删除 $count 条消息吗？';
-  }
-
-  @override
-  String get sectionfiles => '';
-
-  @override
-  String get selectFile => '选择文件';
-
-  @override
-  String get selectFiles => '选择文件';
-
-  @override
-  String get selectImage => '选择图片';
-
-  @override
-  String get selectVideo => '选择视频';
-
-  @override
-  String get selectDocument => '选择文档';
-
-  @override
-  String get noFiles => '暂无文件';
-
-  @override
-  String get fileName => '文件名';
-
-  @override
-  String get fileSize => '文件大小';
-
-  @override
-  String get fileType => '文件类型';
-
-  @override
-  String get fileDate => '日期';
-
-  @override
-  String get uploadFile => '上传文件';
-
-  @override
-  String get downloadFile => '下载文件';
-
-  @override
-  String get openFile => '打开文件';
-
-  @override
-  String get shareFile => '分享文件';
-
-  @override
-  String get deleteFile => '删除文件';
-
-  @override
-  String uploadProgress(int progress) {
-    return '上传中... $progress%';
-  }
-
-  @override
-  String downloadProgress(int progress) {
-    return '下载中... $progress%';
-  }
-
-  @override
-  String get uploadSuccess => '上传成功';
-
-  @override
-  String get downloadSuccess => '下载成功';
-
-  @override
-  String get uploadFailed => '上传失败';
-
-  @override
-  String get downloadFailed => '下载失败';
-
-  @override
-  String get fileTooLarge => '文件太大无法发送';
-
-  @override
-  String get unsupportedFileType => '不支持的文件类型';
-
-  @override
-  String get saveToGallery => '保存到相册';
-
-  @override
-  String get saveToLocal => '保存到本地';
-
-  @override
-  String get openFileLocation => '打开文件位置';
-
-  @override
-  String get sectionmemories => '';
-
-  @override
-  String get createMemory => '创建记忆';
-
-  @override
-  String get editMemory => '编辑记忆';
-
-  @override
-  String get deleteMemory => '删除记忆';
-
-  @override
-  String get memoryTitle => '标题';
-
-  @override
-  String get memoryContent => '内容';
-
-  @override
-  String get memoryCategory => '分类';
-
-  @override
-  String get memoryTags => '标签';
-
-  @override
-  String get memoryDate => '日期';
-
-  @override
-  String get memoryLocation => '位置';
-
-  @override
-  String get memoryPriority => '优先级';
-
-  @override
-  String get memoryStatus => '状态';
-
-  @override
-  String get noMemories => '暂无记忆';
-
-  @override
-  String get searchMemories => '搜索记忆内容、标签...';
-
-  @override
-  String get filterByCategory => '按分类筛选';
-
-  @override
-  String get sortByDate => '按日期排序';
-
-  @override
-  String get sortByPriority => '按优先级排序';
-
-  @override
-  String get memoryCategories => '分类';
-
-  @override
-  String get personalMemory => '个人';
-
-  @override
-  String get workMemory => '工作';
-
-  @override
-  String get lifeMemory => '生活';
-
-  @override
-  String get studyMemory => '学习';
-
-  @override
-  String get travelMemory => '旅行';
-
-  @override
-  String get otherMemory => '其他';
-
-  @override
-  String get memoryPriorityHigh => '高';
-
-  @override
-  String get memoryPriorityMedium => '中';
-
-  @override
-  String get memoryPriorityLow => '低';
-
-  @override
-  String get memoryStatusActive => '活跃';
-
-  @override
-  String get memoryStatusCompleted => '已完成';
-
-  @override
-  String get memoryStatusArchived => '已归档';
-
-  @override
-  String get sectiongroups => '';
-
-  @override
-  String get createGroup => '创建群组';
-
-  @override
-  String get joinGroup => '加入群组';
-
-  @override
-  String get leaveGroup => '离开群组';
-
-  @override
-  String get deleteGroup => '删除群组';
-
-  @override
-  String get groupName => '群组名称';
-
-  @override
-  String get groupNameHint => '请输入群组名称';
-
-  @override
-  String get groupDescription => '群组描述（可选）';
-
-  @override
-  String get groupDescriptionHint => '请输入群组描述';
-
-  @override
-  String get groupDescriptionOptional => '群组描述（可选）';
-
-  @override
-  String get groupMembers => '成员';
-
-  @override
-  String get groupSettings => '群组设置';
-
-  @override
-  String get noGroups => '暂无群组';
-
-  @override
-  String get groupCode => '群组代码';
-
-  @override
-  String get scanQRCode => '扫描二维码';
-
-  @override
-  String get generateQRCode => '生成二维码';
-
-  @override
-  String get joinGroupByCode => '通过代码加入';
-
-  @override
-  String get joinGroupByQR => '通过二维码加入';
-
-  @override
-  String get groupJoinSuccess => '成功加入群组';
-
-  @override
-  String get groupJoinFailed => '加入群组失败';
-
-  @override
-  String get groupLeaveSuccess => '成功离开群组';
-
-  @override
-  String get groupLeaveFailed => '离开群组失败';
-
-  @override
-  String get groupLeaveConfirm => '确定要离开此群组吗？';
-
-  @override
-  String get groupDeleteConfirm => '确定要删除此群组吗？';
-
-  @override
-  String get groupCreated => '群组创建成功';
-
-  @override
-  String get groupCreateFailed => '群组创建失败';
-
-  @override
-  String get invalidGroupCode => '无效的群组代码';
-
-  @override
-  String get groupNotFound => '未找到群组';
-
-  @override
-  String get alreadyInGroup => '已在此群组中';
-
-  @override
-  String get groupFull => '群组已满';
-
-  @override
-  String get renameGroup => '重命名群组';
-
-  @override
-  String get newGroupName => '新群组名称';
-
-  @override
-  String get enterNewGroupName => '请输入新的群组名称';
-
-  @override
-  String get renamingGroup => '正在重命名群组...';
-
-  @override
-  String get groupRenameSuccess => '群组重命名成功';
-
-  @override
-  String get groupRenameFailed => '群组重命名失败';
-
-  @override
-  String get renameFailed => '重命名失败';
-
-  @override
-  String get loadGroupInfoFailed => '加载群组信息失败';
-
-  @override
-  String get groupManagement => '群组管理';
-
-  @override
-  String get membersList => '成员列表';
-
-  @override
-  String get groupInfo => '群组信息';
-
-  @override
-  String get sectiondevices => '';
-
-  @override
-  String get deviceName => '设备名称';
-
-  @override
-  String get deviceType => '设备类型';
-
-  @override
-  String get deviceStatus => '状态';
-
-  @override
-  String get deviceLastSeen => '最后在线';
-
-  @override
-  String get connectedDevices => '已连接设备';
-
-  @override
-  String get availableDevices => '可用设备';
-
-  @override
-  String get noDevices => '暂无设备';
-
-  @override
-  String get connectDevice => '连接设备';
-
-  @override
-  String get disconnectDevice => '断开设备';
-
-  @override
-  String get removeDevice => '移除设备';
-
-  @override
-  String get deviceConnected => '设备已连接';
-
-  @override
-  String get deviceDisconnected => '设备已断开';
-
-  @override
-  String get deviceRemoved => '设备已移除';
-
-  @override
-  String get deviceNotFound => '未找到设备';
-
-  @override
-  String get deviceConnectionFailed => '设备连接失败';
-
-  @override
-  String get sectionsync => '';
-
-  @override
-  String get sync => '同步';
-
-  @override
-  String get syncing => '同步中...';
-
-  @override
-  String get syncComplete => '同步完成';
-
-  @override
-  String get syncFailed => '同步失败';
-
-  @override
-  String get autoSync => '自动同步';
-
-  @override
-  String get syncNow => '立即同步';
-
-  @override
-  String get lastSync => '上次同步';
-
-  @override
-  String get syncSettings => '同步设置';
-
-  @override
-  String get syncMessages => '同步消息';
-
-  @override
-  String get syncFiles => '同步文件';
-
-  @override
-  String get syncMemories => '同步记忆';
-
-  @override
-  String get offlineMode => '离线模式';
-
-  @override
-  String get onlineMode => '在线模式';
-
-  @override
-  String get sectionqr => '';
-
-  @override
-  String get qrCodeTitle => '二维码';
-
-  @override
-  String get scanQR => '扫描二维码';
-
-  @override
-  String get generateQR => '生成二维码';
-
-  @override
-  String get qrCodeGenerated => '二维码已生成';
-
-  @override
-  String get qrCodeScanned => '二维码已扫描';
-
-  @override
-  String get qrScanFailed => '二维码扫描失败';
-
-  @override
-  String get invalidQRCode => '无效的二维码';
-
-  @override
-  String get qrPermissionDenied => '相机权限被拒绝';
-
-  @override
-  String get qrCameraError => '相机错误';
-
-  @override
-  String get manualInput => '手动输入';
-
-  @override
-  String get flashlight => '闪光灯';
-
-  @override
-  String get enterJoinCode => '输入加入码';
-
-  @override
-  String get joinCodeHint => '8位加入码';
-
-  @override
-  String get joinGroupSuccess => '成功加入群组！';
+  String get joinGroupSuccess => 'Joined group successfully';
 
   @override
   String get joinGroupFailed => '加入群组失败';
 
   @override
-  String get joinFailed => '加入失败';
+  String get joinFailed => 'Join failed';
 
   @override
-  String get joiningGroup => '正在加入群组...';
+  String get enterJoinCode => 'Enter Join Code';
 
   @override
-  String get placeQRInFrame => '将二维码置于框内进行扫描';
+  String get joinCodeHint => '8-digit join code';
 
   @override
-  String get deviceJoinCode => '设备加入码';
+  String get join => 'Join';
 
   @override
-  String get regenerate => '重新生成';
+  String get scanQRCode => 'Scan QR Code';
 
   @override
-  String get generatingJoinCode => '正在生成加入码...';
+  String get manualInput => 'Manual Input';
 
   @override
-  String get generateFailed => '生成失败';
+  String get flashlight => 'Flashlight';
 
   @override
-  String get noGroupInfo => '没有可用的群组信息';
+  String get appSlogan => 'Your personal file transfer assistant';
 
   @override
-  String get join => '加入';
+  String get myFiles => 'My Files';
 
   @override
-  String get sectionnetwork => '';
+  String get filesFeatureComingSoon => 'Files Feature Coming Soon';
 
   @override
-  String get networkStatus => '网络状态';
+  String get stayTuned => 'Stay tuned!';
 
   @override
-  String get networkConnected => '已连接';
+  String get noDeviceGroups => 'No Device Groups';
 
   @override
-  String get networkDisconnected => '已断开';
+  String get scanQRToJoin => 'Scan QR code to join a group';
 
   @override
-  String get networkError => '网络错误';
+  String get myDeviceGroups => 'My Device Groups';
 
   @override
-  String get connectionTimeout => '连接超时';
+  String get unnamedGroup => 'Unnamed Group';
 
   @override
-  String get serverError => '服务器错误';
+  String deviceCount(Object count) {
+    return '$count devices';
+  }
 
   @override
-  String get clientError => '客户端错误';
+  String get youAreOwner => 'You are the owner';
 
   @override
-  String get networkDebug => '网络调试';
+  String get member => 'Member';
 
   @override
-  String get checkConnection => '检查连接';
+  String createdOn(String date) {
+    return '创建于 $date';
+  }
 
   @override
-  String get reconnecting => '重连中';
+  String get unknownDate => 'Unknown';
 
   @override
-  String get reconnected => '已重新连接';
+  String memoriesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Memories',
+      one: '1 Memory',
+      zero: 'No Memories',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get connectionLost => '连接丢失';
+  String get searchMemories => 'Search memories...';
 
   @override
-  String get sectionnotifications => '';
+  String get today => 'Today';
 
   @override
-  String get notifications => '通知';
+  String get yesterday => 'Yesterday';
 
   @override
-  String get enableNotifications => '启用通知';
+  String get monday => 'Monday';
 
   @override
-  String get disableNotifications => '禁用通知';
+  String get tuesday => 'Tuesday';
 
   @override
-  String get notificationSettings => '通知设置';
+  String get wednesday => 'Wednesday';
 
   @override
-  String get newMessageNotification => '新消息';
+  String get thursday => 'Thursday';
 
   @override
-  String get fileUploadNotification => '文件上传完成';
+  String get friday => 'Friday';
 
   @override
-  String get fileDownloadNotification => '文件下载完成';
+  String get saturday => 'Saturday';
 
   @override
-  String get syncCompleteNotification => '同步完成';
+  String get sunday => 'Sunday';
 
   @override
-  String get deviceConnectedNotification => '设备已连接';
+  String get noMemories => 'No Memories Yet';
 
   @override
-  String get deviceDisconnectedNotification => '设备已断开';
+  String get noMemoriesDesc => 'Create your first memory to get started!';
 
   @override
-  String get sectiontime => '';
+  String get createMemory => 'Create Memory';
 
   @override
-  String get now => '现在';
+  String get quickAdd => 'Quick Add';
 
   @override
-  String get today => '今天';
+  String get memoryDeleteTitle => 'Delete Memory';
 
   @override
-  String get yesterday => '昨天';
+  String get confirmDeleteMemory =>
+      'Are you sure you want to delete this memory?';
 
   @override
-  String get thisWeek => '本周';
+  String get deleteMemorySuccess => 'Memory deleted successfully';
 
   @override
-  String get lastWeek => '上周';
+  String get deleteMemoryFailed => 'Failed to delete memory';
 
   @override
-  String get thisMonth => '本月';
+  String dateFormat(Object day, Object month) {
+    return '$month/$day';
+  }
 
   @override
-  String get lastMonth => '上月';
+  String get notes => 'Notes';
+
+  @override
+  String get passwords => 'Passwords';
+
+  @override
+  String get contacts => 'Contacts';
+
+  @override
+  String get quickTexts => 'Quick Texts';
+
+  @override
+  String get myMemory => 'My Memory';
+
+  @override
+  String groupMemory(Object groupName) {
+    return '$groupName\'s Memory';
+  }
+
+  @override
+  String totalItemsSaved(Object count) {
+    return '$count items saved';
+  }
+
+  @override
+  String get selectGroupToView => 'Select a group to view memories';
+
+  @override
+  String get groupStorage => 'Group Storage';
+
+  @override
+  String get localStory => 'Local Storage';
+
+  @override
+  String get noNotes => 'No Notes Yet';
+
+  @override
+  String get recordImportantInfo => 'Record important information and ideas';
+
+  @override
+  String get noPasswords => 'No Passwords Yet';
+
+  @override
+  String get securelyStore => 'Securely store your account passwords';
+
+  @override
+  String get noContacts => 'No Contacts Yet';
+
+  @override
+  String get saveImportantContacts => 'Save important contact information';
+
+  @override
+  String get noQuickTexts => 'No Quick Texts Yet';
+
+  @override
+  String get saveCommonTexts => 'Save common texts and templates';
+
+  @override
+  String get addNote => 'Add Note';
+
+  @override
+  String get editNote => 'Edit Note';
+
+  @override
+  String get title => 'Title';
+
+  @override
+  String get content => 'Content';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get addPassword => 'Add Password';
+
+  @override
+  String get editPassword => 'Edit Password';
+
+  @override
+  String get site => 'Site/App';
+
+  @override
+  String get username => 'Username/Email';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get addContact => 'Add Contact';
+
+  @override
+  String get editContact => 'Edit Contact';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get phone => 'Phone';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get addQuickText => 'Add Quick Text';
+
+  @override
+  String get editQuickText => 'Edit Quick Text';
+
+  @override
+  String get saveButton => 'Save';
+
+  @override
+  String get titleLabel => 'Title';
+
+  @override
+  String get titleHint => 'Enter a title for your memory';
+
+  @override
+  String get contentLabel => 'Content';
+
+  @override
+  String get writeYourThoughts => 'Write down your thoughts...';
+
+  @override
+  String get websiteAppName => 'Website/App Name';
+
+  @override
+  String get websiteAppNameHint => 'e.g., Google, Facebook';
+
+  @override
+  String get websiteAddress => 'Website Address';
+
+  @override
+  String get websiteAddressHint => 'e.g., https://www.google.com';
+
+  @override
+  String get usernameEmailLabel => 'Username/Email';
+
+  @override
+  String get loginAccountHint => 'Your login account';
+
+  @override
+  String get passwordLabel => 'Password';
+
+  @override
+  String get passwordHint => 'Your login password';
+
+  @override
+  String get notesLabel => 'Notes';
+
+  @override
+  String get otherInfoHint => 'Other information, such as security questions';
+
+  @override
+  String get expenseItemLabel => 'Expense Item';
+
+  @override
+  String get expenseItemHint => 'e.g., Coffee, Lunch';
+
+  @override
+  String get amountLabel => 'Amount';
+
+  @override
+  String get amountHint => 'e.g., 25.50';
+
+  @override
+  String get typeLabel => 'Type';
+
+  @override
+  String get expense => 'Expense';
+
+  @override
+  String get income => 'Income';
+
+  @override
+  String get connectionStatusChanged => 'Connection status changed';
+
+  @override
+  String get networkStatusChanged => 'Network status changed';
+
+  @override
+  String get errorOccurred => 'Error occurred';
+
+  @override
+  String get messageReceived => 'Message received';
+
+  @override
+  String get networkDiagnosticTool => 'Network Diagnostic Tool';
+
+  @override
+  String get clearLogs => 'Clear Logs';
+
+  @override
+  String get copyLogs => 'Copy Logs';
+
+  @override
+  String get connectionStatus => 'Connection Status';
+
+  @override
+  String get connectionDetails => 'Connection Details';
+
+  @override
+  String get networkTest => 'Network Test';
+
+  @override
+  String get testWebSocket => 'Test WebSocket';
+
+  @override
+  String get forceReconnect => 'Force Reconnect';
+
+  @override
+  String get preparingToSendFiles => 'Preparing to send files...';
+
+  @override
+  String get shareSuccess => 'Share Successful';
+
+  @override
+  String get shareFailed => 'Share Failed';
+
+  @override
+  String get shareException => 'Share Exception';
+
+  @override
+  String get contentSentToGroup => 'Content has been sent to the current group';
+
+  @override
+  String get pleaseTryAgainLater => 'Please try again later';
+
+  @override
+  String get processing => 'Processing';
+
+  @override
+  String get waitingForApp => 'Waiting for app to start...';
+
+  @override
+  String get appSlowToStart =>
+      'App is slow to start, trying to process share...';
+
+  @override
+  String get tryAgainIfFailed => 'If it fails, please try sharing again';
+
+  @override
+  String get processingShare => 'Processing share...';
+
+  @override
+  String get subscriptionPricingTitle => 'Subscription & Pricing';
+
+  @override
+  String get subscriptionPricingSubtitle => 'Choose your plan';
+
+  @override
+  String get currentPlan => 'Current Plan';
+
+  @override
+  String validUntil(Object date) {
+    return 'Valid until: $date';
+  }
+
+  @override
+  String get mostPopular => 'Most Popular';
+
+  @override
+  String get monthlyPlan => 'Monthly Plan';
+
+  @override
+  String get yearlyPlan => 'Yearly Plan';
+
+  @override
+  String get restorePurchases => 'Restore Purchases';
+
+  @override
+  String get priceVariesByRegion => 'Price may vary by region.';
+
+  @override
+  String get purchaseSuccess => 'Purchase Successful';
+
+  @override
+  String get purchaseFailed => 'Purchase Failed';
+
+  @override
+  String get freePlan => 'Free Plan';
+
+  @override
+  String deviceLimit(Object count) {
+    return 'Up to $count devices';
+  }
+
+  @override
+  String get chooseYourPlan => 'Choose Your Plan';
+
+  @override
+  String get basicPlan => 'Basic Plan';
+
+  @override
+  String get proPlan => 'Pro Plan';
+
+  @override
+  String get enterprisePlan => 'Enterprise Plan';
+
+  @override
+  String get freePlanDescription => 'For personal use';
+
+  @override
+  String get basicPlanDescription => 'For small teams';
+
+  @override
+  String get proPlanDescription => 'For growing businesses';
+
+  @override
+  String get enterprisePlanDescription => 'For large organizations';
+
+  @override
+  String get feature2DeviceGroup => 'Up to 2 devices in a group';
+
+  @override
+  String get featureBasicFileTransfer => 'Basic file transfer (up to 100MB)';
+
+  @override
+  String get featureTextMessage => 'Text messages';
+
+  @override
+  String get featureImageTransfer => 'Image transfer';
+
+  @override
+  String get feature5DeviceGroup => 'Up to 5 devices in a group';
+
+  @override
+  String get featureUnlimitedFileTransfer =>
+      'Unlimited file transfer (up to 1GB)';
+
+  @override
+  String get featureVideoTransfer => 'Video transfer';
+
+  @override
+  String get cameraUnavailableSwitchedToInput =>
+      'Camera unavailable, switched to input mode.';
+
+  @override
+  String get desktopCameraUnstableTip =>
+      'Desktop camera scanning may be unstable, it is recommended to use input mode.';
+
+  @override
+  String get joinGroupSuccessExclamation => 'Joined group successfully!';
+
+  @override
+  String get joinGroupFailedGeneric => 'Failed to join group.';
+
+  @override
+  String operationFailed(Object error) {
+    return 'Operation failed: $error';
+  }
+
+  @override
+  String get pleaseEnterInviteCode => 'Please enter the invite code.';
+
+  @override
+  String get inviteCodeLengthError => 'Invite code length error.';
+
+  @override
+  String get loadDevicesFailed => 'Failed to load devices';
+
+  @override
+  String get createJoinCodeFailed => 'Failed to create join code';
+
+  @override
+  String get leaveGroupSuccess => 'Left group successfully';
+
+  @override
+  String get leaveGroupFailed => '离开群组失败';
+
+  @override
+  String get groupInfoUpdated => 'Group info updated';
+
+  @override
+  String get refreshFailed => 'Refresh failed';
+
+  @override
+  String get deviceGroup => '设备组';
+
+  @override
+  String get leaveGroup => 'Leave Group';
+
+  @override
+  String get generating => 'Generating...';
+
+  @override
+  String get generateDeviceJoinCode => 'Generate Device Join Code';
+
+  @override
+  String get scanQRToJoinDeviceGroup =>
+      'Scan QR code to join this device group';
+
+  @override
+  String get joinCode => 'Join Code';
+
+  @override
+  String get copyJoinCode => 'Copy Join Code';
+
+  @override
+  String get joinCodeCopied => 'Join code copied to clipboard';
+
+  @override
+  String expiresAt(Object date) {
+    return 'Expires at: $date';
+  }
+
+  @override
+  String get deviceList => 'Device List';
+
+  @override
+  String get noDevicesToDisplay => 'No devices to display';
+
+  @override
+  String get unnamedDevice => 'Unnamed Device';
+
+  @override
+  String get currentDevice => 'Current Device';
+
+  @override
+  String get groupOwner => 'Group Owner';
+
+  @override
+  String get unknownDevice => 'Unknown Device';
+
+  @override
+  String get unknownPlatform => 'Unknown Platform';
+
+  @override
+  String get removeDevice => 'Remove Device';
+
+  @override
+  String get confirmLeaveGroup =>
+      'Are you sure you want to leave this device group?';
+
+  @override
+  String get confirmRemoveDevice =>
+      'Are you sure you want to remove the device';
+
+  @override
+  String get removeDeviceFeatureComingSoon =>
+      'Remove device feature coming soon';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get loadGroupInfoFailed => 'Failed to load group info';
+
+  @override
+  String get renameGroup => 'Rename Group';
+
+  @override
+  String get groupName => 'Group Name';
+
+  @override
+  String get enterNewGroupName => 'Enter a new group name';
+
+  @override
+  String get groupNameHint => 'Group name cannot be empty';
+
+  @override
+  String get renamingGroup => 'Renaming group...';
+
+  @override
+  String get groupRenameSuccess => 'Group renamed successfully';
+
+  @override
+  String get groupRenameFailed => 'Failed to rename group';
+
+  @override
+  String get renameFailed => 'Rename failed';
+
+  @override
+  String get groupLeaveConfirm => 'Are you sure you want to leave this group?';
+
+  @override
+  String get editMemory => 'Edit Memory';
+
+  @override
+  String get enterTitle => 'Enter title';
+
+  @override
+  String get enterContent => 'Enter content';
+
+  @override
+  String get tags => 'Tags';
+
+  @override
+  String get addTag => 'Add Tag';
+
+  @override
+  String get generateTags => 'Generate Tags';
+
+  @override
+  String get generatingTags => 'Generating tags...';
+
+  @override
+  String get https => 'https://...';
+
+  @override
+  String get usernameEmail => 'Username/Email';
+
+  @override
+  String get loginAccount => 'Login account';
+
+  @override
+  String get loginPassword => 'Login password';
+
+  @override
+  String get otherInformation => 'Other information';
+
+  @override
+  String get amount => 'Amount';
+
+  @override
+  String get zeroZero => '0.00';
+
+  @override
+  String get type => 'Type';
+
+  @override
+  String get category => 'Category';
+
+  @override
+  String get eg => 'e.g.,';
+
+  @override
+  String get date => 'Date';
+
+  @override
+  String get detailedExplanation => 'Detailed explanation';
+
+  @override
+  String get startTime => 'Start Time';
+
+  @override
+  String get endTimeOptional => 'End Time (Optional)';
+
+  @override
+  String get location => 'Location';
+
+  @override
+  String get conferenceRoomRestaurant => 'Conference room, restaurant, etc.';
+
+  @override
+  String get details => 'Details';
+
+  @override
+  String get meetingContentNotes => 'Meeting content, notes';
+
+  @override
+  String get reminder => 'Reminder';
+
+  @override
+  String get noReminder => 'No reminder';
+
+  @override
+  String get fiveMinutesBefore => '5 minutes before';
+
+  @override
+  String get fifteenMinutesBefore => '15 minutes before';
+
+  @override
+  String get thirtyMinutesBefore => '30 minutes before';
+
+  @override
+  String get oneHourBefore => '1 hour before';
+
+  @override
+  String get detailedDescription => 'Detailed Description';
+
+  @override
+  String get specificRequirementsNotes => 'Specific requirements, notes';
+
+  @override
+  String get priority => 'Priority';
+
+  @override
+  String get low => 'Low';
+
+  @override
+  String get medium => 'Medium';
+
+  @override
+  String get high => 'High';
+
+  @override
+  String get completed => 'Completed';
+
+  @override
+  String get dueDateOptional => 'Due Date (Optional)';
+
+  @override
+  String get urlLink => 'URL Link';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get purposeOrContent => 'Purpose or content of this link';
+
+  @override
+  String get enterTagName => 'Enter tag name';
+
+  @override
+  String get selectDate => 'Select date';
+
+  @override
+  String get selectTime => 'Select time';
+
+  @override
+  String get updateSuccess => 'Update successful';
+
+  @override
+  String get updateFailed => 'Update failed';
+
+  @override
+  String get catering => 'Catering';
+
+  @override
+  String get transportation => 'Transportation';
+
+  @override
+  String get scanDeviceJoinOtherDevices => 'Scan with other devices to join';
+
+  @override
+  String get joinGroup => 'Join Group';
+
+  @override
+  String get expiresIn => 'Expires in';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get noGroupInfo => 'No group info available';
+
+  @override
+  String get generateFailed => 'Failed to generate';
+
+  @override
+  String get deviceJoinCode => 'Device Join Code';
+
+  @override
+  String get regenerate => 'Regenerate';
+
+  @override
+  String get generatingJoinCode => 'Generating join code...';
+
+  @override
+  String get groupPrefix => 'Group';
+
+  @override
+  String get copyright => '© 2023 Send To Myself';
+
+  @override
+  String get deviceInfo => 'Device Info';
+
+  @override
+  String get deviceName => 'Device Name';
+
+  @override
+  String get deviceType => 'Device Type';
+
+  @override
+  String get platform => 'Platform';
+
+  @override
+  String get deviceId => 'Device ID';
+
+  @override
+  String get appTheme => 'App Theme';
+
+  @override
+  String get defaultTheme => 'Default';
+
+  @override
+  String get notificationSettings => 'Notification Settings';
+
+  @override
+  String get enabled => 'Enabled';
+
+  @override
+  String get aboutApp => 'About App';
+
+  @override
+  String get sendFileFailed => 'Send file failed';
+
+  @override
+  String get noFilesToSend => 'No files to send';
+
+  @override
+  String get batchRecall => 'Batch Recall';
+
+  @override
+  String get recall => 'Recall';
+
+  @override
+  String get batchRecallReason => 'Recall messages';
+
+  @override
+  String get batchDelete => 'Batch Delete';
+
+  @override
+  String confirmBatchDelete(int count) {
+    return 'Are you sure you want to delete $count messages?';
+  }
+
+  @override
+  String get batchDeleteReason => 'Delete messages';
+
+  @override
+  String batchDeleteSuccess(int count) {
+    return 'Successfully deleted $count messages';
+  }
+
+  @override
+  String batchDeleteFailedWithError(String error) {
+    return 'Batch delete failed: $error';
+  }
+
+  @override
+  String get debugInfoTitle => 'Debug Info';
+
+  @override
+  String get permanentStorageDirectory => 'Permanent Storage Directory';
+
+  @override
+  String get storageUsage => 'Storage Usage';
+
+  @override
+  String get fileCacheStats => 'File Cache Stats';
+
+  @override
+  String get deduplicationDiagnostics => 'Deduplication Diagnostics';
+
+  @override
+  String get clearDeduplicationRecords => 'Clear Deduplication Records';
+
+  @override
+  String get startConversation => 'Start a new conversation';
+
+  @override
+  String get sendMessageOrFileToStart => 'Send a message or file to start';
+
+  @override
+  String get cancelUpload => 'Cancel Upload';
+
+  @override
+  String get cancelDownload => 'Cancel Download';
+
+  @override
+  String get confirmCancelUpload =>
+      'Are you sure you want to cancel the upload?';
+
+  @override
+  String get confirmCancelDownload =>
+      'Are you sure you want to cancel the download?';
+
+  @override
+  String get continueTransfer => 'Continue Transfer';
+
+  @override
+  String get confirmCancel => 'Confirm Cancel';
+
+  @override
+  String get uploadCancelled => 'Upload cancelled';
+
+  @override
+  String get downloadCancelled => 'Download cancelled';
+
+  @override
+  String get file => 'File';
+
+  @override
+  String get addDescriptionText => 'Add description';
+
+  @override
+  String get inputMessageHintDesktop =>
+      'Input message, paste screenshot, or drag file here';
+
+  @override
+  String get inputMessageHintMobile => 'Input message';
+
+  @override
+  String get imageFile => 'Image File';
+
+  @override
+  String get videoFile => 'Video File';
+
+  @override
+  String get documentFile => 'Document File';
+
+  @override
+  String get audioFile => 'Audio File';
+
+  @override
+  String get selectFileType => 'Select file type';
+
+  @override
+  String get selectFileTypeMultiple => 'Select file type (multiple)';
+
+  @override
+  String get image => 'Image';
+
+  @override
+  String get video => 'Video';
+
+  @override
+  String get document => 'Document';
+
+  @override
+  String get audio => 'Audio';
+
+  @override
+  String get fileDownloadFailed => 'File download failed';
+
+  @override
+  String get fileNotExistsOrExpired => 'File does not exist or has expired';
+
+  @override
+  String get noPermissionToDownload => 'No permission to download';
+
+  @override
+  String get copiedToClipboard => 'Copied to clipboard';
+
+  @override
+  String get textCopiedToClipboard => 'Text copied to clipboard';
+
+  @override
+  String get canDragSelectText => 'You can drag to select text';
+
+  @override
+  String get allContentCopied => 'All content copied';
+
+  @override
+  String get recallMessage => 'Recall Message';
+
+  @override
+  String get deleteMessageTitle => 'Delete Message';
+
+  @override
+  String get confirmDeleteSingleMessage =>
+      'Are you sure you want to delete this message?';
+
+  @override
+  String get messageContentAddedToInput => 'Message content added to input';
+
+  @override
+  String get confirmDeleteMessage =>
+      'Are you sure you want to delete this message?';
+
+  @override
+  String get gallery => 'Gallery';
+
+  @override
+  String get documents => 'Documents';
+
+  @override
+  String get saveFailed => 'Save failed';
+
+  @override
+  String get messageShare => 'Message Share';
+
+  @override
+  String get textShared => 'Text shared';
+
+  @override
+  String get messageRecalledText => '[You recalled a message]';
+
+  @override
+  String get filePathCopied => 'File path copied';
+
+  @override
+  String get copyFilePathFailed => 'Copy file path failed';
+
+  @override
+  String get categoryLabel => 'Category';
+
+  @override
+  String get categoryHint => 'e.g., Work, Personal';
+
+  @override
+  String get dateLabel => 'Date';
+
+  @override
+  String get notesHint => 'Add notes...';
+
+  @override
+  String get scheduleTitleLabel => 'Schedule Title';
+
+  @override
+  String get scheduleTitleHint => 'e.g., Team Meeting';
+
+  @override
+  String get startTimeLabel => 'Start Time';
+
+  @override
+  String get endTimeOptionalLabel => 'End Time (Optional)';
+
+  @override
+  String get locationLabel => 'Location';
+
+  @override
+  String get locationHint => 'e.g., Conference Room A';
+
+  @override
+  String get detailsLabel => 'Details';
+
+  @override
+  String get meetingDetailsHint => 'e.g., Agenda, Attendees';
+
+  @override
+  String get advanceReminderLabel => 'Advance Reminder';
+
+  @override
+  String get minutes5Before => '5 minutes before';
+
+  @override
+  String get minutes15Before => '15 minutes before';
+
+  @override
+  String get minutes30Before => '30 minutes before';
+
+  @override
+  String get hour1Before => '1 hour before';
+
+  @override
+  String get taskLabel => 'Task';
+
+  @override
+  String get whatToDoHint => 'e.g., Buy groceries';
+
+  @override
+  String get detailedDescriptionLabel => 'Detailed Description';
+
+  @override
+  String get taskRequirementsHint => 'e.g., Milk, Bread, Eggs';
+
+  @override
+  String get priorityLabel => 'Priority';
+
+  @override
+  String get dueDateOptionalLabel => 'Due Date (Optional)';
+
+  @override
+  String get websiteLinkName => 'Website/Link Name';
+
+  @override
+  String get urlLinkLabel => 'URL/Link';
+
+  @override
+  String get linkDescriptionLabel => 'Description';
+
+  @override
+  String get linkPurposeHint => 'e.g., Project research';
+
+  @override
+  String get fileDescription => 'File Description';
+
+  @override
+  String get fileExplanation => 'e.g., Contract draft';
+
+  @override
+  String pleaseEnter(String label) {
+    return 'Please enter $label';
+  }
+
+  @override
+  String get saveToLocal => 'Save to Local';
+
+  @override
+  String get openFileLocation => 'Open File Location';
+
+  @override
+  String get selectMessages => 'Select Messages';
+
+  @override
+  String selectedMessages(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get deleteTooltip => 'Delete';
+
+  @override
+  String get messageFilter => 'Message Filter';
+
+  @override
+  String get searchMessagesOrFiles => 'Search messages or files';
+
+  @override
+  String get messageType => 'Message Type';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get text => 'Text';
+
+  @override
+  String get saveToGallery => 'Save to Gallery';
+
+  @override
+  String get confirmShare => 'Confirm Share';
+
+  @override
+  String get textSent => 'Text sent';
+
+  @override
+  String get groups => 'Groups';
+
+  @override
+  String get noGroup => 'No Group';
+
+  @override
+  String get memories => 'Memories';
+
+  @override
+  String get createGroup => 'Create Group';
+
+  @override
+  String get groupDescriptionOptional => 'Group Description (optional)';
+
+  @override
+  String get groupDescriptionHint => 'Enter group description';
+
+  @override
+  String get pleaseEnterGroupName => 'Please enter group name';
+
+  @override
+  String groupCreatedSuccessfully(String name) {
+    return 'Group \'$name\' created successfully';
+  }
+
+  @override
+  String get createGroupFailed => 'Create group failed';
+
+  @override
+  String get deviceOs => 'Device OS';
+
+  @override
+  String get deviceVersion => 'Device Version';
+
+  @override
+  String get deviceRegistrationFailed => '设备注册失败';
+
+  @override
+  String get placeQRInFrame => 'Place QR code in the frame';
+
+  @override
+  String get joiningGroup => 'Joining group...';
+
+  @override
+  String get reconnecting => 'Reconnecting...';
+
+  @override
+  String get connectionFailed => 'Connection failed';
+
+  @override
+  String get networkNormal => 'Network normal';
+
+  @override
+  String get networkLimited => 'Network limited';
+
+  @override
+  String get networkUnavailable => 'Network unavailable';
+
+  @override
+  String get checking => 'Checking...';
+
+  @override
+  String get logoutConfirm => '确定要退出登录吗？';
+
+  @override
+  String get loggingOut => '正在退出登录...';
+
+  @override
+  String get logoutSuccess => '退出成功';
+
+  @override
+  String get logoutError => '退出登录时发生错误';
+
+  @override
+  String get logoutFailed => 'Logout failed';
+
+  @override
+  String get loginStatusExpired => 'Login status has expired';
+
+  @override
+  String get logoutFailedContent => '退出登录失败，您可以选择强制退出或重试。';
+
+  @override
+  String get forceLogout => '强制退出';
+
+  @override
+  String get bytes => '字节';
+
+  @override
+  String get kilobytes => 'KB';
+
+  @override
+  String get megabytes => 'MB';
+
+  @override
+  String get gigabytes => 'GB';
+
+  @override
+  String get terabytes => 'TB';
+
+  @override
+  String get now => '刚刚';
 
   @override
   String minutesAgo(int minutes) {
@@ -910,1412 +1495,93 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get sectionerrors => '';
+  String get justActive => '刚刚活跃';
 
   @override
-  String get errorGeneral => '发生错误';
+  String get onlyMyself => '只有我自己';
 
   @override
-  String get errorNetwork => '网络错误';
-
-  @override
-  String get errorTimeout => '请求超时';
-
-  @override
-  String get errorServerUnavailable => '服务器不可用';
-
-  @override
-  String get errorUnauthorized => '未授权访问';
-
-  @override
-  String get errorForbidden => '访问被禁止';
-
-  @override
-  String get errorNotFound => '资源未找到';
-
-  @override
-  String get errorInternalServer => '内部服务器错误';
-
-  @override
-  String get errorBadRequest => '错误请求';
-
-  @override
-  String get errorTooManyRequests => '请求过多';
-
-  @override
-  String get errorServiceUnavailable => '服务不可用';
-
-  @override
-  String get errorUnknown => '未知错误';
-
-  @override
-  String get errorRetry => '请重试';
-
-  @override
-  String get sectionfile_sizes => '';
-
-  @override
-  String get bytes => 'B';
-
-  @override
-  String get kilobytes => 'KB';
-
-  @override
-  String get megabytes => 'MB';
-
-  @override
-  String get gigabytes => 'GB';
-
-  @override
-  String get terabytes => 'TB';
-
-  @override
-  String get sectionpermissions => '';
-
-  @override
-  String get permissionRequired => '需要权限';
-
-  @override
-  String get permissionDenied => '权限被拒绝';
-
-  @override
-  String get permissionCamera => '需要相机权限';
-
-  @override
-  String get permissionStorage => '需要存储权限';
-
-  @override
-  String get permissionNotification => '需要通知权限';
-
-  @override
-  String get permissionLocation => '需要位置权限';
-
-  @override
-  String get grantPermission => '授予权限';
-
-  @override
-  String get openSettings => '打开设置';
-
-  @override
-  String get sectionsettings => '';
-
-  @override
-  String get deviceInfo => '设备信息';
-
-  @override
-  String get deviceId => '设备ID';
-
-  @override
-  String get platform => '平台';
-
-  @override
-  String get unknown => '未知';
-
-  @override
-  String get logoutConfirmation => '退出当前设备';
-
-  @override
-  String get appTheme => '应用主题';
-
-  @override
-  String get defaultTheme => '默认';
-
-  @override
-  String get enabled => '开启';
-
-  @override
-  String get aboutApp => '关于应用';
-
-  @override
-  String get comingSoon => '敬请期待';
-
-  @override
-  String get featureComingSoon => '该功能即将上线，敬请期待！';
-
-  @override
-  String get logoutConfirmTitle => '退出登录';
-
-  @override
-  String get logoutConfirmMessage => '确定要退出当前设备的登录状态吗？';
-
-  @override
-  String get sectionmemory => '';
-
-  @override
-  String memoriesCount(int count) {
-    return '已收藏 $count 条记忆';
+  String devicesCount(int count) {
+    return '$count台设备';
   }
 
   @override
-  String get noMemoriesDesc => '开始创建你的第一条记忆吧';
+  String get sendToMyself => '发送给自己';
 
   @override
-  String get viewMemory => '查看记忆';
+  String get clickToStartGroupChat => '点击开始群聊';
 
   @override
-  String get quickAdd => '快速添加';
+  String get noConversations => '暂无会话';
 
   @override
-  String get addMemoryFromText => '从文本添加';
+  String get joinGroupToStartChat => '加入群组以开始聊天';
 
   @override
-  String get addMemoryFromImage => '从图片添加';
+  String get pleaseSelectGroup => '请选择一个群组';
 
   @override
-  String get addMemoryFromFile => '从文件添加';
-
-  @override
-  String get sectionjoingroup => '';
-
-  @override
-  String get scanMode => '扫描模式';
-
-  @override
-  String get inputMode => '输入模式';
-
-  @override
-  String get cameraInitFailed => '摄像头初始化失败';
-
-  @override
-  String get cameraNotAvailable => '摄像头不可用，已切换到手动输入模式';
-
-  @override
-  String get desktopCameraTip => '桌面端建议使用手动输入模式，摄像头扫描可能不稳定';
+  String get clickGroupSelectorHint => '点击顶部的群组选择器以选择或创建群组';
 
   @override
   String get enterGroupCode => '输入群组代码';
 
   @override
-  String get groupCodePlaceholder => '请输入8位群组代码';
-
-  @override
-  String get invalidCode => '无效代码';
-
-  @override
-  String get codeRequired => '请输入代码';
-
-  @override
-  String get processing => '处理中...';
-
-  @override
-  String get switchToScan => '切换到扫描模式';
-
-  @override
-  String get switchToInput => '切换到输入模式';
-
-  @override
   String get cameraUnavailable => '摄像头不可用';
 
   @override
-  String get checkCameraPermissions => '请检查摄像头权限设置';
+  String get desktopInputModeRecommended => '建议使用桌面输入模式';
 
   @override
-  String get desktopInputModeRecommended => '桌面端建议使用下方的\"输入邀请码\"模式';
+  String get checkCameraPermissions => '检查相机权限';
 
   @override
-  String get cameraStartupFailed => '摄像头启动失败';
+  String get switchToInput => '切换到输入';
 
   @override
-  String get startingCamera => '正在启动摄像头...';
+  String get cameraStartupFailed => '相机启动失败';
 
   @override
-  String get placeQRInScanFrame => '将二维码置于扫描框内';
+  String get startingCamera => '正在启动相机...';
 
   @override
-  String get switchToInputModeOrCheckPermissions => '请切换到输入模式或检查摄像头权限';
+  String get switchToInputModeOrCheckPermissions => '切换到输入模式或检查相机权限';
 
   @override
-  String get enterInviteCodeHint => '请输入群组邀请码（4-20位）';
+  String get placeQRInScanFrame => '将二维码放入扫描框';
+
+  @override
+  String get enterInviteCodeHint => '输入邀请码';
 
   @override
   String get inviteCodePlaceholder => '邀请码';
 
   @override
-  String get clickToJoinGroup => '点击加入群组';
+  String get groupLeaveSuccess => '成功离开群组';
 
   @override
-  String get selectGroup => '选择群组';
+  String get groupLeaveFailed => '离开群组失败';
 
   @override
-  String get createGroupFailed => '创建群组失败';
+  String get deviceRemoved => '设备已移除';
 
   @override
-  String get pleaseEnterGroupName => '请输入群组名称';
+  String get groupManagement => '群组管理';
 
   @override
-  String groupCreatedSuccessfully(Object name) {
-    return 'Group \"$name\" created successfully';
-  }
+  String get groupMembers => '群组成员';
 
   @override
-  String get title => '标题';
+  String get generateQRCode => '生成二维码';
 
   @override
-  String get content => '内容';
+  String get noDevices => '无设备';
 
   @override
-  String get writeYourThoughts => '写下你的想法...';
+  String get myself => '我自己';
 
   @override
-  String get enterNoteTitle => '输入笔记标题';
-
-  @override
-  String get websiteAppName => '网站/应用名称';
-
-  @override
-  String get websiteAppNameHint => '如：微信、淘宝';
-
-  @override
-  String get websiteAddress => '网站地址';
-
-  @override
-  String get websiteAddressHint => 'https://...';
-
-  @override
-  String get usernameEmail => '用户名/邮箱';
-
-  @override
-  String get loginAccount => '登录账号';
-
-  @override
-  String get password => '密码';
-
-  @override
-  String get loginPassword => '登录密码';
-
-  @override
-  String get sectionchat => '';
-
-  @override
-  String get sendFailed => '发送失败';
-
-  @override
-  String get maxAllowed => '最大允许';
-
-  @override
-  String get selectFileFailed => '选择文件失败';
-
-  @override
-  String get pasteFailed => '粘贴失败';
-
-  @override
-  String get fileProcessingFailed => '文件处理失败';
-
-  @override
-  String sharedTextMessages(Object count) {
-    return '已分享$count条文本消息';
-  }
-
-  @override
-  String sharedFiles(Object count) {
-    return '已分享$count个文件';
-  }
-
-  @override
-  String batchShareFailed(String error) {
-    return '批量分享失败: $error';
-  }
-
-  @override
-  String copiedMessages(Object count) {
-    return '已复制$count条消息到剪贴板';
-  }
-
-  @override
-  String messagesAddedToInput(Object count) {
-    return '$count条消息内容已添加到输入框';
-  }
-
-  @override
-  String favoriteMessages(Object count, Object total) {
-    return '已收藏$count/$total条消息';
-  }
-
-  @override
-  String recalledMessages(Object count) {
-    return '已撤回$count条消息';
-  }
-
-  @override
-  String get batchRecallFailed => '批量撤回失败';
-
-  @override
-  String deletedMessages(Object count) {
-    return '已删除$count条消息';
-  }
-
-  @override
-  String get batchDeleteFailed => '批量删除失败';
-
-  @override
-  String get debugInfo => '调试信息';
-
-  @override
-  String get permanentStorageDir => '永久存储目录';
-
-  @override
-  String get storageUsage => '存储使用情况:';
-
-  @override
-  String get chatData => '聊天数据';
-
-  @override
-  String get memoryData => '记忆数据';
-
-  @override
-  String get userData => '用户数据';
-
-  @override
-  String get fileCache => '文件缓存';
-
-  @override
-  String get total => '总计';
-
-  @override
-  String get fileCacheStats => '文件缓存统计:';
-
-  @override
-  String get totalFiles => '总文件数';
-
-  @override
-  String get validFiles => '有效文件';
-
-  @override
-  String get invalidFiles => '无效文件';
-
-  @override
-  String get deduplicationDiagnostics => '去重诊断:';
-
-  @override
-  String get processedMessageIds => '已处理消息ID';
-
-  @override
-  String get timestampRecords => '时间戳记录';
-
-  @override
-  String get uiMessages => '界面消息数';
-
-  @override
-  String get websocketConnection => 'WebSocket连接';
-
-  @override
-  String get lastMessageReceived => '最后收到消息';
-
-  @override
-  String get forceClearDedupRecords => '已强制清理去重记录并重启WebSocket监听';
-
-  @override
-  String get clearDedupRecords => '清理去重记录';
-
-  @override
-  String get getDebugInfoFailed => '获取调试信息失败';
-
-  @override
-  String get copiedToClipboard => '已复制到剪贴板';
-
-  @override
-  String get textCopiedToClipboard => '文字已复制到剪贴板';
-
-  @override
-  String get canDragSelectText => '可以直接拖拽选择文字内容';
-
-  @override
-  String get allContentCopied => '全部内容已复制到剪贴板';
-
-  @override
-  String get messageRecalled => '消息已撤回';
-
-  @override
-  String get recallFailed => '撤回失败';
-
-  @override
-  String get messageDeleted => '消息已删除';
-
-  @override
-  String get deleteFailed => '删除失败';
-
-  @override
-  String get messageAddedToInput => '消息内容已添加到输入框';
-
-  @override
-  String get addedToFavorites => '已添加到收藏';
-
-  @override
-  String get favoriteFailed => '收藏失败';
-
-  @override
-  String get removedFromFavorites => '已从收藏中移除';
-
-  @override
-  String get unfavoriteFailed => '取消收藏失败';
-
-  @override
-  String get confirmDeleteMessage => '确定要删除这条消息吗？';
-
-  @override
-  String get jumpedToOriginalMessage => '已跳转到原消息';
-
-  @override
-  String get originalMessageNotExists => '原消息不存在或已被删除';
-
-  @override
-  String get fileInfoIncomplete => '文件信息不完整';
-
-  @override
-  String get featureOnlyMobile => '此功能仅在移动端可用';
-
-  @override
-  String get fileNotExistsDownloading => '文件不存在，正在下载...';
-
-  @override
-  String get fileDownloadFailedCannotSave => '文件下载失败，无法保存';
-
-  @override
-  String get sectionnetworkdebug => '';
-
-  @override
-  String get networkDiagnosticTool => '网络诊断工具';
-
-  @override
-  String get clearLogs => '清除日志';
-
-  @override
-  String get copyLogs => '复制日志';
-
-  @override
-  String get connectionStatus => '连接状态';
-
-  @override
-  String get connectionDetails => '连接详情';
-
-  @override
-  String get networkTest => '网络检测';
-
-  @override
-  String get testWebSocket => '测试WebSocket';
-
-  @override
-  String get forceReconnect => '强制重连';
-
-  @override
-  String get pingTest => 'Ping测试';
-
-  @override
-  String get diagnosticLogs => '诊断日志';
-
-  @override
-  String recordsCount(int count) {
-    return '$count 条记录';
-  }
-
-  @override
-  String get startingNetworkDiagnostic => '开始网络诊断测试...';
-
-  @override
-  String get testingBasicConnectivity => '测试基本连接...';
-
-  @override
-  String get testingDnsResolution => '测试DNS解析...';
-
-  @override
-  String get testingServerConnectivity => '测试服务器连接...';
-
-  @override
-  String get networkDiagnosticComplete => '网络诊断测试完成';
-
-  @override
-  String get testingConnection => '测试连接';
-
-  @override
-  String get connectionSuccessful => '连接成功';
-
-  @override
-  String get connectionFailed => '连接失败';
-
-  @override
-  String get connectionStatusChanged => '连接状态改变';
-
-  @override
-  String get networkStatusChanged => '网络状态改变';
-
-  @override
-  String get errorOccurred => '发生错误';
-
-  @override
-  String get messageReceived => '收到消息';
-
-  @override
-  String get sectionsplash => '';
-
-  @override
-  String get appSlogan => '跨设备文件共享和同步';
-
-  @override
-  String get myFiles => '我的文件';
-
-  @override
-  String get filesFeatureComingSoon => '文件功能即将推出';
-
-  @override
-  String get stayTuned => '敬请期待';
-
-  @override
-  String get sectiondevicegroups => '';
-
-  @override
-  String get noDeviceGroups => '暂无设备群组';
-
-  @override
-  String get scanQRToJoin => '使用其他设备扫描二维码加入';
-
-  @override
-  String get myDeviceGroups => '我的设备群组';
-
-  @override
-  String get unnamedGroup => '未命名群组';
-
-  @override
-  String deviceCount(int count) {
-    return '$count 台设备';
-  }
-
-  @override
-  String get youAreOwner => '你是群主';
-
-  @override
-  String get member => '成员';
-
-  @override
-  String get createdOn => '创建于';
-
-  @override
-  String get unknownDate => '未知';
-
-  @override
-  String get sectiondebug => '';
-
-  @override
-  String get batchDelete => '批量删除';
-
-  @override
-  String confirmBatchDelete(int count) {
-    return '确定要删除选中的$count条消息吗？删除后无法恢复。';
-  }
-
-  @override
-  String batchDeleteSuccess(int count) {
-    return '已删除$count条消息';
-  }
-
-  @override
-  String batchDeleteFailedWithError(String error) {
-    return '批量删除失败: $error';
-  }
-
-  @override
-  String get deleteMessageTitle => '删除消息';
-
-  @override
-  String get confirmDeleteSingleMessage => '确定要删除这条消息吗？删除后无法恢复。';
-
-  @override
-  String deleteFailedWithError(String error) {
-    return '删除失败: $error';
-  }
-
-  @override
-  String recallFailedWithError(String error) {
-    return '撤回失败: $error';
-  }
-
-  @override
-  String get startConversation => '开始对话';
-
-  @override
-  String get sendMessageOrFileToStart => '发送消息或文件来开始聊天';
-
-  @override
-  String get debugInfoTitle => '调试信息';
-
-  @override
-  String get permanentStorageDirectory => '永久存储目录:';
-
-  @override
-  String get memoryDeleteTitle => '删除记忆';
-
-  @override
-  String confirmDeleteMemory(String title) {
-    return '确定要删除\"$title\"吗？删除后无法恢复。';
-  }
-
-  @override
-  String get deleteMemorySuccess => '删除成功';
-
-  @override
-  String get deleteMemoryFailed => '删除失败';
-
-  @override
-  String memorySavedWithAI(int count) {
-    return '记忆已保存，AI生成了标题和$count个标签';
-  }
-
-  @override
-  String saveFailedWithError(String error) {
-    return '保存失败: $error';
-  }
-
-  @override
-  String get deleteTooltip => '删除';
-
-  @override
-  String get sectionsnackbar => '';
-
-  @override
-  String sharedTextMessagesCount(int count) {
-    return '已分享$count条文本消息';
-  }
-
-  @override
-  String sharedFilesAndText(int fileCount, int textCount) {
-    return '已分享$fileCount个文件和$textCount条文本';
-  }
-
-  @override
-  String andTextMessages(int count) {
-    return '和$count条文本';
-  }
-
-  @override
-  String batchShareFailedWithError(String error) {
-    return '批量分享失败: $error';
-  }
-
-  @override
-  String copiedMessagesToClipboard(int count) {
-    return '已复制$count条消息到剪贴板';
-  }
-
-  @override
-  String messagesAddedToInputBox(int count) {
-    return '$count条消息内容已添加到输入框';
-  }
-
-  @override
-  String favoritedMessagesCount(int successCount, int totalCount) {
-    return '已收藏$successCount/$totalCount条消息';
-  }
-
-  @override
-  String recalledMessagesCount(int count) {
-    return '已撤回$count条消息';
-  }
-
-  @override
-  String batchRecallFailedWithError(String error) {
-    return '批量撤回失败: $error';
-  }
-
-  @override
-  String get forceClearedDedupRecords => '已强制清理去重记录并重启WebSocket监听';
-
-  @override
-  String getDebugInfoFailedWithError(String error) {
-    return '获取调试信息失败: $error';
-  }
-
-  @override
-  String get textCanBeDragSelected => '可以直接拖拽选择文字内容';
-
-  @override
-  String get allContentCopiedToClipboard => '全部内容已复制到剪贴板';
-
-  @override
-  String get messageContentAddedToInput => '消息内容已添加到输入框';
-
-  @override
-  String get featureOnlyAvailableOnMobile => '此功能仅在移动端可用';
-
-  @override
-  String fileDownloadFailedWithError(String error) {
-    return '文件下载失败: $error';
-  }
-
-  @override
-  String get fileUrlNotExistsCannotDownload => '文件URL不存在，无法下载';
-
-  @override
-  String get fileLocationOpened => '已打开文件位置';
-
-  @override
-  String get filePathCopiedToClipboard => '文件路径已复制到剪贴板';
-
-  @override
-  String get fileLinkCopiedToClipboard => '文件链接已复制到剪贴板';
-
-  @override
-  String get sectionmisc => '';
-
-  @override
-  String get sectionauth => '';
-
-  @override
-  String get loggingOut => '正在退出登录...';
-
-  @override
-  String get logoutSuccessMessage => '已成功退出登录';
-
-  @override
-  String get logoutError => '退出登录时发生错误';
-
-  @override
-  String logoutFailedWithError(String error) {
-    return '退出登录失败: $error';
-  }
-
-  @override
-  String get loginStatusInvalid => '登录状态已失效';
-
-  @override
-  String get logoutFailedTitle => '退出登录失败';
-
-  @override
-  String get logoutFailedContent => '退出登录失败，您可以选择强制退出或重试。';
-
-  @override
-  String get forceLogout => '强制退出';
-
-  @override
-  String get sectiongroup => '';
-
-  @override
-  String get createNewGroup => '创建新群组';
-
-  @override
-  String groupCreatedSuccess(String name) {
-    return '群组\"$name\"创建成功';
-  }
-
-  @override
-  String get create => '创建';
-
-  @override
-  String get sectionconnection => '';
-
-  @override
-  String onlineStatus(int online, int total) {
-    return '$online/$total在线';
-  }
-
-  @override
-  String get networkNormal => '网络正常';
-
-  @override
-  String get networkLimited => '网络受限';
-
-  @override
-  String get networkUnavailable => '网络不可用';
-
-  @override
-  String get checking => '检查中';
-
-  @override
-  String get sendFileFailed => '发送文件失败';
-
-  @override
-  String get noFilesToSend => '没有文件可发送';
-
-  @override
-  String get batchRecall => '批量撤回';
-
-  @override
-  String get recall => '撤回';
-
-  @override
-  String get clearDeduplicationRecords => '清除去重记录';
-
-  @override
-  String get cancelUpload => '取消上传';
-
-  @override
-  String get cancelDownload => '取消下载';
-
-  @override
-  String confirmCancelTransfer(String action) {
-    return '确定要$action这个文件吗？';
-  }
-
-  @override
-  String get continueTransfer => '继续传输';
-
-  @override
-  String get confirmCancel => '确定取消';
-
-  @override
-  String transferCancelled(String action) {
-    return '$action已取消';
-  }
-
-  @override
-  String get preparingDownload => '准备下载';
-
-  @override
-  String fileNotExists(int index) {
-    return '文件不存在';
-  }
-
-  @override
-  String get file => '文件';
-
-  @override
-  String get fileDownloadFailed => '文件下载失败';
-
-  @override
-  String get fileNotExistsOrExpired => '文件不存在或已过期';
-
-  @override
-  String get noPermissionToDownload => '没有权限下载此文件';
-
-  @override
-  String get imageFile => '图片文件';
-
-  @override
-  String get videoFile => '视频文件';
-
-  @override
-  String get documentFile => '文档文件';
-
-  @override
-  String get audioFile => '音频文件';
-
-  @override
-  String get selectFileType => '选择文件类型';
-
-  @override
-  String get selectFileTypeMultiple => '选择文件类型（多选直接发送）';
-
-  @override
-  String get image => '图片';
-
-  @override
-  String get video => '视频';
-
-  @override
-  String get document => '文档';
-
-  @override
-  String get audio => '音频';
-
-  @override
-  String get canDragToSelectText => '可以直接拖拽选择文字内容';
-
-  @override
-  String get recallMessage => '撤回消息';
-
-  @override
-  String get addToFavoritesFailed => '收藏失败';
-
-  @override
-  String get removeFromFavoritesFailed => '取消收藏失败';
-
-  @override
-  String get jumpedToOriginal => '已跳转到原消息';
-
-  @override
-  String get gallery => '相册';
-
-  @override
-  String get documents => '文档';
-
-  @override
-  String get saveFailed => '保存失败';
-
-  @override
-  String get textShared => '文字已分享';
-
-  @override
-  String get fileNotAvailableAndNoTextToShare => '文件不可用且无文字内容可分享';
-
-  @override
-  String get messageRecalledText => '[此消息已被撤回]';
-
-  @override
-  String get cannotOpenFileLocation => '无法打开文件位置';
-
-  @override
-  String get copyFilePathFailed => '复制文件路径失败';
-
-  @override
-  String get copyFileLinkFailed => '复制文件链接失败';
-
-  @override
-  String get desktopVideoNoValidSource => '桌面端无有效视频源';
-
-  @override
-  String get mobileVideoNoValidSource => '移动端无有效视频源';
-
-  @override
-  String get desktopVideo => '桌面端视频';
-
-  @override
-  String get sectionchatui => '';
-
-  @override
-  String get continuedTransfer => '继续传输';
-
-  @override
-  String get sectionchatmessages => '';
-
-  @override
-  String get batchRecallReason => '批量撤回';
-
-  @override
-  String get batchDeleteReason => '批量删除';
-
-  @override
-  String get confirmCancelUpload => '确定要取消上传这个文件吗？';
-
-  @override
-  String get confirmCancelDownload => '确定要取消下载这个文件吗？';
-
-  @override
-  String get uploadCancelled => '上传已取消';
-
-  @override
-  String get downloadCancelled => '下载已取消';
-
-  @override
-  String get favoritesFailed => '收藏失败';
-
-  @override
-  String get fileUnavailableNoText => '文件不可用且无文字内容可分享';
-
-  @override
-  String get filePathCopied => '文件路径已复制到剪贴板';
-
-  @override
-  String get fileLinkCopied => '文件链接已复制到剪贴板';
-
-  @override
-  String get saveButton => '保存';
-
-  @override
-  String get titleLabel => '标题';
-
-  @override
-  String get titleHint => '输入标题';
-
-  @override
-  String get contentLabel => '内容';
-
-  @override
-  String get note => '备注';
-
-  @override
-  String get otherInfo => '其他信息';
-
-  @override
-  String get expenseItem => '消费项目';
-
-  @override
-  String get amount => '金额';
-
-  @override
-  String get type => '类型';
-
-  @override
-  String get expense => '支出';
-
-  @override
-  String get income => '收入';
-
-  @override
-  String get category => '分类';
-
-  @override
-  String get date => '日期';
-
-  @override
-  String get detailedDescription => '详细描述';
-
-  @override
-  String get scheduleTitle => '日程标题';
-
-  @override
-  String get startTime => '开始时间';
-
-  @override
-  String get location => '地点';
-
-  @override
-  String get details => '详情';
-
-  @override
-  String get advanceReminder => '提前提醒';
-
-  @override
-  String get noReminder => '不提醒';
-
-  @override
-  String get task => '任务';
-
-  @override
-  String get whatToDo => '要做什么';
-
-  @override
-  String get detailedTaskDescription => '详细描述';
-
-  @override
-  String get priority => '优先级';
-
-  @override
-  String get low => '低';
-
-  @override
-  String get medium => '中';
-
-  @override
-  String get high => '高';
-
-  @override
-  String get websiteOrLinkName => '网站或链接名称';
-
-  @override
-  String get linkPurpose => '这个链接的用途或内容';
-
-  @override
-  String get fileDescription => '文件描述';
-
-  @override
-  String get fileExplanation => '文件说明';
-
-  @override
-  String get selectDate => '选择日期';
-
-  @override
-  String get selectTime => '选择时间';
-
-  @override
-  String get clickToSelectFile => '点击选择文件';
-
-  @override
-  String get addAccountPassword => '添加账号密码';
-
-  @override
-  String get recordExpense => '记一笔账';
-
-  @override
-  String get createSchedule => '创建日程';
-
-  @override
-  String get addTodo => '添加待办';
-
-  @override
-  String get saveLink => '保存链接';
-
-  @override
-  String get saveImage => '保存图片';
-
-  @override
-  String get saveVideo => '保存视频';
-
-  @override
-  String get saveDocument => '保存文档';
-
-  @override
-  String get writeNote => '写笔记';
-
-  @override
-  String get pleaseSelectFile => '请选择文件';
-
-  @override
-  String get saveSuccess => '保存成功';
-
-  @override
-  String get sectioninput => '';
-
-  @override
-  String get inputMessageHintDesktop => '输入消息或拖拽文件...(Enter发送)';
-
-  @override
-  String get inputMessageHintMobile => '输入消息或拖拽文件...';
-
-  @override
-  String get addDescriptionText => '添加说明文字...(Enter发送)';
-
-  @override
-  String get sectionmenu => '';
-
-  @override
-  String get sideMenu => '侧边菜单';
-
-  @override
-  String get appSettings => '应用设置';
-
-  @override
-  String get networkDiagnostics => '网络诊断';
-
-  @override
-  String get currentDevice => '当前设备';
-
-  @override
-  String get systemInfo => '系统信息';
-
-  @override
-  String get noGroup => '无群组';
-
-  @override
-  String get sectionpriority => '';
-
-  @override
-  String get highPriority => '高优先级';
-
-  @override
-  String get mediumPriority => '中优先级';
-
-  @override
-  String get lowPriority => '低优先级';
-
-  @override
-  String get justNow => '刚刚';
-
-  @override
-  String get sectionaccount => '';
-
-  @override
-  String accountInfo(String username, String website) {
-    return '账号: $username • 网站: $website';
-  }
-
-  @override
-  String get sectionforms => '';
-
-  @override
-  String get loginAccountHint => '登录账号';
-
-  @override
-  String get passwordHint => '登录密码';
-
-  @override
-  String get notesLabel => '备注';
-
-  @override
-  String get otherInfoHint => '其他信息';
-
-  @override
-  String get expenseItemHint => '如：午餐、购物';
-
-  @override
-  String get amountHint => '0.00';
-
-  @override
-  String get typeLabel => '类型';
-
-  @override
-  String get categoryLabel => '分类';
-
-  @override
-  String get categoryHint => '如：餐饮、交通';
-
-  @override
-  String get dateLabel => '日期';
-
-  @override
-  String get detailsHint => '详细说明';
-
-  @override
-  String get scheduleTitleHint => '会议、约会等';
-
-  @override
-  String get startTimeLabel => '开始时间';
-
-  @override
-  String get endTimeOptional => '结束时间（可选）';
-
-  @override
-  String get locationLabel => '地点';
-
-  @override
-  String get locationHint => '会议室、餐厅等';
-
-  @override
-  String get detailsLabel => '详情';
-
-  @override
-  String get meetingDetailsHint => '会议内容、注意事项';
-
-  @override
-  String get minutes5Before => '5分钟前';
-
-  @override
-  String get minutes15Before => '15分钟前';
-
-  @override
-  String get minutes30Before => '30分钟前';
-
-  @override
-  String get hour1Before => '1小时前';
-
-  @override
-  String get taskLabel => '任务';
-
-  @override
-  String get taskRequirementsHint => '具体要求、注意事项';
-
-  @override
-  String get priorityLabel => '优先级';
-
-  @override
-  String get dueDateOptional => '截止日期（可选）';
-
-  @override
-  String get websiteLinkName => '网站或链接名称';
-
-  @override
-  String get urlLink => 'URL链接';
-
-  @override
-  String get sectionshare => '';
-
-  @override
-  String get confirmShare => '确认分享';
-
-  @override
-  String get textSent => '文本已发送';
-
-  @override
-  String get fileSent => '文件已发送';
-
-  @override
-  String filesSent(int count) {
-    return '$count个文件已发送';
-  }
-
-  @override
-  String get sectionmissing => '';
-
-  @override
-  String get sectionmemoryforms => '';
-
-  @override
-  String get usernameEmailLabel => '用户名/邮箱';
-
-  @override
-  String get passwordLabel => '密码';
-
-  @override
-  String get expenseItemLabel => '消费项目';
-
-  @override
-  String get amountLabel => '金额';
-
-  @override
-  String get notesHint => '详细说明';
-
-  @override
-  String get scheduleTitleLabel => '日程标题';
-
-  @override
-  String get endTimeOptionalLabel => '结束时间（可选）';
-
-  @override
-  String get advanceReminderLabel => '提前提醒';
-
-  @override
-  String get whatToDoHint => '要做什么';
-
-  @override
-  String get detailedDescriptionLabel => '详细描述';
-
-  @override
-  String get dueDateOptionalLabel => '截止日期（可选）';
-
-  @override
-  String get urlLinkLabel => 'URL链接';
-
-  @override
-  String get linkDescriptionLabel => '描述';
-
-  @override
-  String get linkPurposeHint => '这个链接的用途或内容';
-
-  @override
-  String get fileLabel => '文件 *';
-
-  @override
-  String pleaseEnter(String field) {
-    return '请输入$field';
-  }
-
-  @override
-  String get completed => '已完成';
-
-  @override
-  String get addTag => '添加标签';
-
-  @override
-  String get addTagLabel => '添加标签';
-
-  @override
-  String get enterTagName => '输入标签名称';
-
-  @override
-  String get aiGenerate => 'AI生成';
-
-  @override
-  String get generating => '生成中...';
-
-  @override
-  String aiGeneratedTags(int count) {
-    return 'AI生成了$count个新标签';
-  }
-
-  @override
-  String generateTagsFailed(String error) {
-    return '生成标签失败: $error';
-  }
-
-  @override
-  String get updateSuccess => '更新成功';
-
-  @override
-  String updateFailed(String error) {
-    return '更新失败: $error';
-  }
-
-  @override
-  String editMemoryType(String type) {
-    return '编辑$type';
-  }
-
-  @override
-  String get enterTitle => '输入标题';
-
-  @override
-  String get enterContent => '输入内容';
-
-  @override
-  String get tagsLabel => '标签';
-
-  @override
-  String get processingShareContent => '正在处理分享内容...';
-
-  @override
-  String get shareSuccess => '✅ 分享成功！';
-
-  @override
-  String get shareFailed => '❌ 分享失败';
-
-  @override
-  String get downloadedFile => '已下载文件';
-
-  @override
-  String get takePhoto => '拍照';
-
-  @override
-  String get selectFromGallery => '从相册选择';
-
-  @override
-  String get copyright => '© 2023 Send To Myself';
+  String get deviceConnected => '设备已连接';
 
   @override
   String get subscriptionManagement => '订阅管理';
@@ -2324,615 +1590,106 @@ class AppLocalizationsZh extends AppLocalizations {
   String get currentSubscription => '当前订阅';
 
   @override
-  String get unknownPlatform => '未知';
+  String get supports => '支持';
 
   @override
-  String supportedDeviceGroup(int count) {
-    return '支持 $count 台设备群组';
+  String get appName => '应用名称';
+
+  @override
+  String get logoutFromCurrentDevice => '从当前设备注销';
+
+  @override
+  String get downloadFailed => '下载失败';
+
+  @override
+  String get messageRecalled => '消息已撤回';
+
+  @override
+  String get messageDeleted => '消息已删除';
+
+  @override
+  String deleteFailedWithError(String error) {
+    return '删除失败，错误：$error';
   }
 
   @override
-  String get shareException => '❌ 分享异常';
+  String get groupMemberLimitReached => '群组成员已达上限';
 
   @override
-  String get allContentSentToGroup => '所有内容已发送到当前群组';
+  String get upgradeToSupportMoreDevices => '升级订阅以支持更多设备';
 
   @override
-  String get pleaseTryAgainLater => '请稍后重试';
+  String get upgrade => '升级';
 
   @override
-  String processingError(String error) {
-    return '处理出现错误: $error';
-  }
+  String get upgradeSubscription => '升级订阅';
 
   @override
-  String get allFilesSentComplete => '所有文件发送完成';
+  String get viewSubscription => '查看订阅';
 
   @override
-  String get partialFilesSentComplete => '部分文件发送完成';
+  String get youHaveBeenRemovedFromGroup => '您已被移出群组';
 
   @override
-  String get allFilesSendFailed => '所有文件发送失败';
+  String get group => '群组';
 
   @override
-  String get fileSentSuccess => '文件发送成功！';
+  String get hasBeenDeleted => '已被删除';
 
   @override
-  String textSharedCount(int count) {
-    return '已分享$count条文本消息';
-  }
+  String get loadGroupsFailed => '加载群组失败';
 
   @override
-  String get messageShare => 'Send To Myself - 消息分享';
+  String get pleaseSelectAGroup => '请选择一个群组';
 
   @override
-  String fileShared(String fileName) {
-    return '文件 $fileName 已分享';
-  }
+  String get generateInviteCodeFailed => '生成邀请码失败';
 
   @override
-  String get fileUnavailableSharedText => '文件不可用，已分享文字内容';
+  String get currentCanAdd => '当前可添加';
 
   @override
-  String get resolvingServerDomain => '🔍 Resolving server domain...';
+  String get devicesUnit => '台设备';
 
   @override
-  String serverDnsSuccess(String address) {
-    return '✅ Server DNS resolution successful: $address';
-  }
+  String get upgradeToBasicVersionCanSupport => '升级到基础版可支持';
 
   @override
-  String get serverDnsFailed => '❌ Server DNS resolution failed: no result';
+  String get fiveDevices => '5台设备';
 
   @override
-  String serverDnsError(String error) {
-    return '❌ Server DNS resolution failed: $error';
-  }
+  String get upgradeToProfessionalVersionCanSupport => '升级到专业版可支持';
 
   @override
-  String get testingServerConnection => '🔍 Testing server connection...';
+  String get tenDevices => '10台设备';
 
   @override
-  String get serverConnectionSuccess => '✅ Server connection successful';
+  String get reachedMaxDeviceCount => '已达到最大设备数量';
 
   @override
-  String serverConnectionFailed(String error) {
-    return '❌ Server connection failed: $error';
-  }
+  String get getGroupDetailsFailed => '获取群组详情失败';
 
   @override
-  String get startingWebSocketTest =>
-      '🧪 Starting WebSocket connection test...';
+  String get getGroupMembersFailed => '获取群组成员失败';
 
   @override
-  String currentConnectionStatus(String status) {
-    return '📊 Current connection status: $status';
-  }
+  String get renameGroupFailed => '重命名群组失败';
 
   @override
-  String get sendingTestPing => '📡 Sending test ping...';
+  String get removeDeviceFailed => '移除设备失败';
 
   @override
-  String get webSocketNotConnected =>
-      '⚠️ WebSocket not connected, unable to send test message';
+  String get renameDeviceFailed => '重命名设备失败';
 
   @override
-  String get executingForceReconnect => '🔄 Executing force reconnect...';
+  String get groupMemberLimitReachedUpgrade => '群组成员已达上限。升级订阅以支持更多设备。';
 
   @override
-  String get stopPingTest => '⏹️ Stop Ping test';
+  String get upgradeToUnlockMoreFeatures => '升级订阅计划以解锁更多设备群组功能：';
 
   @override
-  String get startPingTest => '🏓 Start Ping test (every 5 seconds)';
+  String get basicVersion5Devices => '• 基础版：支持5台设备';
 
   @override
-  String get sendingPing => '🏓 Sending test ping';
-
-  @override
-  String get connectionDisconnectedPausePing =>
-      '⚠️ Connection disconnected, pausing ping test';
-
-  @override
-  String get logCleared => '🧹 Log cleared';
-
-  @override
-  String get logCopiedToClipboard => 'Log copied to clipboard';
-
-  @override
-  String get noResult => 'no result';
-
-  @override
-  String get sectionwidgets => '';
-
-  @override
-  String get logoutErrorMessage => 'Error occurred during logout';
-
-  @override
-  String get loginStatusExpired => 'Login status has expired';
-
-  @override
-  String get logoutFailedMessage =>
-      'Logout failed, you can choose to force logout or retry.';
-
-  @override
-  String get preparingToSendFiles => 'Preparing to send files...';
-
-  @override
-  String sendingFileCount(int current) {
-    return 'Sending file $current...';
-  }
-
-  @override
-  String sendingFileProgress(int current, String sizeMB) {
-    return 'Sending file $current (${sizeMB}MB)';
-  }
-
-  @override
-  String retryingSendFile(int current) {
-    return 'Retrying to send file $current';
-  }
-
-  @override
-  String fileSendSuccess(int current) {
-    return '✅ File $current sent successfully';
-  }
-
-  @override
-  String filesCompleted(int success, int total) {
-    return 'Completed $success/$total files';
-  }
-
-  @override
-  String get waitingForServerProcessing => 'Waiting for server processing...';
-
-  @override
-  String get ensureFileFullyUploaded => 'Ensuring file is fully uploaded';
-
-  @override
-  String fileSendFailed(int current) {
-    return '❌ File $current failed to send';
-  }
-
-  @override
-  String maxRetriesReached(String fileName, int maxRetries) {
-    return '$fileName failed after $maxRetries retries';
-  }
-
-  @override
-  String fileSendException(int current) {
-    return '❌ File $current send exception';
-  }
-
-  @override
-  String sendErrorMessage(String fileName, String error) {
-    return '$fileName error during send: $error';
-  }
-
-  @override
-  String fileDataIncomplete(int current) {
-    return '❌ File $current data exception';
-  }
-
-  @override
-  String get fileInfoIncompleteMessage => 'File information incomplete';
-
-  @override
-  String allFilesSentToGroup(int count) {
-    return 'Sent $count files to current group';
-  }
-
-  @override
-  String successCountFiles(int success, int total) {
-    return 'Success: $success/$total files';
-  }
-
-  @override
-  String get noFilesToSendError => '❌ No files to send';
-
-  @override
-  String get shareDataEmpty => 'Share data is empty';
-
-  @override
-  String get sendingFile => 'Sending file...';
-
-  @override
-  String fileUploadFailed(String fileName) {
-    return '$fileName upload failed';
-  }
-
-  @override
-  String fileSentToGroup(String fileName) {
-    return '$fileName sent to group';
-  }
-
-  @override
-  String get unsupportedShareType => '❌ Unsupported share type';
-
-  @override
-  String get cannotHandleContentType => 'Cannot handle this content type';
-
-  @override
-  String get textSendSuccess => '✅ Text sent successfully!';
-
-  @override
-  String get contentSentToGroup => 'Content sent to group';
-
-  @override
-  String get textSendFailed => '❌ Text send failed';
-
-  @override
-  String get unknownFileName => 'Unknown file name';
-
-  @override
-  String filePathInvalid(String fileName) {
-    return '$fileName invalid file path';
-  }
-
-  @override
-  String retryAttempt(int retry, String fileName) {
-    return 'Retry $retry - $fileName';
-  }
-
-  @override
-  String get monthlyPlan => '月付';
-
-  @override
-  String get yearlyPlan => '年付';
-
-  @override
-  String pricePerMonth(String currencySymbol, String price) {
-    return '$currencySymbol$price/月';
-  }
-
-  @override
-  String pricePerYear(String currencySymbol, String price) {
-    return '$currencySymbol$price/年';
-  }
-
-  @override
-  String get freePlan => 'Free';
-
-  @override
-  String get freePlanDescription => 'For personal use';
-
-  @override
-  String get basicPlan => 'Basic';
-
-  @override
-  String get basicPlanDescription => 'For small teams';
-
-  @override
-  String get proPlan => 'Pro';
-
-  @override
-  String get proPlanDescription => 'For teams';
-
-  @override
-  String get enterprisePlan => 'Enterprise';
-
-  @override
-  String get enterprisePlanDescription => 'For large enterprises';
-
-  @override
-  String get feature2DeviceGroup => '2 device groups';
-
-  @override
-  String get featureBasicFileTransfer => 'Basic file transfer';
-
-  @override
-  String get featureTextMessage => 'Text messages';
-
-  @override
-  String get featureImageTransfer => 'Image transfer';
-
-  @override
-  String get feature5DeviceGroup => '5 device groups';
-
-  @override
-  String get featureUnlimitedFileTransfer => 'Unlimited file transfer';
-
-  @override
-  String get featureVideoTransfer => 'Video transfer';
-
-  @override
-  String get featureMemoryFunction => 'Memory function';
-
-  @override
-  String get featurePrioritySupport => 'Priority support';
-
-  @override
-  String get feature10DeviceGroup => '10 device groups';
-
-  @override
-  String get featureAdvancedMemory => 'Advanced memory';
-
-  @override
-  String get featureDataSyncBackup => 'Data sync & backup';
-
-  @override
-  String get featureDedicatedSupport => 'Dedicated support';
-
-  @override
-  String get featureTeamManagement => 'Team management';
-
-  @override
-  String get featureUnlimitedDeviceGroup => 'Unlimited device groups';
-
-  @override
-  String get featureAdvancedAnalytics => 'Advanced analytics';
-
-  @override
-  String get featureCustomIntegration => 'Custom integration';
-
-  @override
-  String get subscriptionPricingTitle => 'Subscription Pricing';
-
-  @override
-  String get subscriptionPricingSubtitle =>
-      'Choose the plan that\'s right for you';
-
-  @override
-  String get popularPlan => 'Popular';
-
-  @override
-  String get mostPopular => 'Most Popular';
-
-  @override
-  String get recommended => 'Recommended';
-
-  @override
-  String get yearlyDiscount => 'Yearly discount';
-
-  @override
-  String savePercentage(int percentage) {
-    return 'Save $percentage%';
-  }
-
-  @override
-  String get priceVariesByRegion => '订阅价格可能因地区而异';
-
-  @override
-  String get pricingNote => 'Prices are automatically adjusted for your region';
-
-  @override
-  String get currencyDisclaimer => 'Prices shown in local currency';
-
-  @override
-  String get subscribeTo => 'Subscribe to';
-
-  @override
-  String get subscriptionStatus => '订阅状态';
-
-  @override
-  String get currentPlan => 'Current Plan';
-
-  @override
-  String get upgradeToUnlock => 'Upgrade to unlock more features';
-
-  @override
-  String get manageSubscription => '管理订阅';
-
-  @override
-  String get restorePurchases => '恢复购买';
-
-  @override
-  String get subscriptionTerms =>
-      'By subscribing, you agree to our Terms of Service and Privacy Policy';
-
-  @override
-  String get purchaseSuccess => '购买成功';
-
-  @override
-  String get purchaseFailed => '购买失败';
-
-  @override
-  String get purchaseRestored => 'Purchase restored';
-
-  @override
-  String get noSubscriptionFound => 'No subscription found';
-
-  @override
-  String get subscriptionExpired => '订阅已过期';
-
-  @override
-  String get subscriptionActive => '订阅有效';
-
-  @override
-  String get subscriptionCancelled => '订阅已取消';
-
-  @override
-  String get subscriptionPending => '订阅处理中';
-
-  @override
-  String get deviceLimitReached => 'Device limit reached';
-
-  @override
-  String get upgradeRequired => '需要升级';
-
-  @override
-  String get upgradeToAddMore => 'Upgrade to add more devices';
-
-  @override
-  String freeTrialDaysLeft(int days) {
-    return '$days days left in free trial';
-  }
-
-  @override
-  String get sectionscanqr => '';
-
-  @override
-  String get scanDeviceJoinOtherDevices => '让其他设备扫描加入';
-
-  @override
-  String get groupPrefix => '群组: ';
-
-  @override
-  String get joinCode => '加入码';
-
-  @override
-  String get qrCodeGenerationFailed => '二维码生成失败';
-
-  @override
-  String get otherDevicesCanScanQRDescription =>
-      '其他设备可以扫描此二维码或手动输入加入码来加入您的设备群组';
-
-  @override
-  String get cameraUnavailableSwitchedToInput => '摄像头不可用，已切换到手动输入模式';
-
-  @override
-  String get desktopCameraUnstableTip => '桌面端建议使用手动输入模式，摄像头扫描可能不稳定';
-
-  @override
-  String get joinGroupSuccessExclamation => '成功加入群组！';
-
-  @override
-  String get joinGroupFailedGeneric => '加入群组失败';
-
-  @override
-  String get pleaseEnterInviteCode => '请输入邀请码';
-
-  @override
-  String get inviteCodeLengthError => '邀请码长度必须在4-20位之间';
-
-  @override
-  String operationFailed(String error) {
-    return '操作失败: $error';
-  }
-
-  @override
-  String get generateDeviceJoinCode => '生成设备加入码';
-
-  @override
-  String get scanQRToJoinDeviceGroup => '扫描二维码加入此设备群组';
-
-  @override
-  String supportXDeviceGroups(String count) {
-    return '支持 $count 台设备群组';
-  }
-
-  @override
-  String get versionNumber => '版本号';
-
-  @override
-  String get expired => '已过期';
-
-  @override
-  String get justActive => '刚刚活跃';
-
-  @override
-  String expiresInMinutes(int minutes) {
-    return '$minutes分钟后过期';
-  }
-
-  @override
-  String expiresInHoursAndMinutes(int hours, int minutes) {
-    return '$hours小时$minutes分钟后过期';
-  }
-
-  @override
-  String get monday => '星期一';
-
-  @override
-  String get tuesday => '星期二';
-
-  @override
-  String get wednesday => '星期三';
-
-  @override
-  String get thursday => '星期四';
-
-  @override
-  String get friday => '星期五';
-
-  @override
-  String get saturday => '星期六';
-
-  @override
-  String get sunday => '星期日';
-
-  @override
-  String monthDay(int month, int day) {
-    return '$month月$day日';
-  }
-
-  @override
-  String yearMonthDay(int month, int day, int year) {
-    return '$year年$month月$day日';
-  }
-
-  @override
-  String get deviceInformation => '设备信息';
-
-  @override
-  String get applicationName => '应用名称';
-
-  @override
-  String get applicationDescription => '应用描述';
-
-  @override
-  String get appDescriptionText => '跨设备文件共享和消息记忆助手';
-
-  @override
-  String get logoutCurrentDeviceDescription => 'Log out of current device';
-
-  @override
-  String get confirmLogoutTitle => 'Confirm Logout';
-
-  @override
-  String get confirmLogoutContent =>
-      'Are you sure you want to log out of the current device?';
-
-  @override
-  String get sectionfilter => '';
-
-  @override
-  String get messageFilter => '消息筛选';
-
-  @override
-  String get searchMessagesOrFiles => '搜索消息内容或文件名...';
-
-  @override
-  String get messageType => '消息类型';
-
-  @override
-  String get sender => '发送者';
-
-  @override
-  String get dateRange => '日期范围';
-
-  @override
-  String get startDate => '开始日期';
-
-  @override
-  String get endDate => '结束日期';
-
-  @override
-  String get clearDate => '清除日期';
-
-  @override
-  String get clearAll => '清除所有';
-
-  @override
-  String get filterActive => '筛选已激活';
-
-  @override
-  String get noFilterConditions => '无筛选条件';
-
-  @override
-  String get all => '全部';
-
-  @override
-  String get text => '文本';
-
-  @override
-  String get sentByMe => '我发送的';
-
-  @override
-  String get sentByOthers => '他人发送的';
-
-  @override
-  String get deviceOs => '操作系统';
-
-  @override
-  String get deviceVersion => '版本号';
+  String get proVersion10Devices => '• 专业版：支持10台设备';
 }

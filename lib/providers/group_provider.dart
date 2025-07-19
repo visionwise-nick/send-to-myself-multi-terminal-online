@@ -7,6 +7,7 @@ import '../services/websocket_manager.dart';
 import '../services/device_auth_service.dart';
 import '../services/subscription_service.dart';
 import '../config/debug_config.dart';
+import '../utils/localization_helper.dart';
 
 class GroupProvider extends ChangeNotifier {
   final GroupService _groupService = GroupService();
@@ -389,7 +390,8 @@ class GroupProvider extends ChangeNotifier {
           final maxMembers = _subscriptionService.getGroupMemberLimit();
           
           if (memberCount > maxMembers) {
-            _error = '群组人数已达上限（$maxMembers台设备）。请升级订阅以支持更多设备。';
+            _error =
+                '群组人数已达上限（$maxMembers台设备）。请升级订阅以支持更多设备。';
             _isLoading = false;
             notifyListeners();
             return false;
@@ -507,9 +509,9 @@ class GroupProvider extends ChangeNotifier {
   }
   
   // 获取升级建议
-  String getUpgradeSuggestion(String groupId) {
-    final currentCount = getGroupMemberCount(groupId);
+  String getUpgradeSuggestion() {
     final maxMembers = _subscriptionService.getGroupMemberLimit();
+    final currentCount = _currentGroup?['devices']?.length ?? 0;
     
     if (currentCount < maxMembers) {
       return '当前可添加 ${maxMembers - currentCount} 台设备';
@@ -523,8 +525,31 @@ class GroupProvider extends ChangeNotifier {
   }
   
   // 显示升级订阅提示
-  bool shouldShowUpgradePrompt(String groupId) {
-    return isGroupMemberLimitReached(groupId) && _subscriptionService.getGroupMemberLimit() < 10;
+  void showUpgradeSubscriptionPrompt(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('升级订阅'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('取消'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('升级'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // 在这里导航到订阅页面
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
   
   // 保存当前群组到本地存储

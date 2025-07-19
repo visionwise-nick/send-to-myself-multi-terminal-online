@@ -4,6 +4,7 @@ import '../models/memory_model.dart';
 import '../providers/memory_provider.dart';
 import '../theme/app_theme.dart';
 import '../services/ai_service.dart';
+import '../utils/localization_helper.dart';
 
 class EditMemoryScreen extends StatefulWidget {
   final Memory memory;
@@ -165,7 +166,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
         backgroundColor: AppTheme.backgroundColor,
         elevation: 0,
         title: Text(
-          '编辑${widget.memory.type.displayName}',
+          LocalizationHelper.of(context).editMemory,
           style: AppTheme.titleStyle.copyWith(
             fontWeight: AppTheme.fontWeightMedium,
           ),
@@ -178,7 +179,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
           TextButton(
             onPressed: _isUpdating ? null : _updateMemory,
             child: Text(
-              '保存',
+              LocalizationHelper.of(context).save,
               style: AppTheme.bodyStyle.copyWith(
                 color: _isUpdating ? AppTheme.textTertiaryColor : AppTheme.primaryColor,
                 fontWeight: AppTheme.fontWeightMedium,
@@ -197,8 +198,8 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
               // 标题
               _buildTextField(
                 controller: _titleController,
-                label: '标题',
-                hint: '输入标题',
+                label: LocalizationHelper.of(context).title,
+                hint: LocalizationHelper.of(context).enterTitle,
                 required: true,
               ),
               
@@ -245,8 +246,8 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
   Widget _buildTextForm() {
     return _buildTextField(
       controller: _contentController,
-      label: '内容',
-      hint: '输入内容',
+      label: LocalizationHelper.of(context).content,
+      hint: LocalizationHelper.of(context).enterContent,
       maxLines: 8,
       required: true,
     );
@@ -257,29 +258,29 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
       children: [
         _buildTextField(
           controller: _websiteController,
-          label: '网站地址',
-          hint: 'https://...',
+          label: LocalizationHelper.of(context).websiteAddress,
+          hint: LocalizationHelper.of(context).https,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _usernameController,
-          label: '用户名/邮箱',
-          hint: '登录账号',
+          label: LocalizationHelper.of(context).usernameEmail,
+          hint: LocalizationHelper.of(context).loginAccount,
           required: true,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _passwordController,
-          label: '密码',
-          hint: '登录密码',
+          label: LocalizationHelper.of(context).password,
+          hint: LocalizationHelper.of(context).loginPassword,
           obscureText: true,
           required: true,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _notesController,
-          label: '备注',
-          hint: '其他信息',
+          label: LocalizationHelper.of(context).notes,
+          hint: LocalizationHelper.of(context).otherInformation,
           maxLines: 3,
         ),
       ],
@@ -289,13 +290,20 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
   Widget _buildFinancialForm() {
     return Column(
       children: [
+        _buildTextField(
+          controller: _titleController,
+          label: LocalizationHelper.of(context).expenseItemLabel,
+          hint: LocalizationHelper.of(context).expenseItemHint,
+          required: true,
+        ),
+        SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: _buildTextField(
                 controller: _amountController,
-                label: '金额',
-                hint: '0.00',
+                label: LocalizationHelper.of(context).amount,
+                hint: LocalizationHelper.of(context).zeroZero,
                 keyboardType: TextInputType.number,
                 required: true,
               ),
@@ -303,11 +311,11 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
             SizedBox(width: 16),
             Expanded(
               child: _buildDropdown(
-                label: '类型',
+                label: LocalizationHelper.of(context).type,
                 value: _transactionType,
                 items: [
-                  DropdownMenuItem(value: 'expense', child: Text('支出')),
-                  DropdownMenuItem(value: 'income', child: Text('收入')),
+                  DropdownMenuItem(value: 'expense', child: Text(LocalizationHelper.of(context).expense)),
+                  DropdownMenuItem(value: 'income', child: Text(LocalizationHelper.of(context).income)),
                 ],
                 onChanged: (value) => setState(() => _transactionType = value!),
               ),
@@ -317,21 +325,21 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
         SizedBox(height: 16),
         _buildTextField(
           controller: TextEditingController(text: _category),
-          label: '分类',
-          hint: '如：餐饮、交通',
+          label: LocalizationHelper.of(context).category,
+          hint: '${LocalizationHelper.of(context).eg}${LocalizationHelper.of(context).catering}、${LocalizationHelper.of(context).transportation}',
           onChanged: (value) => _category = value,
         ),
         SizedBox(height: 16),
         _buildDatePicker(
-          label: '日期',
+          label: LocalizationHelper.of(context).date,
           date: _selectedDate,
           onChanged: (date) => setState(() => _selectedDate = date),
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _contentController,
-          label: '备注',
-          hint: '详细说明',
+          label: LocalizationHelper.of(context).notes,
+          hint: LocalizationHelper.of(context).detailedExplanation,
           maxLines: 3,
         ),
       ],
@@ -342,13 +350,13 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
     return Column(
       children: [
         _buildDateTimePicker(
-          label: '开始时间',
+          label: LocalizationHelper.of(context).startTime,
           dateTime: _startTime,
           onChanged: (dateTime) => setState(() => _startTime = dateTime),
         ),
         SizedBox(height: 16),
         _buildDateTimePicker(
-          label: '结束时间（可选）',
+          label: LocalizationHelper.of(context).endTimeOptional,
           dateTime: _endTime,
           onChanged: (dateTime) => setState(() => _endTime = dateTime),
           allowNull: true,
@@ -356,26 +364,26 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
         SizedBox(height: 16),
         _buildTextField(
           controller: _locationController,
-          label: '地点',
-          hint: '会议室、餐厅等',
+          label: LocalizationHelper.of(context).location,
+          hint: LocalizationHelper.of(context).conferenceRoomRestaurant,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _descriptionController,
-          label: '详情',
-          hint: '会议内容、注意事项',
+          label: LocalizationHelper.of(context).details,
+          hint: LocalizationHelper.of(context).meetingContentNotes,
           maxLines: 3,
         ),
         SizedBox(height: 16),
         _buildDropdown(
-          label: '提前提醒',
+          label: LocalizationHelper.of(context).reminder,
           value: _reminderMinutes,
           items: [
-            DropdownMenuItem(value: 0, child: Text('不提醒')),
-            DropdownMenuItem(value: 5, child: Text('5分钟前')),
-            DropdownMenuItem(value: 15, child: Text('15分钟前')),
-            DropdownMenuItem(value: 30, child: Text('30分钟前')),
-            DropdownMenuItem(value: 60, child: Text('1小时前')),
+            DropdownMenuItem(value: 0, child: Text(LocalizationHelper.of(context).noReminder)),
+            DropdownMenuItem(value: 5, child: Text(LocalizationHelper.of(context).fiveMinutesBefore)),
+            DropdownMenuItem(value: 15, child: Text(LocalizationHelper.of(context).fifteenMinutesBefore)),
+            DropdownMenuItem(value: 30, child: Text(LocalizationHelper.of(context).thirtyMinutesBefore)),
+            DropdownMenuItem(value: 60, child: Text(LocalizationHelper.of(context).oneHourBefore)),
           ],
           onChanged: (value) => setState(() => _reminderMinutes = value!),
         ),
@@ -388,8 +396,8 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
       children: [
         _buildTextField(
           controller: _contentController,
-          label: '详细描述',
-          hint: '具体要求、注意事项',
+          label: LocalizationHelper.of(context).detailedDescription,
+          hint: LocalizationHelper.of(context).specificRequirementsNotes,
           maxLines: 4,
         ),
         SizedBox(height: 16),
@@ -397,12 +405,12 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
           children: [
             Expanded(
               child: _buildDropdown(
-                label: '优先级',
+                label: LocalizationHelper.of(context).priority,
                 value: _priority,
                 items: [
-                  DropdownMenuItem(value: 'low', child: Text('低')),
-                  DropdownMenuItem(value: 'medium', child: Text('中')),
-                  DropdownMenuItem(value: 'high', child: Text('高')),
+                  DropdownMenuItem(value: 'low', child: Text(LocalizationHelper.of(context).low)),
+                  DropdownMenuItem(value: 'medium', child: Text(LocalizationHelper.of(context).medium)),
+                  DropdownMenuItem(value: 'high', child: Text(LocalizationHelper.of(context).high)),
                 ],
                 onChanged: (value) => setState(() => _priority = value!),
               ),
@@ -416,7 +424,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
                     onChanged: (value) => setState(() => _isCompleted = value ?? false),
                     activeColor: AppTheme.primaryColor,
                   ),
-                  Text('已完成', style: AppTheme.bodyStyle),
+                  Text(LocalizationHelper.of(context).completed, style: AppTheme.bodyStyle),
                 ],
               ),
             ),
@@ -424,7 +432,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
         ),
         SizedBox(height: 16),
         _buildDatePicker(
-          label: '截止日期（可选）',
+          label: LocalizationHelper.of(context).dueDateOptional,
           date: _dueDate,
           onChanged: (date) => setState(() => _dueDate = date),
           allowNull: true,
@@ -438,15 +446,15 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
       children: [
         _buildTextField(
           controller: _urlController,
-          label: 'URL链接',
-          hint: 'https://...',
+          label: LocalizationHelper.of(context).urlLink,
+          hint: LocalizationHelper.of(context).https,
           required: true,
         ),
         SizedBox(height: 16),
         _buildTextField(
           controller: _urlDescriptionController,
-          label: '描述',
-          hint: '这个链接的用途或内容',
+          label: LocalizationHelper.of(context).description,
+          hint: LocalizationHelper.of(context).purposeOrContent,
           maxLines: 4,
         ),
       ],
@@ -457,30 +465,9 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              '标签',
-              style: AppTheme.bodyStyle.copyWith(
-                fontWeight: AppTheme.fontWeightMedium,
-              ),
-            ),
-            Spacer(),
-            TextButton.icon(
-              onPressed: _isGeneratingTags ? null : _generateTagsFromContent,
-              icon: _isGeneratingTags 
-                ? SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(Icons.auto_awesome, size: 16),
-              label: Text(
-                _isGeneratingTags ? '生成中...' : 'AI生成',
-                style: AppTheme.captionStyle,
-              ),
-            ),
-          ],
+        Text(
+          LocalizationHelper.of(context).tags,
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         SizedBox(height: 8),
         Wrap(
@@ -489,6 +476,37 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
           children: [
             ..._tags.map((tag) => _buildTagChip(tag)),
             _buildAddTagChip(),
+          ],
+        ),
+        SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildTextField(
+                controller: TextEditingController(),
+                label: '',
+                hint: LocalizationHelper.of(context).addTag,
+                onSubmitted: (tag) {
+                  if (tag.isNotEmpty && !_tags.contains(tag)) {
+                    setState(() {
+                      _tags.add(tag);
+                    });
+                  }
+                },
+              ),
+            ),
+            SizedBox(width: 8),
+            _isGeneratingTags
+                ? SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : IconButton(
+                    icon: Icon(Icons.auto_awesome, color: AppTheme.primaryColor),
+                    tooltip: LocalizationHelper.of(context).generateTags,
+                    onPressed: _generateTags,
+                  ),
           ],
         ),
       ],
@@ -511,7 +529,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
 
   Widget _buildAddTagChip() {
     return ActionChip(
-      label: Text('添加标签', style: AppTheme.smallStyle),
+      label: Text(LocalizationHelper.of(context).addTag, style: AppTheme.smallStyle),
       avatar: Icon(Icons.add, size: 14),
       onPressed: _showAddTagDialog,
       backgroundColor: AppTheme.surfaceColor,
@@ -525,12 +543,12 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.backgroundColor,
-        title: Text('添加标签', style: AppTheme.titleStyle),
+        title: Text(LocalizationHelper.of(context).addTag, style: AppTheme.titleStyle),
         content: TextField(
           controller: controller,
           style: AppTheme.bodyStyle,
           decoration: InputDecoration(
-            hintText: '输入标签名称',
+            hintText: LocalizationHelper.of(context).enterTagName,
             hintStyle: AppTheme.bodyStyle.copyWith(
               color: AppTheme.textTertiaryColor,
             ),
@@ -547,7 +565,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('取消', style: AppTheme.bodyStyle),
+            child: Text(LocalizationHelper.of(context).cancel, style: AppTheme.bodyStyle),
           ),
           TextButton(
             onPressed: () {
@@ -560,7 +578,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
               Navigator.pop(context);
             },
             child: Text(
-              '添加',
+              LocalizationHelper.of(context).add,
               style: AppTheme.bodyStyle.copyWith(color: AppTheme.primaryColor),
             ),
           ),
@@ -569,38 +587,26 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
     );
   }
 
-  Future<void> _generateTagsFromContent() async {
-    final content = _getContentForTags();
-    if (content.isEmpty) return;
-    
+  Future<void> _generateTags() async {
     setState(() {
       _isGeneratingTags = true;
     });
     
     try {
-      final newTags = await _aiService.generateTags(content);
-      setState(() {
-        // 只添加不重复的标签
-        for (final tag in newTags) {
-          if (!_tags.contains(tag)) {
-            _tags.add(tag);
-          }
-        }
-      });
+      final content = '${_titleController.text} ${_contentController.text}';
+      final tags = await _aiService.generateTags(content);
       
-      if (newTags.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('AI生成了${newTags.length}个新标签')),
-        );
-      }
+      setState(() {
+        _tags = tags;
+        _isGeneratingTags = false;
+      });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('生成标签失败: $e')),
-      );
-    } finally {
       setState(() {
         _isGeneratingTags = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${LocalizationHelper.of(context).generatingTags}: $e')),
+      );
     }
   }
 
@@ -622,6 +628,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
     bool required = false,
     TextInputType? keyboardType,
     Function(String)? onChanged,
+    Function(String)? onSubmitted,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -639,6 +646,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
           maxLines: maxLines,
           keyboardType: keyboardType,
           onChanged: onChanged,
+          onFieldSubmitted: onSubmitted,
           style: AppTheme.bodyStyle,
           decoration: InputDecoration(
             hintText: hint,
@@ -757,7 +765,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
                 Text(
                   date != null 
                     ? '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}'
-                    : '选择日期',
+                    : LocalizationHelper.of(context).selectDate,
                   style: AppTheme.bodyStyle.copyWith(
                     color: date != null ? AppTheme.textPrimaryColor : AppTheme.textTertiaryColor,
                   ),
@@ -825,7 +833,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
                 Text(
                   dateTime != null 
                     ? '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}'
-                    : '选择时间',
+                    : LocalizationHelper.of(context).selectTime,
                   style: AppTheme.bodyStyle.copyWith(
                     color: dateTime != null ? AppTheme.textPrimaryColor : AppTheme.textTertiaryColor,
                   ),
@@ -853,7 +861,7 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
         child: _isUpdating
             ? CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
             : Text(
-                '保存',
+                LocalizationHelper.of(context).save,
                 style: AppTheme.bodyStyle.copyWith(
                   fontWeight: AppTheme.fontWeightMedium,
                   color: Colors.white,
@@ -884,12 +892,12 @@ class _EditMemoryScreenState extends State<EditMemoryScreen> {
       if (success) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('更新成功')),
+          SnackBar(content: Text(LocalizationHelper.of(context).updateSuccess)),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('更新失败: $e')),
+        SnackBar(content: Text('${LocalizationHelper.of(context).updateFailed}: $e')),
       );
     } finally {
       setState(() => _isUpdating = false);

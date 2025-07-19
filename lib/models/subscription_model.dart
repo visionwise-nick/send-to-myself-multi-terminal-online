@@ -393,8 +393,9 @@ class SubscriptionPlanConfig {
   }
 }
 
-// 订阅信息模型
+// 订阅信息类
 class SubscriptionInfo {
+  final String id;
   final SubscriptionPlan plan;
   final SubscriptionStatus status;
   final DateTime? startDate;
@@ -406,6 +407,7 @@ class SubscriptionInfo {
   final String? currency;
 
   const SubscriptionInfo({
+    required this.id,
     required this.plan,
     required this.status,
     this.startDate,
@@ -417,18 +419,16 @@ class SubscriptionInfo {
     this.currency,
   });
 
-  // 是否是活跃订阅
-  bool get isActive => status == SubscriptionStatus.active;
+  // 是否为活跃订阅
+  bool get isActive => status == SubscriptionStatus.active && (endDate == null || endDate!.isAfter(DateTime.now()));
 
   // 是否过期
   bool get isExpired => endDate != null && DateTime.now().isAfter(endDate!);
 
   // 剩余天数
   int get remainingDays {
-    if (endDate == null) return 0;
-    final now = DateTime.now();
-    if (now.isAfter(endDate!)) return 0;
-    return endDate!.difference(now).inDays;
+    if (endDate == null || !isActive) return 0;
+    return endDate!.difference(DateTime.now()).inDays;
   }
 
   // 获取群组成员上限
@@ -439,6 +439,7 @@ class SubscriptionInfo {
   // 从JSON创建
   factory SubscriptionInfo.fromJson(Map<String, dynamic> json) {
     return SubscriptionInfo(
+      id: json['id'] ?? '',
       plan: SubscriptionPlan.values.firstWhere(
         (p) => p.name == json['plan'],
         orElse: () => SubscriptionPlan.free,
@@ -460,6 +461,7 @@ class SubscriptionInfo {
   // 转换为JSON
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'plan': plan.name,
       'status': status.name,
       'startDate': startDate?.toIso8601String(),
@@ -474,6 +476,7 @@ class SubscriptionInfo {
 
   // 创建副本
   SubscriptionInfo copyWith({
+    String? id,
     SubscriptionPlan? plan,
     SubscriptionStatus? status,
     DateTime? startDate,
@@ -485,6 +488,7 @@ class SubscriptionInfo {
     String? currency,
   }) {
     return SubscriptionInfo(
+      id: id ?? this.id,
       plan: plan ?? this.plan,
       status: status ?? this.status,
       startDate: startDate ?? this.startDate,
@@ -497,13 +501,59 @@ class SubscriptionInfo {
     );
   }
 
-  // 创建免费版订阅
+  // 创建一个免费订阅的实例
   static SubscriptionInfo createFreeSubscription() {
-    return const SubscriptionInfo(
+    return SubscriptionInfo(
+      id: 'free',
       plan: SubscriptionPlan.free,
       status: SubscriptionStatus.active,
+      startDate: DateTime.now(),
+      endDate: null,
       isYearly: false,
+      productId: '',
+      transactionId: '',
+      price: 0,
+      currency: 'USD',
     );
+  }
+
+  // 从Map创建实例
+  factory SubscriptionInfo.fromMap(Map<String, dynamic> map) {
+    return SubscriptionInfo(
+      id: map['id'] ?? '',
+      plan: SubscriptionPlan.values.firstWhere(
+        (e) => e.toString() == 'SubscriptionPlan.${map['plan']}',
+        orElse: () => SubscriptionPlan.free,
+      ),
+      status: SubscriptionStatus.values.firstWhere(
+        (s) => s.name == map['status'],
+        orElse: () => SubscriptionStatus.none,
+      ),
+      startDate:
+          map['startDate'] != null ? DateTime.parse(map['startDate']) : null,
+      endDate: map['endDate'] != null ? DateTime.parse(map['endDate']) : null,
+      isYearly: map['isYearly'] ?? false,
+      productId: map['productId'],
+      transactionId: map['transactionId'],
+      price: map['price']?.toDouble(),
+      currency: map['currency'],
+    );
+  }
+
+  // 转换为Map
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'plan': plan.name,
+      'status': status.name,
+      'startDate': startDate?.toIso8601String(),
+      'endDate': endDate?.toIso8601String(),
+      'isYearly': isYearly,
+      'productId': productId,
+      'transactionId': transactionId,
+      'price': price,
+      'currency': currency,
+    };
   }
 }
 

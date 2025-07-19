@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/billing_client_wrappers.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -323,6 +325,7 @@ class SubscriptionService {
       final priceInfo = config.getPriceInfo(_currentCurrency);
       
       final subscription = SubscriptionInfo(
+        id: purchase.purchaseID ?? '',
         plan: config.plan,
         status: SubscriptionStatus.active,
         startDate: now,
@@ -449,6 +452,7 @@ class SubscriptionService {
         );
         
         final subscription = SubscriptionInfo(
+          id: backendSubscription['transactionId'] ?? '',
           plan: plan,
           status: subscriptionStatus,
           startDate: startDate,
@@ -495,14 +499,17 @@ class SubscriptionService {
       // 月付选项
       final monthlyProduct = _products.firstWhere(
         (p) => p.id == config.productIdMonthly,
-        orElse: () => ProductDetails(
-          id: config.productIdMonthly,
-          title: '${config.plan.name} 月付',
-          description: '${config.plan.name} 月付订阅',
-          price: '${priceInfo.currencySymbol}${priceInfo.monthlyPrice.toStringAsFixed(2)}',
-          rawPrice: priceInfo.monthlyPrice,
-          currencyCode: priceInfo.currencyCode,
-        ),
+        orElse: () {
+          // 创建默认的ProductDetails，避免类型不匹配
+          return ProductDetails(
+            id: config.productIdMonthly,
+            title: '${config.plan.name} 月付',
+            description: '${config.plan.name} 月付订阅',
+            price: '${priceInfo.currencySymbol}${priceInfo.monthlyPrice.toStringAsFixed(2)}',
+            rawPrice: priceInfo.monthlyPrice,
+            currencyCode: priceInfo.currencyCode,
+          );
+        },
       );
       
       options.add(PurchaseOption.create(
@@ -516,14 +523,17 @@ class SubscriptionService {
       // 年付选项
       final yearlyProduct = _products.firstWhere(
         (p) => p.id == config.productIdYearly,
-        orElse: () => ProductDetails(
-          id: config.productIdYearly,
-          title: '${config.plan.name} 年付',
-          description: '${config.plan.name} 年付订阅',
-          price: '${priceInfo.currencySymbol}${priceInfo.yearlyPrice.toStringAsFixed(2)}',
-          rawPrice: priceInfo.yearlyPrice,
-          currencyCode: priceInfo.currencyCode,
-        ),
+        orElse: () {
+          // 创建默认的ProductDetails，避免类型不匹配
+          return ProductDetails(
+            id: config.productIdYearly,
+            title: '${config.plan.name} 年付',
+            description: '${config.plan.name} 年付订阅',
+            price: '${priceInfo.currencySymbol}${priceInfo.yearlyPrice.toStringAsFixed(2)}',
+            rawPrice: priceInfo.yearlyPrice,
+            currencyCode: priceInfo.currencyCode,
+          );
+        },
       );
       
       options.add(PurchaseOption.create(

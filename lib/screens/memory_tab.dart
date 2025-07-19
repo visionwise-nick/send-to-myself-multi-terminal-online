@@ -5,6 +5,7 @@ import 'dart:convert';
 import '../theme/app_theme.dart';
 import '../utils/time_utils.dart';
 import '../providers/group_provider.dart';
+import '../utils/localization_helper.dart';
 
 class MemoryTab extends StatefulWidget {
   const MemoryTab({super.key});
@@ -144,11 +145,11 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
               labelColor: Colors.white,
               unselectedLabelColor: AppTheme.textSecondaryColor,
               labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-              tabs: const [
-                Tab(icon: Icon(Icons.note_rounded, size: 18), text: '笔记'),
-                Tab(icon: Icon(Icons.key_rounded, size: 18), text: '密码'),
-                Tab(icon: Icon(Icons.contacts_rounded, size: 18), text: '联系人'),
-                Tab(icon: Icon(Icons.flash_on_rounded, size: 18), text: '快捷文本'),
+              tabs: [
+                Tab(icon: Icon(Icons.note_rounded, size: 18), text: LocalizationHelper.of(context).notes),
+                Tab(icon: Icon(Icons.key_rounded, size: 18), text: LocalizationHelper.of(context).passwords),
+                Tab(icon: Icon(Icons.contacts_rounded, size: 18), text: LocalizationHelper.of(context).contacts),
+                Tab(icon: Icon(Icons.flash_on_rounded, size: 18), text: LocalizationHelper.of(context).quickTexts),
               ],
             ),
           ),
@@ -216,7 +217,7 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  currentGroup != null ? '${currentGroup['name']} 的记忆' : '我的记忆',
+                  currentGroup != null ? LocalizationHelper.of(context).groupMemory(currentGroup['name']) : LocalizationHelper.of(context).myMemory,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -225,8 +226,8 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
                 const SizedBox(height: 4),
                 Text(
                   currentGroup != null 
-                    ? '已保存 $totalItems 项重要信息'
-                    : '请选择群组查看记忆',
+                    ? LocalizationHelper.of(context).totalItemsSaved(totalItems)
+                    : LocalizationHelper.of(context).selectGroupToView,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.white.withOpacity(0.8),
                   ),
@@ -241,7 +242,7 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              currentGroup != null ? '群组存储' : '本地存储',
+              currentGroup != null ? LocalizationHelper.of(context).groupStorage : LocalizationHelper.of(context).localStory,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w500,
@@ -255,11 +256,11 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
   
   // 笔记Tab
   Widget _buildNotesTab() {
-    return _buildDataTab(
+    return _buildMemoryList(
       data: _notes,
       emptyIcon: Icons.note_add_rounded,
-      emptyTitle: '暂无笔记',
-      emptySubtitle: '记录重要信息和想法',
+      emptyTitle: LocalizationHelper.of(context).noNotes,
+      emptySubtitle: LocalizationHelper.of(context).recordImportantInfo,
       onAdd: () => _showNoteDialog(),
       itemBuilder: (item, index) => _buildNoteCard(item, index),
     );
@@ -267,11 +268,11 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
   
   // 密码Tab
   Widget _buildPasswordsTab() {
-    return _buildDataTab(
+    return _buildMemoryList(
       data: _passwords,
       emptyIcon: Icons.security_rounded,
-      emptyTitle: '暂无密码',
-      emptySubtitle: '安全存储您的账号密码',
+      emptyTitle: LocalizationHelper.of(context).noPasswords,
+      emptySubtitle: LocalizationHelper.of(context).securelyStore,
       onAdd: () => _showPasswordDialog(),
       itemBuilder: (item, index) => _buildPasswordCard(item, index),
     );
@@ -279,11 +280,11 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
   
   // 联系人Tab
   Widget _buildContactsTab() {
-    return _buildDataTab(
+    return _buildMemoryList(
       data: _contacts,
       emptyIcon: Icons.person_add_rounded,
-      emptyTitle: '暂无联系人',
-      emptySubtitle: '保存重要联系人信息',
+      emptyTitle: LocalizationHelper.of(context).noContacts,
+      emptySubtitle: LocalizationHelper.of(context).saveImportantContacts,
       onAdd: () => _showContactDialog(),
       itemBuilder: (item, index) => _buildContactCard(item, index),
     );
@@ -291,17 +292,17 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
   
   // 快捷文本Tab
   Widget _buildQuickTextsTab() {
-    return _buildDataTab(
+    return _buildMemoryList(
       data: _quickTexts,
       emptyIcon: Icons.text_snippet_rounded,
-      emptyTitle: '暂无快捷文本',
-      emptySubtitle: '保存常用文本和模板',
+      emptyTitle: LocalizationHelper.of(context).noQuickTexts,
+      emptySubtitle: LocalizationHelper.of(context).saveCommonTexts,
       onAdd: () => _showQuickTextDialog(),
       itemBuilder: (item, index) => _buildQuickTextCard(item, index),
     );
   }
   
-  Widget _buildDataTab({
+  Widget _buildMemoryList({
     required List<Map<String, dynamic>> data,
     required IconData emptyIcon,
     required String emptyTitle,
@@ -749,23 +750,23 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: Text(note == null ? '添加笔记' : '编辑笔记'),
+        title: Text(note == null ? LocalizationHelper.of(context).addNote : LocalizationHelper.of(context).editNote),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(
-                labelText: '标题',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).title,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: contentController,
-              decoration: const InputDecoration(
-                labelText: '内容',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).content,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 5,
             ),
@@ -774,29 +775,21 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () {
               final newNote = {
+                'id': note?['id'] ?? DateTime.now().toIso8601String(),
                 'title': titleController.text,
                 'content': contentController.text,
                 'createdAt': note?['createdAt'] ?? DateTime.now().toIso8601String(),
                 'updatedAt': DateTime.now().toIso8601String(),
               };
-              
-              setState(() {
-                if (index != null) {
-                  _notes[index] = newNote;
-                } else {
-                  _notes.add(newNote);
-                }
-              });
-              
-              _saveData();
+              _updateOrAddItem(_notes, note, newNote);
               Navigator.pop(context);
             },
-            child: Text(note == null ? '添加' : '保存'),
+            child: Text(note == null ? LocalizationHelper.of(context).add : LocalizationHelper.of(context).save),
           ),
         ],
       ),
@@ -816,31 +809,31 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: Text(password == null ? '添加密码' : '编辑密码'),
+        title: Text(password == null ? LocalizationHelper.of(context).addPassword : LocalizationHelper.of(context).editPassword),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: siteController,
-              decoration: const InputDecoration(
-                labelText: '网站/应用',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).site,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: usernameController,
-              decoration: const InputDecoration(
-                labelText: '用户名/邮箱',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).username,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: passwordController,
-              decoration: const InputDecoration(
-                labelText: '密码',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).password,
+                border: const OutlineInputBorder(),
               ),
               obscureText: true,
             ),
@@ -849,30 +842,22 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () {
               final newPassword = {
+                'id': password?['id'] ?? DateTime.now().toIso8601String(),
                 'site': siteController.text,
                 'username': usernameController.text,
                 'password': passwordController.text,
                 'createdAt': password?['createdAt'] ?? DateTime.now().toIso8601String(),
                 'updatedAt': DateTime.now().toIso8601String(),
               };
-              
-              setState(() {
-                if (index != null) {
-                  _passwords[index] = newPassword;
-                } else {
-                  _passwords.add(newPassword);
-                }
-              });
-              
-              _saveData();
+              _updateOrAddItem(_passwords, password, newPassword);
               Navigator.pop(context);
             },
-            child: Text(password == null ? '添加' : '保存'),
+            child: Text(password == null ? LocalizationHelper.of(context).add : LocalizationHelper.of(context).save),
           ),
         ],
       ),
@@ -892,31 +877,31 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: Text(contact == null ? '添加联系人' : '编辑联系人'),
+        title: Text(contact == null ? LocalizationHelper.of(context).addContact : LocalizationHelper.of(context).editContact),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: '姓名',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).name,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: phoneController,
-              decoration: const InputDecoration(
-                labelText: '电话',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).phone,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(
-                labelText: '邮箱',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).email,
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
@@ -924,30 +909,22 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () {
               final newContact = {
+                'id': contact?['id'] ?? DateTime.now().toIso8601String(),
                 'name': nameController.text,
                 'phone': phoneController.text,
                 'email': emailController.text,
                 'createdAt': contact?['createdAt'] ?? DateTime.now().toIso8601String(),
                 'updatedAt': DateTime.now().toIso8601String(),
               };
-              
-              setState(() {
-                if (index != null) {
-                  _contacts[index] = newContact;
-                } else {
-                  _contacts.add(newContact);
-                }
-              });
-              
-              _saveData();
+              _updateOrAddItem(_contacts, contact, newContact);
               Navigator.pop(context);
             },
-            child: Text(contact == null ? '添加' : '保存'),
+            child: Text(contact == null ? LocalizationHelper.of(context).add : LocalizationHelper.of(context).save),
           ),
         ],
       ),
@@ -966,23 +943,23 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: Text(quickText == null ? '添加快捷文本' : '编辑快捷文本'),
+        title: Text(quickText == null ? LocalizationHelper.of(context).addQuickText : LocalizationHelper.of(context).editQuickText),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(
-                labelText: '标题',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).title,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: contentController,
-              decoration: const InputDecoration(
-                labelText: '文本内容',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: LocalizationHelper.of(context).content,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 5,
             ),
@@ -991,32 +968,35 @@ class _MemoryTabState extends State<MemoryTab> with TickerProviderStateMixin {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () {
               final newQuickText = {
+                'id': quickText?['id'] ?? DateTime.now().toIso8601String(),
                 'title': titleController.text,
                 'content': contentController.text,
                 'createdAt': quickText?['createdAt'] ?? DateTime.now().toIso8601String(),
                 'updatedAt': DateTime.now().toIso8601String(),
               };
-              
-              setState(() {
-                if (index != null) {
-                  _quickTexts[index] = newQuickText;
-                } else {
-                  _quickTexts.add(newQuickText);
-                }
-              });
-              
-              _saveData();
+              _updateOrAddItem(_quickTexts, quickText, newQuickText);
               Navigator.pop(context);
             },
-            child: Text(quickText == null ? '添加' : '保存'),
+            child: Text(quickText == null ? LocalizationHelper.of(context).add : LocalizationHelper.of(context).save),
           ),
         ],
       ),
     );
+  }
+
+  // Helper to update or add item
+  void _updateOrAddItem(List<Map<String, dynamic>> list, Map<String, dynamic>? existingItem, Map<String, dynamic> newItem) {
+    final index = existingItem != null ? list.indexOf(existingItem) : -1;
+    if (index != -1) {
+      list[index] = newItem;
+    } else {
+      list.add(newItem);
+    }
+    _saveData();
   }
 } 

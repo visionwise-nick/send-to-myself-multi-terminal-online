@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:convert';
@@ -267,103 +268,52 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
             
             const SizedBox(height: 40),
             
-            // 二维码卡片
+            // 二维码容器
             ScaleTransition(
               scale: _scaleAnimation,
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppTheme.cardColor,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.shadowColor,
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Column(
                   children: [
-                    // 二维码
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppTheme.borderColor,
-                          width: 1,
-                        ),
+                    Text(
+                      '${LocalizationHelper.of(context).joinGroup}: $groupName',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${LocalizationHelper.of(context).expiresIn} ${_formatDateTime(expiresAt)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textSecondaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // 二维码
+                    SizedBox(
+                      width: 220,
+                      height: 220,
                       child: QrImageView(
                         data: qrDataString,
                         version: QrVersions.auto,
-                        size: 200,
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        errorStateBuilder: (context, error) {
-                          return Container(
-                            width: 200,
-                            height: 200,
-                            child: Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.error_outline,
-                                    color: AppTheme.errorColor,
-                                    size: 40,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    LocalizationHelper.of(context).qrCodeGenerationFailed,
-                                    style: TextStyle(
-                                      color: AppTheme.errorColor,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // 加入码显示
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppTheme.primaryColor.withOpacity(0.2),
-                          width: 1,
+                        size: 220,
+                        gapless: false,
+                        embeddedImage: const AssetImage('assets/images/logo.png'),
+                        embeddedImageStyle: const QrEmbeddedImageStyle(
+                          size: Size(40, 40),
                         ),
-                      ),
-                                              child: Column(
-                          children: [
-                            Text(
-                              LocalizationHelper.of(context).joinCode,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: AppTheme.primaryColor,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          const SizedBox(height: 8),
-                          Text(
-                            joinCode,
-                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                              color: AppTheme.primaryColor,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 4,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ],
@@ -373,50 +323,52 @@ class _QrGenerateScreenState extends State<QrGenerateScreen> with TickerProvider
             
             const SizedBox(height: 32),
             
-            // 说明信息
+            // 加入码
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppTheme.surfaceColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppTheme.borderColor,
-                  width: 0.5,
-                ),
+                border: Border.all(color: AppTheme.borderColor),
               ),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.access_time_rounded,
-                        color: AppTheme.warningColor,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _formatDateTime(expiresAt),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.warningColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    LocalizationHelper.of(context).joinCode,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    LocalizationHelper.of(context).otherDevicesCanScanQRDescription,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondaryColor,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        joinCode,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 8,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      IconButton(
+                        icon: const Icon(Icons.copy_rounded),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: joinCode));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(LocalizationHelper.of(context).copied),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            
-            const SizedBox(height: 40),
           ],
         ),
       ),

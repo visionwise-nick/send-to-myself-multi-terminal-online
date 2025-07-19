@@ -86,7 +86,7 @@ class LogoutDialog {
         Navigator.of(context).pop();
         
         if (success) {
-          _showLogoutSuccessMessage(context, '已成功退出登录');
+          _showLogoutSuccessMessage(context, LocalizationHelper.of(context).logoutSuccess);
           
           // 🔥 修复：强制导航到登录页面，清除所有页面堆栈
           Future.delayed(const Duration(milliseconds: 500), () {
@@ -96,7 +96,7 @@ class LogoutDialog {
             }
           });
         } else {
-          _showLogoutErrorMessage(context, '退出登录时发生错误');
+          _showLogoutErrorMessage(context, LocalizationHelper.of(context).logoutError);
           
           // 🔥 即使失败也提供跳转选项
           Future.delayed(const Duration(seconds: 2), () {
@@ -111,7 +111,7 @@ class LogoutDialog {
       // 关闭进度对话框
       if (context.mounted) {
         Navigator.of(context).pop();
-        _showLogoutErrorMessage(context, '退出登录失败: $e');
+        _showLogoutErrorMessage(context, '${LocalizationHelper.of(context).logoutFailed}: $e');
       }
     }
   }
@@ -149,11 +149,11 @@ class LogoutDialog {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
               Icon(Icons.warning, color: Colors.orange),
               SizedBox(width: 8),
-              Text('登录状态已失效'),
+              Text(LocalizationHelper.of(context).loginStatusExpired),
             ],
           ),
           content: Text(message),
@@ -167,7 +167,7 @@ class LogoutDialog {
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('确定'),
+              child: Text(LocalizationHelper.of(context).confirm),
             ),
           ],
         ),
@@ -182,14 +182,14 @@ class LogoutDialog {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
               Icon(Icons.error_outline, color: Colors.red),
               SizedBox(width: 8),
-              Text('退出登录失败'),
+              Text(LocalizationHelper.of(context).logoutFailed),
             ],
           ),
-          content: const Text('退出登录失败，您可以选择强制退出或重试。'),
+          content: Text(LocalizationHelper.of(context).logoutFailedContent),
           actions: [
             TextButton(
               onPressed: () {
@@ -198,7 +198,7 @@ class LogoutDialog {
                 showLogoutConfirmDialog(context);
               },
               child: Text(
-                '重试',
+                LocalizationHelper.of(context).retry,
                 style: TextStyle(color: Colors.grey[600]),
               ),
             ),
@@ -212,7 +212,7 @@ class LogoutDialog {
                 backgroundColor: AppTheme.primaryColor,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('强制退出'),
+              child: Text(LocalizationHelper.of(context).forceLogout),
             ),
           ],
         ),

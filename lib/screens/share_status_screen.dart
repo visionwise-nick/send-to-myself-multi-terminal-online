@@ -71,17 +71,18 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
     _contentSentText = l10n.contentSentToGroup;
     _tryAgainText = l10n.pleaseTryAgainLater;
     _processingErrorText = l10n.processing;
-    _waitingForAppText = '正在启动应用...';
+    _waitingForAppText = l10n.waitingForApp;
     
     // 🔥 修改：设置初始状态为等待APP启动
     setState(() {
       _status = _waitingForAppText;
-      _detail = '正在初始化应用服务，请稍候...';
+      _detail = l10n.waitingForApp;
     });
   }
 
   // 🔥 新增：检查APP启动状态
   Future<void> _checkAppReadyStatus() async {
+    final l10n = LocalizationHelper.of(context);
     print('🔍 开始检查APP启动状态...');
     
     while (!_isAppReady && _initializationAttempts < _maxInitializationAttempts) {
@@ -110,7 +111,7 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
           if (mounted) {
             setState(() {
               _status = _waitingForAppText;
-              _detail = '正在启动应用服务... ($_initializationAttempts/$_maxInitializationAttempts)';
+              _detail = '${_waitingForAppText} ($_initializationAttempts/$_maxInitializationAttempts)';
             });
           }
           
@@ -127,9 +128,10 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
     if (!_isAppReady) {
       print('⚠️ 达到最大等待时间，强制开始处理分享');
       if (mounted) {
+        final l10n = LocalizationHelper.of(context);
         setState(() {
-          _status = '应用启动较慢，正在尝试处理分享...';
-          _detail = '如果失败，请重新尝试分享';
+          _status = l10n.appSlowToStart;
+          _detail = l10n.tryAgainIfFailed;
         });
         
         // 强制等待更长时间后开始处理
@@ -183,11 +185,12 @@ class _ShareStatusScreenState extends State<ShareStatusScreen>
   
   Future<void> _processShare() async {
     try {
+      final l10n = LocalizationHelper.of(context);
       // 🔥 新增：开始处理前的最后检查
       if (mounted) {
         setState(() {
           _status = _processingText;
-          _detail = '正在处理分享内容...';
+          _detail = l10n.processingShare;
         });
       }
       

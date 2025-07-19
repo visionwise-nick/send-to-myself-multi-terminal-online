@@ -50,7 +50,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('加载设备失败: $e')),
+          SnackBar(content: Text(LocalizationHelper.of(context).loadDevicesFailed)),
         );
       }
     }
@@ -80,7 +80,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
           _isQrCodeLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('创建加入码失败: $e')),
+          SnackBar(content: Text(LocalizationHelper.of(context).createJoinCodeFailed)),
         );
       }
     }
@@ -95,13 +95,13 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
       if (result && mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已成功离开群组')),
+          SnackBar(content: Text(LocalizationHelper.of(context).leaveGroupSuccess)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('离开群组失败: $e')),
+          SnackBar(content: Text(LocalizationHelper.of(context).leaveGroupFailed)),
         );
       }
     }
@@ -117,13 +117,13 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('群组信息已更新')),
+          SnackBar(content: Text(LocalizationHelper.of(context).groupInfoUpdated)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('刷新失败: $e')),
+          SnackBar(content: Text(LocalizationHelper.of(context).refreshFailed)),
         );
       }
     }
@@ -143,14 +143,14 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(currentGroup?['name'] ?? '设备群组'),
+        title: Text(currentGroup?['name'] ?? LocalizationHelper.of(context).deviceGroup),
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
         actions: [
           // 刷新按钮
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: '刷新',
+            tooltip: LocalizationHelper.of(context).refresh,
             onPressed: _refreshGroup,
           ),
           // 菜单按钮
@@ -161,13 +161,13 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'leave',
                 child: Row(
                   children: [
                     Icon(Icons.exit_to_app, color: Colors.red),
                     SizedBox(width: 8),
-                    Text('离开群组', style: TextStyle(color: Colors.red)),
+                    Text(LocalizationHelper.of(context).leaveGroup, style: TextStyle(color: Colors.red)),
                   ],
                 ),
               ),
@@ -218,7 +218,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        currentGroup['name'] ?? '未命名群组',
+                                        currentGroup['name'] ?? LocalizationHelper.of(context).unnamedGroup,
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,
@@ -228,7 +228,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       Text(
-                                        '创建于: ${_formatDate(currentGroup['createdAt'])}',
+                                        LocalizationHelper.of(context).createdOn(_formatDate(currentGroup['createdAt'])),
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey.shade600,
@@ -244,7 +244,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
-                                    '${_devices?.length ?? 0} 台设备',
+                                    LocalizationHelper.of(context).deviceCount(_devices?.length ?? 0),
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey.shade700,
@@ -339,7 +339,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  '加入码: ${_joinCodeData!['code']}',
+                                  '${LocalizationHelper.of(context).joinCode}: ${_joinCodeData!['code']}',
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -347,11 +347,11 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.copy),
-                                  tooltip: '复制加入码',
+                                  tooltip: LocalizationHelper.of(context).copyJoinCode,
                                   onPressed: () {
                                     // 复制到剪贴板
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('加入码已复制到剪贴板')),
+                                      SnackBar(content: Text(LocalizationHelper.of(context).joinCodeCopied)),
                                     );
                                   },
                                 ),
@@ -359,7 +359,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                             ),
                             // 过期时间
                             Text(
-                              '有效期至: ${_formatDateTime(_joinCodeData!['expiresAt'])}',
+                              LocalizationHelper.of(context).expiresAt(_formatDateTime(_joinCodeData!['expiresAt'])),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
@@ -375,8 +375,8 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                   // 设备列表标题
                   Row(
                     children: [
-                      const Text(
-                        '设备列表',
+                      Text(
+                        LocalizationHelper.of(context).deviceList,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -391,7 +391,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${_devices?.length ?? 0}',
+                          LocalizationHelper.of(context).deviceCount(_devices?.length ?? 0),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -417,8 +417,8 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                                   color: Colors.grey.shade300,
                                 ),
                                 const SizedBox(height: 16),
-                                const Text(
-                                  '没有可显示的设备',
+                                Text(
+                                  LocalizationHelper.of(context).noDevicesToDisplay,
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -462,7 +462,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          device['name'] ?? '未命名设备',
+                                          device['name'] ?? LocalizationHelper.of(context).unnamedDevice,
                                           style: TextStyle(
                                             fontWeight: isCurrentDevice
                                                 ? FontWeight.bold
@@ -479,8 +479,8 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                                             color: AppTheme.primaryColor.withOpacity(0.1),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
-                                          child: const Text(
-                                            '当前设备',
+                                          child: Text(
+                                            LocalizationHelper.of(context).currentDevice,
                                             style: TextStyle(
                                               fontSize: 10,
                                               color: AppTheme.primaryColor,
@@ -495,8 +495,8 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                                             color: AppTheme.primaryColor.withOpacity(0.1),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
-                                          child: const Text(
-                                            '群主',
+                                          child: Text(
+                                            LocalizationHelper.of(context).groupOwner,
                                             style: TextStyle(
                                               fontSize: 10,
                                               color: AppTheme.primaryColor,
@@ -506,7 +506,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                                     ],
                                   ),
                                   subtitle: Text(
-                                    '${device['type'] ?? '未知设备'} · ${device['platform'] ?? '未知平台'}',
+                                    '${device['type'] ?? LocalizationHelper.of(context).unknownDevice} · ${device['platform'] ?? LocalizationHelper.of(context).unknownPlatform}',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -516,7 +516,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
                                             Icons.remove_circle_outline,
                                             color: Colors.red,
                                           ),
-                                          tooltip: '移除设备',
+                                          tooltip: LocalizationHelper.of(context).removeDevice,
                                           onPressed: () {
                                             _showRemoveDeviceDialog(device);
                                           },
@@ -538,14 +538,14 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('离开群组'),
-        content: const Text('确定要离开此设备群组吗？'),
+        title: Text(LocalizationHelper.of(context).leaveGroup),
+        content: Text(LocalizationHelper.of(context).confirmLeaveGroup),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -555,7 +555,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: const Text('确定'),
+            child: Text(LocalizationHelper.of(context).confirm),
           ),
         ],
       ),
@@ -567,27 +567,27 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('移除设备'),
-        content: Text('确定要将设备 "${device['name']}" 从群组中移除吗？'),
+        title: Text(LocalizationHelper.of(context).removeDevice),
+        content: Text('${LocalizationHelper.of(context).confirmRemoveDevice} "${device['name']}"?'),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: const Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               // 移除设备的逻辑（本次未实现）
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('移除设备功能即将上线')),
+                SnackBar(content: Text(LocalizationHelper.of(context).removeDeviceFeatureComingSoon)),
               );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
             ),
-            child: const Text('确定'),
+            child: Text(LocalizationHelper.of(context).confirm),
           ),
         ],
       ),
@@ -620,7 +620,7 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
 
   // 格式化日期
   String _formatDate(dynamic date) {
-    if (date == null) return '未知';
+    if (date == null) return LocalizationHelper.of(context).unknown;
     
     try {
       if (date is String) {
@@ -633,35 +633,33 @@ class _DeviceGroupScreenState extends State<DeviceGroupScreen> {
         final localTime = dateTime.toLocal();
         return '${localTime.year}-${localTime.month.toString().padLeft(2, '0')}-${localTime.day.toString().padLeft(2, '0')}';
       }
+      
+      return date.toString();
     } catch (e) {
       print('解析日期失败: $e, 原始日期: $date');
-      return '未知';
+      return LocalizationHelper.of(context).unknown;
     }
-    
-    return '未知';
   }
 
   // 格式化日期时间
   String _formatDateTime(dynamic dateTime) {
-    if (dateTime == null) return '未知';
+    if (dateTime == null) return LocalizationHelper.of(context).unknown;
     
     try {
       if (dateTime is String) {
         // 解析时间并转换为本地时间
         DateTime dt = DateTime.parse(dateTime);
         if (!dateTime.contains('Z') && !dateTime.contains('+')) {
-          // 如果没有时区信息，假设是UTC时间
           dt = DateTime.parse(dateTime + 'Z');
         }
         final localTime = dt.toLocal();
-        return '${localTime.year}-${localTime.month.toString().padLeft(2, '0')}-${localTime.day.toString().padLeft(2, '0')} '
-            '${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}';
+        return '${localTime.year}-${localTime.month.toString().padLeft(2, '0')}-${localTime.day.toString().padLeft(2, '0')} ${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}';
       }
+      
+      return dateTime.toString();
     } catch (e) {
       print('解析日期时间失败: $e, 原始时间: $dateTime');
-      return '未知';
+      return LocalizationHelper.of(context).unknown;
     }
-    
-    return '未知';
   }
 } 

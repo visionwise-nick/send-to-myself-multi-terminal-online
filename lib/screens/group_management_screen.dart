@@ -618,9 +618,13 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
               ),
               Expanded(
                 child: _buildInfoItem(
-                  icon: Icons.schedule,
-                  label: LocalizationHelper.of(context).createdOn,
-                  value: TimeUtils.formatDateTime(group['createdAt'], context),
+                  icon: Icons.calendar_today_outlined,
+                  label: LocalizationHelper.of(context).createdOn(
+                      _currentGroupData['createdAt'] != null
+                          ? TimeUtils.formatDateTime(
+                              _currentGroupData['createdAt'], context)
+                          : ''),
+                  value: '',
                 ),
               ),
             ],
@@ -655,7 +659,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '群组人数已达上限。升级订阅以支持更多设备。',
+                          LocalizationHelper.of(context).groupMemberLimitReachedUpgrade,
                           style: TextStyle(
                             color: Colors.orange,
                             fontSize: 12,
@@ -675,7 +679,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            '升级',
+                            LocalizationHelper.of(context).upgrade,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -753,10 +757,13 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
               size: 16,
             ),
             const SizedBox(width: 4),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white.withOpacity(0.8),
+            Expanded(
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withOpacity(0.8),
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -768,6 +775,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
             color: Colors.white,
             fontWeight: FontWeight.w500,
           ),
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -1074,7 +1082,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
               color: AppTheme.primaryColor,
             ),
             const SizedBox(width: 8),
-            const Text('升级订阅'),
+            Text(LocalizationHelper.of(context).upgradeSubscription),
           ],
         ),
         content: Column(
@@ -1082,7 +1090,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '当前群组人数已达上限',
+              LocalizationHelper.of(context).groupMemberLimitReached,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -1090,7 +1098,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              '升级订阅计划以解锁更多设备群组功能：',
+              LocalizationHelper.of(context).upgradeToUnlockMoreFeatures,
               style: TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondaryColor,
@@ -1098,7 +1106,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              '• 基础版：支持5台设备\n• 专业版：支持10台设备',
+              '${LocalizationHelper.of(context).basicVersion5Devices}\n${LocalizationHelper.of(context).proVersion10Devices}',
               style: TextStyle(
                 fontSize: 14,
                 color: AppTheme.textSecondaryColor,
@@ -1109,7 +1117,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('取消'),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1120,7 +1128,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen>
                 ),
               );
             },
-            child: Text('查看订阅'),
+            child: Text(LocalizationHelper.of(context).viewSubscription),
           ),
         ],
       ),

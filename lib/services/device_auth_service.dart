@@ -10,6 +10,7 @@ import 'dart:ui' show PlatformDispatcher;
 
 class DeviceAuthService {
   final String _baseUrl = "https://sendtomyself-api-adecumh2za-uc.a.run.app/api";
+  final String _jwtSecret = "your_super_secret_key_for_jwt"; // 确保与后端一致
   
   // 获取或生成设备ID - 基于硬件信息生成稳定ID
   Future<String> getOrCreateDeviceId() async {

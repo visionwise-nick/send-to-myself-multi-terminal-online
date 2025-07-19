@@ -47,6 +47,51 @@
   "help": "Help",
   "about": "About",
   "version": "Version",
+  "monthDay": "{month}/{day}",
+  "@monthDay": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "expiresInHoursAndMinutes": "Expires in {hours}h {minutes}m",
+  "@expiresInHoursAndMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "expiresInMinutes": "Expires in {minutes}m",
+  "@expiresInMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "expired": "Expired",
+  "yearMonthDay": "{year}/{month}/{day}",
+  "@yearMonthDay": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+  },
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "update": "Update",
   "download": "Download",
   "upload": "Upload",
@@ -71,54 +116,410 @@
   "registerSubtitle": "Sign up to get started",
   "registerDevice": "Register Device",
   "registering": "Registering...",
-  "deviceRegistration": "Device Registration",
-  "deviceRegistrationSuccess": "Device registered successfully",
-  "deviceRegistrationFailed": "Device registration failed",
-  "loginSuccess": "Login successful",
-  "loginFailed": "Login failed",
-  "logoutSuccess": "Logout successful",
-  "logoutConfirm": "Are you sure you want to logout?",
-  
-  "navigationSection": "",
-  "home": "Home",
-  "messages": "Messages",
-  "files": "Files",
-  "memories": "Memories",
-  "groups": "Groups",
-  
-  "sectionmessages": "",
-  "newMessage": "New Message",
-  "onlyMyself": "Only myself",
-  "devicesCount": "{count} devices",
-  "@devicesCount": {
+  "deviceRegistration": "Device registration is required for the first use, which will generate a unique identifier for you.",
+  "joinGroupSuccess": "Joined group successfully",
+  "joinGroupFailed": "Failed to join group",
+  "joinFailed": "Join failed",
+  "enterJoinCode": "Enter Join Code",
+  "joinCodeHint": "8-digit join code",
+  "join": "Join",
+  "scanQRCode": "Scan QR Code",
+  "manualInput": "Manual Input",
+  "flashlight": "Flashlight",
+  "appTitle": "Send To Myself",
+  "appSlogan": "Your personal file transfer assistant",
+  "myFiles": "My Files",
+  "filesFeatureComingSoon": "Files Feature Coming Soon",
+  "stayTuned": "Stay tuned!",
+  "noDeviceGroups": "No Device Groups",
+  "scanQRToJoin": "Scan QR code to join a group",
+  "myDeviceGroups": "My Device Groups",
+  "unnamedGroup": "Unnamed Group",
+  "deviceCount": "{count} devices",
+  "youAreOwner": "You are the owner",
+  "member": "Member",
+  "createdOn": "Created on",
+  "unknownDate": "Unknown",
+  "memoriesCount": "{count,plural, =0{No Memories} =1{1 Memory} other{{count} Memories}}",
+  "searchMemories": "Search memories...",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "monday": "Monday",
+  "tuesday": "Tuesday",
+  "wednesday": "Wednesday",
+  "thursday": "Thursday",
+  "friday": "Friday",
+  "saturday": "Saturday",
+  "sunday": "Sunday",
+  "noMemories": "No Memories Yet",
+  "noMemoriesDesc": "Create your first memory to get started!",
+  "createMemory": "Create Memory",
+  "quickAdd": "Quick Add",
+  "memoryDeleteTitle": "Delete Memory",
+  "confirmDeleteMemory": "Are you sure you want to delete this memory?",
+  "deleteMemorySuccess": "Memory deleted successfully",
+  "deleteMemoryFailed": "Failed to delete memory",
+  "dateFormat": "{month}/{day}",
+  "notes": "Notes",
+  "passwords": "Passwords",
+  "contacts": "Contacts",
+  "quickTexts": "Quick Texts",
+  "myMemory": "My Memory",
+  "groupMemory": "{groupName}'s Memory",
+  "totalItemsSaved": "{count} items saved",
+  "selectGroupToView": "Select a group to view memories",
+  "groupStorage": "Group Storage",
+  "localStory": "Local Storage",
+  "noNotes": "No Notes Yet",
+  "recordImportantInfo": "Record important information and ideas",
+  "noPasswords": "No Passwords Yet",
+  "securelyStore": "Securely store your account passwords",
+  "noContacts": "No Contacts Yet",
+  "saveImportantContacts": "Save important contact information",
+  "noQuickTexts": "No Quick Texts Yet",
+  "saveCommonTexts": "Save common texts and templates",
+  "addNote": "Add Note",
+  "editNote": "Edit Note",
+  "title": "Title",
+  "content": "Content",
+  "add": "Add",
+  "save": "Save",
+  "addPassword": "Add Password",
+  "editPassword": "Edit Password",
+  "site": "Site/App",
+  "username": "Username/Email",
+  "password": "Password",
+  "addContact": "Add Contact",
+  "editContact": "Edit Contact",
+  "name": "Name",
+  "phone": "Phone",
+  "email": "Email",
+  "addQuickText": "Add Quick Text",
+  "editQuickText": "Edit Quick Text",
+  "saveButton": "Save",
+  "titleLabel": "Title",
+  "titleHint": "Enter a title for your memory",
+  "contentLabel": "Content",
+  "writeYourThoughts": "Write down your thoughts...",
+  "websiteAppName": "Website/App Name",
+  "websiteAppNameHint": "e.g., Google, Facebook",
+  "websiteAddress": "Website Address",
+  "websiteAddressHint": "e.g., https://www.google.com",
+  "usernameEmailLabel": "Username/Email",
+  "loginAccountHint": "Your login account",
+  "passwordLabel": "Password",
+  "passwordHint": "Your login password",
+  "notesLabel": "Notes",
+  "otherInfoHint": "Other information, such as security questions",
+  "expenseItemLabel": "Expense Item",
+  "expenseItemHint": "e.g., Coffee, Lunch",
+  "amountLabel": "Amount",
+  "amountHint": "e.g., 25.50",
+  "typeLabel": "Type",
+  "expense": "Expense",
+  "income": "Income",
+  "connectionStatusChanged": "Connection status changed",
+  "networkStatusChanged": "Network status changed",
+  "errorOccurred": "Error occurred",
+  "messageReceived": "Message received",
+  "networkDiagnosticTool": "Network Diagnostic Tool",
+  "clearLogs": "Clear Logs",
+  "copyLogs": "Copy Logs",
+  "connectionStatus": "Connection Status",
+  "connectionDetails": "Connection Details",
+  "networkTest": "Network Test",
+  "testWebSocket": "Test WebSocket",
+  "forceReconnect": "Force Reconnect",
+  "preparingToSendFiles": "Preparing to send files...",
+  "shareSuccess": "Share Successful",
+  "shareFailed": "Share Failed",
+  "shareException": "Share Exception",
+  "contentSentToGroup": "Content has been sent to the current group",
+  "pleaseTryAgainLater": "Please try again later",
+  "processing": "Processing",
+  "waitingForApp": "Waiting for app to start...",
+  "appSlowToStart": "App is slow to start, trying to process share...",
+  "tryAgainIfFailed": "If it fails, please try sharing again",
+  "processingShare": "Processing share...",
+  "subscriptionPricingTitle": "Subscription & Pricing",
+  "subscriptionPricingSubtitle": "Choose your plan",
+  "currentPlan": "Current Plan",
+  "validUntil": "Valid until: {date}",
+  "mostPopular": "Most Popular",
+  "monthlyPlan": "Monthly Plan",
+  "yearlyPlan": "Yearly Plan",
+  "restorePurchases": "Restore Purchases",
+  "priceVariesByRegion": "Price may vary by region.",
+  "purchaseSuccess": "Purchase Successful",
+  "purchaseFailed": "Purchase Failed",
+  "freePlan": "Free Plan",
+  "deviceLimit": "Up to {count} devices",
+  "chooseYourPlan": "Choose Your Plan",
+  "basicPlan": "Basic Plan",
+  "proPlan": "Pro Plan",
+  "enterprisePlan": "Enterprise Plan",
+  "freePlanDescription": "For personal use",
+  "basicPlanDescription": "For small teams",
+  "proPlanDescription": "For growing businesses",
+  "enterprisePlanDescription": "For large organizations",
+  "feature2DeviceGroup": "Up to 2 devices in a group",
+  "featureBasicFileTransfer": "Basic file transfer (up to 100MB)",
+  "featureTextMessage": "Text messages",
+  "featureImageTransfer": "Image transfer",
+  "feature5DeviceGroup": "Up to 5 devices in a group",
+  "featureUnlimitedFileTransfer": "Unlimited file transfer (up to 1GB)",
+  "featureVideoTransfer": "Video transfer",
+  "cameraUnavailableSwitchedToInput": "Camera unavailable, switched to input mode.",
+  "desktopCameraUnstableTip": "Desktop camera scanning may be unstable, it is recommended to use input mode.",
+  "joinGroupSuccessExclamation": "Joined group successfully!",
+  "joinGroupFailedGeneric": "Failed to join group.",
+  "operationFailed": "Operation failed: {error}",
+  "pleaseEnterInviteCode": "Please enter the invite code.",
+  "inviteCodeLengthError": "Invite code length error.",
+  "loadDevicesFailed": "Failed to load devices",
+  "createJoinCodeFailed": "Failed to create join code",
+  "leaveGroupSuccess": "Left group successfully",
+  "leaveGroupFailed": "Failed to leave group",
+  "groupInfoUpdated": "Group info updated",
+  "refreshFailed": "Refresh failed",
+  "deviceGroup": "Device Group",
+  "refresh": "Refresh",
+  "leaveGroup": "Leave Group",
+  "unnamedGroup": "Unnamed Group",
+  "createdOn": "Created on: {date}",
+  "deviceCount": "{count} devices",
+  "generating": "Generating...",
+  "generateDeviceJoinCode": "Generate Device Join Code",
+  "scanQRToJoinDeviceGroup": "Scan QR code to join this device group",
+  "joinCode": "Join Code",
+  "copyJoinCode": "Copy Join Code",
+  "joinCodeCopied": "Join code copied to clipboard",
+  "expiresAt": "Expires at: {date}",
+  "deviceList": "Device List",
+  "noDevicesToDisplay": "No devices to display",
+  "unnamedDevice": "Unnamed Device",
+  "currentDevice": "Current Device",
+  "groupOwner": "Group Owner",
+  "unknownDevice": "Unknown Device",
+  "unknownPlatform": "Unknown Platform",
+  "removeDevice": "Remove Device",
+  "confirmLeaveGroup": "Are you sure you want to leave this device group?",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "confirmRemoveDevice": "Are you sure you want to remove the device",
+  "removeDeviceFeatureComingSoon": "Remove device feature coming soon",
+  "unknown": "Unknown",
+  "loadGroupInfoFailed": "Failed to load group info",
+  "renameGroup": "Rename Group",
+  "groupName": "Group Name",
+  "enterNewGroupName": "Enter a new group name",
+  "groupNameHint": "Group name cannot be empty",
+  "renamingGroup": "Renaming group...",
+  "groupRenameSuccess": "Group renamed successfully",
+  "groupRenameFailed": "Failed to rename group",
+  "renameFailed": "Rename failed",
+  "ok": "OK",
+  "groupLeaveConfirm": "Are you sure you want to leave this group?",
+  "editMemory": "Edit Memory",
+  "save": "Save",
+  "enterTitle": "Enter title",
+  "enterContent": "Enter content",
+  "tags": "Tags",
+  "addTag": "Add Tag",
+  "generateTags": "Generate Tags",
+  "generatingTags": "Generating tags...",
+  "https": "https://...",
+  "usernameEmail": "Username/Email",
+  "loginAccount": "Login account",
+  "password": "Password",
+  "loginPassword": "Login password",
+  "notes": "Notes",
+  "otherInformation": "Other information",
+  "amount": "Amount",
+  "zeroZero": "0.00",
+  "type": "Type",
+  "expense": "Expense",
+  "income": "Income",
+  "category": "Category",
+  "eg": "e.g.,",
+  "date": "Date",
+  "detailedExplanation": "Detailed explanation",
+  "startTime": "Start Time",
+  "endTimeOptional": "End Time (Optional)",
+  "location": "Location",
+  "conferenceRoomRestaurant": "Conference room, restaurant, etc.",
+  "details": "Details",
+  "meetingContentNotes": "Meeting content, notes",
+  "reminder": "Reminder",
+  "noReminder": "No reminder",
+  "fiveMinutesBefore": "5 minutes before",
+  "fifteenMinutesBefore": "15 minutes before",
+  "thirtyMinutesBefore": "30 minutes before",
+  "oneHourBefore": "1 hour before",
+  "detailedDescription": "Detailed Description",
+  "specificRequirementsNotes": "Specific requirements, notes",
+  "priority": "Priority",
+  "low": "Low",
+  "medium": "Medium",
+  "high": "High",
+  "completed": "Completed",
+  "dueDateOptional": "Due Date (Optional)",
+  "urlLink": "URL Link",
+  "description": "Description",
+  "purposeOrContent": "Purpose or content of this link",
+  "enterTagName": "Enter tag name",
+  "cancel": "Cancel",
+  "add": "Add",
+  "selectDate": "Select date",
+  "selectTime": "Select time",
+  "updateSuccess": "Update successful",
+  "updateFailed": "Update failed",
+  "catering": "Catering",
+  "transportation": "Transportation",
+  "scanDeviceJoinOtherDevices": "Scan with other devices to join",
+  "joinGroup": "Join Group",
+  "expiresIn": "Expires in",
+  "joinCode": "Join Code",
+  "copy": "Copy",
+  "copied": "Copied",
+  "noGroupInfo": "No group info available",
+  "generateFailed": "Failed to generate",
+  "deviceJoinCode": "Device Join Code",
+  "regenerate": "Regenerate",
+  "generatingJoinCode": "Generating join code...",
+  "groupPrefix": "Group",
+  "copyright": "© 2023 Send To Myself",
+  "deviceInfo": "Device Info",
+  "deviceName": "Device Name",
+  "deviceType": "Device Type",
+  "platform": "Platform",
+  "deviceId": "Device ID",
+  "appTheme": "App Theme",
+  "defaultTheme": "Default",
+  "notificationSettings": "Notification Settings",
+  "enabled": "Enabled",
+  "aboutApp": "About App",
+  "version": "Version",
+  "sendFileFailed": "Send file failed",
+  "noFilesToSend": "No files to send",
+  "batchRecall": "Batch Recall",
+  "recall": "Recall",
+  "batchRecallReason": "Recall messages",
+  "batchDelete": "Batch Delete",
+  "confirmBatchDelete": "Are you sure you want to delete {count} messages?",
+  "@confirmBatchDelete": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "clickToStartGroupChat": "Click to start group chat",
-  "sendToMyself": "Send to myself",
-  "clickToStartChat": "Click to start chat",
-  "unknownDevice": "Unknown device",
-  "unknownType": "Unknown type",
-  "myself": "Me",
-  "noConversations": "No conversations",
-  "joinGroupToStartChat": "Join a device group to start chatting",
-  "pleaseSelectGroup": "Please select a group",
-  "clickGroupSelectorHint": "Click the group selector at the top to select or create a group",
-  "sendMessage": "Send Message",
-  "messageHint": "Type your message...",
-  "noMessages": "No messages yet",
-  "messagesSent": "Messages sent",
-  "messagesReceived": "Messages received",
-  "messageDelivered": "Delivered",
-  "messageFailed": "Failed",
-  "messagePending": "Pending",
-  "copyMessage": "Copy Message",
-  "deleteMessage": "Delete Message",
-  "replyMessage": "Reply",
-  "forwardMessage": "Forward",
+  "batchDeleteReason": "Delete messages",
+  "batchDeleteSuccess": "Successfully deleted {count} messages",
+  "@batchDeleteSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "batchDeleteFailedWithError": "Batch delete failed: {error}",
+  "@batchDeleteFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "debugInfoTitle": "Debug Info",
+  "permanentStorageDirectory": "Permanent Storage Directory",
+  "storageUsage": "Storage Usage",
+  "fileCacheStats": "File Cache Stats",
+  "deduplicationDiagnostics": "Deduplication Diagnostics",
+  "clearDeduplicationRecords": "Clear Deduplication Records",
+  "startConversation": "Start a new conversation",
+  "sendMessageOrFileToStart": "Send a message or file to start",
+  "cancelUpload": "Cancel Upload",
+  "cancelDownload": "Cancel Download",
+  "confirmCancelUpload": "Are you sure you want to cancel the upload?",
+  "confirmCancelDownload": "Are you sure you want to cancel the download?",
+  "continueTransfer": "Continue Transfer",
+  "confirmCancel": "Confirm Cancel",
+  "uploadCancelled": "Upload cancelled",
+  "downloadCancelled": "Download cancelled",
+  "file": "File",
+  "addDescriptionText": "Add description",
+  "inputMessageHintDesktop": "Input message, paste screenshot, or drag file here",
+  "inputMessageHintMobile": "Input message",
+  "imageFile": "Image File",
+  "videoFile": "Video File",
+  "documentFile": "Document File",
+  "audioFile": "Audio File",
+  "selectFileType": "Select file type",
+  "selectFileTypeMultiple": "Select file type (multiple)",
+  "image": "Image",
+  "video": "Video",
+  "document": "Document",
+  "audio": "Audio",
+  "fileDownloadFailed": "File download failed",
+  "fileNotExistsOrExpired": "File does not exist or has expired",
+  "noPermissionToDownload": "No permission to download",
+  "copiedToClipboard": "Copied to clipboard",
+  "textCopiedToClipboard": "Text copied to clipboard",
+  "canDragSelectText": "You can drag to select text",
+  "allContentCopied": "All content copied",
+  "recallMessage": "Recall Message",
+  "deleteMessageTitle": "Delete Message",
+  "confirmDeleteSingleMessage": "Are you sure you want to delete this message?",
+  "messageContentAddedToInput": "Message content added to input",
+  "confirmDeleteMessage": "Are you sure you want to delete this message?",
+  "gallery": "Gallery",
+  "documents": "Documents",
+  "saveFailed": "Save failed",
+  "messageShare": "Message Share",
+  "textShared": "Text shared",
+  "messageRecalledText": "[You recalled a message]",
+  "filePathCopied": "File path copied",
+  "copyFilePathFailed": "Copy file path failed",
+  "categoryLabel": "Category",
+  "categoryHint": "e.g., Work, Personal",
+  "dateLabel": "Date",
+  "notesHint": "Add notes...",
+  "scheduleTitleLabel": "Schedule Title",
+  "scheduleTitleHint": "e.g., Team Meeting",
+  "startTimeLabel": "Start Time",
+  "endTimeOptionalLabel": "End Time (Optional)",
+  "locationLabel": "Location",
+  "locationHint": "e.g., Conference Room A",
+  "detailsLabel": "Details",
+  "meetingDetailsHint": "e.g., Agenda, Attendees",
+  "advanceReminderLabel": "Advance Reminder",
+  "minutes5Before": "5 minutes before",
+  "minutes15Before": "15 minutes before",
+  "minutes30Before": "30 minutes before",
+  "hour1Before": "1 hour before",
+  "taskLabel": "Task",
+  "whatToDoHint": "e.g., Buy groceries",
+  "detailedDescriptionLabel": "Detailed Description",
+  "taskRequirementsHint": "e.g., Milk, Bread, Eggs",
+  "priorityLabel": "Priority",
+  "dueDateOptionalLabel": "Due Date (Optional)",
+  "websiteLinkName": "Website/Link Name",
+  "urlLinkLabel": "URL/Link",
+  "linkDescriptionLabel": "Description",
+  "linkPurposeHint": "e.g., Project research",
+  "fileDescription": "File Description",
+  "fileExplanation": "e.g., Contract draft",
+  "pleaseEnter": "Please enter {label}",
+  "@pleaseEnter": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "saveToLocal": "Save to Local",
+  "openFileLocation": "Open File Location",
   "selectMessages": "Select Messages",
   "selectedMessages": "{count} selected",
   "@selectedMessages": {
@@ -128,227 +529,56 @@
       }
     }
   },
-  "deleteSelectedMessages": "Delete Selected Messages",
-  "deleteMessageConfirm": "Are you sure you want to delete this message?",
-  "deleteMessagesConfirm": "Are you sure you want to delete {count} messages?",
-  "@deleteMessagesConfirm": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  
-  "sectionfiles": "",
-  "selectFile": "Select File",
-  "selectFiles": "Select Files",
-  "selectImage": "Select Image",
-  "selectVideo": "Select Video",
-  "selectDocument": "Select Document",
-  "noFiles": "No files",
-  "fileName": "File Name",
-  "fileSize": "File Size",
-  "fileType": "File Type",
-  "fileDate": "Date",
-  "uploadFile": "Upload File",
-  "downloadFile": "Download File",
-  "openFile": "Open File",
-  "shareFile": "Share File",
-  "deleteFile": "Delete File",
-  "uploadProgress": "Uploading... {progress}%",
-  "@uploadProgress": {
-    "placeholders": {
-      "progress": {
-        "type": "int"
-      }
-    }
-  },
-  "downloadProgress": "Downloading... {progress}%",
-  "@downloadProgress": {
-    "placeholders": {
-      "progress": {
-        "type": "int"
-      }
-    }
-  },
-  "uploadSuccess": "Upload successful",
-  "downloadSuccess": "Download successful",
-  "uploadFailed": "Upload failed",
-  "downloadFailed": "Download failed",
-  "fileTooLarge": "File is too large",
-  "unsupportedFileType": "Unsupported file type",
+  "deleteTooltip": "Delete",
+  "messageFilter": "Message Filter",
+  "searchMessagesOrFiles": "Search messages or files",
+  "messageType": "Message Type",
+  "all": "All",
+  "text": "Text",
   "saveToGallery": "Save to Gallery",
-  "saveToLocal": "Save to Local",
-  "openFileLocation": "Open File Location",
-  
-  "sectionmemories": "",
-  "createMemory": "Create Memory",
-  "editMemory": "Edit Memory",
-  "deleteMemory": "Delete Memory",
-  "memoryTitle": "Title",
-  "memoryContent": "Content",
-  "memoryCategory": "Category",
-  "memoryTags": "Tags",
-  "memoryDate": "Date",
-  "memoryLocation": "Location",
-  "memoryPriority": "Priority",
-  "memoryStatus": "Status",
-  "noMemories": "No memories yet",
-  "searchMemories": "Search memories...",
-  "filterByCategory": "Filter by category",
-  "sortByDate": "Sort by date",
-  "sortByPriority": "Sort by priority",
-  "memoryCategories": "Categories",
-  "personalMemory": "Personal",
-  "workMemory": "Work",
-  "lifeMemory": "Life",
-  "studyMemory": "Study",
-  "travelMemory": "Travel",
-  "otherMemory": "Other",
-  "memoryPriorityHigh": "High",
-  "memoryPriorityMedium": "Medium",
-  "memoryPriorityLow": "Low",
-  "memoryStatusActive": "Active",
-  "memoryStatusCompleted": "Completed",
-  "memoryStatusArchived": "Archived",
-  
-  "sectiongroups": "",
+  "confirmShare": "Confirm Share",
+  "textSent": "Text sent",
+  "groups": "Groups",
+  "noGroup": "No Group",
+  "memories": "Memories",
   "createGroup": "Create Group",
-  "joinGroup": "Join Group",
-  "leaveGroup": "Leave Group",
-  "deleteGroup": "Delete Group",
-  "groupName": "Group Name",
-  "groupNameHint": "Enter group name",
-  "groupDescription": "Group Description",
+  "groupDescriptionOptional": "Group Description (optional)",
   "groupDescriptionHint": "Enter group description",
-  "groupDescriptionOptional": "Group Description (Optional)",
-  "groupMembers": "Members",
-  "groupSettings": "Group Settings",
-  "noGroups": "No groups",
-  "groupCode": "Group Code",
-  "scanQRCode": "Scan QR Code",
-  "generateQRCode": "Generate QR Code",
-  "joinGroupByCode": "Join by Code",
-  "joinGroupByQR": "Join by QR Code",
-  "groupJoinSuccess": "Joined group successfully",
-  "groupJoinFailed": "Failed to join group",
-  "groupLeaveSuccess": "Left group successfully",
-  "groupLeaveFailed": "Failed to leave group",
-  "groupLeaveConfirm": "Are you sure you want to leave this group?",
-  "groupDeleteConfirm": "Are you sure you want to delete this group?",
-  "groupCreated": "Group created successfully",
-  "groupCreateFailed": "Failed to create group",
-  "invalidGroupCode": "Invalid group code",
-  "groupNotFound": "Group not found",
-  "alreadyInGroup": "Already in this group",
-  "groupFull": "Group is full",
-  "renameGroup": "Rename Group",
-  "newGroupName": "New Group Name",
-  "enterNewGroupName": "Enter new group name",
-  "renamingGroup": "Renaming group...",
-  "groupRenameSuccess": "Group renamed successfully",
-  "groupRenameFailed": "Failed to rename group",
-  "renameFailed": "Rename failed",
-  "loadGroupInfoFailed": "Failed to load group information",
-  "groupManagement": "Group Management",
-  "groupSettings": "Group Settings",
-  "membersList": "Members List",
-  "groupInfo": "Group Information",
-  
-  "sectiondevices": "",
-  "deviceName": "Device Name",
-  "deviceType": "Device Type",
-  "deviceStatus": "Status",
-  "deviceLastSeen": "Last Seen",
-  "connectedDevices": "Connected Devices",
-  "availableDevices": "Available Devices",
-  "noDevices": "No devices",
-  "connectDevice": "Connect Device",
-  "disconnectDevice": "Disconnect Device",
-  "removeDevice": "Remove Device",
-  "deviceConnected": "Device connected",
-  "deviceDisconnected": "Device disconnected",
-  "deviceRemoved": "Device removed",
-  "deviceNotFound": "Device not found",
-  "deviceConnectionFailed": "Failed to connect device",
-  
-  "sectionsync": "",
-  "sync": "Sync",
-  "syncing": "Syncing...",
-  "syncComplete": "Sync complete",
-  "syncFailed": "Sync failed",
-  "autoSync": "Auto Sync",
-  "syncNow": "Sync Now",
-  "lastSync": "Last Sync",
-  "syncSettings": "Sync Settings",
-  "syncMessages": "Sync Messages",
-  "syncFiles": "Sync Files",
-  "syncMemories": "Sync Memories",
-  "offlineMode": "Offline Mode",
-  "onlineMode": "Online Mode",
-  
-  "sectionqr": "",
-  "qrCodeTitle": "QR Code",
-  "scanQR": "Scan QR",
-  "generateQR": "Generate QR",
-  "qrCodeGenerated": "QR Code generated",
-  "qrCodeScanned": "QR Code scanned",
-  "qrScanFailed": "QR scan failed",
-  "invalidQRCode": "Invalid QR code",
-  "qrPermissionDenied": "Camera permission denied",
-  "qrCameraError": "Camera error",
-  "scanQRCode": "Scan QR Code",
-  "manualInput": "Manual Input",
-  "flashlight": "Flashlight",
-  "enterJoinCode": "Enter Join Code",
-  "joinCodeHint": "8-digit join code",
-  "joinGroupSuccess": "Successfully joined group",
-  "joinGroupFailed": "Failed to join group, please check the join code",
-  "joinFailed": "Join failed",
+  "pleaseEnterGroupName": "Please enter group name",
+  "groupCreatedSuccessfully": "Group '{name}' created successfully",
+  "@groupCreatedSuccessfully": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "createGroupFailed": "Create group failed",
+  "deviceOs": "Device OS",
+  "deviceVersion": "Device Version",
+  "deviceRegistrationFailed": "Device registration failed",
+  "placeQRInFrame": "Place QR code in the frame",
   "joiningGroup": "Joining group...",
-  "placeQRInFrame": "Place QR code within the frame to scan",
-  "deviceJoinCode": "Device Join Code",
-  "regenerate": "Regenerate",
-  "generatingJoinCode": "Generating join code...",
-  "generateFailed": "Generation failed",
-  "noGroupInfo": "No available group information",
-  "join": "Join",
-  "retry": "Retry",
-  
-  "sectionnetwork": "",
-  "networkStatus": "Network Status",
-  "networkConnected": "Connected",
-  "networkDisconnected": "Disconnected",
-  "networkError": "Network Error",
-  "connectionTimeout": "Connection timeout",
-  "serverError": "Server error",
-  "clientError": "Client error",
-  "networkDebug": "Network Debug",
-  "checkConnection": "Check Connection",
-  "reconnecting": "Reconnecting",
-  "reconnected": "Reconnected",
-  "connectionLost": "Connection lost",
-  
-  "sectionnotifications": "",
-  "notifications": "Notifications",
-  "enableNotifications": "Enable Notifications",
-  "disableNotifications": "Disable Notifications",
-  "notificationSettings": "Notification Settings",
-  "newMessageNotification": "New message",
-  "fileUploadNotification": "File upload complete",
-  "fileDownloadNotification": "File download complete",
-  "syncCompleteNotification": "Sync complete",
-  "deviceConnectedNotification": "Device connected",
-  "deviceDisconnectedNotification": "Device disconnected",
-  
-  "sectiontime": "",
+  "reconnecting": "Reconnecting...",
+  "connectionFailed": "Connection failed",
+  "networkNormal": "Network normal",
+  "networkLimited": "Network limited",
+  "networkUnavailable": "Network unavailable",
+  "checking": "Checking...",
+  "logoutConfirm": "Are you sure you want to log out?",
+  "loggingOut": "Logging out...",
+  "logoutSuccess": "Logged out successfully",
+  "logoutError": "Error logging out",
+  "logoutFailed": "Logout failed",
+  "loginStatusExpired": "Login status has expired",
+  "logoutFailedContent": "Logout failed. You can force logout or try again.",
+  "forceLogout": "Force Logout",
+  "bytes": "B",
+  "kilobytes": "KB",
+  "megabytes": "MB",
+  "gigabytes": "GB",
+  "terabytes": "TB",
   "now": "Now",
-  "today": "Today",
-  "yesterday": "Yesterday",
-  "thisWeek": "This week",
-  "lastWeek": "Last week",
-  "thisMonth": "This month",
-  "lastMonth": "Last month",
   "minutesAgo": "{minutes}m ago",
   "@minutesAgo": {
     "placeholders": {
@@ -373,276 +603,59 @@
       }
     }
   },
-  
-  "sectionerrors": "",
-  "errorGeneral": "An error occurred",
-  "errorNetwork": "Network error",
-  "errorTimeout": "Request timeout",
-  "errorServerUnavailable": "Server unavailable",
-  "errorUnauthorized": "Unauthorized access",
-  "errorForbidden": "Access forbidden",
-  "errorNotFound": "Resource not found",
-  "errorInternalServer": "Internal server error",
-  "errorBadRequest": "Bad request",
-  "errorTooManyRequests": "Too many requests",
-  "errorServiceUnavailable": "Service unavailable",
-  "errorUnknown": "Unknown error",
-  "errorRetry": "Please try again",
-  
-  "sectionfile_sizes": "",
-  "bytes": "B",
-  "kilobytes": "KB",
-  "megabytes": "MB",
-  "gigabytes": "GB",
-  "terabytes": "TB",
-  
-  "sectionpermissions": "",
-  "permissionRequired": "Permission Required",
-  "permissionDenied": "Permission Denied",
-  "permissionCamera": "Camera permission is required",
-  "permissionStorage": "Storage permission is required",
-  "permissionNotification": "Notification permission is required",
-  "permissionLocation": "Location permission is required",
-  "grantPermission": "Grant Permission",
-  "openSettings": "Open Settings",
-  
-  "sectionsettings": "",
-  "deviceInfo": "Device Information",
-  "deviceId": "Device ID",
-  "platform": "Platform",
-  "unknown": "Unknown",
-  "logoutConfirmation": "Log out of the current device",
-  "appTheme": "App Theme",
-  "defaultTheme": "Default",
-  "notificationSettings": "Notification Settings",
-  "enabled": "Enabled",
-  "aboutApp": "About App",
-  "version": "Version 1.0.0",
-  "comingSoon": "Coming Soon",
-  "featureComingSoon": "This feature is coming soon, please stay tuned!",
-  "logoutConfirmTitle": "Logout",
-  "logoutConfirmMessage": "Are you sure you want to logout from this device?",
-  
-  "sectionmemory": "",
-  "memories": "Memories",
-  "memoriesCount": "Saved {count} memories",
-  "@memoriesCount": {
+  "justActive": "Just active",
+  "onlyMyself": "Only myself",
+  "devicesCount": "{count} devices",
+  "@devicesCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "searchMemories": "Search memories, tags...",
-  "noMemories": "No memories yet",
-  "noMemoriesDesc": "Start creating your first memory",
-  "createMemory": "Create Memory",
-  "editMemory": "Edit Memory",
-  "deleteMemory": "Delete Memory",
-  "viewMemory": "View Memory",
-  "quickAdd": "Quick Add",
-  "addMemoryFromText": "Add from Text",
-  "addMemoryFromImage": "Add from Image",
-  "addMemoryFromFile": "Add from File",
-  
-  "sectionjoingroup": "",
-  "joinGroup": "Join Group",
-  "scanMode": "Scan Mode",
-  "inputMode": "Input Mode",
-  "cameraInitFailed": "Camera initialization failed",
-  "cameraNotAvailable": "Camera not available, switched to manual input mode",
-  "desktopCameraTip": "Desktop mode recommends manual input, camera scanning may be unstable",
-  "joinGroupSuccess": "Successfully joined group!",
-  "joinGroupFailed": "Failed to join group",
+  "sendToMyself": "Send to myself",
+  "clickToStartGroupChat": "Click to start group chat",
+  "noConversations": "No conversations",
+  "joinGroupToStartChat": "Join a group to start chatting",
+  "pleaseSelectGroup": "Please select a group",
+  "clickGroupSelectorHint": "Click the group selector at the top to select or create a group",
   "enterGroupCode": "Enter Group Code",
-  "groupCodePlaceholder": "Enter 8-digit group code",
-  "invalidCode": "Invalid code",
-  "codeRequired": "Code is required",
-  "processing": "Processing...",
-  "switchToScan": "Switch to Scan Mode",
-  "switchToInput": "Switch to Input Mode",
   "cameraUnavailable": "Camera unavailable",
-  "checkCameraPermissions": "Please check camera permission settings",
-  "desktopInputModeRecommended": "Desktop mode recommends using the \"Enter Invite Code\" mode below",
+  "desktopInputModeRecommended": "Desktop input mode is recommended",
+  "checkCameraPermissions": "Check camera permissions",
+  "switchToInput": "Switch to Input",
   "cameraStartupFailed": "Camera startup failed",
   "startingCamera": "Starting camera...",
-  "placeQRInScanFrame": "Place QR code within the scan frame",
-  "switchToInputModeOrCheckPermissions": "Please switch to input mode or check camera permissions",
-  "enterInviteCodeHint": "Please enter group invite code (4-20 digits)",
-  "inviteCodePlaceholder": "Invite code",
-  "clickToJoinGroup": "Click to join group",
-  "selectGroup": "Select Group",
-  "createGroupFailed": "Failed to create group",
-  "pleaseEnterGroupName": "Please enter group name",
-  "groupCreatedSuccessfully": "Group \"{name}\" created successfully",
-  
-  "sectionmemory": "",
-  "save": "Save",
-  "title": "Title",
-  "content": "Content",
-  "writeYourThoughts": "Write your thoughts...",
-  "enterNoteTitle": "Enter note title",
-  "websiteAppName": "Website/App Name",
-  "websiteAppNameHint": "e.g.: WeChat, Taobao",
-  "websiteAddress": "Website Address",
-  "websiteAddressHint": "https://...",
-  "usernameEmail": "Username/Email",
-  "loginAccount": "Login account",
-  "password": "Password",
-  "loginPassword": "Login password",
-  
-  "sectionchat": "",
-  "sendFailed": "Send failed",
-  "fileTooLarge": "File too large to send",
-  "fileSize": "File size",
-  "maxAllowed": "Maximum allowed",
-  "selectFileFailed": "Select file failed",
-  "pasteFailed": "Paste failed",
-  "fileProcessingFailed": "File processing failed",
-  "sharedTextMessages": "Shared {count} text messages",
-  "sharedFiles": "Shared {count} files",
-  "batchShareFailed": "Batch share failed",
-  "copiedMessages": "Copied {count} messages to clipboard",
-  "messagesAddedToInput": "{count} message contents added to input box",
-  "favoriteMessages": "Favorited {count}/{total} messages",
-  "recalledMessages": "Recalled {count} messages",
-  "batchRecallFailed": "Batch recall failed",
-  "deletedMessages": "Deleted {count} messages",
-  "batchDeleteFailed": "Batch delete failed",
-  "debugInfo": "Debug Info",
-  "permanentStorageDir": "Permanent Storage Directory",
-  "storageUsage": "Storage Usage",
-  "chatData": "Chat Data",
-  "memoryData": "Memory Data",
-  "userData": "User Data",
-  "fileCache": "File Cache",
-  "total": "Total",
-  "fileCacheStats": "File Cache Stats",
-  "totalFiles": "Total Files",
-  "validFiles": "Valid Files",
-  "invalidFiles": "Invalid Files",
-  "deduplicationDiagnostics": "Deduplication Diagnostics",
-  "processedMessageIds": "Processed Message IDs",
-  "timestampRecords": "Timestamp Records",
-  "uiMessages": "UI Messages",
-  "websocketConnection": "WebSocket Connection",
-  "connected": "Connected",
-  "disconnected": "Disconnected",
-  "lastMessageReceived": "Last Message Received",
-  "minutesAgo": "{minutes} minutes ago",
-  "forceClearDedupRecords": "Force clear dedup records and restart WebSocket listening",
-  "clearDedupRecords": "Clear Dedup Records",
-  "close": "Close",
-  "getDebugInfoFailed": "Failed to get debug info",
-  "copiedToClipboard": "Copied to clipboard",
-  "textCopiedToClipboard": "Text copied to clipboard",
-  "canDragSelectText": "You can directly drag to select text content",
-  "allContentCopied": "All content copied to clipboard",
-  "messageRecalled": "Message recalled",
-  "recallFailed": "Recall failed",
-  "messageDeleted": "Message deleted",
-  "deleteFailed": "Delete failed",
-  "messageAddedToInput": "Message content added to input box",
-  "addedToFavorites": "Added to favorites",
-  "favoriteFailed": "Favorite failed",
-  "removedFromFavorites": "Removed from favorites",
-  "unfavoriteFailed": "Unfavorite failed",
-  "deleteMessage": "Delete Message",
-  "confirmDeleteMessage": "Are you sure you want to delete this message?",
-  "jumpedToOriginalMessage": "Jumped to original message",
-  "originalMessageNotExists": "Original message does not exist or has been deleted",
-  "fileInfoIncomplete": "File info incomplete",
-  "featureOnlyMobile": "This feature is only available on mobile",
-  "fileNotExistsDownloading": "File does not exist, downloading...",
-  "fileDownloadFailedCannotSave": "File download failed, cannot save",
-  
-  "sectionnetworkdebug": "",
-  "networkDiagnosticTool": "Network Diagnostic Tool",
-  "clearLogs": "Clear Logs",
-  "copyLogs": "Copy Logs",
-  "connectionStatus": "Connection Status",
-  "connectionDetails": "Connection Details",
-  "networkTest": "Network Test",
-  "testWebSocket": "Test WebSocket",
-  "forceReconnect": "Force Reconnect",
-  "pingTest": "Ping Test",
-  "diagnosticLogs": "Diagnostic Logs",
-  "recordsCount": "{count} records",
-  "@recordsCount": {
+  "switchToInputModeOrCheckPermissions": "Switch to input mode or check camera permissions",
+  "placeQRInScanFrame": "Place QR code in the scan frame",
+  "enterInviteCodeHint": "Enter invite code",
+  "inviteCodePlaceholder": "Invite Code",
+  "groupLeaveSuccess": "Successfully left the group",
+  "groupLeaveFailed": "Failed to leave the group",
+  "deviceRemoved": "Device removed",
+  "groupManagement": "Group Management",
+  "groupMembers": "Group Members",
+  "createdOn": "Created on {date}",
+  "@createdOn": {
     "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "startingNetworkDiagnostic": "Starting network diagnostic test...",
-  "testingBasicConnectivity": "Testing basic connectivity...",
-  "testingDnsResolution": "Testing DNS resolution...",
-  "testingServerConnectivity": "Testing server connectivity...",
-  "networkDiagnosticComplete": "Network diagnostic test complete",
-  "testingConnection": "Testing connection",
-  "connectionSuccessful": "Connection successful",
-  "connectionFailed": "Connection Failed",
-  "connectionStatusChanged": "Connection status changed",
-  "networkStatusChanged": "Network status changed",
-  "errorOccurred": "Error occurred",
-  "messageReceived": "Message received",
-  
-  "sectionsplash": "",
-  "appSlogan": "Cross-device file sharing and sync",
-  
-  "sectionfiles": "",
-  "myFiles": "My Files",
-  "filesFeatureComingSoon": "File feature coming soon",
-  "stayTuned": "Stay tuned",
-  
-  "sectiondevicegroups": "",
-  "noDeviceGroups": "No device groups yet",
-  "scanQRToJoin": "Use other devices to scan QR code to join",
-  "myDeviceGroups": "My Device Groups",
-  "unnamedGroup": "Unnamed Group",
-  "deviceCount": "{count} devices",
-  "@deviceCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "youAreOwner": "You are the owner",
-  "member": "Member",
-  "createdOn": "Created on",
-  "unknownDate": "Unknown",
-  
-  "sectiondebug": "",
-  "batchDelete": "Batch Delete",
-  "confirmBatchDelete": "Are you sure you want to delete the selected {count} messages? This action cannot be undone.",
-  "@confirmBatchDelete": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "batchDeleteSuccess": "Deleted {count} messages",
-  "@batchDeleteSuccess": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "batchDeleteFailedWithError": "Batch delete failed: {error}",
-  "@batchDeleteFailedWithError": {
-    "placeholders": {
-      "error": {
+      "date": {
         "type": "String"
       }
     }
   },
-  "deleteMessageTitle": "Delete Message",
-  "confirmDeleteSingleMessage": "Are you sure you want to delete this message? This action cannot be undone.",
-  "deleteFailedWithError": "Delete failed: {error}",
+  "generateQRCode": "Generate QR Code",
+  "noDevices": "No devices",
+  "myself": "Myself",
+  "deviceConnected": "Device connected",
+  "subscriptionManagement": "Subscription Management",
+  "currentSubscription": "Current Subscription",
+  "supports": "Supports",
+  "appName": "App Name",
+  "logoutFromCurrentDevice": "Logout from current device",
+  "downloadFailed": "Download failed",
+  "messageRecalled": "Message recalled",
+  "messageDeleted": "Message deleted",
+  "deleteFailedWithError": "Delete failed with error: {error}",
   "@deleteFailedWithError": {
     "placeholders": {
       "error": {
@@ -650,1189 +663,33 @@
       }
     }
   },
-  "recallFailedWithError": "Recall failed: {error}",
-  "@recallFailedWithError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "startConversation": "Start conversation",
-  "sendMessageOrFileToStart": "Send a message or file to start chatting",
-  "debugInfoTitle": "Debug Info",
-  "permanentStorageDirectory": "Permanent Storage Directory:",
-  "memoryDeleteTitle": "Delete Memory",
-  "confirmDeleteMemory": "Are you sure you want to delete \"{title}\"? This action cannot be undone.",
-  "@confirmDeleteMemory": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
-  "deleteMemorySuccess": "Delete successful",
-  "deleteMemoryFailed": "Delete failed",
-  "memorySavedWithAI": "Memory saved, AI generated title and {count} tags",
-  "@memorySavedWithAI": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "saveFailedWithError": "Save failed: {error}",
-  "@saveFailedWithError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "deleteTooltip": "Delete",
-  
-  "sectionsnackbar": "",
-  "sharedTextMessagesCount": "Shared {count} text messages",
-  "@sharedTextMessagesCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "sharedFilesAndText": "Shared {fileCount} files{textPart}",
-  "@sharedFilesAndText": {
-    "placeholders": {
-      "fileCount": {
-        "type": "int"
-      },
-      "textPart": {
-        "type": "String"
-      }
-    }
-  },
-  "andTextMessages": " and {count} text messages",
-  "@andTextMessages": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "batchShareFailedWithError": "Batch share failed: {error}",
-  "@batchShareFailedWithError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "copiedMessagesToClipboard": "Copied {count} messages to clipboard",
-  "@copiedMessagesToClipboard": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "messagesAddedToInputBox": "{count} message contents added to input box",
-  "@messagesAddedToInputBox": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "favoritedMessagesCount": "Favorited {successCount}/{totalCount} messages",
-  "@favoritedMessagesCount": {
-    "placeholders": {
-      "successCount": {
-        "type": "int"
-      },
-      "totalCount": {
-        "type": "int"
-      }
-    }
-  },
-  "recalledMessagesCount": "Recalled {count} messages",
-  "@recalledMessagesCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "batchRecallFailedWithError": "Batch recall failed: {error}",
-  "@batchRecallFailedWithError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "forceClearedDedupRecords": "Force cleared dedup records and restarted WebSocket listening",
-  "getDebugInfoFailedWithError": "Failed to get debug info: {error}",
-  "@getDebugInfoFailedWithError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "textCanBeDragSelected": "You can directly drag to select text content",
-  "allContentCopiedToClipboard": "All content copied to clipboard",
-  "messageContentAddedToInput": "Message content added to input box",
-  "addedToFavorites": "Added to favorites",
-  "favoriteFailed": "Favorite failed",
-  "removedFromFavorites": "Removed from favorites",
-  "unfavoriteFailed": "Unfavorite failed",
-  "fileInfoIncomplete": "File info incomplete",
-  "featureOnlyAvailableOnMobile": "This feature is only available on mobile",
-  "fileNotExistsDownloading": "File does not exist, downloading...",
-  "fileDownloadFailedCannotSave": "File download failed, cannot save",
-  "fileDownloadFailedWithError": "File download failed: {error}",
-  "@fileDownloadFailedWithError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "fileUrlNotExistsCannotDownload": "File URL does not exist, cannot download",
-  "fileLocationOpened": "File location opened",
-  "filePathCopiedToClipboard": "File path copied to clipboard",
-  "fileLinkCopiedToClipboard": "File link copied to clipboard",
-  
-  "sectionmisc": "",
-  
-  "sectionauth": "",
-  "loggingOut": "Logging out...",
-  "logoutSuccessMessage": "Successfully logged out",
-  "logoutError": "Error occurred during logout",
-  "logoutFailedWithError": "Logout failed: {error}",
-  "@logoutFailedWithError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "loginStatusInvalid": "Login status has expired",
-  "logoutFailedTitle": "Logout Failed",
-  "logoutFailedContent": "Logout failed, you can choose to force logout or retry.",
-  "forceLogout": "Force Logout",
-  
-  "sectiongroup": "",
-  "groupManagement": "Group Management",
-  "deviceCount": "{count} devices",
-  "@deviceCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "createNewGroup": "Create New Group",
-  "groupName": "Group Name",
-  "groupNameHint": "Please enter group name",
-  "groupDescription": "Group Description (Optional)",
-  "groupDescriptionHint": "Please enter group description",
-  "pleaseEnterGroupName": "Please enter group name",
-  "groupCreatedSuccess": "Group \"{name}\" created successfully",
-  "@groupCreatedSuccess": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "pleaseSelectGroup": "Please select a group first",
-  "create": "Create",
-  
-  "sectionconnection": "",
-  "connected": "Connected",
-  "connecting": "Connecting",
-  "disconnected": "Disconnected",
-  "onlineStatus": "{online}/{total} online",
-  "@onlineStatus": {
-    "placeholders": {
-      "online": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "connectionStatus": "Connection Status",
-  "networkStatus": "Network Status",
-  "reconnecting": "Reconnecting",
-  "connectionFailed": "Connection Failed",
-  "networkNormal": "Network Normal",
-  "networkLimited": "Network Limited",
-  "networkUnavailable": "Network Unavailable",
-  "checking": "Checking",
-  
-  "sectionchat": "",
-  "sendFileFailed": "Failed to send file",
-  "retry": "Retry",
-  "noFilesToSend": "No files to send",
-  "batchRecall": "Batch Recall",
-  "recall": "Recall",
-  "batchDelete": "Batch Delete",
-  "storageUsage": "Storage Usage:",
-  "fileCacheStats": "File Cache Stats:",
-  "deduplicationDiagnostics": "Deduplication Diagnostics:",
-  "clearDeduplicationRecords": "Clear Deduplication Records",
-  "close": "Close",
-  "upload": "Upload",
-  "download": "Download",
-  "cancelUpload": "Cancel Upload",
-  "cancelDownload": "Cancel Download",
-  "confirmCancelTransfer": "Are you sure you want to cancel {action} this file?",
-  "@confirmCancelTransfer": {
-    "placeholders": {
-      "action": {
-        "type": "String"
-      }
-    }
-  },
-  "continueTransfer": "Continue Transfer",
-  "confirmCancel": "Confirm Cancel",
-  "transferCancelled": "{action} cancelled",
-  "@transferCancelled": {
-    "placeholders": {
-      "action": {
-        "type": "String"
-      }
-    }
-  },
-  "preparingDownload": "Preparing download",
-  "fileNotExists": "File does not exist",
-  "file": "File",
-  "fileDownloadFailed": "File download failed",
-  "fileNotExistsOrExpired": "File does not exist or has expired",
-  "noPermissionToDownload": "No permission to download this file",
-  "imageFile": "Image file",
-  "videoFile": "Video file",
-  "documentFile": "Document file",
-  "audioFile": "Audio file",
-  "selectFileType": "Select file type",
-  "selectFileTypeMultiple": "Select file type (multiple files can be sent directly)",
-  "image": "Image",
-  "video": "Video",
-  "document": "Document",
-  "audio": "Audio",
-  "textCopiedToClipboard": "Text copied to clipboard",
-  "canDragToSelectText": "You can drag to select text content",
-  "allContentCopiedToClipboard": "All content copied to clipboard",
-  "recallMessage": "Recall Message",
-  "messageRecalled": "Message recalled",
-  "messageContentAddedToInput": "Message content added to input box",
-  "addedToFavorites": "Added to favorites",
-  "addToFavoritesFailed": "Failed to add to favorites",
-  "removedFromFavorites": "Removed from favorites",
-  "removeFromFavoritesFailed": "Failed to remove from favorites",
-  "jumpedToOriginal": "Jumped to original message",
-  "originalMessageNotExists": "Original message does not exist or has been deleted",
-  "fileInfoIncomplete": "File information incomplete",
-  "featureOnlyMobile": "This feature is only available on mobile",
-  "gallery": "Gallery",
-  "documents": "Documents",
-  "saveFailed": "Save failed",
-  "textShared": "Text shared",
-  "fileNotAvailableAndNoTextToShare": "File not available and no text content to share",
-  "messageRecalledText": "[This message has been recalled]",
-  "cannotOpenFileLocation": "Cannot open file location",
-  "copyFilePathFailed": "Failed to copy file path",
-  "copyFileLinkFailed": "Failed to copy file link",
-  "desktopVideoNoValidSource": "Desktop: No valid video source",
-  "mobileVideoNoValidSource": "Mobile: No valid video source",
-  "desktopVideo": "Desktop video",
-  "networkStatus": "Network Status",
-  "reconnecting": "Reconnecting",
-  "connectionFailed": "Connection Failed",
-  "networkNormal": "Network Normal",
-  "networkLimited": "Network Limited",
-  "networkUnavailable": "Network Unavailable",
-  "checking": "Checking",
-  "sectionchatui": "",
-  "preparingDownload": "Preparing download",
-  "fileNotExists": "File not found",
-  "selectFileType": "Select file type",
-  "selectFileTypeMultiple": "Select file type (multiple files can be sent directly)",
-  "image": "Image",
-  "video": "Video",
-  "document": "Document",
-  "audio": "Audio",
-  "gallery": "Gallery",
-  "documents": "Documents",
-  "saveFailed": "Save failed",
-  "textShared": "Text shared",
-  "messageRecalledText": "[This message has been recalled]",
-  "continuedTransfer": "Continue transfer",
-  "confirmCancel": "Confirm cancel",
-  "imageFile": "Image file",
-  "videoFile": "Video file",
-  "documentFile": "Document file",
-  "audioFile": "Audio file",
-  "file": "File",
-  "sectionchatmessages": "",
-  "batchRecallReason": "Batch recall",
-  "batchDeleteReason": "Batch delete",
-  "cancelUpload": "Cancel Upload",
-  "cancelDownload": "Cancel Download",
-  "confirmCancelUpload": "Are you sure you want to cancel uploading this file?",
-  "confirmCancelDownload": "Are you sure you want to cancel downloading this file?",
-  "uploadCancelled": "Upload cancelled",
-  "downloadCancelled": "Download cancelled",
-  "fileDownloadFailed": "File download failed",
-  "fileNotExistsOrExpired": "File does not exist or has expired",
-  "noPermissionToDownload": "No permission to download this file",
-  "canDragSelectText": "You can directly drag to select text content",
-  "allContentCopied": "All content copied to clipboard",
-  "recallMessage": "Recall message",
-  "messageAddedToInput": "Message content added to input box",
-  "addedToFavorites": "Added to favorites",
-  "favoritesFailed": "Failed to add to favorites",
-  "removedFromFavorites": "Removed from favorites",
-  "unfavoriteFailed": "Failed to remove from favorites",
-  "jumpedToOriginal": "Jumped to original message",
-  "originalMessageNotExists": "Original message does not exist or has been deleted",
-  "fileInfoIncomplete": "File information incomplete",
-  "featureOnlyMobile": "This feature is only available on mobile",
-  "fileUnavailableNoText": "File unavailable and no text content to share",
-  "fileLocationOpened": "File location opened",
-  "cannotOpenFileLocation": "Cannot open file location",
-  "filePathCopied": "File path copied to clipboard",
-  "copyFilePathFailed": "Failed to copy file path",
-  "fileLinkCopied": "File link copied to clipboard",
-  "copyFileLinkFailed": "Failed to copy file link",
-  "sectionmemory": "",
-  "saveButton": "Save",
-  "titleLabel": "Title",
-  "titleHint": "Enter note title",
-  "contentLabel": "Content",
-  "websiteAddress": "Website Address",
-  "loginAccount": "Login Account",
-  "password": "Password",
-  "loginPassword": "Login Password",
-  "note": "Note",
-  "otherInfo": "Other Information",
-  "expenseItem": "Expense Item",
-  "amount": "Amount",
-  "type": "Type",
-  "expense": "Expense",
-  "income": "Income",
-  "category": "Category",
-  "date": "Date",
-  "detailedDescription": "Detailed Description",
-  "scheduleTitle": "Schedule Title",
-  "startTime": "Start Time",
-  "location": "Location",
-  "details": "Details",
-  "advanceReminder": "Advance Reminder",
-  "noReminder": "No Reminder",
-  "task": "Task",
-  "whatToDo": "What to do",
-  "detailedTaskDescription": "Detailed Description",
-  "priority": "Priority",
-  "low": "Low",
-  "medium": "Medium",
-  "high": "High",
-  "websiteOrLinkName": "Website or link name",
-  "linkPurpose": "The purpose or content of this link",
-  "fileDescription": "File description",
-  "fileExplanation": "File explanation",
-  "selectDate": "Select Date",
-  "selectTime": "Select Time",
-  "clickToSelectFile": "Click to select file",
-  "addAccountPassword": "Add Account Password",
-  "recordExpense": "Record Expense",
-  "createSchedule": "Create Schedule",
-  "addTodo": "Add Todo",
-  "saveLink": "Save Link",
-  "saveImage": "Save Image",
-  "saveVideo": "Save Video",
-  "saveDocument": "Save Document",
-  "writeNote": "Write Note",
-  "pleaseSelectFile": "Please select file",
-  "saveSuccess": "Save successful",
-  
-  "sectioninput": "",
-  "inputMessageHintDesktop": "Enter message or drag files...(Enter to send)",
-  "inputMessageHintMobile": "Enter message or drag files...",
-  "addDescriptionText": "Add description text...(Enter to send)",
-  
-  "sectionmenu": "",
-  "sideMenu": "Side Menu",
-  "appSettings": "App Settings",
-  "networkDiagnostics": "Network Diagnostics",
-  "currentDevice": "Current Device",
-  "systemInfo": "System Information",
-  "noGroup": "No Group",
-  "groups": "Groups",
-  "sectionpriority": "",
-  "highPriority": "High Priority",
-  "mediumPriority": "Medium Priority",
-  "lowPriority": "Low Priority",
-  "sectiontime": "",
-  "justNow": "Just now",
-  "minutesAgo": "{minutes} minutes ago",
-  "@minutesAgo": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "sectionaccount": "",
-  "accountInfo": "Account: {username} • Website: {website}",
-  "@accountInfo": {
-    "placeholders": {
-      "username": {
-        "type": "String"
-      },
-      "website": {
-        "type": "String"
-      }
-    }
-  },
-  "sectionforms": "",
-  "websiteAddress": "Website Address",
-  "websiteAddressHint": "https://...",
-  "usernameEmail": "Username/Email",
-  "loginAccountHint": "Login account",
-  "passwordHint": "Login password",
-  "notesLabel": "Notes",
-  "otherInfoHint": "Other information",
-  "expenseItem": "Expense Item",
-  "expenseItemHint": "e.g.: Lunch, Shopping",
-  "amountHint": "0.00",
-  "typeLabel": "Type",
-  "expense": "Expense",
-  "income": "Income",
-  "categoryLabel": "Category",
-  "categoryHint": "e.g.: Food, Transportation",
-  "dateLabel": "Date",
-  "detailsHint": "Detailed description",
-  "scheduleTitle": "Schedule Title",
-  "scheduleTitleHint": "Meeting, appointment, etc.",
-  "startTimeLabel": "Start Time",
-  "endTimeOptional": "End Time (Optional)",
-  "locationLabel": "Location",
-  "locationHint": "Meeting room, restaurant, etc.",
-  "detailsLabel": "Details",
-  "meetingDetailsHint": "Meeting content, notes",
-  "advanceReminder": "Advance Reminder",
-  "noReminder": "No reminder",
-  "minutes5Before": "5 minutes before",
-  "minutes15Before": "15 minutes before",
-  "minutes30Before": "30 minutes before",
-  "hour1Before": "1 hour before",
-  "taskLabel": "Task",
-  "whatToDo": "What to do",
-  "detailedDescription": "Detailed Description",
-  "taskRequirementsHint": "Specific requirements, notes",
-  "priorityLabel": "Priority",
-  "low": "Low",
-  "medium": "Medium",
-  "high": "High",
-  "dueDateOptional": "Due Date (Optional)",
-  "titleLabel": "Title",
-  "websiteLinkName": "Website or link name",
-  "urlLink": "URL Link",
-  "sectionshare": "",
-  "confirmShare": "Confirm Share",
-  "textSent": "Text sent",
-  "fileSent": "File sent",
-  "filesSent": "{count} files sent",
-  "@filesSent": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  
-  "sectionmissing": "",
-  "sendFileFailed": "Send file failed",
-  "noFilesToSend": "No files to send",
-  "batchRecall": "Batch Recall",
-  "recall": "Recall",
-  "batchRecallReason": "Batch recall",
-  "batchDeleteReason": "Batch delete",
-  "clearDeduplicationRecords": "Clear deduplication records",
-  "cancelUpload": "Cancel Upload",
-  "cancelDownload": "Cancel Download",
-  "confirmCancelUpload": "Are you sure you want to cancel uploading this file?",
-  "confirmCancelDownload": "Are you sure you want to cancel downloading this file?",
-  
-  "sectionmemoryforms": "",
-  "websiteAppName": "Website/App Name",
-  "websiteAppNameHint": "e.g.: WeChat, Taobao",
-  "usernameEmailLabel": "Username/Email",
-  "passwordLabel": "Password",
-  "notesLabel": "Notes",
-  "expenseItemLabel": "Expense Item",
-  "expenseItemHint": "e.g.: Lunch, Shopping",
-  "amountLabel": "Amount",
-  "typeLabel": "Type",
-  "expense": "Expense",
-  "income": "Income",
-  "categoryLabel": "Category",
-  "categoryHint": "e.g.: Food, Transportation",
-  "dateLabel": "Date",
-  "notesHint": "Detailed description",
-  "scheduleTitleLabel": "Schedule Title",
-  "scheduleTitleHint": "Meeting, appointment, etc.",
-  "startTimeLabel": "Start Time",
-  "endTimeOptionalLabel": "End Time (Optional)",
-  "locationLabel": "Location",
-  "locationHint": "Meeting room, restaurant, etc.",
-  "detailsLabel": "Details",
-  "meetingDetailsHint": "Meeting content, notes",
-  "advanceReminderLabel": "Advance Reminder",
-  "noReminder": "No reminder",
-  "minutes5Before": "5 minutes before",
-  "minutes15Before": "15 minutes before",
-  "minutes30Before": "30 minutes before",
-  "hour1Before": "1 hour before",
-  "taskLabel": "Task",
-  "whatToDoHint": "What to do",
-  "detailedDescriptionLabel": "Detailed Description",
-  "taskRequirementsHint": "Specific requirements, notes",
-  "priorityLabel": "Priority",
-  "dueDateOptionalLabel": "Due Date (Optional)",
-  "urlLinkLabel": "URL Link",
-  "linkDescriptionLabel": "Description",
-  "linkPurposeHint": "The purpose or content of this link",
-  "fileLabel": "File *",
-  "clickToSelectFile": "Click to select file",
-  "pleaseEnter": "Please enter {field}",
-  "@pleaseEnter": {
-    "placeholders": {
-      "field": {
-        "type": "String"
-      }
-    }
-  },
-  "selectDate": "Select Date",
-  "selectTime": "Select Time",
-  "addAccountPassword": "Add Account Password",
-  "recordExpense": "Record Expense",
-  "createSchedule": "Create Schedule",
-  "addTodo": "Add Todo",
-  "saveLink": "Save Link",
-  "saveImage": "Save Image",
-  "saveVideo": "Save Video",
-  "saveDocument": "Save Document",
-  "completed": "Completed",
-  "addTag": "Add Tag",
-  "addTagLabel": "Add Tag",
-  "enterTagName": "Enter tag name",
-  "aiGenerate": "AI Generate",
-  "generating": "Generating...",
-  "aiGeneratedTags": "AI generated {count} new tags",
-  "@aiGeneratedTags": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "generateTagsFailed": "Generate tags failed: {error}",
-  "@generateTagsFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "updateSuccess": "Update successful",
-  "updateFailed": "Update failed: {error}",
-  "@updateFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "editMemoryType": "Edit {type}",
-  "@editMemoryType": {
-    "placeholders": {
-      "type": {
-        "type": "String"
-      }
-    }
-  },
-  "enterTitle": "Enter title",
-  "enterContent": "Enter content",
-  "tagsLabel": "Tags",
-  "saveButton": "Save",
-  "titleLabel": "Title",
-  "titleHint": "Enter title",
-  "contentLabel": "Content",
-  "writeYourThoughts": "Write your thoughts...",
-  "otherInfoHint": "Other information",
-  "amountHint": "0.00",
-  
-  "sectionshare": "",
-  "processingShareContent": "Processing shared content...",
-  "shareSuccess": "✅ Share successful!",
-  "shareFailed": "❌ Share failed",
-  "downloadedFile": "downloaded_file",
-  "takePhoto": "Take Photo",
-  "selectFromGallery": "Select from Gallery",
-  "copyright": "© 2023 Send To Myself",
-  "settings": "Settings",
-  "subscriptionManagement": "Subscription Management",
-  "currentSubscription": "Current Subscription",
-  "deviceInfo": "Device Information",
-  "deviceName": "Device Name",
-  "deviceType": "Device Type",
-  "unknownDevice": "Unknown Device",
-  "unknownPlatform": "Unknown",
-  "deviceId": "Device ID",
-  "about": "About",
-  "supportedDeviceGroup": "Supports {count} device group",
-  "@supportedDeviceGroup": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "unknown": "Unknown",
-  "shareException": "❌ Share exception",
-  "allContentSentToGroup": "All content has been sent to current group",
-  "pleaseTryAgainLater": "Please try again later",
-  "processingError": "Processing error: {error}",
-  "@processingError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "allFilesSentComplete": "All files sent successfully",
-  "partialFilesSentComplete": "Some files sent successfully",
-  "allFilesSendFailed": "All files failed to send",
-  "fileSentSuccess": "File sent successfully!",
-  "textSharedCount": "Shared {count} text messages",
-  "@textSharedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "sharedFilesAndText": "Shared {fileCount} files and {textCount} text messages",
-  "@sharedFilesAndText": {
-    "placeholders": {
-      "fileCount": {
-        "type": "int"
-      },
-      "textCount": {
-        "type": "int"
-      }
-    }
-  },
-  "batchShareFailed": "Batch share failed: {error}",
-  "@batchShareFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "messageShare": "Send To Myself - Message Share",
-  "fileShared": "File {fileName} has been shared",
-  "@fileShared": {
-    "placeholders": {
-      "fileName": {
-        "type": "String"
-      }
-    }
-  },
-  "fileUnavailableSharedText": "File unavailable, shared text content instead",
-  "fileUnavailableNoText": "File unavailable and no text content to share",
-  
-  "sectionnetwork": "",
-  "resolvingServerDomain": "🔍 Resolving server domain...",
-  "serverDnsSuccess": "✅ Server DNS resolution successful: {address}",
-  "@serverDnsSuccess": {
-    "placeholders": {
-      "address": {
-        "type": "String"
-      }
-    }
-  },
-  "serverDnsFailed": "❌ Server DNS resolution failed: no result",
-  "serverDnsError": "❌ Server DNS resolution failed: {error}",
-  "@serverDnsError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "testingServerConnection": "🔍 Testing server connection...",
-  "serverConnectionSuccess": "✅ Server connection successful",
-  "serverConnectionFailed": "❌ Server connection failed: {error}",
-  "@serverConnectionFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "startingWebSocketTest": "🧪 Starting WebSocket connection test...",
-  "currentConnectionStatus": "📊 Current connection status: {status}",
-  "@currentConnectionStatus": {
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
-  },
-  "sendingTestPing": "📡 Sending test ping...",
-  "webSocketNotConnected": "⚠️ WebSocket not connected, unable to send test message",
-  "executingForceReconnect": "🔄 Executing force reconnect...",
-  "stopPingTest": "⏹️ Stop Ping test",
-  "startPingTest": "🏓 Start Ping test (every 5 seconds)",
-  "sendingPing": "🏓 Sending test ping",
-  "connectionDisconnectedPausePing": "⚠️ Connection disconnected, pausing ping test",
-  "logCleared": "🧹 Log cleared",
-  "logCopiedToClipboard": "Log copied to clipboard",
-  "noResult": "no result",
-  
-  "sectionwidgets": "",
-  "searchMemories": "Search memories...",
-  "memoryCategories": "Memory Categories",
-  "accountInfo": "Account: {username} • Website: {website}",
-  "@accountInfo": {
-    "placeholders": {
-      "username": {
-        "type": "String"
-      },
-      "website": {
-        "type": "String"
-      }
-    }
-  },
-  "highPriority": "High Priority",
-  "mediumPriority": "Medium Priority",
-  "lowPriority": "Low Priority",
-  "justNow": "Just now",
-  "minutesAgo": "{minutes} minutes ago",
-  "@minutesAgo": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "logoutSuccessMessage": "Successfully logged out",
-  "logoutErrorMessage": "Error occurred during logout",
-  "loginStatusExpired": "Login status has expired",
-  "logoutFailedTitle": "Logout Failed",
-  "logoutFailedMessage": "Logout failed, you can choose to force logout or retry.",
-  "retry": "Retry",
-  "forceLogout": "Force Logout",
-  
-  "sendFileFailed": "Send file failed",
-  "noFilesToSend": "No files to send",
-  "batchRecall": "Batch Recall",
-  "recall": "Recall",
-  "batchRecallReason": "Batch recall",
-  "batchDeleteReason": "Batch delete",
-  "preparingToSendFiles": "Preparing to send files...",
-  "sendingFileCount": "Sending file {current}...",
-  "@sendingFileCount": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      }
-    }
-  },
-  "fileNotExists": "File {index} does not exist",
-  "@fileNotExists": {
-    "placeholders": {
-      "index": {
-        "type": "int"
-      }
-    }
-  },
-  "sendingFileProgress": "Sending file {current} ({sizeMB}MB)",
-  "@sendingFileProgress": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "sizeMB": {
-        "type": "String"
-      }
-    }
-  },
-  "retryingSendFile": "Retrying to send file {current}",
-  "@retryingSendFile": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      }
-    }
-  },
-  "fileSendSuccess": "✅ File {current} sent successfully",
-  "@fileSendSuccess": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      }
-    }
-  },
-  "filesCompleted": "Completed {success}/{total} files",
-  "@filesCompleted": {
-    "placeholders": {
-      "success": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "waitingForServerProcessing": "Waiting for server processing...",
-  "ensureFileFullyUploaded": "Ensuring file is fully uploaded",
-  "fileSendFailed": "❌ File {current} failed to send",
-  "@fileSendFailed": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      }
-    }
-  },
-  "maxRetriesReached": "{fileName} failed after {maxRetries} retries",
-  "@maxRetriesReached": {
-    "placeholders": {
-      "fileName": {
-        "type": "String"
-      },
-      "maxRetries": {
-        "type": "int"
-      }
-    }
-  },
-  "fileSendException": "❌ File {current} send exception",
-  "@fileSendException": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      }
-    }
-  },
-  "sendErrorMessage": "{fileName} error during send: {error}",
-  "@sendErrorMessage": {
-    "placeholders": {
-      "fileName": {
-        "type": "String"
-      },
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "fileDataIncomplete": "❌ File {current} data exception",
-  "@fileDataIncomplete": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      }
-    }
-  },
-  "fileInfoIncompleteMessage": "File information incomplete",
-  "allFilesSentToGroup": "Sent {count} files to current group",
-  "@allFilesSentToGroup": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "successCountFiles": "Success: {success}/{total} files",
-  "@successCountFiles": {
-    "placeholders": {
-      "success": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "noFilesToSendError": "❌ No files to send",
-  "shareDataEmpty": "Share data is empty",
-  "sendingFile": "Sending file...",
-  "fileUploadFailed": "{fileName} upload failed",
-  "@fileUploadFailed": {
-    "placeholders": {
-      "fileName": {
-        "type": "String"
-      }
-    }
-  },
-  "fileSentToGroup": "{fileName} sent to group",
-  "@fileSentToGroup": {
-    "placeholders": {
-      "fileName": {
-        "type": "String"
-      }
-    }
-  },
-  "unsupportedShareType": "❌ Unsupported share type",
-  "cannotHandleContentType": "Cannot handle this content type",
-  "textSendSuccess": "✅ Text sent successfully!",
-  "contentSentToGroup": "Content sent to group",
-  "textSendFailed": "❌ Text send failed",
-  "pleaseTryAgainLater": "Please try again later",
-  "unknownFileName": "Unknown file name",
-  "filePathInvalid": "{fileName} invalid file path",
-  "@filePathInvalid": {
-    "placeholders": {
-      "fileName": {
-        "type": "String"
-      }
-    }
-  },
-  "retryAttempt": "Retry {retry} - {fileName}",
-  "@retryAttempt": {
-    "placeholders": {
-      "retry": {
-        "type": "int"
-      },
-      "fileName": {
-        "type": "String"
-      }
-    }
-  },
-  "monthlyPlan": "Monthly",
-  "yearlyPlan": "Yearly",
-  "pricePerMonth": "{currencySymbol}{price}/month",
-  "@pricePerMonth": {
-    "placeholders": {
-      "currencySymbol": {
-        "type": "String"
-      },
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "pricePerYear": "{currencySymbol}{price}/year",
-  "@pricePerYear": {
-    "placeholders": {
-      "currencySymbol": {
-        "type": "String"
-      },
-      "price": {
-        "type": "String"
-      }
-    }
-  },
-  "freePlan": "Free",
-  "freePlanDescription": "For personal use",
-  "basicPlan": "Basic",
-  "basicPlanDescription": "For small teams",
-  "proPlan": "Pro",
-  "proPlanDescription": "For teams",
-  "enterprisePlan": "Enterprise",
-  "enterprisePlanDescription": "For large enterprises",
-  "feature2DeviceGroup": "2 device groups",
-  "featureBasicFileTransfer": "Basic file transfer",
-  "featureTextMessage": "Text messages",
-  "featureImageTransfer": "Image transfer",
-  "feature5DeviceGroup": "5 device groups",
-  "featureUnlimitedFileTransfer": "Unlimited file transfer",
-  "featureVideoTransfer": "Video transfer",
-  "featureMemoryFunction": "Memory function",
-  "featurePrioritySupport": "Priority support",
-  "feature10DeviceGroup": "10 device groups",
-  "featureAdvancedMemory": "Advanced memory",
-  "featureDataSyncBackup": "Data sync & backup",
-  "featureDedicatedSupport": "Dedicated support",
-  "featureTeamManagement": "Team management",
-  "featureUnlimitedDeviceGroup": "Unlimited device groups",
-  "featureAdvancedAnalytics": "Advanced analytics",
-  "featureCustomIntegration": "Custom integration",
-  "subscriptionPricingTitle": "Subscription Pricing",
-  "subscriptionPricingSubtitle": "Choose the plan that's right for you",
-  "popularPlan": "Popular",
-  "mostPopular": "Most Popular",
-  "recommended": "Recommended",
-  "yearlyDiscount": "Yearly discount",
-  "savePercentage": "Save {percentage}%",
-  "@savePercentage": {
-    "placeholders": {
-      "percentage": {
-        "type": "int"
-      }
-    }
-  },
-  "priceVariesByRegion": "Subscription prices may vary by region",
-  "pricingNote": "Prices are automatically adjusted for your region",
-  "currencyDisclaimer": "Prices shown in local currency",
-  "subscribeTo": "Subscribe to",
-  "subscriptionStatus": "Subscription Status",
-  "currentPlan": "Current Plan",
-  "upgradeToUnlock": "Upgrade to unlock more features",
-  "manageSubscription": "Manage Subscription",
-  "restorePurchases": "Restore Purchases",
-  "subscriptionTerms": "By subscribing, you agree to our Terms of Service and Privacy Policy",
-  "purchaseSuccess": "Purchase successful!",
-  "purchaseFailed": "Purchase failed",
-  "purchaseRestored": "Purchase restored",
-  "noSubscriptionFound": "No subscription found",
-  "subscriptionExpired": "Subscription expired",
-  "subscriptionActive": "Subscription active",
-  "subscriptionCancelled": "Subscription cancelled",
-  "subscriptionPending": "Subscription pending",
-  "deviceLimitReached": "Device limit reached",
-  "upgradeRequired": "Upgrade required",
-  "upgradeToAddMore": "Upgrade to add more devices",
-  "freeTrialDaysLeft": "{days} days left in free trial",
-  "@freeTrialDaysLeft": {
-    "placeholders": {
-      "days": {
-        "type": "int"
-      }
-    }
-  },
-  
-  "sectionscanqr": "",
-  "scanDeviceJoinOtherDevices": "Let other devices scan to join",
-  "groupPrefix": "Group: ",
-  "joinCode": "Join Code",
-  "qrCodeGenerationFailed": "QR code generation failed",
-  "otherDevicesCanScanQRDescription": "Other devices can scan this QR code or manually enter the join code to join your device group",
-  "cameraUnavailableSwitchedToInput": "Camera unavailable, switched to manual input mode",
-  "desktopCameraUnstableTip": "Desktop camera scanning may be unstable, manual input mode is recommended",
-  "joinGroupSuccessExclamation": "Successfully joined group!",
-  "joinGroupFailedGeneric": "Failed to join group",
-  "pleaseEnterInviteCode": "Please enter invite code",
-  "inviteCodeLengthError": "Invite code must be 4-20 characters long",
-  "operationFailed": "Operation failed: {error}",
-  "@operationFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "generating": "Generating...",
-  "generateDeviceJoinCode": "Generate device join code",
-  "scanQRToJoinDeviceGroup": "Scan QR code to join this device group",
-  "subscriptionManagement": "Subscription Management",
-  "currentSubscription": "Current Subscription",
-  "supportXDeviceGroups": "Supports {count} device groups",
-  "@supportXDeviceGroups": {
-    "placeholders": {
-      "count": {
-        "type": "String"
-      }
-    }
-  },
-  
-  "versionNumber": "Version",
-  "expired": "Expired",
-  "justActive": "Just active",
-  "expiresInMinutes": "Expires in {minutes} minutes",
-  "@expiresInMinutes": {
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "expiresInHoursAndMinutes": "Expires in {hours}h {minutes}m",
-  "@expiresInHoursAndMinutes": {
-    "placeholders": {
-      "hours": {
-        "type": "int"
-      },
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "monday": "Monday",
-  "tuesday": "Tuesday", 
-  "wednesday": "Wednesday",
-  "thursday": "Thursday",
-  "friday": "Friday",
-  "saturday": "Saturday",
-  "sunday": "Sunday",
-  "monthDay": "{month}/{day}",
-  "@monthDay": {
-    "placeholders": {
-      "month": {
-        "type": "int"
-      },
-      "day": {
-        "type": "int"
-      }
-    }
-  },
-  "yearMonthDay": "{month}/{day}/{year}",
-  "@yearMonthDay": {
-    "placeholders": {
-      "month": {
-        "type": "int"
-      },
-      "day": {
-        "type": "int"
-      },
-      "year": {
-        "type": "int"
-      }
-    }
-  },
-  
-  "deviceInformation": "Device Information",
-  "deviceName": "Device Name",
-  "deviceType": "Device Type", 
-  "deviceId": "Device ID",
-  "applicationName": "Application Name",
-  "applicationDescription": "Application Description",
-  "unknown": "Unknown",
-  "unknownDevice": "Unknown Device",
-  "appDescriptionText": "Cross-device file sharing and message memory assistant",
-  "logoutCurrentDeviceDescription": "Log out of current device",
-  "confirmLogoutTitle": "Confirm Logout",
-  "confirmLogoutContent": "Are you sure you want to log out of the current device?",
-  "confirmLogoutContent": "Are you sure you want to log out of the current device?",
-  "cancel": "Cancel",
-  
-  "sectionfilter": "",
-  "messageFilter": "Message Filter",
-  "searchMessagesOrFiles": "Search messages or files...",
-  "messageType": "Message Type",
-  "sender": "Sender",
-  "dateRange": "Date Range",
-  "startDate": "Start Date",
-  "endDate": "End Date",
-  "clearDate": "Clear Date",
-  "clearAll": "Clear All",
-  "filterActive": "Filter Active",
-  "noFilterConditions": "No Filter Conditions",
-  "all": "All",
-  "text": "Text",
-  "image": "Image",
-  "video": "Video",
-  "file": "File",
-  "document": "Document",
-  "sentByMe": "Sent by Me",
-  "sentByOthers": "Sent by Others",
-  
-  "deviceOs": "Operating System",
-  "deviceVersion": "Version"
-} 
+  "groupMemberLimitReached": "Group member limit reached",
+  "upgradeToSupportMoreDevices": "Upgrade to support more devices",
+  "upgrade": "Upgrade",
+  "upgradeSubscription": "Upgrade Subscription",
+  "viewSubscription": "View Subscription",
+  "youHaveBeenRemovedFromGroup": "You have been removed from the group",
+  "group": "Group",
+  "hasBeenDeleted": "has been deleted",
+  "loadGroupsFailed": "Failed to load groups",
+  "pleaseSelectAGroup": "Please select a group",
+  "generateInviteCodeFailed": "Failed to generate invite code",
+  "joinGroupFailed": "Failed to join group",
+  "currentCanAdd": "You can add",
+  "devicesUnit": "devices",
+  "upgradeToBasicVersionCanSupport": "Upgrade to Basic version to support",
+  "fiveDevices": "5 devices",
+  "upgradeToProfessionalVersionCanSupport": "Upgrade to Professional version to support",
+  "tenDevices": "10 devices",
+  "reachedMaxDeviceCount": "Reached max device count",
+  "getGroupDetailsFailed": "Failed to get group details",
+  "getGroupMembersFailed": "Failed to get group members",
+  "renameGroupFailed": "Failed to rename group",
+  "leaveGroupFailed": "Failed to leave group",
+  "removeDeviceFailed": "Failed to remove device",
+  "renameDeviceFailed": "Failed to rename device",
+  "groupMemberLimitReachedUpgrade": "Group member limit reached. Upgrade subscription to support more devices.",
+  "upgradeToUnlockMoreFeatures": "Upgrade subscription to unlock more features:",
+  "basicVersion5Devices": "• Basic version: supports 5 devices",
+  "proVersion10Devices": "• Pro version: supports 10 devices"
+}

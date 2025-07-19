@@ -53,9 +53,9 @@ class SplashScreen extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             // 应用名称
-            const Text(
-              'Send To Myself',
-              style: TextStyle(
+            Text(
+              LocalizationHelper.of(context).appTitle,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 32,
                 fontWeight: FontWeight.bold,

@@ -130,6 +130,29 @@ class AppLocalizationsIt extends AppLocalizations {
   String get version => 'Version';
 
   @override
+  String monthDay(int month, int day) {
+    return '$month/$day';
+  }
+
+  @override
+  String expiresInHoursAndMinutes(int hours, int minutes) {
+    return 'Expires in ${hours}h ${minutes}m';
+  }
+
+  @override
+  String expiresInMinutes(int minutes) {
+    return 'Expires in ${minutes}m';
+  }
+
+  @override
+  String get expired => 'Expired';
+
+  @override
+  String yearMonthDay(int year, int month, int day) {
+    return '$year/$month/$day';
+  }
+
+  @override
   String get update => 'Update';
 
   @override
@@ -202,575 +225,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get deviceRegistration => 'Device Registration';
 
   @override
-  String get deviceRegistrationSuccess => 'Device registered successfully';
-
-  @override
-  String get deviceRegistrationFailed => 'Device registration failed';
-
-  @override
-  String get loginSuccess => 'Login successful';
-
-  @override
-  String get loginFailed => 'Login failed';
-
-  @override
-  String get logoutSuccess => 'Logout successful';
-
-  @override
-  String get logoutConfirm => 'Are you sure you want to logout?';
-
-  @override
-  String get navigationSection => '';
-
-  @override
-  String get home => 'Home';
-
-  @override
-  String get messages => 'Messages';
-
-  @override
-  String get files => 'Files';
-
-  @override
-  String get memories => 'Memories';
-
-  @override
-  String get groups => 'Groups';
-
-  @override
-  String get sectionmessages => '';
-
-  @override
-  String get newMessage => 'New Message';
-
-  @override
-  String get onlyMyself => 'Only myself';
-
-  @override
-  String devicesCount(int count) {
-    return '$count devices';
-  }
-
-  @override
-  String get clickToStartGroupChat => 'Click to start group chat';
-
-  @override
-  String get sendToMyself => 'Send to myself';
-
-  @override
-  String get clickToStartChat => 'Click to start chat';
-
-  @override
-  String get unknownDevice => 'Unknown Device';
-
-  @override
-  String get unknownType => 'Unknown type';
-
-  @override
-  String get myself => 'Me';
-
-  @override
-  String get noConversations => 'No conversations';
-
-  @override
-  String get joinGroupToStartChat => 'Join a device group to start chatting';
-
-  @override
-  String get pleaseSelectGroup => 'Please select a group first';
-
-  @override
-  String get clickGroupSelectorHint =>
-      'Click the group selector at the top to select or create a group';
-
-  @override
-  String get sendMessage => 'Send Message';
-
-  @override
-  String get messageHint => 'Type your message...';
-
-  @override
-  String get noMessages => 'No messages yet';
-
-  @override
-  String get messagesSent => 'Messages sent';
-
-  @override
-  String get messagesReceived => 'Messages received';
-
-  @override
-  String get messageDelivered => 'Delivered';
-
-  @override
-  String get messageFailed => 'Failed';
-
-  @override
-  String get messagePending => 'Pending';
-
-  @override
-  String get copyMessage => 'Copy Message';
-
-  @override
-  String get deleteMessage => 'Delete Message';
-
-  @override
-  String get replyMessage => 'Reply';
-
-  @override
-  String get forwardMessage => 'Forward';
-
-  @override
-  String get selectMessages => 'Select Messages';
-
-  @override
-  String selectedMessages(int count) {
-    return '$count selected';
-  }
-
-  @override
-  String get deleteSelectedMessages => 'Delete Selected Messages';
-
-  @override
-  String get deleteMessageConfirm =>
-      'Are you sure you want to delete this message?';
-
-  @override
-  String deleteMessagesConfirm(int count) {
-    return 'Are you sure you want to delete $count messages?';
-  }
-
-  @override
-  String get sectionfiles => '';
-
-  @override
-  String get selectFile => 'Select File';
-
-  @override
-  String get selectFiles => 'Select Files';
-
-  @override
-  String get selectImage => 'Select Image';
-
-  @override
-  String get selectVideo => 'Select Video';
-
-  @override
-  String get selectDocument => 'Select Document';
-
-  @override
-  String get noFiles => 'No files';
-
-  @override
-  String get fileName => 'File Name';
-
-  @override
-  String get fileSize => 'File Size';
-
-  @override
-  String get fileType => 'File Type';
-
-  @override
-  String get fileDate => 'Date';
-
-  @override
-  String get uploadFile => 'Upload File';
-
-  @override
-  String get downloadFile => 'Download File';
-
-  @override
-  String get openFile => 'Open File';
-
-  @override
-  String get shareFile => 'Share File';
-
-  @override
-  String get deleteFile => 'Delete File';
-
-  @override
-  String uploadProgress(int progress) {
-    return 'Uploading... $progress%';
-  }
-
-  @override
-  String downloadProgress(int progress) {
-    return 'Downloading... $progress%';
-  }
-
-  @override
-  String get uploadSuccess => 'Upload successful';
-
-  @override
-  String get downloadSuccess => 'Download successful';
-
-  @override
-  String get uploadFailed => 'Upload failed';
-
-  @override
-  String get downloadFailed => 'Download failed';
-
-  @override
-  String get fileTooLarge => 'File is too large';
-
-  @override
-  String get unsupportedFileType => 'Unsupported file type';
-
-  @override
-  String get saveToGallery => 'Save to Gallery';
-
-  @override
-  String get saveToLocal => 'Save to Local';
-
-  @override
-  String get openFileLocation => 'Open File Location';
-
-  @override
-  String get sectionmemories => '';
-
-  @override
-  String get createMemory => 'Create Memory';
-
-  @override
-  String get editMemory => 'Edit Memory';
-
-  @override
-  String get deleteMemory => 'Delete Memory';
-
-  @override
-  String get memoryTitle => 'Title';
-
-  @override
-  String get memoryContent => 'Content';
-
-  @override
-  String get memoryCategory => 'Category';
-
-  @override
-  String get memoryTags => 'Tags';
-
-  @override
-  String get memoryDate => 'Date';
-
-  @override
-  String get memoryLocation => 'Location';
-
-  @override
-  String get memoryPriority => 'Priority';
-
-  @override
-  String get memoryStatus => 'Status';
-
-  @override
-  String get noMemories => 'No memories yet';
-
-  @override
-  String get searchMemories => 'Search memories...';
-
-  @override
-  String get filterByCategory => 'Filter by category';
-
-  @override
-  String get sortByDate => 'Sort by date';
-
-  @override
-  String get sortByPriority => 'Sort by priority';
-
-  @override
-  String get memoryCategories => 'Categories';
-
-  @override
-  String get personalMemory => 'Personal';
-
-  @override
-  String get workMemory => 'Work';
-
-  @override
-  String get lifeMemory => 'Life';
-
-  @override
-  String get studyMemory => 'Study';
-
-  @override
-  String get travelMemory => 'Travel';
-
-  @override
-  String get otherMemory => 'Other';
-
-  @override
-  String get memoryPriorityHigh => 'High';
-
-  @override
-  String get memoryPriorityMedium => 'Medium';
-
-  @override
-  String get memoryPriorityLow => 'Low';
-
-  @override
-  String get memoryStatusActive => 'Active';
-
-  @override
-  String get memoryStatusCompleted => 'Completed';
-
-  @override
-  String get memoryStatusArchived => 'Archived';
-
-  @override
-  String get sectiongroups => '';
-
-  @override
-  String get createGroup => 'Create Group';
-
-  @override
-  String get joinGroup => 'Join Group';
-
-  @override
-  String get leaveGroup => 'Leave Group';
-
-  @override
-  String get deleteGroup => 'Delete Group';
-
-  @override
-  String get groupName => 'Group Name';
-
-  @override
-  String get groupNameHint => 'Please enter group name';
-
-  @override
-  String get groupDescription => 'Group Description';
-
-  @override
-  String get groupDescriptionHint => 'Please enter group description';
-
-  @override
-  String get groupDescriptionOptional => 'Group Description (Optional)';
-
-  @override
-  String get groupMembers => 'Members';
-
-  @override
-  String get groupSettings => 'Group Settings';
-
-  @override
-  String get noGroups => 'No groups';
-
-  @override
-  String get groupCode => 'Group Code';
-
-  @override
-  String get scanQRCode => 'Scan QR Code';
-
-  @override
-  String get generateQRCode => 'Generate QR Code';
-
-  @override
-  String get joinGroupByCode => 'Join by Code';
-
-  @override
-  String get joinGroupByQR => 'Join by QR Code';
-
-  @override
-  String get groupJoinSuccess => 'Joined group successfully';
-
-  @override
-  String get groupJoinFailed => 'Failed to join group';
-
-  @override
-  String get groupLeaveSuccess => 'Left group successfully';
-
-  @override
-  String get groupLeaveFailed => 'Failed to leave group';
-
-  @override
-  String get groupLeaveConfirm => 'Are you sure you want to leave this group?';
-
-  @override
-  String get groupDeleteConfirm =>
-      'Are you sure you want to delete this group?';
-
-  @override
-  String get groupCreated => 'Group created successfully';
-
-  @override
-  String get groupCreateFailed => 'Failed to create group';
-
-  @override
-  String get invalidGroupCode => 'Invalid group code';
-
-  @override
-  String get groupNotFound => 'Group not found';
-
-  @override
-  String get alreadyInGroup => 'Already in this group';
-
-  @override
-  String get groupFull => 'Group is full';
-
-  @override
-  String get renameGroup => 'Rename Group';
-
-  @override
-  String get newGroupName => 'New Group Name';
-
-  @override
-  String get enterNewGroupName => 'Enter new group name';
-
-  @override
-  String get renamingGroup => 'Renaming group...';
-
-  @override
-  String get groupRenameSuccess => 'Group renamed successfully';
-
-  @override
-  String get groupRenameFailed => 'Failed to rename group';
-
-  @override
-  String get renameFailed => 'Rename failed';
-
-  @override
-  String get loadGroupInfoFailed => 'Failed to load group information';
-
-  @override
-  String get groupManagement => 'Group Management';
-
-  @override
-  String get membersList => 'Members List';
-
-  @override
-  String get groupInfo => 'Group Information';
-
-  @override
-  String get sectiondevices => '';
-
-  @override
-  String get deviceName => 'Device Name';
-
-  @override
-  String get deviceType => 'Device Type';
-
-  @override
-  String get deviceStatus => 'Status';
-
-  @override
-  String get deviceLastSeen => 'Last Seen';
-
-  @override
-  String get connectedDevices => 'Connected Devices';
-
-  @override
-  String get availableDevices => 'Available Devices';
-
-  @override
-  String get noDevices => 'No devices';
-
-  @override
-  String get connectDevice => 'Connect Device';
-
-  @override
-  String get disconnectDevice => 'Disconnect Device';
-
-  @override
-  String get removeDevice => 'Remove Device';
-
-  @override
-  String get deviceConnected => 'Device connected';
-
-  @override
-  String get deviceDisconnected => 'Device disconnected';
-
-  @override
-  String get deviceRemoved => 'Device removed';
-
-  @override
-  String get deviceNotFound => 'Device not found';
-
-  @override
-  String get deviceConnectionFailed => 'Failed to connect device';
-
-  @override
-  String get sectionsync => '';
-
-  @override
-  String get sync => 'Sync';
-
-  @override
-  String get syncing => 'Syncing...';
-
-  @override
-  String get syncComplete => 'Sync complete';
-
-  @override
-  String get syncFailed => 'Sync failed';
-
-  @override
-  String get autoSync => 'Auto Sync';
-
-  @override
-  String get syncNow => 'Sync Now';
-
-  @override
-  String get lastSync => 'Last Sync';
-
-  @override
-  String get syncSettings => 'Sync Settings';
-
-  @override
-  String get syncMessages => 'Sync Messages';
-
-  @override
-  String get syncFiles => 'Sync Files';
-
-  @override
-  String get syncMemories => 'Sync Memories';
-
-  @override
-  String get offlineMode => 'Offline Mode';
-
-  @override
-  String get onlineMode => 'Online Mode';
-
-  @override
-  String get sectionqr => '';
-
-  @override
-  String get qrCodeTitle => 'QR Code';
-
-  @override
-  String get scanQR => 'Scan QR';
-
-  @override
-  String get generateQR => 'Generate QR';
-
-  @override
-  String get qrCodeGenerated => 'QR Code generated';
-
-  @override
-  String get qrCodeScanned => 'QR Code scanned';
-
-  @override
-  String get qrScanFailed => 'QR scan failed';
-
-  @override
-  String get invalidQRCode => 'Invalid QR code';
-
-  @override
-  String get qrPermissionDenied => 'Camera permission denied';
-
-  @override
-  String get qrCameraError => 'Camera error';
-
-  @override
-  String get manualInput => 'Manual Input';
-
-  @override
-  String get flashlight => 'Flashlight';
-
-  @override
-  String get enterJoinCode => 'Enter Join Code';
-
-  @override
-  String get joinCodeHint => '8-digit join code';
-
-  @override
-  String get joinGroupSuccess => 'Successfully joined group!';
+  String get joinGroupSuccess => 'Joined group successfully';
 
   @override
   String get joinGroupFailed => 'Failed to join group';
@@ -779,106 +234,80 @@ class AppLocalizationsIt extends AppLocalizations {
   String get joinFailed => 'Join failed';
 
   @override
-  String get joiningGroup => 'Joining group...';
+  String get enterJoinCode => 'Enter Join Code';
 
   @override
-  String get placeQRInFrame => 'Place QR code within the frame to scan';
-
-  @override
-  String get deviceJoinCode => 'Device Join Code';
-
-  @override
-  String get regenerate => 'Regenerate';
-
-  @override
-  String get generatingJoinCode => 'Generating join code...';
-
-  @override
-  String get generateFailed => 'Generation failed';
-
-  @override
-  String get noGroupInfo => 'No available group information';
+  String get joinCodeHint => '8-digit join code';
 
   @override
   String get join => 'Join';
 
   @override
-  String get sectionnetwork => '';
+  String get scanQRCode => 'Scan QR Code';
 
   @override
-  String get networkStatus => 'Network Status';
+  String get manualInput => 'Manual Input';
 
   @override
-  String get networkConnected => 'Connected';
+  String get flashlight => 'Flashlight';
 
   @override
-  String get networkDisconnected => 'Disconnected';
+  String get appSlogan => 'Your personal file transfer assistant';
 
   @override
-  String get networkError => 'Network Error';
+  String get myFiles => 'My Files';
 
   @override
-  String get connectionTimeout => 'Connection timeout';
+  String get filesFeatureComingSoon => 'Files Feature Coming Soon';
 
   @override
-  String get serverError => 'Server error';
+  String get stayTuned => 'Stay tuned!';
 
   @override
-  String get clientError => 'Client error';
+  String get noDeviceGroups => 'No Device Groups';
 
   @override
-  String get networkDebug => 'Network Debug';
+  String get scanQRToJoin => 'Scan QR code to join a group';
 
   @override
-  String get checkConnection => 'Check Connection';
+  String get myDeviceGroups => 'My Device Groups';
 
   @override
-  String get reconnecting => 'Reconnecting...';
+  String get unnamedGroup => 'Unnamed Group';
 
   @override
-  String get reconnected => 'Reconnected';
+  String deviceCount(Object count) {
+    return '$count devices';
+  }
 
   @override
-  String get connectionLost => 'Connection lost';
+  String get youAreOwner => 'You are the owner';
 
   @override
-  String get sectionnotifications => '';
+  String get member => 'Member';
 
   @override
-  String get notifications => 'Notifications';
+  String createdOn(String date) {
+    return 'Created on $date';
+  }
 
   @override
-  String get enableNotifications => 'Enable Notifications';
+  String get unknownDate => 'Unknown';
 
   @override
-  String get disableNotifications => 'Disable Notifications';
+  String memoriesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Memories',
+      one: '1 Memory',
+      zero: 'No Memories',
+    );
+    return '$_temp0';
+  }
 
   @override
-  String get notificationSettings => 'Notification Settings';
-
-  @override
-  String get newMessageNotification => 'New message';
-
-  @override
-  String get fileUploadNotification => 'File upload complete';
-
-  @override
-  String get fileDownloadNotification => 'File download complete';
-
-  @override
-  String get syncCompleteNotification => 'Sync complete';
-
-  @override
-  String get deviceConnectedNotification => 'Device connected';
-
-  @override
-  String get deviceDisconnectedNotification => 'Device disconnected';
-
-  @override
-  String get sectiontime => '';
-
-  @override
-  String get now => 'Now';
+  String get searchMemories => 'Search memories...';
 
   @override
   String get today => 'Today';
@@ -887,277 +316,119 @@ class AppLocalizationsIt extends AppLocalizations {
   String get yesterday => 'Yesterday';
 
   @override
-  String get thisWeek => 'This week';
+  String get monday => 'Monday';
 
   @override
-  String get lastWeek => 'Last week';
+  String get tuesday => 'Tuesday';
 
   @override
-  String get thisMonth => 'This month';
+  String get wednesday => 'Wednesday';
 
   @override
-  String get lastMonth => 'Last month';
+  String get thursday => 'Thursday';
 
   @override
-  String minutesAgo(int minutes) {
-    return '${minutes}m ago';
-  }
+  String get friday => 'Friday';
 
   @override
-  String hoursAgo(int hours) {
-    return '${hours}h ago';
-  }
+  String get saturday => 'Saturday';
 
   @override
-  String daysAgo(int days) {
-    return '${days}d ago';
-  }
+  String get sunday => 'Sunday';
 
   @override
-  String get sectionerrors => '';
+  String get noMemories => 'No memories yet';
 
   @override
-  String get errorGeneral => 'An error occurred';
+  String get noMemoriesDesc => 'Create your first memory to get started!';
 
   @override
-  String get errorNetwork => 'Network error';
-
-  @override
-  String get errorTimeout => 'Request timeout';
-
-  @override
-  String get errorServerUnavailable => 'Server unavailable';
-
-  @override
-  String get errorUnauthorized => 'Unauthorized access';
-
-  @override
-  String get errorForbidden => 'Access forbidden';
-
-  @override
-  String get errorNotFound => 'Resource not found';
-
-  @override
-  String get errorInternalServer => 'Internal server error';
-
-  @override
-  String get errorBadRequest => 'Bad request';
-
-  @override
-  String get errorTooManyRequests => 'Too many requests';
-
-  @override
-  String get errorServiceUnavailable => 'Service unavailable';
-
-  @override
-  String get errorUnknown => 'Unknown error';
-
-  @override
-  String get errorRetry => 'Please try again';
-
-  @override
-  String get sectionfile_sizes => '';
-
-  @override
-  String get bytes => 'B';
-
-  @override
-  String get kilobytes => 'KB';
-
-  @override
-  String get megabytes => 'MB';
-
-  @override
-  String get gigabytes => 'GB';
-
-  @override
-  String get terabytes => 'TB';
-
-  @override
-  String get sectionpermissions => '';
-
-  @override
-  String get permissionRequired => 'Permission Required';
-
-  @override
-  String get permissionDenied => 'Permission Denied';
-
-  @override
-  String get permissionCamera => 'Camera permission is required';
-
-  @override
-  String get permissionStorage => 'Storage permission is required';
-
-  @override
-  String get permissionNotification => 'Notification permission is required';
-
-  @override
-  String get permissionLocation => 'Location permission is required';
-
-  @override
-  String get grantPermission => 'Grant Permission';
-
-  @override
-  String get openSettings => 'Open Settings';
-
-  @override
-  String get sectionsettings => '';
-
-  @override
-  String get deviceInfo => 'Device Information';
-
-  @override
-  String get deviceId => 'Device ID';
-
-  @override
-  String get platform => 'Platform';
-
-  @override
-  String get unknown => 'Unknown';
-
-  @override
-  String get logoutConfirmation => 'Log out of the current device';
-
-  @override
-  String get appTheme => 'App Theme';
-
-  @override
-  String get defaultTheme => 'Default';
-
-  @override
-  String get enabled => 'Enabled';
-
-  @override
-  String get aboutApp => 'About App';
-
-  @override
-  String get comingSoon => 'Coming Soon';
-
-  @override
-  String get featureComingSoon =>
-      'This feature is coming soon, please stay tuned!';
-
-  @override
-  String get logoutConfirmTitle => 'Logout';
-
-  @override
-  String get logoutConfirmMessage =>
-      'Are you sure you want to logout from this device?';
-
-  @override
-  String get sectionmemory => '';
-
-  @override
-  String memoriesCount(int count) {
-    return 'Saved $count memories';
-  }
-
-  @override
-  String get noMemoriesDesc => 'Start creating your first memory';
-
-  @override
-  String get viewMemory => 'View Memory';
+  String get createMemory => 'Create Memory';
 
   @override
   String get quickAdd => 'Quick Add';
 
   @override
-  String get addMemoryFromText => 'Add from Text';
+  String get memoryDeleteTitle => 'Delete Memory';
 
   @override
-  String get addMemoryFromImage => 'Add from Image';
+  String get confirmDeleteMemory =>
+      'Are you sure you want to delete this memory?';
 
   @override
-  String get addMemoryFromFile => 'Add from File';
+  String get deleteMemorySuccess => 'Memory deleted successfully';
 
   @override
-  String get sectionjoingroup => '';
+  String get deleteMemoryFailed => 'Failed to delete memory';
 
   @override
-  String get scanMode => 'Scan Mode';
-
-  @override
-  String get inputMode => 'Input Mode';
-
-  @override
-  String get cameraInitFailed => 'Camera initialization failed';
-
-  @override
-  String get cameraNotAvailable =>
-      'Camera not available, switched to manual input mode';
-
-  @override
-  String get desktopCameraTip =>
-      'Desktop mode recommends manual input, camera scanning may be unstable';
-
-  @override
-  String get enterGroupCode => 'Enter Group Code';
-
-  @override
-  String get groupCodePlaceholder => 'Enter 8-digit group code';
-
-  @override
-  String get invalidCode => 'Invalid code';
-
-  @override
-  String get codeRequired => 'Code is required';
-
-  @override
-  String get processing => 'Processing...';
-
-  @override
-  String get switchToScan => 'Switch to Scan Mode';
-
-  @override
-  String get switchToInput => 'Switch to Input Mode';
-
-  @override
-  String get cameraUnavailable => 'Camera unavailable';
-
-  @override
-  String get checkCameraPermissions =>
-      'Please check camera permission settings';
-
-  @override
-  String get desktopInputModeRecommended =>
-      'Desktop mode recommends using the \"Enter Invite Code\" mode below';
-
-  @override
-  String get cameraStartupFailed => 'Camera startup failed';
-
-  @override
-  String get startingCamera => 'Starting camera...';
-
-  @override
-  String get placeQRInScanFrame => 'Place QR code within the scan frame';
-
-  @override
-  String get switchToInputModeOrCheckPermissions =>
-      'Please switch to input mode or check camera permissions';
-
-  @override
-  String get enterInviteCodeHint =>
-      'Please enter group invite code (4-20 digits)';
-
-  @override
-  String get inviteCodePlaceholder => 'Invite code';
-
-  @override
-  String get clickToJoinGroup => 'Click to join group';
-
-  @override
-  String get selectGroup => 'Select Group';
-
-  @override
-  String get createGroupFailed => 'Failed to create group';
-
-  @override
-  String get pleaseEnterGroupName => 'Please enter group name';
-
-  @override
-  String groupCreatedSuccessfully(Object name) {
-    return 'Group \"$name\" created successfully';
+  String dateFormat(Object day, Object month) {
+    return '$month/$day';
   }
+
+  @override
+  String get notes => 'Notes';
+
+  @override
+  String get passwords => 'Passwords';
+
+  @override
+  String get contacts => 'Contacts';
+
+  @override
+  String get quickTexts => 'Quick Texts';
+
+  @override
+  String get myMemory => 'My Memory';
+
+  @override
+  String groupMemory(Object groupName) {
+    return '$groupName\'s Memory';
+  }
+
+  @override
+  String totalItemsSaved(Object count) {
+    return '$count items saved';
+  }
+
+  @override
+  String get selectGroupToView => 'Select a group to view memories';
+
+  @override
+  String get groupStorage => 'Group Storage';
+
+  @override
+  String get localStory => 'Local Storage';
+
+  @override
+  String get noNotes => 'No Notes Yet';
+
+  @override
+  String get recordImportantInfo => 'Record important information and ideas';
+
+  @override
+  String get noPasswords => 'No Passwords Yet';
+
+  @override
+  String get securelyStore => 'Securely store your account passwords';
+
+  @override
+  String get noContacts => 'No Contacts Yet';
+
+  @override
+  String get saveImportantContacts => 'Save important contact information';
+
+  @override
+  String get noQuickTexts => 'No Quick Texts Yet';
+
+  @override
+  String get saveCommonTexts => 'Save common texts and templates';
+
+  @override
+  String get addNote => 'Add Note';
+
+  @override
+  String get editNote => 'Edit Note';
 
   @override
   String get title => 'Title';
@@ -1166,229 +437,121 @@ class AppLocalizationsIt extends AppLocalizations {
   String get content => 'Content';
 
   @override
-  String get writeYourThoughts => 'Write your thoughts...';
+  String get add => 'Add';
 
   @override
-  String get enterNoteTitle => 'Enter note title';
+  String get addPassword => 'Add Password';
 
   @override
-  String get websiteAppName => 'Website/App Name';
+  String get editPassword => 'Edit Password';
 
   @override
-  String get websiteAppNameHint => 'e.g.: WeChat, Taobao';
+  String get site => 'Site/App';
 
   @override
-  String get websiteAddress => 'Website Address';
-
-  @override
-  String get websiteAddressHint => 'https://...';
-
-  @override
-  String get usernameEmail => 'Username/Email';
-
-  @override
-  String get loginAccount => 'Login Account';
+  String get username => 'Username/Email';
 
   @override
   String get password => 'Password';
 
   @override
-  String get loginPassword => 'Login Password';
+  String get addContact => 'Add Contact';
 
   @override
-  String get sectionchat => '';
+  String get editContact => 'Edit Contact';
 
   @override
-  String get sendFailed => 'Send failed';
+  String get name => 'Name';
 
   @override
-  String get maxAllowed => 'Maximum allowed';
+  String get phone => 'Phone';
 
   @override
-  String get selectFileFailed => 'Select file failed';
+  String get email => 'Email';
 
   @override
-  String get pasteFailed => 'Paste failed';
+  String get addQuickText => 'Add Quick Text';
 
   @override
-  String get fileProcessingFailed => 'File processing failed';
+  String get editQuickText => 'Edit Quick Text';
 
   @override
-  String sharedTextMessages(Object count) {
-    return 'Shared $count text messages';
-  }
+  String get saveButton => 'Save';
 
   @override
-  String sharedFiles(Object count) {
-    return 'Shared $count files';
-  }
+  String get titleLabel => 'Title';
 
   @override
-  String batchShareFailed(String error) {
-    return 'Batch share failed: $error';
-  }
+  String get titleHint => 'Enter a title for your memory';
 
   @override
-  String copiedMessages(Object count) {
-    return 'Copied $count messages to clipboard';
-  }
+  String get contentLabel => 'Content';
 
   @override
-  String messagesAddedToInput(Object count) {
-    return '$count message contents added to input box';
-  }
+  String get writeYourThoughts => 'Write down your thoughts...';
 
   @override
-  String favoriteMessages(Object count, Object total) {
-    return 'Favorited $count/$total messages';
-  }
+  String get websiteAppName => 'Website/App Name';
 
   @override
-  String recalledMessages(Object count) {
-    return 'Recalled $count messages';
-  }
+  String get websiteAppNameHint => 'e.g., Google, Facebook';
 
   @override
-  String get batchRecallFailed => 'Batch recall failed';
+  String get websiteAddress => 'Website Address';
 
   @override
-  String deletedMessages(Object count) {
-    return 'Deleted $count messages';
-  }
+  String get websiteAddressHint => 'e.g., https://www.google.com';
 
   @override
-  String get batchDeleteFailed => 'Batch delete failed';
+  String get usernameEmailLabel => 'Username/Email';
 
   @override
-  String get debugInfo => 'Debug Info';
+  String get loginAccountHint => 'Your login account';
 
   @override
-  String get permanentStorageDir => 'Permanent Storage Directory';
+  String get passwordLabel => 'Password';
 
   @override
-  String get storageUsage => 'Storage Usage:';
+  String get passwordHint => 'Your login password';
 
   @override
-  String get chatData => 'Chat Data';
+  String get notesLabel => 'Notes';
 
   @override
-  String get memoryData => 'Memory Data';
+  String get otherInfoHint => 'Other information, such as security questions';
 
   @override
-  String get userData => 'User Data';
+  String get expenseItemLabel => 'Expense Item';
 
   @override
-  String get fileCache => 'File Cache';
+  String get expenseItemHint => 'e.g., Coffee, Lunch';
 
   @override
-  String get total => 'Total';
+  String get amountLabel => 'Amount';
 
   @override
-  String get fileCacheStats => 'File Cache Stats:';
+  String get amountHint => 'e.g., 25.50';
 
   @override
-  String get totalFiles => 'Total Files';
+  String get typeLabel => 'Type';
 
   @override
-  String get validFiles => 'Valid Files';
+  String get expense => 'Expense';
 
   @override
-  String get invalidFiles => 'Invalid Files';
+  String get income => 'Income';
 
   @override
-  String get deduplicationDiagnostics => 'Deduplication Diagnostics:';
+  String get connectionStatusChanged => 'Connection status changed';
 
   @override
-  String get processedMessageIds => 'Processed Message IDs';
+  String get networkStatusChanged => 'Network status changed';
 
   @override
-  String get timestampRecords => 'Timestamp Records';
+  String get errorOccurred => 'Error occurred';
 
   @override
-  String get uiMessages => 'UI Messages';
-
-  @override
-  String get websocketConnection => 'WebSocket Connection';
-
-  @override
-  String get lastMessageReceived => 'Last Message Received';
-
-  @override
-  String get forceClearDedupRecords =>
-      'Force clear dedup records and restart WebSocket listening';
-
-  @override
-  String get clearDedupRecords => 'Clear Dedup Records';
-
-  @override
-  String get getDebugInfoFailed => 'Failed to get debug info';
-
-  @override
-  String get copiedToClipboard => 'Copied to clipboard';
-
-  @override
-  String get textCopiedToClipboard => 'Text copied to clipboard';
-
-  @override
-  String get canDragSelectText =>
-      'You can directly drag to select text content';
-
-  @override
-  String get allContentCopied => 'All content copied to clipboard';
-
-  @override
-  String get messageRecalled => 'Message recalled';
-
-  @override
-  String get recallFailed => 'Recall failed';
-
-  @override
-  String get messageDeleted => 'Message deleted';
-
-  @override
-  String get deleteFailed => 'Delete failed';
-
-  @override
-  String get messageAddedToInput => 'Message content added to input box';
-
-  @override
-  String get addedToFavorites => 'Added to favorites';
-
-  @override
-  String get favoriteFailed => 'Favorite failed';
-
-  @override
-  String get removedFromFavorites => 'Removed from favorites';
-
-  @override
-  String get unfavoriteFailed => 'Failed to remove from favorites';
-
-  @override
-  String get confirmDeleteMessage =>
-      'Are you sure you want to delete this message?';
-
-  @override
-  String get jumpedToOriginalMessage => 'Jumped to original message';
-
-  @override
-  String get originalMessageNotExists =>
-      'Original message does not exist or has been deleted';
-
-  @override
-  String get fileInfoIncomplete => 'File information incomplete';
-
-  @override
-  String get featureOnlyMobile => 'This feature is only available on mobile';
-
-  @override
-  String get fileNotExistsDownloading => 'File does not exist, downloading...';
-
-  @override
-  String get fileDownloadFailedCannotSave =>
-      'File download failed, cannot save';
-
-  @override
-  String get sectionnetworkdebug => '';
+  String get messageReceived => 'Message received';
 
   @override
   String get networkDiagnosticTool => 'Network Diagnostic Tool';
@@ -1415,583 +578,368 @@ class AppLocalizationsIt extends AppLocalizations {
   String get forceReconnect => 'Force Reconnect';
 
   @override
-  String get pingTest => 'Ping Test';
+  String get preparingToSendFiles => 'Preparing to send files...';
 
   @override
-  String get diagnosticLogs => 'Diagnostic Logs';
+  String get shareSuccess => 'Share Successful';
 
   @override
-  String recordsCount(int count) {
-    return '$count records';
+  String get shareFailed => 'Share Failed';
+
+  @override
+  String get shareException => 'Share Exception';
+
+  @override
+  String get contentSentToGroup => 'Content has been sent to the current group';
+
+  @override
+  String get pleaseTryAgainLater => 'Please try again later';
+
+  @override
+  String get processing => 'Processing';
+
+  @override
+  String get waitingForApp => 'Waiting for app to start...';
+
+  @override
+  String get appSlowToStart =>
+      'App is slow to start, trying to process share...';
+
+  @override
+  String get tryAgainIfFailed => 'If it fails, please try sharing again';
+
+  @override
+  String get processingShare => 'Processing share...';
+
+  @override
+  String get subscriptionPricingTitle => 'Subscription & Pricing';
+
+  @override
+  String get subscriptionPricingSubtitle => 'Choose your plan';
+
+  @override
+  String get currentPlan => 'Current Plan';
+
+  @override
+  String validUntil(Object date) {
+    return 'Valid until: $date';
   }
 
   @override
-  String get startingNetworkDiagnostic => 'Starting network diagnostic test...';
+  String get mostPopular => 'Most Popular';
 
   @override
-  String get testingBasicConnectivity => 'Testing basic connectivity...';
+  String get monthlyPlan => 'Monthly Plan';
 
   @override
-  String get testingDnsResolution => 'Testing DNS resolution...';
+  String get yearlyPlan => 'Yearly Plan';
 
   @override
-  String get testingServerConnectivity => 'Testing server connectivity...';
+  String get restorePurchases => 'Restore Purchases';
 
   @override
-  String get networkDiagnosticComplete => 'Network diagnostic test complete';
+  String get priceVariesByRegion => 'Price may vary by region.';
 
   @override
-  String get testingConnection => 'Testing connection';
+  String get purchaseSuccess => 'Purchase Successful';
 
   @override
-  String get connectionSuccessful => 'Connection successful';
+  String get purchaseFailed => 'Purchase Failed';
 
   @override
-  String get connectionFailed => 'Connection Failed';
+  String get freePlan => 'Free Plan';
 
   @override
-  String get connectionStatusChanged => 'Connection status changed';
-
-  @override
-  String get networkStatusChanged => 'Network status changed';
-
-  @override
-  String get errorOccurred => 'Error occurred';
-
-  @override
-  String get messageReceived => 'Message received';
-
-  @override
-  String get sectionsplash => '';
-
-  @override
-  String get appSlogan => 'Cross-device file sharing and sync';
-
-  @override
-  String get myFiles => 'My Files';
-
-  @override
-  String get filesFeatureComingSoon => 'File feature coming soon';
-
-  @override
-  String get stayTuned => 'Stay tuned';
-
-  @override
-  String get sectiondevicegroups => '';
-
-  @override
-  String get noDeviceGroups => 'No device groups yet';
-
-  @override
-  String get scanQRToJoin => 'Use other devices to scan QR code to join';
-
-  @override
-  String get myDeviceGroups => 'My Device Groups';
-
-  @override
-  String get unnamedGroup => 'Unnamed Group';
-
-  @override
-  String deviceCount(int count) {
-    return '$count devices';
+  String deviceLimit(Object count) {
+    return 'Up to $count devices';
   }
 
   @override
-  String get youAreOwner => 'You are the owner';
+  String get chooseYourPlan => 'Choose Your Plan';
 
   @override
-  String get member => 'Member';
+  String get basicPlan => 'Basic Plan';
 
   @override
-  String get createdOn => 'Created on';
+  String get proPlan => 'Pro Plan';
 
   @override
-  String get unknownDate => 'Unknown';
+  String get enterprisePlan => 'Enterprise Plan';
 
   @override
-  String get sectiondebug => '';
+  String get freePlanDescription => 'For personal use';
 
   @override
-  String get batchDelete => 'Batch Delete';
+  String get basicPlanDescription => 'For small teams';
 
   @override
-  String confirmBatchDelete(int count) {
-    return 'Are you sure you want to delete the selected $count messages? This action cannot be undone.';
+  String get proPlanDescription => 'For growing businesses';
+
+  @override
+  String get enterprisePlanDescription => 'For large organizations';
+
+  @override
+  String get feature2DeviceGroup => 'Up to 2 devices in a group';
+
+  @override
+  String get featureBasicFileTransfer => 'Basic file transfer (up to 100MB)';
+
+  @override
+  String get featureTextMessage => 'Text messages';
+
+  @override
+  String get featureImageTransfer => 'Image transfer';
+
+  @override
+  String get feature5DeviceGroup => 'Up to 5 devices in a group';
+
+  @override
+  String get featureUnlimitedFileTransfer =>
+      'Unlimited file transfer (up to 1GB)';
+
+  @override
+  String get featureVideoTransfer => 'Video transfer';
+
+  @override
+  String get cameraUnavailableSwitchedToInput =>
+      'Camera unavailable, switched to input mode.';
+
+  @override
+  String get desktopCameraUnstableTip =>
+      'Desktop camera scanning may be unstable, it is recommended to use input mode.';
+
+  @override
+  String get joinGroupSuccessExclamation => 'Joined group successfully!';
+
+  @override
+  String get joinGroupFailedGeneric => 'Failed to join group.';
+
+  @override
+  String operationFailed(Object error) {
+    return 'Operation failed: $error';
   }
 
   @override
-  String batchDeleteSuccess(int count) {
-    return 'Deleted $count messages';
+  String get pleaseEnterInviteCode => 'Please enter the invite code.';
+
+  @override
+  String get inviteCodeLengthError => 'Invite code length error.';
+
+  @override
+  String get loadDevicesFailed => 'Failed to load devices';
+
+  @override
+  String get createJoinCodeFailed => 'Failed to create join code';
+
+  @override
+  String get leaveGroupSuccess => 'Left group successfully';
+
+  @override
+  String get leaveGroupFailed => 'Failed to leave group';
+
+  @override
+  String get groupInfoUpdated => 'Group info updated';
+
+  @override
+  String get refreshFailed => 'Refresh failed';
+
+  @override
+  String get deviceGroup => 'Device Group';
+
+  @override
+  String get leaveGroup => 'Leave Group';
+
+  @override
+  String get generating => 'Generating...';
+
+  @override
+  String get generateDeviceJoinCode => 'Generate Device Join Code';
+
+  @override
+  String get scanQRToJoinDeviceGroup =>
+      'Scan QR code to join this device group';
+
+  @override
+  String get joinCode => 'Join Code';
+
+  @override
+  String get copyJoinCode => 'Copy Join Code';
+
+  @override
+  String get joinCodeCopied => 'Join code copied to clipboard';
+
+  @override
+  String expiresAt(Object date) {
+    return 'Expires at: $date';
   }
 
   @override
-  String batchDeleteFailedWithError(String error) {
-    return 'Batch delete failed: $error';
-  }
+  String get deviceList => 'Device List';
 
   @override
-  String get deleteMessageTitle => 'Delete Message';
+  String get noDevicesToDisplay => 'No devices to display';
 
   @override
-  String get confirmDeleteSingleMessage =>
-      'Are you sure you want to delete this message? This action cannot be undone.';
+  String get unnamedDevice => 'Unnamed Device';
 
   @override
-  String deleteFailedWithError(String error) {
-    return 'Delete failed: $error';
-  }
+  String get currentDevice => 'Current Device';
 
   @override
-  String recallFailedWithError(String error) {
-    return 'Recall failed: $error';
-  }
+  String get groupOwner => 'Group Owner';
 
   @override
-  String get startConversation => 'Start conversation';
+  String get unknownDevice => 'Unknown Device';
 
   @override
-  String get sendMessageOrFileToStart =>
-      'Send a message or file to start chatting';
+  String get unknownPlatform => 'Unknown Platform';
 
   @override
-  String get debugInfoTitle => 'Debug Info';
+  String get removeDevice => 'Remove Device';
 
   @override
-  String get permanentStorageDirectory => 'Permanent Storage Directory:';
+  String get confirmLeaveGroup =>
+      'Are you sure you want to leave this device group?';
 
   @override
-  String get memoryDeleteTitle => 'Delete Memory';
+  String get confirmRemoveDevice =>
+      'Are you sure you want to remove the device';
 
   @override
-  String confirmDeleteMemory(String title) {
-    return 'Are you sure you want to delete \"$title\"? This action cannot be undone.';
-  }
+  String get removeDeviceFeatureComingSoon =>
+      'Remove device feature coming soon';
 
   @override
-  String get deleteMemorySuccess => 'Delete successful';
+  String get unknown => 'Unknown';
 
   @override
-  String get deleteMemoryFailed => 'Delete failed';
+  String get loadGroupInfoFailed => 'Failed to load group info';
 
   @override
-  String memorySavedWithAI(int count) {
-    return 'Memory saved, AI generated title and $count tags';
-  }
+  String get renameGroup => 'Rename Group';
 
   @override
-  String saveFailedWithError(String error) {
-    return 'Save failed: $error';
-  }
+  String get groupName => 'Group Name';
 
   @override
-  String get deleteTooltip => 'Delete';
+  String get enterNewGroupName => 'Enter a new group name';
 
   @override
-  String get sectionsnackbar => '';
+  String get groupNameHint => 'Group name cannot be empty';
 
   @override
-  String sharedTextMessagesCount(int count) {
-    return 'Shared $count text messages';
-  }
+  String get renamingGroup => 'Renaming group...';
 
   @override
-  String sharedFilesAndText(int fileCount, int textCount) {
-    return 'Shared $fileCount files and $textCount text messages';
-  }
+  String get groupRenameSuccess => 'Group renamed successfully';
 
   @override
-  String andTextMessages(int count) {
-    return ' and $count text messages';
-  }
+  String get groupRenameFailed => 'Failed to rename group';
 
   @override
-  String batchShareFailedWithError(String error) {
-    return 'Batch share failed: $error';
-  }
+  String get renameFailed => 'Rename failed';
 
   @override
-  String copiedMessagesToClipboard(int count) {
-    return 'Copied $count messages to clipboard';
-  }
+  String get groupLeaveConfirm => 'Are you sure you want to leave this group?';
 
   @override
-  String messagesAddedToInputBox(int count) {
-    return '$count message contents added to input box';
-  }
+  String get editMemory => 'Edit Memory';
 
   @override
-  String favoritedMessagesCount(int successCount, int totalCount) {
-    return 'Favorited $successCount/$totalCount messages';
-  }
+  String get enterTitle => 'Enter title';
 
   @override
-  String recalledMessagesCount(int count) {
-    return 'Recalled $count messages';
-  }
+  String get enterContent => 'Enter content';
 
   @override
-  String batchRecallFailedWithError(String error) {
-    return 'Batch recall failed: $error';
-  }
+  String get tags => 'Tags';
 
   @override
-  String get forceClearedDedupRecords =>
-      'Force cleared dedup records and restarted WebSocket listening';
+  String get addTag => 'Add Tag';
 
   @override
-  String getDebugInfoFailedWithError(String error) {
-    return 'Failed to get debug info: $error';
-  }
+  String get generateTags => 'Generate Tags';
 
   @override
-  String get textCanBeDragSelected =>
-      'You can directly drag to select text content';
+  String get generatingTags => 'Generating tags...';
 
   @override
-  String get allContentCopiedToClipboard => 'All content copied to clipboard';
+  String get https => 'https://...';
 
   @override
-  String get messageContentAddedToInput => 'Message content added to input box';
+  String get usernameEmail => 'Username/Email';
 
   @override
-  String get featureOnlyAvailableOnMobile =>
-      'This feature is only available on mobile';
+  String get loginAccount => 'Login account';
 
   @override
-  String fileDownloadFailedWithError(String error) {
-    return 'File download failed: $error';
-  }
+  String get loginPassword => 'Login password';
 
   @override
-  String get fileUrlNotExistsCannotDownload =>
-      'File URL does not exist, cannot download';
-
-  @override
-  String get fileLocationOpened => 'File location opened';
-
-  @override
-  String get filePathCopiedToClipboard => 'File path copied to clipboard';
-
-  @override
-  String get fileLinkCopiedToClipboard => 'File link copied to clipboard';
-
-  @override
-  String get sectionmisc => '';
-
-  @override
-  String get sectionauth => '';
-
-  @override
-  String get loggingOut => 'Logging out...';
-
-  @override
-  String get logoutSuccessMessage => 'Successfully logged out';
-
-  @override
-  String get logoutError => 'Error occurred during logout';
-
-  @override
-  String logoutFailedWithError(String error) {
-    return 'Logout failed: $error';
-  }
-
-  @override
-  String get loginStatusInvalid => 'Login status has expired';
-
-  @override
-  String get logoutFailedTitle => 'Logout Failed';
-
-  @override
-  String get logoutFailedContent =>
-      'Logout failed, you can choose to force logout or retry.';
-
-  @override
-  String get forceLogout => 'Force Logout';
-
-  @override
-  String get sectiongroup => '';
-
-  @override
-  String get createNewGroup => 'Create New Group';
-
-  @override
-  String groupCreatedSuccess(String name) {
-    return 'Group \"$name\" created successfully';
-  }
-
-  @override
-  String get create => 'Create';
-
-  @override
-  String get sectionconnection => '';
-
-  @override
-  String onlineStatus(int online, int total) {
-    return '$online/$total online';
-  }
-
-  @override
-  String get networkNormal => 'Network Normal';
-
-  @override
-  String get networkLimited => 'Network Limited';
-
-  @override
-  String get networkUnavailable => 'Network Unavailable';
-
-  @override
-  String get checking => 'Checking';
-
-  @override
-  String get sendFileFailed => 'Send file failed';
-
-  @override
-  String get noFilesToSend => 'No files to send';
-
-  @override
-  String get batchRecall => 'Batch Recall';
-
-  @override
-  String get recall => 'Recall';
-
-  @override
-  String get clearDeduplicationRecords => 'Clear deduplication records';
-
-  @override
-  String get cancelUpload => 'Cancel Upload';
-
-  @override
-  String get cancelDownload => 'Cancel Download';
-
-  @override
-  String confirmCancelTransfer(String action) {
-    return 'Are you sure you want to cancel $action this file?';
-  }
-
-  @override
-  String get continueTransfer => 'Continue Transfer';
-
-  @override
-  String get confirmCancel => 'Confirm cancel';
-
-  @override
-  String transferCancelled(String action) {
-    return '$action cancelled';
-  }
-
-  @override
-  String get preparingDownload => 'Preparing download';
-
-  @override
-  String fileNotExists(int index) {
-    return 'File $index does not exist';
-  }
-
-  @override
-  String get file => 'File';
-
-  @override
-  String get fileDownloadFailed => 'File download failed';
-
-  @override
-  String get fileNotExistsOrExpired => 'File does not exist or has expired';
-
-  @override
-  String get noPermissionToDownload => 'No permission to download this file';
-
-  @override
-  String get imageFile => 'Image file';
-
-  @override
-  String get videoFile => 'Video file';
-
-  @override
-  String get documentFile => 'Document file';
-
-  @override
-  String get audioFile => 'Audio file';
-
-  @override
-  String get selectFileType => 'Select file type';
-
-  @override
-  String get selectFileTypeMultiple =>
-      'Select file type (multiple files can be sent directly)';
-
-  @override
-  String get image => 'Image';
-
-  @override
-  String get video => 'Video';
-
-  @override
-  String get document => 'Document';
-
-  @override
-  String get audio => 'Audio';
-
-  @override
-  String get canDragToSelectText => 'You can drag to select text content';
-
-  @override
-  String get recallMessage => 'Recall message';
-
-  @override
-  String get addToFavoritesFailed => 'Failed to add to favorites';
-
-  @override
-  String get removeFromFavoritesFailed => 'Failed to remove from favorites';
-
-  @override
-  String get jumpedToOriginal => 'Jumped to original message';
-
-  @override
-  String get gallery => 'Gallery';
-
-  @override
-  String get documents => 'Documents';
-
-  @override
-  String get saveFailed => 'Save failed';
-
-  @override
-  String get textShared => 'Text shared';
-
-  @override
-  String get fileNotAvailableAndNoTextToShare =>
-      'File not available and no text content to share';
-
-  @override
-  String get messageRecalledText => '[This message has been recalled]';
-
-  @override
-  String get cannotOpenFileLocation => 'Cannot open file location';
-
-  @override
-  String get copyFilePathFailed => 'Failed to copy file path';
-
-  @override
-  String get copyFileLinkFailed => 'Failed to copy file link';
-
-  @override
-  String get desktopVideoNoValidSource => 'Desktop: No valid video source';
-
-  @override
-  String get mobileVideoNoValidSource => 'Mobile: No valid video source';
-
-  @override
-  String get desktopVideo => 'Desktop video';
-
-  @override
-  String get sectionchatui => '';
-
-  @override
-  String get continuedTransfer => 'Continue transfer';
-
-  @override
-  String get sectionchatmessages => '';
-
-  @override
-  String get batchRecallReason => 'Batch recall';
-
-  @override
-  String get batchDeleteReason => 'Batch delete';
-
-  @override
-  String get confirmCancelUpload =>
-      'Are you sure you want to cancel uploading this file?';
-
-  @override
-  String get confirmCancelDownload =>
-      'Are you sure you want to cancel downloading this file?';
-
-  @override
-  String get uploadCancelled => 'Upload cancelled';
-
-  @override
-  String get downloadCancelled => 'Download cancelled';
-
-  @override
-  String get favoritesFailed => 'Failed to add to favorites';
-
-  @override
-  String get fileUnavailableNoText =>
-      'File unavailable and no text content to share';
-
-  @override
-  String get filePathCopied => 'File path copied to clipboard';
-
-  @override
-  String get fileLinkCopied => 'File link copied to clipboard';
-
-  @override
-  String get saveButton => 'Save';
-
-  @override
-  String get titleLabel => 'Title';
-
-  @override
-  String get titleHint => 'Enter title';
-
-  @override
-  String get contentLabel => 'Content';
-
-  @override
-  String get note => 'Note';
-
-  @override
-  String get otherInfo => 'Other Information';
-
-  @override
-  String get expenseItem => 'Expense Item';
+  String get otherInformation => 'Other information';
 
   @override
   String get amount => 'Amount';
 
   @override
+  String get zeroZero => '0.00';
+
+  @override
   String get type => 'Type';
-
-  @override
-  String get expense => 'Expense';
-
-  @override
-  String get income => 'Income';
 
   @override
   String get category => 'Category';
 
   @override
+  String get eg => 'e.g.,';
+
+  @override
   String get date => 'Date';
 
   @override
-  String get detailedDescription => 'Detailed Description';
-
-  @override
-  String get scheduleTitle => 'Schedule Title';
+  String get detailedExplanation => 'Detailed explanation';
 
   @override
   String get startTime => 'Start Time';
 
   @override
+  String get endTimeOptional => 'End Time (Optional)';
+
+  @override
   String get location => 'Location';
+
+  @override
+  String get conferenceRoomRestaurant => 'Conference room, restaurant, etc.';
 
   @override
   String get details => 'Details';
 
   @override
-  String get advanceReminder => 'Advance Reminder';
+  String get meetingContentNotes => 'Meeting content, notes';
+
+  @override
+  String get reminder => 'Reminder';
 
   @override
   String get noReminder => 'No reminder';
 
   @override
-  String get task => 'Task';
+  String get fiveMinutesBefore => '5 minutes before';
 
   @override
-  String get whatToDo => 'What to do';
+  String get fifteenMinutesBefore => '15 minutes before';
 
   @override
-  String get detailedTaskDescription => 'Detailed Description';
+  String get thirtyMinutesBefore => '30 minutes before';
+
+  @override
+  String get oneHourBefore => '1 hour before';
+
+  @override
+  String get detailedDescription => 'Detailed Description';
+
+  @override
+  String get specificRequirementsNotes => 'Specific requirements, notes';
 
   @override
   String get priority => 'Priority';
@@ -2006,172 +954,333 @@ class AppLocalizationsIt extends AppLocalizations {
   String get high => 'High';
 
   @override
-  String get websiteOrLinkName => 'Website or link name';
+  String get completed => 'Completed';
 
   @override
-  String get linkPurpose => 'The purpose or content of this link';
+  String get dueDateOptional => 'Due Date (Optional)';
 
   @override
-  String get fileDescription => 'File description';
+  String get urlLink => 'URL Link';
 
   @override
-  String get fileExplanation => 'File explanation';
+  String get description => 'Description';
 
   @override
-  String get selectDate => 'Select Date';
+  String get purposeOrContent => 'Purpose or content of this link';
 
   @override
-  String get selectTime => 'Select Time';
+  String get enterTagName => 'Enter tag name';
 
   @override
-  String get clickToSelectFile => 'Click to select file';
+  String get selectDate => 'Select date';
 
   @override
-  String get addAccountPassword => 'Add Account Password';
+  String get selectTime => 'Select time';
 
   @override
-  String get recordExpense => 'Record Expense';
+  String get updateSuccess => 'Update successful';
 
   @override
-  String get createSchedule => 'Create Schedule';
+  String get updateFailed => 'Update failed';
 
   @override
-  String get addTodo => 'Add Todo';
+  String get catering => 'Catering';
 
   @override
-  String get saveLink => 'Save Link';
+  String get transportation => 'Transportation';
 
   @override
-  String get saveImage => 'Save Image';
+  String get scanDeviceJoinOtherDevices => 'Scan with other devices to join';
 
   @override
-  String get saveVideo => 'Save Video';
+  String get joinGroup => 'Join Group';
 
   @override
-  String get saveDocument => 'Save Document';
+  String get expiresIn => 'Expires in';
 
   @override
-  String get writeNote => 'Write Note';
+  String get copied => 'Copied';
 
   @override
-  String get pleaseSelectFile => 'Please select file';
+  String get noGroupInfo => 'No group info available';
 
   @override
-  String get saveSuccess => 'Save successful';
+  String get generateFailed => 'Failed to generate';
 
   @override
-  String get sectioninput => '';
+  String get deviceJoinCode => 'Device Join Code';
 
   @override
-  String get inputMessageHintDesktop =>
-      'Enter message or drag files...(Enter to send)';
+  String get regenerate => 'Regenerate';
 
   @override
-  String get inputMessageHintMobile => 'Enter message or drag files...';
+  String get generatingJoinCode => 'Generating join code...';
 
   @override
-  String get addDescriptionText => 'Add description text...(Enter to send)';
+  String get groupPrefix => 'Group';
 
   @override
-  String get sectionmenu => '';
+  String get copyright => '© 2023 Send To Myself';
 
   @override
-  String get sideMenu => 'Side Menu';
+  String get deviceInfo => 'Device Info';
 
   @override
-  String get appSettings => 'App Settings';
+  String get deviceName => 'Device Name';
 
   @override
-  String get networkDiagnostics => 'Network Diagnostics';
+  String get deviceType => 'Device Type';
 
   @override
-  String get currentDevice => 'Current Device';
+  String get platform => 'Platform';
 
   @override
-  String get systemInfo => 'System Information';
+  String get deviceId => 'Device ID';
 
   @override
-  String get noGroup => 'No Group';
+  String get appTheme => 'App Theme';
 
   @override
-  String get sectionpriority => '';
+  String get defaultTheme => 'Default';
 
   @override
-  String get highPriority => 'High Priority';
+  String get notificationSettings => 'Notification Settings';
 
   @override
-  String get mediumPriority => 'Medium Priority';
+  String get enabled => 'Enabled';
 
   @override
-  String get lowPriority => 'Low Priority';
+  String get aboutApp => 'About App';
 
   @override
-  String get justNow => 'Just now';
+  String get sendFileFailed => 'Send file failed';
 
   @override
-  String get sectionaccount => '';
+  String get noFilesToSend => 'No files to send';
 
   @override
-  String accountInfo(String username, String website) {
-    return 'Account: $username • Website: $website';
+  String get batchRecall => 'Batch Recall';
+
+  @override
+  String get recall => 'Recall';
+
+  @override
+  String get batchRecallReason => 'Recall messages';
+
+  @override
+  String get batchDelete => 'Batch Delete';
+
+  @override
+  String confirmBatchDelete(int count) {
+    return 'Are you sure you want to delete $count messages?';
   }
 
   @override
-  String get sectionforms => '';
+  String get batchDeleteReason => 'Delete messages';
 
   @override
-  String get loginAccountHint => 'Login account';
+  String batchDeleteSuccess(int count) {
+    return 'Successfully deleted $count messages';
+  }
 
   @override
-  String get passwordHint => 'Login password';
+  String batchDeleteFailedWithError(String error) {
+    return 'Batch delete failed: $error';
+  }
 
   @override
-  String get notesLabel => 'Notes';
+  String get debugInfoTitle => 'Debug Info';
 
   @override
-  String get otherInfoHint => 'Other information';
+  String get permanentStorageDirectory => 'Permanent Storage Directory';
 
   @override
-  String get expenseItemHint => 'e.g.: Lunch, Shopping';
+  String get storageUsage => 'Storage Usage';
 
   @override
-  String get amountHint => '0.00';
+  String get fileCacheStats => 'File Cache Stats';
 
   @override
-  String get typeLabel => 'Type';
+  String get deduplicationDiagnostics => 'Deduplication Diagnostics';
+
+  @override
+  String get clearDeduplicationRecords => 'Clear Deduplication Records';
+
+  @override
+  String get startConversation => 'Start a new conversation';
+
+  @override
+  String get sendMessageOrFileToStart => 'Send a message or file to start';
+
+  @override
+  String get cancelUpload => 'Cancel Upload';
+
+  @override
+  String get cancelDownload => 'Cancel Download';
+
+  @override
+  String get confirmCancelUpload =>
+      'Are you sure you want to cancel the upload?';
+
+  @override
+  String get confirmCancelDownload =>
+      'Are you sure you want to cancel the download?';
+
+  @override
+  String get continueTransfer => 'Continue Transfer';
+
+  @override
+  String get confirmCancel => 'Confirm Cancel';
+
+  @override
+  String get uploadCancelled => 'Upload cancelled';
+
+  @override
+  String get downloadCancelled => 'Download cancelled';
+
+  @override
+  String get file => 'File';
+
+  @override
+  String get addDescriptionText => 'Add description';
+
+  @override
+  String get inputMessageHintDesktop =>
+      'Input message, paste screenshot, or drag file here';
+
+  @override
+  String get inputMessageHintMobile => 'Input message';
+
+  @override
+  String get imageFile => 'Image File';
+
+  @override
+  String get videoFile => 'Video File';
+
+  @override
+  String get documentFile => 'Document File';
+
+  @override
+  String get audioFile => 'Audio File';
+
+  @override
+  String get selectFileType => 'Select file type';
+
+  @override
+  String get selectFileTypeMultiple => 'Select file type (multiple)';
+
+  @override
+  String get image => 'Image';
+
+  @override
+  String get video => 'Video';
+
+  @override
+  String get document => 'Document';
+
+  @override
+  String get audio => 'Audio';
+
+  @override
+  String get fileDownloadFailed => 'File download failed';
+
+  @override
+  String get fileNotExistsOrExpired => 'File does not exist or has expired';
+
+  @override
+  String get noPermissionToDownload => 'No permission to download';
+
+  @override
+  String get copiedToClipboard => 'Copied to clipboard';
+
+  @override
+  String get textCopiedToClipboard => 'Text copied to clipboard';
+
+  @override
+  String get canDragSelectText => 'You can drag to select text';
+
+  @override
+  String get allContentCopied => 'All content copied';
+
+  @override
+  String get recallMessage => 'Recall Message';
+
+  @override
+  String get deleteMessageTitle => 'Delete Message';
+
+  @override
+  String get confirmDeleteSingleMessage =>
+      'Are you sure you want to delete this message?';
+
+  @override
+  String get messageContentAddedToInput => 'Message content added to input';
+
+  @override
+  String get confirmDeleteMessage =>
+      'Are you sure you want to delete this message?';
+
+  @override
+  String get gallery => 'Gallery';
+
+  @override
+  String get documents => 'Documents';
+
+  @override
+  String get saveFailed => 'Save failed';
+
+  @override
+  String get messageShare => 'Message Share';
+
+  @override
+  String get textShared => 'Text shared';
+
+  @override
+  String get messageRecalledText => '[You recalled a message]';
+
+  @override
+  String get filePathCopied => 'File path copied';
+
+  @override
+  String get copyFilePathFailed => 'Copy file path failed';
 
   @override
   String get categoryLabel => 'Category';
 
   @override
-  String get categoryHint => 'e.g.: Food, Transportation';
+  String get categoryHint => 'e.g., Work, Personal';
 
   @override
   String get dateLabel => 'Date';
 
   @override
-  String get detailsHint => 'Detailed description';
+  String get notesHint => 'Add notes...';
 
   @override
-  String get scheduleTitleHint => 'Meeting, appointment, etc.';
+  String get scheduleTitleLabel => 'Schedule Title';
+
+  @override
+  String get scheduleTitleHint => 'e.g., Team Meeting';
 
   @override
   String get startTimeLabel => 'Start Time';
 
   @override
-  String get endTimeOptional => 'End Time (Optional)';
+  String get endTimeOptionalLabel => 'End Time (Optional)';
 
   @override
   String get locationLabel => 'Location';
 
   @override
-  String get locationHint => 'Meeting room, restaurant, etc.';
+  String get locationHint => 'e.g., Conference Room A';
 
   @override
   String get detailsLabel => 'Details';
 
   @override
-  String get meetingDetailsHint => 'Meeting content, notes';
+  String get meetingDetailsHint => 'e.g., Agenda, Attendees';
+
+  @override
+  String get advanceReminderLabel => 'Advance Reminder';
 
   @override
   String get minutes5Before => '5 minutes before';
@@ -2189,771 +1298,68 @@ class AppLocalizationsIt extends AppLocalizations {
   String get taskLabel => 'Task';
 
   @override
-  String get taskRequirementsHint => 'Specific requirements, notes';
-
-  @override
-  String get priorityLabel => 'Priority';
-
-  @override
-  String get dueDateOptional => 'Due Date (Optional)';
-
-  @override
-  String get websiteLinkName => 'Website or link name';
-
-  @override
-  String get urlLink => 'URL Link';
-
-  @override
-  String get sectionshare => '';
-
-  @override
-  String get confirmShare => 'Confirm Share';
-
-  @override
-  String get textSent => 'Text sent';
-
-  @override
-  String get fileSent => 'File sent';
-
-  @override
-  String filesSent(int count) {
-    return '$count files sent';
-  }
-
-  @override
-  String get sectionmissing => '';
-
-  @override
-  String get sectionmemoryforms => '';
-
-  @override
-  String get usernameEmailLabel => 'Username/Email';
-
-  @override
-  String get passwordLabel => 'Password';
-
-  @override
-  String get expenseItemLabel => 'Expense Item';
-
-  @override
-  String get amountLabel => 'Amount';
-
-  @override
-  String get notesHint => 'Detailed description';
-
-  @override
-  String get scheduleTitleLabel => 'Schedule Title';
-
-  @override
-  String get endTimeOptionalLabel => 'End Time (Optional)';
-
-  @override
-  String get advanceReminderLabel => 'Advance Reminder';
-
-  @override
-  String get whatToDoHint => 'What to do';
+  String get whatToDoHint => 'e.g., Buy groceries';
 
   @override
   String get detailedDescriptionLabel => 'Detailed Description';
 
   @override
+  String get taskRequirementsHint => 'e.g., Milk, Bread, Eggs';
+
+  @override
+  String get priorityLabel => 'Priority';
+
+  @override
   String get dueDateOptionalLabel => 'Due Date (Optional)';
 
   @override
-  String get urlLinkLabel => 'URL Link';
+  String get websiteLinkName => 'Website/Link Name';
+
+  @override
+  String get urlLinkLabel => 'URL/Link';
 
   @override
   String get linkDescriptionLabel => 'Description';
 
   @override
-  String get linkPurposeHint => 'The purpose or content of this link';
+  String get linkPurposeHint => 'e.g., Project research';
 
   @override
-  String get fileLabel => 'File *';
+  String get fileDescription => 'File Description';
 
   @override
-  String pleaseEnter(String field) {
-    return 'Please enter $field';
+  String get fileExplanation => 'e.g., Contract draft';
+
+  @override
+  String pleaseEnter(String label) {
+    return 'Please enter $label';
   }
 
   @override
-  String get completed => 'Completed';
+  String get saveToLocal => 'Save to Local';
 
   @override
-  String get addTag => 'Add Tag';
+  String get openFileLocation => 'Open File Location';
 
   @override
-  String get addTagLabel => 'Add Tag';
+  String get selectMessages => 'Select Messages';
 
   @override
-  String get enterTagName => 'Enter tag name';
-
-  @override
-  String get aiGenerate => 'AI Generate';
-
-  @override
-  String get generating => 'Generating...';
-
-  @override
-  String aiGeneratedTags(int count) {
-    return 'AI generated $count new tags';
+  String selectedMessages(int count) {
+    return '$count selected';
   }
 
   @override
-  String generateTagsFailed(String error) {
-    return 'Generate tags failed: $error';
-  }
-
-  @override
-  String get updateSuccess => 'Update successful';
-
-  @override
-  String updateFailed(String error) {
-    return 'Update failed: $error';
-  }
-
-  @override
-  String editMemoryType(String type) {
-    return 'Edit $type';
-  }
-
-  @override
-  String get enterTitle => 'Enter title';
-
-  @override
-  String get enterContent => 'Enter content';
-
-  @override
-  String get tagsLabel => 'Tags';
-
-  @override
-  String get processingShareContent => 'Processing shared content...';
-
-  @override
-  String get shareSuccess => '✅ Share successful!';
-
-  @override
-  String get shareFailed => '❌ Share failed';
-
-  @override
-  String get downloadedFile => 'downloaded_file';
-
-  @override
-  String get takePhoto => 'Take Photo';
-
-  @override
-  String get selectFromGallery => 'Select from Gallery';
-
-  @override
-  String get copyright => '© 2023 Send To Myself';
-
-  @override
-  String get subscriptionManagement => 'Subscription Management';
-
-  @override
-  String get currentSubscription => 'Current Subscription';
-
-  @override
-  String get unknownPlatform => 'Unknown';
-
-  @override
-  String supportedDeviceGroup(int count) {
-    return 'Supports $count device group';
-  }
-
-  @override
-  String get shareException => '❌ Share exception';
-
-  @override
-  String get allContentSentToGroup =>
-      'All content has been sent to current group';
-
-  @override
-  String get pleaseTryAgainLater => 'Please try again later';
-
-  @override
-  String processingError(String error) {
-    return 'Processing error: $error';
-  }
-
-  @override
-  String get allFilesSentComplete => 'All files sent successfully';
-
-  @override
-  String get partialFilesSentComplete => 'Some files sent successfully';
-
-  @override
-  String get allFilesSendFailed => 'All files failed to send';
-
-  @override
-  String get fileSentSuccess => 'File sent successfully!';
-
-  @override
-  String textSharedCount(int count) {
-    return 'Shared $count text messages';
-  }
-
-  @override
-  String get messageShare => 'Send To Myself - Message Share';
-
-  @override
-  String fileShared(String fileName) {
-    return 'File $fileName has been shared';
-  }
-
-  @override
-  String get fileUnavailableSharedText =>
-      'File unavailable, shared text content instead';
-
-  @override
-  String get resolvingServerDomain => '🔍 Resolving server domain...';
-
-  @override
-  String serverDnsSuccess(String address) {
-    return '✅ Server DNS resolution successful: $address';
-  }
-
-  @override
-  String get serverDnsFailed => '❌ Server DNS resolution failed: no result';
-
-  @override
-  String serverDnsError(String error) {
-    return '❌ Server DNS resolution failed: $error';
-  }
-
-  @override
-  String get testingServerConnection => '🔍 Testing server connection...';
-
-  @override
-  String get serverConnectionSuccess => '✅ Server connection successful';
-
-  @override
-  String serverConnectionFailed(String error) {
-    return '❌ Server connection failed: $error';
-  }
-
-  @override
-  String get startingWebSocketTest =>
-      '🧪 Starting WebSocket connection test...';
-
-  @override
-  String currentConnectionStatus(String status) {
-    return '📊 Current connection status: $status';
-  }
-
-  @override
-  String get sendingTestPing => '📡 Sending test ping...';
-
-  @override
-  String get webSocketNotConnected =>
-      '⚠️ WebSocket not connected, unable to send test message';
-
-  @override
-  String get executingForceReconnect => '🔄 Executing force reconnect...';
-
-  @override
-  String get stopPingTest => '⏹️ Stop Ping test';
-
-  @override
-  String get startPingTest => '🏓 Start Ping test (every 5 seconds)';
-
-  @override
-  String get sendingPing => '🏓 Sending test ping';
-
-  @override
-  String get connectionDisconnectedPausePing =>
-      '⚠️ Connection disconnected, pausing ping test';
-
-  @override
-  String get logCleared => '🧹 Log cleared';
-
-  @override
-  String get logCopiedToClipboard => 'Log copied to clipboard';
-
-  @override
-  String get noResult => 'no result';
-
-  @override
-  String get sectionwidgets => '';
-
-  @override
-  String get logoutErrorMessage => 'Error occurred during logout';
-
-  @override
-  String get loginStatusExpired => 'Login status has expired';
-
-  @override
-  String get logoutFailedMessage =>
-      'Logout failed, you can choose to force logout or retry.';
-
-  @override
-  String get preparingToSendFiles => 'Preparing to send files...';
-
-  @override
-  String sendingFileCount(int current) {
-    return 'Sending file $current...';
-  }
-
-  @override
-  String sendingFileProgress(int current, String sizeMB) {
-    return 'Sending file $current (${sizeMB}MB)';
-  }
-
-  @override
-  String retryingSendFile(int current) {
-    return 'Retrying to send file $current';
-  }
-
-  @override
-  String fileSendSuccess(int current) {
-    return '✅ File $current sent successfully';
-  }
-
-  @override
-  String filesCompleted(int success, int total) {
-    return 'Completed $success/$total files';
-  }
-
-  @override
-  String get waitingForServerProcessing => 'Waiting for server processing...';
-
-  @override
-  String get ensureFileFullyUploaded => 'Ensuring file is fully uploaded';
-
-  @override
-  String fileSendFailed(int current) {
-    return '❌ File $current failed to send';
-  }
-
-  @override
-  String maxRetriesReached(String fileName, int maxRetries) {
-    return '$fileName failed after $maxRetries retries';
-  }
-
-  @override
-  String fileSendException(int current) {
-    return '❌ File $current send exception';
-  }
-
-  @override
-  String sendErrorMessage(String fileName, String error) {
-    return '$fileName error during send: $error';
-  }
-
-  @override
-  String fileDataIncomplete(int current) {
-    return '❌ File $current data exception';
-  }
-
-  @override
-  String get fileInfoIncompleteMessage => 'File information incomplete';
-
-  @override
-  String allFilesSentToGroup(int count) {
-    return 'Sent $count files to current group';
-  }
-
-  @override
-  String successCountFiles(int success, int total) {
-    return 'Success: $success/$total files';
-  }
-
-  @override
-  String get noFilesToSendError => '❌ No files to send';
-
-  @override
-  String get shareDataEmpty => 'Share data is empty';
-
-  @override
-  String get sendingFile => 'Sending file...';
-
-  @override
-  String fileUploadFailed(String fileName) {
-    return '$fileName upload failed';
-  }
-
-  @override
-  String fileSentToGroup(String fileName) {
-    return '$fileName sent to group';
-  }
-
-  @override
-  String get unsupportedShareType => '❌ Unsupported share type';
-
-  @override
-  String get cannotHandleContentType => 'Cannot handle this content type';
-
-  @override
-  String get textSendSuccess => '✅ Text sent successfully!';
-
-  @override
-  String get contentSentToGroup => 'Content sent to group';
-
-  @override
-  String get textSendFailed => '❌ Text send failed';
-
-  @override
-  String get unknownFileName => 'Unknown file name';
-
-  @override
-  String filePathInvalid(String fileName) {
-    return '$fileName invalid file path';
-  }
-
-  @override
-  String retryAttempt(int retry, String fileName) {
-    return 'Retry $retry - $fileName';
-  }
-
-  @override
-  String get monthlyPlan => 'Monthly';
-
-  @override
-  String get yearlyPlan => 'Yearly';
-
-  @override
-  String pricePerMonth(String currencySymbol, String price) {
-    return '$currencySymbol$price/month';
-  }
-
-  @override
-  String pricePerYear(String currencySymbol, String price) {
-    return '$currencySymbol$price/year';
-  }
-
-  @override
-  String get freePlan => 'Free';
-
-  @override
-  String get freePlanDescription => 'For personal use';
-
-  @override
-  String get basicPlan => 'Basic';
-
-  @override
-  String get basicPlanDescription => 'For small teams';
-
-  @override
-  String get proPlan => 'Pro';
-
-  @override
-  String get proPlanDescription => 'For teams';
-
-  @override
-  String get enterprisePlan => 'Enterprise';
-
-  @override
-  String get enterprisePlanDescription => 'For large enterprises';
-
-  @override
-  String get feature2DeviceGroup => '2 device groups';
-
-  @override
-  String get featureBasicFileTransfer => 'Basic file transfer';
-
-  @override
-  String get featureTextMessage => 'Text messages';
-
-  @override
-  String get featureImageTransfer => 'Image transfer';
-
-  @override
-  String get feature5DeviceGroup => '5 device groups';
-
-  @override
-  String get featureUnlimitedFileTransfer => 'Unlimited file transfer';
-
-  @override
-  String get featureVideoTransfer => 'Video transfer';
-
-  @override
-  String get featureMemoryFunction => 'Memory function';
-
-  @override
-  String get featurePrioritySupport => 'Priority support';
-
-  @override
-  String get feature10DeviceGroup => '10 device groups';
-
-  @override
-  String get featureAdvancedMemory => 'Advanced memory';
-
-  @override
-  String get featureDataSyncBackup => 'Data sync & backup';
-
-  @override
-  String get featureDedicatedSupport => 'Dedicated support';
-
-  @override
-  String get featureTeamManagement => 'Team management';
-
-  @override
-  String get featureUnlimitedDeviceGroup => 'Unlimited device groups';
-
-  @override
-  String get featureAdvancedAnalytics => 'Advanced analytics';
-
-  @override
-  String get featureCustomIntegration => 'Custom integration';
-
-  @override
-  String get subscriptionPricingTitle => 'Subscription Pricing';
-
-  @override
-  String get subscriptionPricingSubtitle =>
-      'Choose the plan that\'s right for you';
-
-  @override
-  String get popularPlan => 'Popular';
-
-  @override
-  String get mostPopular => 'Most Popular';
-
-  @override
-  String get recommended => 'Recommended';
-
-  @override
-  String get yearlyDiscount => 'Yearly discount';
-
-  @override
-  String savePercentage(int percentage) {
-    return 'Save $percentage%';
-  }
-
-  @override
-  String get priceVariesByRegion => 'Subscription prices may vary by region';
-
-  @override
-  String get pricingNote => 'Prices are automatically adjusted for your region';
-
-  @override
-  String get currencyDisclaimer => 'Prices shown in local currency';
-
-  @override
-  String get subscribeTo => 'Subscribe to';
-
-  @override
-  String get subscriptionStatus => 'Subscription Status';
-
-  @override
-  String get currentPlan => 'Current Plan';
-
-  @override
-  String get upgradeToUnlock => 'Upgrade to unlock more features';
-
-  @override
-  String get manageSubscription => 'Manage Subscription';
-
-  @override
-  String get restorePurchases => 'Restore Purchases';
-
-  @override
-  String get subscriptionTerms =>
-      'By subscribing, you agree to our Terms of Service and Privacy Policy';
-
-  @override
-  String get purchaseSuccess => 'Purchase successful!';
-
-  @override
-  String get purchaseFailed => 'Purchase failed';
-
-  @override
-  String get purchaseRestored => 'Purchase restored';
-
-  @override
-  String get noSubscriptionFound => 'No subscription found';
-
-  @override
-  String get subscriptionExpired => 'Subscription expired';
-
-  @override
-  String get subscriptionActive => 'Subscription active';
-
-  @override
-  String get subscriptionCancelled => 'Subscription cancelled';
-
-  @override
-  String get subscriptionPending => 'Subscription pending';
-
-  @override
-  String get deviceLimitReached => 'Device limit reached';
-
-  @override
-  String get upgradeRequired => 'Upgrade required';
-
-  @override
-  String get upgradeToAddMore => 'Upgrade to add more devices';
-
-  @override
-  String freeTrialDaysLeft(int days) {
-    return '$days days left in free trial';
-  }
-
-  @override
-  String get sectionscanqr => '';
-
-  @override
-  String get scanDeviceJoinOtherDevices => 'Let other devices scan to join';
-
-  @override
-  String get groupPrefix => 'Group: ';
-
-  @override
-  String get joinCode => 'Join Code';
-
-  @override
-  String get qrCodeGenerationFailed => 'QR code generation failed';
-
-  @override
-  String get otherDevicesCanScanQRDescription =>
-      'Other devices can scan this QR code or manually enter the join code to join your device group';
-
-  @override
-  String get cameraUnavailableSwitchedToInput =>
-      'Camera unavailable, switched to manual input mode';
-
-  @override
-  String get desktopCameraUnstableTip =>
-      'Desktop camera scanning may be unstable, manual input mode is recommended';
-
-  @override
-  String get joinGroupSuccessExclamation => 'Successfully joined group!';
-
-  @override
-  String get joinGroupFailedGeneric => 'Failed to join group';
-
-  @override
-  String get pleaseEnterInviteCode => 'Please enter invite code';
-
-  @override
-  String get inviteCodeLengthError =>
-      'Invite code must be 4-20 characters long';
-
-  @override
-  String operationFailed(String error) {
-    return 'Operation failed: $error';
-  }
-
-  @override
-  String get generateDeviceJoinCode => 'Generate device join code';
-
-  @override
-  String get scanQRToJoinDeviceGroup =>
-      'Scan QR code to join this device group';
-
-  @override
-  String supportXDeviceGroups(String count) {
-    return 'Supports $count device groups';
-  }
-
-  @override
-  String get versionNumber => 'Version';
-
-  @override
-  String get expired => 'Expired';
-
-  @override
-  String get justActive => 'Just active';
-
-  @override
-  String expiresInMinutes(int minutes) {
-    return 'Expires in $minutes minutes';
-  }
-
-  @override
-  String expiresInHoursAndMinutes(int hours, int minutes) {
-    return 'Expires in ${hours}h ${minutes}m';
-  }
-
-  @override
-  String get monday => 'Monday';
-
-  @override
-  String get tuesday => 'Tuesday';
-
-  @override
-  String get wednesday => 'Wednesday';
-
-  @override
-  String get thursday => 'Thursday';
-
-  @override
-  String get friday => 'Friday';
-
-  @override
-  String get saturday => 'Saturday';
-
-  @override
-  String get sunday => 'Sunday';
-
-  @override
-  String monthDay(int month, int day) {
-    return '$month/$day';
-  }
-
-  @override
-  String yearMonthDay(int month, int day, int year) {
-    return '$month/$day/$year';
-  }
-
-  @override
-  String get deviceInformation => 'Device Information';
-
-  @override
-  String get applicationName => 'Application Name';
-
-  @override
-  String get applicationDescription => 'Application Description';
-
-  @override
-  String get appDescriptionText =>
-      'Cross-device file sharing and message memory assistant';
-
-  @override
-  String get logoutCurrentDeviceDescription => 'Log out of current device';
-
-  @override
-  String get confirmLogoutTitle => 'Confirm Logout';
-
-  @override
-  String get confirmLogoutContent =>
-      'Are you sure you want to log out of the current device?';
-
-  @override
-  String get sectionfilter => '';
+  String get deleteTooltip => 'Delete';
 
   @override
   String get messageFilter => 'Message Filter';
 
   @override
-  String get searchMessagesOrFiles => 'Search messages or files...';
+  String get searchMessagesOrFiles => 'Search messages or files';
 
   @override
   String get messageType => 'Message Type';
-
-  @override
-  String get sender => 'Sender';
-
-  @override
-  String get dateRange => 'Date Range';
-
-  @override
-  String get startDate => 'Start Date';
-
-  @override
-  String get endDate => 'End Date';
-
-  @override
-  String get clearDate => 'Clear Date';
-
-  @override
-  String get clearAll => 'Clear All';
-
-  @override
-  String get filterActive => 'Filter Active';
-
-  @override
-  String get noFilterConditions => 'No Filter Conditions';
 
   @override
   String get all => 'All';
@@ -2962,14 +1368,337 @@ class AppLocalizationsIt extends AppLocalizations {
   String get text => 'Text';
 
   @override
-  String get sentByMe => 'Sent by Me';
+  String get saveToGallery => 'Save to Gallery';
 
   @override
-  String get sentByOthers => 'Sent by Others';
+  String get confirmShare => 'Confirm Share';
 
   @override
-  String get deviceOs => 'Operating System';
+  String get textSent => 'Text sent';
 
   @override
-  String get deviceVersion => 'Version';
+  String get groups => 'Groups';
+
+  @override
+  String get noGroup => 'No Group';
+
+  @override
+  String get memories => 'Memories';
+
+  @override
+  String get createGroup => 'Create Group';
+
+  @override
+  String get groupDescriptionOptional => 'Group Description (optional)';
+
+  @override
+  String get groupDescriptionHint => 'Enter group description';
+
+  @override
+  String get pleaseEnterGroupName => 'Please enter group name';
+
+  @override
+  String groupCreatedSuccessfully(String name) {
+    return 'Group \'$name\' created successfully';
+  }
+
+  @override
+  String get createGroupFailed => 'Create group failed';
+
+  @override
+  String get deviceOs => 'Device OS';
+
+  @override
+  String get deviceVersion => 'Device Version';
+
+  @override
+  String get deviceRegistrationFailed => 'Device registration failed';
+
+  @override
+  String get placeQRInFrame => 'Place QR code in the frame';
+
+  @override
+  String get joiningGroup => 'Joining group...';
+
+  @override
+  String get reconnecting => 'Reconnecting...';
+
+  @override
+  String get connectionFailed => 'Connection failed';
+
+  @override
+  String get networkNormal => 'Network normal';
+
+  @override
+  String get networkLimited => 'Network limited';
+
+  @override
+  String get networkUnavailable => 'Network unavailable';
+
+  @override
+  String get checking => 'Checking...';
+
+  @override
+  String get logoutConfirm => 'Are you sure you want to logout?';
+
+  @override
+  String get loggingOut => 'Logging out...';
+
+  @override
+  String get logoutSuccess => 'Logout successful';
+
+  @override
+  String get logoutError => 'Error logging out';
+
+  @override
+  String get logoutFailed => 'Logout failed';
+
+  @override
+  String get loginStatusExpired => 'Login status has expired';
+
+  @override
+  String get logoutFailedContent =>
+      'Logout failed. You can force logout or try again.';
+
+  @override
+  String get forceLogout => 'Force Logout';
+
+  @override
+  String get bytes => 'B';
+
+  @override
+  String get kilobytes => 'KB';
+
+  @override
+  String get megabytes => 'MB';
+
+  @override
+  String get gigabytes => 'GB';
+
+  @override
+  String get terabytes => 'TB';
+
+  @override
+  String get now => 'Now';
+
+  @override
+  String minutesAgo(int minutes) {
+    return '${minutes}m ago';
+  }
+
+  @override
+  String hoursAgo(int hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String daysAgo(int days) {
+    return '${days}d ago';
+  }
+
+  @override
+  String get justActive => 'Just active';
+
+  @override
+  String get onlyMyself => 'Only myself';
+
+  @override
+  String devicesCount(int count) {
+    return '$count devices';
+  }
+
+  @override
+  String get sendToMyself => 'Send to myself';
+
+  @override
+  String get clickToStartGroupChat => 'Click to start group chat';
+
+  @override
+  String get noConversations => 'No conversations';
+
+  @override
+  String get joinGroupToStartChat => 'Join a group to start chatting';
+
+  @override
+  String get pleaseSelectGroup => 'Please select a group';
+
+  @override
+  String get clickGroupSelectorHint =>
+      'Click the group selector at the top to select or create a group';
+
+  @override
+  String get enterGroupCode => 'Enter Group Code';
+
+  @override
+  String get cameraUnavailable => 'Camera unavailable';
+
+  @override
+  String get desktopInputModeRecommended => 'Desktop input mode is recommended';
+
+  @override
+  String get checkCameraPermissions => 'Check camera permissions';
+
+  @override
+  String get switchToInput => 'Switch to Input';
+
+  @override
+  String get cameraStartupFailed => 'Camera startup failed';
+
+  @override
+  String get startingCamera => 'Starting camera...';
+
+  @override
+  String get switchToInputModeOrCheckPermissions =>
+      'Switch to input mode or check camera permissions';
+
+  @override
+  String get placeQRInScanFrame => 'Place QR code in the scan frame';
+
+  @override
+  String get enterInviteCodeHint => 'Enter invite code';
+
+  @override
+  String get inviteCodePlaceholder => 'Invite Code';
+
+  @override
+  String get groupLeaveSuccess => 'Left group successfully';
+
+  @override
+  String get groupLeaveFailed => 'Failed to leave group';
+
+  @override
+  String get deviceRemoved => 'Device removed';
+
+  @override
+  String get groupManagement => 'Group Management';
+
+  @override
+  String get groupMembers => 'Members';
+
+  @override
+  String get generateQRCode => 'Generate QR Code';
+
+  @override
+  String get noDevices => 'No devices';
+
+  @override
+  String get myself => 'Myself';
+
+  @override
+  String get deviceConnected => 'Device connected';
+
+  @override
+  String get subscriptionManagement => 'Subscription Management';
+
+  @override
+  String get currentSubscription => 'Current Subscription';
+
+  @override
+  String get supports => 'Supports';
+
+  @override
+  String get appName => 'App Name';
+
+  @override
+  String get logoutFromCurrentDevice => 'Logout from current device';
+
+  @override
+  String get downloadFailed => 'Download failed';
+
+  @override
+  String get messageRecalled => 'Message recalled';
+
+  @override
+  String get messageDeleted => 'Message deleted';
+
+  @override
+  String deleteFailedWithError(String error) {
+    return 'Delete failed with error: $error';
+  }
+
+  @override
+  String get groupMemberLimitReached => 'Group member limit reached';
+
+  @override
+  String get upgradeToSupportMoreDevices => 'Upgrade to support more devices';
+
+  @override
+  String get upgrade => 'Upgrade';
+
+  @override
+  String get upgradeSubscription => 'Upgrade Subscription';
+
+  @override
+  String get viewSubscription => 'View Subscription';
+
+  @override
+  String get youHaveBeenRemovedFromGroup =>
+      'You have been removed from the group';
+
+  @override
+  String get group => 'Group';
+
+  @override
+  String get hasBeenDeleted => 'has been deleted';
+
+  @override
+  String get loadGroupsFailed => 'Failed to load groups';
+
+  @override
+  String get pleaseSelectAGroup => 'Please select a group';
+
+  @override
+  String get generateInviteCodeFailed => 'Failed to generate invite code';
+
+  @override
+  String get currentCanAdd => 'You can add';
+
+  @override
+  String get devicesUnit => 'devices';
+
+  @override
+  String get upgradeToBasicVersionCanSupport =>
+      'Upgrade to Basic version to support';
+
+  @override
+  String get fiveDevices => '5 devices';
+
+  @override
+  String get upgradeToProfessionalVersionCanSupport =>
+      'Upgrade to Professional version to support';
+
+  @override
+  String get tenDevices => '10 devices';
+
+  @override
+  String get reachedMaxDeviceCount => 'Reached max device count';
+
+  @override
+  String get getGroupDetailsFailed => 'Failed to get group details';
+
+  @override
+  String get getGroupMembersFailed => 'Failed to get group members';
+
+  @override
+  String get renameGroupFailed => 'Failed to rename group';
+
+  @override
+  String get removeDeviceFailed => 'Failed to remove device';
+
+  @override
+  String get renameDeviceFailed => 'Failed to rename device';
+
+  @override
+  String get groupMemberLimitReachedUpgrade =>
+      'Group member limit reached. Upgrade subscription to support more devices.';
+
+  @override
+  String get upgradeToUnlockMoreFeatures =>
+      'Upgrade subscription to unlock more features:';
+
+  @override
+  String get basicVersion5Devices => '• Basic version: supports 5 devices';
+
+  @override
+  String get proVersion10Devices => '• Pro version: supports 10 devices';
 }

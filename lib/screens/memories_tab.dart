@@ -215,10 +215,19 @@ class _MemoriesTabState extends State<MemoriesTab> {
       } else if (_isSameDay(date, now.subtract(Duration(days: 1)))) {
         dateKey = LocalizationHelper.of(context).yesterday;
       } else if (date.isAfter(now.subtract(Duration(days: 7)))) {
-        final weekdays = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+        final weekdays = [
+          '', 
+          LocalizationHelper.of(context).monday, 
+          LocalizationHelper.of(context).tuesday, 
+          LocalizationHelper.of(context).wednesday, 
+          LocalizationHelper.of(context).thursday, 
+          LocalizationHelper.of(context).friday, 
+          LocalizationHelper.of(context).saturday, 
+          LocalizationHelper.of(context).sunday
+        ];
         dateKey = weekdays[date.weekday];
       } else {
-        dateKey = '${date.month}月${date.day}日';
+        dateKey = LocalizationHelper.of(context).dateFormat(date.month, date.day);
       }
       
       if (!grouped.containsKey(dateKey)) {
@@ -231,7 +240,17 @@ class _MemoriesTabState extends State<MemoriesTab> {
     final sortedKeys = grouped.keys.toList();
     final today = LocalizationHelper.of(context).today;
     final yesterday = LocalizationHelper.of(context).yesterday;
-    final keyOrder = [today, yesterday, '周日', '周六', '周五', '周四', '周三', '周二', '周一'];
+    final keyOrder = [
+      today, 
+      yesterday, 
+      LocalizationHelper.of(context).sunday, 
+      LocalizationHelper.of(context).saturday, 
+      LocalizationHelper.of(context).friday, 
+      LocalizationHelper.of(context).thursday, 
+      LocalizationHelper.of(context).wednesday, 
+      LocalizationHelper.of(context).tuesday, 
+      LocalizationHelper.of(context).monday
+    ];
     
     sortedKeys.sort((a, b) {
       final aIndex = keyOrder.indexOf(a);
@@ -264,49 +283,30 @@ class _MemoriesTabState extends State<MemoriesTab> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              Icons.lightbulb_outline,
-              size: 40,
-              color: AppTheme.primaryColor,
-            ),
+          Icon(
+            Icons.memory_outlined,
+            size: 60,
+            color: AppTheme.textTertiaryColor,
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 16),
           Text(
             LocalizationHelper.of(context).noMemories,
-            style: AppTheme.titleStyle.copyWith(
-              fontWeight: AppTheme.fontWeightMedium,
-            ),
+            style: AppTheme.titleStyle,
           ),
           SizedBox(height: 8),
           Text(
             LocalizationHelper.of(context).noMemoriesDesc,
-            style: AppTheme.captionStyle,
+            style: AppTheme.bodyStyle.copyWith(color: AppTheme.textSecondaryColor),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 30),
-          ElevatedButton(
-            onPressed: _showQuickAddOptions,
+          SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => _createMemory(context, MemoryType.text),
+            icon: Icon(Icons.add, size: 18),
+            label: Text(LocalizationHelper.of(context).createMemory),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Text(
-              LocalizationHelper.of(context).createMemory,
-              style: AppTheme.bodyStyle.copyWith(
-                color: Colors.white,
-                fontWeight: AppTheme.fontWeightMedium,
-              ),
             ),
           ),
         ],
@@ -317,34 +317,22 @@ class _MemoriesTabState extends State<MemoriesTab> {
   void _showQuickAddOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: AppTheme.backgroundColor,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: SafeArea(
+      backgroundColor: AppTheme.backgroundColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                margin: EdgeInsets.only(top: 8),
-                width: 32,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.borderColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              SizedBox(height: 20),
               Text(
                 LocalizationHelper.of(context).quickAdd,
-                style: AppTheme.titleStyle.copyWith(
-                  fontWeight: AppTheme.fontWeightMedium,
-                ),
+                style: AppTheme.titleStyle,
               ),
-              SizedBox(height: 24),
+              SizedBox(height: 16),
               
               // 快速输入文字
               _buildQuickTextInput(),
@@ -412,8 +400,8 @@ class _MemoriesTabState extends State<MemoriesTab> {
               SizedBox(height: 20),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -570,7 +558,7 @@ class _MemoriesTabState extends State<MemoriesTab> {
     return GestureDetector(
       onTap: () {
         Navigator.pop(context);
-        _createMemory(type);
+        _createMemory(context, type);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -683,7 +671,7 @@ class _MemoriesTabState extends State<MemoriesTab> {
     print('录音功能');
   }
 
-  void _createMemory(MemoryType type) {
+  void _createMemory(BuildContext context, MemoryType type) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -706,42 +694,40 @@ class _MemoriesTabState extends State<MemoriesTab> {
     );
   }
 
-  void _deleteMemory(Memory memory) {
-    showDialog(
+  Future<void> _deleteMemory(Memory memory) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.backgroundColor,
-        title: Text(LocalizationHelper.of(context).memoryDeleteTitle, style: AppTheme.titleStyle),
-        content: Text(
-          LocalizationHelper.of(context).confirmDeleteMemory(memory.title),
-          style: AppTheme.bodyStyle,
-        ),
+        title: Text(LocalizationHelper.of(context).memoryDeleteTitle),
+        content: Text(LocalizationHelper.of(context).confirmDeleteMemory),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(LocalizationHelper.of(context).cancel, style: AppTheme.bodyStyle),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(LocalizationHelper.of(context).cancel),
           ),
           TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              final success = await context.read<MemoryProvider>().deleteMemory(memory.id);
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(LocalizationHelper.of(context).deleteMemorySuccess)),
-                );
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(LocalizationHelper.of(context).deleteMemoryFailed)),
-                );
-              }
-            },
+            onPressed: () => Navigator.of(context).pop(true),
             child: Text(
-              LocalizationHelper.of(context).delete, 
-              style: AppTheme.bodyStyle.copyWith(color: AppTheme.errorColor),
+              LocalizationHelper.of(context).delete,
+              style: TextStyle(color: AppTheme.errorColor),
             ),
           ),
         ],
       ),
     );
+
+    if (confirmed == true) {
+      final success = await context.read<MemoryProvider>().deleteMemory(memory.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(success 
+              ? LocalizationHelper.of(context).deleteMemorySuccess 
+              : LocalizationHelper.of(context).deleteMemoryFailed),
+            backgroundColor: success ? AppTheme.successColor : AppTheme.errorColor,
+          ),
+        );
+      }
+    }
   }
 } 

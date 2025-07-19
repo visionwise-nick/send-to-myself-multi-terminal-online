@@ -1,0 +1,11 @@
+{
+  "groupLeaveConfirm": "你确定要离开这个群组吗？",
+  "editMemory": "编辑记忆",
+  "save": "保存",
+  "enterTitle": "输入标题",
+  "enterContent": "输入内容",
+  "tags": "标签",
+  "addTag": "添加标签",
+  "generateTags": "生成标签",
+  "generatingTags": "正在生成标签..."
+} 

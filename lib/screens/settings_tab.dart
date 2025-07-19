@@ -133,7 +133,7 @@ class SettingsTab extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Center(
                     child: Text(
-                      _copyright,
+                      l10n.copyright,
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
