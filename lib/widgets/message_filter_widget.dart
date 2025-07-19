@@ -172,40 +172,6 @@ class _MessageFilterWidgetState extends State<MessageFilterWidget> {
             ],
           ),
           
-          // 🔥 新增：筛选状态提示
-          if (_filter.hasActiveFilters)
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: Theme.of(context).primaryColor.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 14,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      '当前正在筛选消息，已设置 ${_getActiveFilterCount()} 个筛选条件',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           const SizedBox(height: 16),
 
           // 搜索框

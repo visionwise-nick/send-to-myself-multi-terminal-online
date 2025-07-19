@@ -455,6 +455,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       final groupProvider = Provider.of<GroupProvider>(context, listen: false);
       final currentGroupId = groupProvider.currentGroup?['id'];
       _statusRefreshManager.onGroupChanged(currentGroupId);
+      // 关键修复：切换群组时重置筛选条件
+      setState(() {
+        _filterParams = null;
+        _showMessageFilter = false;
+      });
       // 不需要强制重建，页面会通过 Consumer 自动响应变化
     }
   }
@@ -481,15 +486,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
   
   // 🔥 新增：消息筛选相关方法
   void _toggleMessageFilter() {
-    print('🔍 切换筛选面板状态: $_showMessageFilter -> ${!_showMessageFilter}');
+    final isOpening = !_showMessageFilter;
     setState(() {
-      _showMessageFilter = !_showMessageFilter;
+      _showMessageFilter = isOpening;
+      if (isOpening) {
+        // 打开筛选面板时，重置筛选条件
+        _filterParams = null;
+      }
     });
-    print('🔍 筛选面板状态已更新: $_showMessageFilter');
+  }
+
+  // 🔥 新增：关闭筛选面板的方法
+  void _closeFilterPanel() {
+    setState(() {
+      _showMessageFilter = false;
+    });
   }
   
   bool _isFilterActive() {
-    return _filterParams != null && _filterParams!.isNotEmpty;
+    // 关键修复：使用筛选条件数量来判断是否激活
+    return _getFilterCount() > 0;
   }
   
   // 🔥 新增：获取筛选条件数量
@@ -507,14 +523,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
     print('🔍 更新筛选参数: $params');
     setState(() {
       _filterParams = params;
-      // 关键修复：仅当筛选参数为空时才关闭筛选面板
+      _showMessageFilter = false; // 确认筛选后总是关闭面板
       if (params == null || params.isEmpty) {
-        _showMessageFilter = false;
-        print('🔍 清除筛选参数，关闭筛选面板');
+        print('🔍 清除筛选参数');
       } else {
-        // 如果有筛选参数，保持筛选状态，但不关闭筛选面板
-        _showMessageFilter = true;
-        print('🔍 设置筛选参数: $params，保持筛选面板打开');
+        print('🔍 设置筛选参数: $params');
       }
     });
   }
@@ -1099,6 +1112,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
                 showFilterPanel: _showMessageFilter,
                 filterParams: _filterParams,
                 onFilterChanged: _updateFilterParams,
+                onFilterPanelClose: _closeFilterPanel,
               ),
             ),
           ],
@@ -1386,135 +1400,135 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
           ),
           
               // 🔥 群组名称标题（可点击打开抽屉）
-              GestureDetector(
-                onTap: () => Scaffold.of(context).openDrawer(),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 6), // 🔥 减小垂直padding
-                  child: Text(
-                    groupName,
-                    style: TextStyle(
-                      fontSize: 13, // 🔥 稍微减小字体
-                      fontWeight: FontWeight.w500, // 🔥 正常字重
-                      color: AppTheme.primaryColor, // 🔥 玫红色
+              Expanded(
+                flex: 2, // 给予群组名称更多空间
+                child: GestureDetector(
+                  onTap: () => Scaffold.of(context).openDrawer(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 6), // 🔥 减小垂直padding
+                    child: Text(
+                      groupName,
+                      style: TextStyle(
+                        fontSize: 13, // 🔥 稍微减小字体
+                        fontWeight: FontWeight.w500, // 🔥 正常字重
+                        color: AppTheme.primaryColor, // 🔥 玫红色
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
               
-              // 🔥 二维码按钮（左对齐，群组名称后20px）
-              if (currentGroup != null) ...[
-                const SizedBox(width: 16), // 🔥 减少间距到16px
-                GestureDetector(
-                  onTap: () => _showQrGenerate(context, currentGroup),
-                  child: Container(
-                    padding: const EdgeInsets.all(4), // 🔥 缩小padding从8到4
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1), // 🔥 背景色使其更明显
-                      borderRadius: BorderRadius.circular(4), // 🔥 减小圆角
-                    ),
-                    child: Icon(
-                      Icons.qr_code,
-                      size: 16, // 🔥 减小图标尺寸从20到16
-                      color: AppTheme.primaryColor, // 🔥 玫红色
-                    ),
-                  ),
-                ),
-                
-                // 🔥 新增：加入群组按钮 - 紧挨着二维码
-                const SizedBox(width: 8), // 二维码和加入群组按钮的间距
-                GestureDetector(
-                  onTap: () => _showJoinGroupOptions(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Icon(
-                      Icons.group_add,
-                      size: 16,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                ),
-            ],
-              
-              // 🔥 右对齐区域
-              const Spacer(),
-              
-              // 🔥 连接状态显示在标题栏右侧，包含设备总数
-              Transform.scale(
-                scale: 0.75, // 🔥 进一步缩小到75%
-                child: const ConnectionStatusWidget(showDeviceCount: true),
-              ),
-              
-              const SizedBox(width: 2), // 调整间距
-              
-              // 🔥 筛选按钮（消息筛选功能）- 移至最右侧
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _toggleMessageFilter(),
-                  borderRadius: BorderRadius.circular(4),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: _isFilterActive() 
-                          ? AppTheme.primaryColor.withOpacity(0.15)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(4),
-                      border: _isFilterActive()
-                          ? Border.all(
-                              color: AppTheme.primaryColor.withOpacity(0.3),
-                              width: 1,
-                            )
-                          : null,
-                    ),
-                    child: Stack(
-                      children: [
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          transitionBuilder: (Widget child, Animation<double> animation) {
-                            return ScaleTransition(
-                              scale: animation,
-                              child: child,
-                            );
-                          },
-                                                  child: Icon(
-                          Icons.filter_list,
-                          key: ValueKey(_isFilterActive()),
+              // 🔥 二维码和加入群组按钮
+              if (currentGroup != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => _showQrGenerate(context, currentGroup),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Icon(
+                          Icons.qr_code,
                           size: 16,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () => _showJoinGroupOptions(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Icon(
+                          Icons.group_add,
+                          size: 16,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              
+              // 🔥 右侧功能按钮
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(width: 8),
+                  // 🔥 连接状态显示在标题栏右侧，包含设备总数
+                  Transform.scale(
+                    scale: 0.75, // 🔥 进一步缩小到75%
+                    child: const ConnectionStatusWidget(showDeviceCount: true),
+                  ),
+                  
+                  const SizedBox(width: 2), // 调整间距
+                  
+                  // 🔥 筛选按钮（消息筛选功能）- 移至最右侧
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _toggleMessageFilter(),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
                           color: _isFilterActive() 
-                              ? AppTheme.primaryColor 
-                              : AppTheme.textSecondaryColor,
+                              ? AppTheme.primaryColor.withOpacity(0.15)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(4),
+                          border: _isFilterActive()
+                              ? Border.all(
+                                  color: AppTheme.primaryColor.withOpacity(0.3),
+                                  width: 1,
+                                )
+                              : null,
                         ),
-                        ),
-                        // 🔥 筛选条件数量提示
-                        if (_isFilterActive() && _getFilterCount() > 0)
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryColor,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '${_getFilterCount()}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.bold,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Icon(
+                              Icons.filter_list,
+                              size: 16,
+                              color: _isFilterActive() 
+                                  ? AppTheme.primaryColor 
+                                  : AppTheme.textSecondaryColor,
+                            ),
+                            // 🔥 筛选条件数量提示
+                            if (_isFilterActive() && _getFilterCount() > 0)
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryColor,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    '${_getFilterCount()}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 7,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
         ],
       ),
@@ -1555,6 +1569,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin, 
       showFilterPanel: _showMessageFilter,
       filterParams: _filterParams,
       onFilterChanged: _updateFilterParams,
+      onFilterPanelClose: _closeFilterPanel,
     );
   }
 

@@ -17,12 +17,14 @@ class MessagesTab extends StatefulWidget {
   final bool showFilterPanel;
   final Map<String, dynamic>? filterParams;
   final Function(Map<String, dynamic>?)? onFilterChanged;
+  final VoidCallback? onFilterPanelClose;
   
   const MessagesTab({
     super.key,
     this.showFilterPanel = false,
     this.filterParams,
     this.onFilterChanged,
+    this.onFilterPanelClose,
   });
 
   @override
@@ -344,6 +346,7 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
               showFilterPanel: widget.showFilterPanel,
               filterParams: widget.filterParams,
               onFilterChanged: widget.onFilterChanged,
+              onFilterPanelClose: widget.onFilterPanelClose,
             ),
           );
         }
@@ -552,5 +555,16 @@ class _MessagesTabState extends State<MessagesTab> with TickerProviderStateMixin
     });
 
     DebugConfig.debugPrint('添加私聊对话(默认): ${device['name']} (${device['id']})${isCurrentDevice ? ' - 自己' : ''}', module: 'MESSAGE');
+  }
+
+  void _navigateToChatScreen(BuildContext context, Map<String, dynamic> conversation) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => ChatScreen(
+        conversation: conversation,
+        filterParams: widget.filterParams,
+        onFilterChanged: widget.onFilterChanged,
+        onFilterPanelClose: widget.onFilterPanelClose,
+      ),
+    ));
   }
 } 

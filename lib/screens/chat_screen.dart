@@ -134,6 +134,7 @@ class ChatScreen extends StatefulWidget {
   final bool showFilterPanel;
   final Map<String, dynamic>? filterParams;
   final Function(Map<String, dynamic>?)? onFilterChanged;
+  final VoidCallback? onFilterPanelClose;
 
   const ChatScreen({
     super.key,
@@ -141,6 +142,7 @@ class ChatScreen extends StatefulWidget {
     this.showFilterPanel = false,
     this.filterParams,
     this.onFilterChanged,
+    this.onFilterPanelClose,
   });
 
   @override
@@ -361,6 +363,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     if (widget.filterParams != null) {
       widget.onFilterChanged?.call(widget.filterParams);
     }
+    widget.onFilterPanelClose?.call();
   }
   
   List<Map<String, dynamic>> get _displayMessages {
