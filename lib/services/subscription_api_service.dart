@@ -16,12 +16,28 @@ class SubscriptionApiService {
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-    final userId = prefs.getString('user_id');
+    
+    // 获取服务器分配的设备ID
+    String? deviceId;
+    final serverDeviceData = prefs.getString('server_device_data');
+    if (serverDeviceData != null) {
+      try {
+        final Map<String, dynamic> data = jsonDecode(serverDeviceData);
+        deviceId = data['id'];
+      } catch (e) {
+        DebugConfig.errorPrint('解析服务器设备ID失败: $e');
+      }
+    }
+    
+    // 如果没有服务器设备ID，使用本地设备ID
+    if (deviceId == null) {
+      deviceId = prefs.getString('device_id') ?? prefs.getString('user_id') ?? '';
+    }
     
     return {
       'Content-Type': 'application/json',
       'Authorization': token != null ? 'Bearer $token' : '',
-      'x-user-id': userId ?? '',
+      'Device-ID': deviceId,
     };
   }
 

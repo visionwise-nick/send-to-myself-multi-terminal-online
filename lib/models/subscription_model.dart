@@ -285,8 +285,8 @@ class SubscriptionPlanConfig {
       nameKey: 'basicPlan',
       descriptionKey: 'basicPlanDescription',
       maxGroupMembers: 5,
-      productIdMonthly: 'send_to_myself_basic_monthly',
-      productIdYearly: 'send_to_myself_basic_yearly',
+      productIdMonthly: 'android.test.purchased', // 测试产品ID
+      productIdYearly: 'android.test.canceled',   // 测试产品ID
       featureKeys: [
         'feature5DeviceGroup',
         'featureUnlimitedFileTransfer',
@@ -301,8 +301,8 @@ class SubscriptionPlanConfig {
       nameKey: 'proPlan',
       descriptionKey: 'proPlanDescription',
       maxGroupMembers: 10,
-      productIdMonthly: 'send_to_myself_pro_monthly',
-      productIdYearly: 'send_to_myself_pro_yearly',
+      productIdMonthly: 'android.test.item_unavailable', // 测试产品ID
+      productIdYearly: 'android.test.refunded',          // 测试产品ID
       featureKeys: [
         'feature10DeviceGroup',
         'featureUnlimitedFileTransfer',
@@ -318,8 +318,8 @@ class SubscriptionPlanConfig {
       nameKey: 'enterprisePlan',
       descriptionKey: 'enterprisePlanDescription',
       maxGroupMembers: -1, // -1 表示无限制
-      productIdMonthly: 'send_to_myself_enterprise_monthly',
-      productIdYearly: 'send_to_myself_enterprise_yearly',
+      productIdMonthly: 'android.test.purchased', // 测试产品ID
+      productIdYearly: 'android.test.canceled',   // 测试产品ID
       featureKeys: [
         'featureUnlimitedDeviceGroup',
         'featureUnlimitedFileTransfer',

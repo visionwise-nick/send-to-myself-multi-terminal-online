@@ -59,25 +59,71 @@ class SubscriptionProvider extends ChangeNotifier {
   
   // 🔥 新增：可用的订阅计划
   List<SubscriptionProduct> get availablePlans {
-    // 示例数据，需要从你的订阅服务中获取
-    return [
-      SubscriptionProduct(
-        id: 'basic_monthly',
-        name: '基础版',
-        description: '适合个人和小团队',
-        price: '¥30/月',
-        isCurrent: _currentSubscription.plan == SubscriptionPlan.basic,
-        features: ['5台设备', '基础文件传输', '消息记忆'],
-      ),
-      SubscriptionProduct(
-        id: 'pro_monthly',
-        name: '专业版',
-        description: '适合重度用户和企业',
-        price: '¥60/月',
-        isCurrent: _currentSubscription.plan == SubscriptionPlan.pro,
-        features: ['10台设备', '无限制文件传输', '高级消息记忆', '数据同步备份'],
-      ),
-    ];
+    // 从后端API获取真实的订阅计划数据
+    final List<SubscriptionProduct> plans = [];
+    
+    // 添加免费计划
+    plans.add(SubscriptionProduct(
+      id: 'free',
+      name: '免费版',
+      description: '适合个人使用',
+      price: '免费',
+      isCurrent: _currentSubscription.plan == SubscriptionPlan.free,
+      features: ['2台设备', '基础文件传输', '文本消息'],
+    ));
+    
+    // 从购买选项中生成订阅计划
+    for (final option in _purchaseOptions) {
+      final config = SubscriptionPlanConfig.getPlanConfig(option.plan);
+      
+      plans.add(SubscriptionProduct(
+        id: option.productId,
+        name: config.name,
+        description: _getPlanDescription(option.plan),
+        price: option.priceText,
+        isCurrent: _currentSubscription.plan == option.plan,
+        features: _getPlanFeatures(option.plan),
+      ));
+    }
+    
+    return plans;
+  }
+  
+  // 获取计划描述
+  String _getPlanDescription(SubscriptionPlan plan) {
+    switch (plan) {
+      case SubscriptionPlan.basic:
+        return '适合个人和小团队';
+      case SubscriptionPlan.pro:
+        return '适合重度用户和企业';
+      case SubscriptionPlan.enterprise:
+        return '适合大型团队和企业';
+      default:
+        return '适合个人使用';
+    }
+  }
+  
+  // 获取计划功能列表
+  List<String> _getPlanFeatures(SubscriptionPlan plan) {
+    final config = SubscriptionPlanConfig.getPlanConfig(plan);
+    final features = <String>[];
+    
+    switch (plan) {
+      case SubscriptionPlan.free:
+        features.addAll(['2台设备', '基础文件传输', '文本消息']);
+        break;
+      case SubscriptionPlan.basic:
+        features.addAll(['5台设备', '无限制文件传输', '消息记忆', '优先支持']);
+        break;
+      case SubscriptionPlan.pro:
+        features.addAll(['10台设备', '无限制文件传输', '高级消息记忆', '数据同步备份', '专属支持']);
+        break;
+      case SubscriptionPlan.enterprise:
+        features.addAll(['无限设备', '无限制文件传输', '高级消息记忆', '数据同步备份', '专属支持', '团队管理', '高级分析']);
+        break;
+    }
+    
+    return features;
   }
   
   // 初始化

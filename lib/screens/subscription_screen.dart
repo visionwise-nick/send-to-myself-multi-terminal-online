@@ -82,7 +82,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   if (provider.isLoading)
                     const Center(child: CircularProgressIndicator())
                   else if (provider.error != null)
-                    _buildErrorWidget(provider.error!, l10n)
+                    Center(child: Text(provider.error!))
                   else
                     ...provider.availablePlans.map((plan) => _buildPlanCard(
                         plan,
@@ -330,50 +330,5 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     final price = priceInfo[isYearly ? 'yearlyPrice' : 'monthlyPrice'] ?? 'N/A';
     final currencySymbol = priceInfo['currencySymbol'] ?? '';
     return '$currencySymbol$price/${isYearly ? 'yr' : 'mo'}';
-  }
-
-  Widget _buildErrorWidget(String error, AppLocalizations l10n) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      margin: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            color: Colors.orange,
-            size: 48,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '初始化订阅服务失败:',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Colors.orange.shade800,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            error,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.orange.shade700,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '应用尚未在应用商店上架，无法获取真实产品信息。\n当前显示模拟订阅计划用于开发测试。',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.orange.shade600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
   }
 } 
